@@ -7,8 +7,8 @@
 // │  o acesso aos dados é controlado pelas Security Rules do Firestore.│
 // └─────────────────────────────────────────────────────────────────────┘
 
-import { initializeApp } from 'firebase/app';
-import { getAuth, signInAnonymously, onAuthStateChanged } from 'firebase/auth';
+import { initializeApp } from "firebase/app";
+import { getAuth, signInAnonymously, onAuthStateChanged } from "firebase/auth";
 import {
   initializeFirestore,
   persistentLocalCache,
@@ -17,16 +17,16 @@ import {
   getDoc,
   setDoc,
   onSnapshot,
-} from 'firebase/firestore';
+} from "firebase/firestore";
 
 // Suporta tanto chaves hardcoded quanto via .env (VITE_FIREBASE_*).
 const firebaseConfig = {
-  apiKey:            import.meta.env.VITE_FIREBASE_API_KEY            ?? 'COLE_SUA_API_KEY_AQUI',
-  authDomain:        import.meta.env.VITE_FIREBASE_AUTH_DOMAIN        ?? 'SEU_PROJETO.firebaseapp.com',
-  projectId:         import.meta.env.VITE_FIREBASE_PROJECT_ID         ?? 'SEU_PROJETO',
-  storageBucket:     import.meta.env.VITE_FIREBASE_STORAGE_BUCKET     ?? 'SEU_PROJETO.appspot.com',
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID ?? 'XXXX',
-  appId:             import.meta.env.VITE_FIREBASE_APP_ID             ?? 'XXXX',
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
 };
 
 export const app = initializeApp(firebaseConfig);
@@ -34,7 +34,9 @@ export const auth = getAuth(app);
 
 // Firestore com cache local (funciona offline e em múltiplas abas).
 export const db = initializeFirestore(app, {
-  localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }),
+  localCache: persistentLocalCache({
+    tabManager: persistentMultipleTabManager(),
+  }),
 });
 
 // Inicia auth anônima na primeira carga. Retorna uma promise que resolve com o UID.
