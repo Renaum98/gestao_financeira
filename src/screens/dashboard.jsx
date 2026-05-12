@@ -7,16 +7,17 @@ import { Card, ItemTransacao, SeletorMes } from '../ui/common.jsx';
 import { PieChart, LineChart } from '../ui/charts.jsx';
 
 export function DashboardScreen({ ctx }) {
-  const { txs, mes, setMes, todosMeses, mesAnterior, ocultar, setOcultar, irPara, orcamentos, usuario } = ctx;
+  const { txs, mes, setMes, todosMeses, mesAnterior, ocultar, setOcultar, irPara, orcamentos, preferences } = ctx;
   const [fatiaAtiva, setFatiaAtiva] = React.useState(null);
-  const primeiroNome = ((usuario && usuario.nome) || 'Marina').split(' ')[0];
+  const primeiroNome = (preferences.nome || '').trim().split(' ')[0];
 
   const txMes = txDoMes(txs, mes);
   const txMesAnt = mesAnterior ? txDoMes(txs, mesAnterior) : [];
   const total = totalGeral(txMes);
   const totalAnt = totalGeral(txMesAnt);
   const delta = totalAnt > 0 ? ((total - totalAnt) / totalAnt) * 100 : 0;
-  const orcTotal = Object.values(orcamentos).reduce((s, v) => s + v, 0);
+  const somaOrcCats = Object.values(orcamentos).reduce((s, v) => s + v, 0);
+  const orcTotal = preferences.orcamentoMensal > 0 ? preferences.orcamentoMensal : somaOrcCats;
   const restante = orcTotal - total;
 
   const porCat = totalPorCategoria(txMes);
@@ -54,8 +55,10 @@ export function DashboardScreen({ ctx }) {
       <div style={{ padding: '60px 20px 0' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div>
-            <div style={{ fontSize: 13, color: 'var(--muted)', fontWeight: 600 }}>{saudacao},</div>
-            <div style={{ fontSize: 22, fontWeight: 800, color: 'var(--ink)', letterSpacing: '-0.02em' }}>{primeiroNome} ✦</div>
+            <div style={{ fontSize: 13, color: 'var(--muted)', fontWeight: 600 }}>{saudacao}{primeiroNome && ','}</div>
+            <div style={{ fontSize: 22, fontWeight: 800, color: 'var(--ink)', letterSpacing: '-0.02em' }}>
+              {primeiroNome ? `${primeiroNome} ✦` : 'Bem-vindo ✦'}
+            </div>
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
             <button onClick={() => setOcultar(!ocultar)} style={{
@@ -75,7 +78,7 @@ export function DashboardScreen({ ctx }) {
                 background: 'linear-gradient(135deg, var(--primary), var(--primary-2))',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 color: '#fff', fontWeight: 800, fontSize: 13, letterSpacing: '-0.02em',
-              }}>{primeiroNome[0]}</div>
+              }}>{primeiroNome ? primeiroNome[0].toUpperCase() : '+'}</div>
             </button>
           </div>
         </div>

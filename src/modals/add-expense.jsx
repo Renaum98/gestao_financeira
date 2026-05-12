@@ -125,7 +125,10 @@ export function AddExpenseModal({ ctx, params }) {
           <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: 0.4, padding: '0 4px 8px' }}>
             Categoria
           </div>
-          <div style={{ display: 'flex', gap: 8, overflowX: 'auto', padding: '0 0 4px', scrollbarWidth: 'none' }}>
+          <div style={{
+            display: 'flex', gap: 8, overflowX: 'auto',
+            padding: '6px 4px 10px', scrollbarWidth: 'none',
+          }}>
             {ORDEM_CATS.map(c => {
               const cat = CATEGORIAS[c];
               const sel = categoria === c;

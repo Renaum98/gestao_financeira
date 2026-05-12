@@ -20,6 +20,7 @@ const DEFAULT_STATE = {
     paleta: '#6E4FF6',
     modo: 'claro',
     nome: '',
+    orcamentoMensal: 0,
   },
 };
 

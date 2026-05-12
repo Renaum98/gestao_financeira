@@ -1,4 +1,4 @@
-// orcamentos.jsx — Tela Orçamentos (limites por categoria)
+// orcamentos.jsx — Tela Orçamentos (total mensal + limites por categoria).
 
 import React from 'react';
 import { CATEGORIAS, ORDEM_CATS, fmtBRL, fmtBRLCompacto, totalGeral, totalPorCategoria, txDoMes } from '../data.js';
@@ -7,52 +7,127 @@ import { Card, TopBar } from '../ui/common.jsx';
 import { BarraProgresso } from '../ui/charts.jsx';
 
 export function OrcamentosScreen({ ctx }) {
-  const { txs, mes, ocultar, voltar, orcamentos, setOrcamentos, irPara } = ctx;
+  const { txs, mes, ocultar, voltar, orcamentos, setOrcamentos, preferences, setPreferences } = ctx;
+
   const txMes = txDoMes(txs, mes);
   const porCat = totalPorCategoria(txMes);
-  const totalOrc = Object.values(orcamentos).reduce((s, v) => s + v, 0);
+  const somaCats = Object.values(orcamentos).reduce((s, v) => s + v, 0);
+  const orcMensal = preferences.orcamentoMensal > 0 ? preferences.orcamentoMensal : somaCats;
   const totalGasto = totalGeral(txMes);
-  const pctGeral = totalOrc > 0 ? (totalGasto / totalOrc) * 100 : 0;
+  const pctGeral = orcMensal > 0 ? (totalGasto / orcMensal) * 100 : 0;
 
-  const [editando, setEditando] = React.useState(null);
-  const [tempVal, setTempVal] = React.useState('');
+  const [editandoTotal, setEditandoTotal] = React.useState(false);
+  const [tempTotal, setTempTotal] = React.useState('');
 
-  const salvar = (catId) => {
-    const v = parseFloat(tempVal.replace(',', '.')) || 0;
+  const [editandoCat, setEditandoCat] = React.useState(null);
+  const [tempCat, setTempCat] = React.useState('');
+
+  const salvarTotal = () => {
+    const v = parseFloat(tempTotal.replace(/\./g, '').replace(',', '.')) || 0;
+    setPreferences({ orcamentoMensal: Math.max(0, v) });
+    setEditandoTotal(false);
+  };
+
+  const salvarCat = (catId) => {
+    const v = parseFloat(tempCat.replace(/\./g, '').replace(',', '.')) || 0;
     setOrcamentos({ ...orcamentos, [catId]: Math.max(0, v) });
-    setEditando(null);
+    setEditandoCat(null);
   };
 
   return (
     <div style={{ paddingBottom: 110 }}>
       <TopBar voltar={voltar} titulo="Orçamentos" />
 
+      {/* Card principal — total mensal editável */}
       <div style={{ padding: '4px 20px 0' }}>
         <div style={{
           background: 'linear-gradient(135deg, var(--primary), var(--primary-2))',
           color: '#fff', borderRadius: 24, padding: 20, position: 'relative', overflow: 'hidden',
         }}>
           <div style={{ position: 'absolute', right: -30, top: -30, width: 120, height: 120, borderRadius: '50%', background: 'rgba(255,255,255,0.08)' }} />
-          <div style={{ fontSize: 12, fontWeight: 600, opacity: 0.85, position: 'relative' }}>Orçamento total do mês</div>
-          <div style={{ fontSize: 28, fontWeight: 800, marginTop: 4, letterSpacing: '-0.02em', position: 'relative' }}>
-            {fmtBRL(totalOrc, ocultar)}
+          <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{ fontSize: 12, fontWeight: 600, opacity: 0.85 }}>Orçamento mensal</div>
+            {!editandoTotal && (
+              <button onClick={() => { setTempTotal(orcMensal > 0 ? String(orcMensal).replace('.', ',') : ''); setEditandoTotal(true); }} style={{
+                background: 'rgba(255,255,255,0.18)', border: 'none', cursor: 'pointer',
+                color: '#fff', padding: '6px 10px', borderRadius: 999,
+                display: 'inline-flex', alignItems: 'center', gap: 5,
+                fontSize: 11, fontWeight: 700, fontFamily: 'inherit',
+              }}>
+                <Icon name="edit" size={12} color="#fff" strokeWidth={2.4} /> Editar
+              </button>
+            )}
           </div>
-          <div style={{ marginTop: 14, position: 'relative' }}>
-            <div style={{ height: 8, background: 'rgba(255,255,255,0.2)', borderRadius: 8, overflow: 'hidden' }}>
-              <div style={{
-                height: '100%', width: `${Math.min(100, pctGeral)}%`,
-                background: pctGeral > 100 ? '#FFB1BD' : '#fff', borderRadius: 8,
-                transition: 'width .3s ease',
-              }} />
+
+          {editandoTotal ? (
+            <div style={{ position: 'relative', marginTop: 4, display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ fontSize: 22, fontWeight: 700, opacity: 0.85 }}>R$</span>
+              <input
+                autoFocus
+                type="text"
+                inputMode="decimal"
+                value={tempTotal}
+                onChange={(e) => setTempTotal(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') salvarTotal(); if (e.key === 'Escape') setEditandoTotal(false); }}
+                placeholder="0,00"
+                style={{
+                  flex: 1, padding: '6px 10px', borderRadius: 10,
+                  border: 'none', background: 'rgba(255,255,255,0.18)',
+                  fontSize: 26, fontWeight: 800, color: '#fff',
+                  outline: 'none', fontFamily: 'inherit', letterSpacing: '-0.02em',
+                  minWidth: 0,
+                }}
+              />
+              <button onClick={salvarTotal} style={{
+                width: 36, height: 36, borderRadius: 18, border: 'none', cursor: 'pointer',
+                background: '#fff', color: 'var(--primary)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+              }}>
+                <Icon name="check" size={16} color="var(--primary)" strokeWidth={2.6} />
+              </button>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8, fontSize: 12, fontWeight: 600 }}>
-              <span>Gasto: {fmtBRLCompacto(totalGasto, ocultar)}</span>
-              <span style={{ opacity: 0.85 }}>{pctGeral.toFixed(0)}% utilizado</span>
+          ) : (
+            <div style={{ fontSize: 28, fontWeight: 800, marginTop: 4, letterSpacing: '-0.02em', position: 'relative' }}>
+              {orcMensal > 0 ? fmtBRL(orcMensal, ocultar) : (
+                <button onClick={() => { setTempTotal(''); setEditandoTotal(true); }} style={{
+                  background: 'transparent', border: '1.5px dashed rgba(255,255,255,0.6)',
+                  color: '#fff', padding: '8px 14px', borderRadius: 12,
+                  fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
+                }}>Definir orçamento</button>
+              )}
             </div>
-          </div>
+          )}
+
+          {orcMensal > 0 && (
+            <div style={{ marginTop: 14, position: 'relative' }}>
+              <div style={{ height: 8, background: 'rgba(255,255,255,0.2)', borderRadius: 8, overflow: 'hidden' }}>
+                <div style={{
+                  height: '100%', width: `${Math.min(100, pctGeral)}%`,
+                  background: pctGeral > 100 ? '#FFB1BD' : '#fff', borderRadius: 8,
+                  transition: 'width .3s ease',
+                }} />
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8, fontSize: 12, fontWeight: 600 }}>
+                <span>Gasto: {fmtBRLCompacto(totalGasto, ocultar)}</span>
+                <span style={{ opacity: 0.85 }}>{pctGeral.toFixed(0)}% utilizado</span>
+              </div>
+            </div>
+          )}
+
+          {preferences.orcamentoMensal > 0 && somaCats > 0 && Math.abs(preferences.orcamentoMensal - somaCats) > 1 && (
+            <div style={{
+              marginTop: 10, padding: '8px 10px', borderRadius: 10,
+              background: 'rgba(255,255,255,0.14)',
+              fontSize: 11, fontWeight: 600, opacity: 0.92,
+              position: 'relative',
+            }}>
+              Soma das categorias: {fmtBRLCompacto(somaCats)} (difere do total mensal).
+            </div>
+          )}
         </div>
       </div>
 
+      {/* Categorias */}
       <div style={{ padding: '20px 20px 0' }}>
         <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: 0.4, padding: '0 4px 10px' }}>
           Por categoria
@@ -77,23 +152,23 @@ export function OrcamentosScreen({ ctx }) {
                       {fmtBRLCompacto(gasto, ocultar)} de {fmtBRLCompacto(orc, ocultar)}
                     </div>
                   </div>
-                  {editando === c ? (
+                  {editandoCat === c ? (
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                       <input
                         autoFocus
                         type="text"
                         inputMode="decimal"
-                        value={tempVal}
-                        onChange={e => setTempVal(e.target.value)}
-                        onKeyDown={e => { if (e.key === 'Enter') salvar(c); if (e.key === 'Escape') setEditando(null); }}
+                        value={tempCat}
+                        onChange={(e) => setTempCat(e.target.value)}
+                        onKeyDown={(e) => { if (e.key === 'Enter') salvarCat(c); if (e.key === 'Escape') setEditandoCat(null); }}
                         style={{
                           width: 80, padding: '6px 10px', borderRadius: 10,
-                          border: '1.5px solid var(--primary)', background: '#fff',
+                          border: '1.5px solid var(--primary)', background: 'var(--card)',
                           fontSize: 13, fontWeight: 700, color: 'var(--ink)', outline: 'none',
                           fontFamily: 'inherit', textAlign: 'right',
                         }}
                       />
-                      <button onClick={() => salvar(c)} style={{
+                      <button onClick={() => salvarCat(c)} style={{
                         width: 30, height: 30, borderRadius: 15, border: 'none',
                         background: 'var(--primary)', color: '#fff', cursor: 'pointer',
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -102,7 +177,7 @@ export function OrcamentosScreen({ ctx }) {
                       </button>
                     </div>
                   ) : (
-                    <button onClick={() => { setEditando(c); setTempVal(String(orc)); }} style={{
+                    <button onClick={() => { setEditandoCat(c); setTempCat(String(orc)); }} style={{
                       background: 'transparent', border: 'none', cursor: 'pointer', padding: 4,
                       color: 'var(--muted)',
                     }}>
