@@ -4,12 +4,14 @@ import React from 'react';
 import { CATEGORIAS, MESES_CURTO, ORDEM_CATS, fmtBRL, totalGeral, txDoMes } from '../data.js';
 import { Icon } from '../ui/icons.jsx';
 import { Card, ItemTransacao, SeletorMes, TopBar } from '../ui/common.jsx';
+import { ConfirmModal } from '../ui/confirm-modal.jsx';
 
 export function GastosScreen({ ctx }) {
   const { txs, mes, setMes, todosMeses, ocultar, irPara, excluirTx } = ctx;
   const [filtro, setFiltro] = React.useState('todas');
   const [busca, setBusca] = React.useState('');
   const [acaoAberta, setAcaoAberta] = React.useState(null);
+  const [confirmarExclusao, setConfirmarExclusao] = React.useState(null); // tx pendente de confirmação
 
   let txMes = txDoMes(txs, mes);
   if (filtro !== 'todas') txMes = txMes.filter(t => t.categoria === filtro);
@@ -89,7 +91,7 @@ export function GastosScreen({ ctx }) {
 
       {/* Filtros de categoria */}
       <div style={{ padding: '12px 0 0' }}>
-        <div style={{ display: 'flex', gap: 8, overflowX: 'auto', padding: '4px 20px 6px', scrollbarWidth: 'none' }}>
+        <div className="carrossel" style={{ display: 'flex', gap: 8, overflowX: 'auto', padding: '4px 20px 6px', scrollbarWidth: 'none' }}>
           {cats.map(c => {
             const sel = filtro === c;
             const cat = c === 'todas' ? null : CATEGORIAS[c];
@@ -97,7 +99,7 @@ export function GastosScreen({ ctx }) {
               <button key={c} onClick={() => setFiltro(c)} style={{
                 padding: '8px 14px', borderRadius: 999, border: 'none',
                 background: sel ? 'var(--ink)' : 'var(--card)',
-                color: sel ? '#fff' : 'var(--ink)',
+                color: sel ? 'var(--bg)' : 'var(--ink)',
                 fontSize: 13, fontWeight: 700, whiteSpace: 'nowrap', cursor: 'pointer',
                 display: 'inline-flex', alignItems: 'center', gap: 6, flexShrink: 0,
                 boxShadow: sel ? 'none' : '0 1px 2px rgba(0,0,0,0.04)',
@@ -153,7 +155,7 @@ export function GastosScreen({ ctx }) {
                         }}>
                           <Icon name="edit" size={14} strokeWidth={2.2} /> Editar
                         </button>
-                        <button onClick={() => { excluirTx(tx.id); setAcaoAberta(null); }} style={{
+                        <button onClick={() => { setConfirmarExclusao(tx); setAcaoAberta(null); }} style={{
                           flex: 1, padding: '8px 12px', borderRadius: 12, border: 'none',
                           background: '#FFE5EA', color: '#D63A55', fontWeight: 700, fontSize: 13,
                           cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6,
@@ -169,6 +171,19 @@ export function GastosScreen({ ctx }) {
           );
         })}
       </div>
+
+      {confirmarExclusao && (
+        <ConfirmModal
+          titulo={confirmarExclusao.parcelas ? 'Excluir parcelamento?' : 'Excluir este gasto?'}
+          mensagem={
+            confirmarExclusao.parcelas
+              ? `"${confirmarExclusao.descricao}" foi parcelado em ${confirmarExclusao.parcelas.total}×. Todas as parcelas serão removidas.`
+              : `"${confirmarExclusao.descricao}" (${fmtBRL(confirmarExclusao.valor)}) será removido permanentemente.`
+          }
+          onCancelar={() => setConfirmarExclusao(null)}
+          onConfirmar={() => { excluirTx(confirmarExclusao.id); setConfirmarExclusao(null); }}
+        />
+      )}
     </div>
   );
 }

@@ -102,8 +102,10 @@ export function PerfilScreen({ ctx }) {
 
         <div style={{ height: 14 }} />
         <Card style={{ padding: '4px 16px' }}>
+          <ConfigItem icon="piggy" label="Caixinhas" onClick={() => irPara('caixinhas')} />
           <ConfigItem icon="target" label="Orçamentos" onClick={() => irPara('orcamentos')} />
-          <ConfigItem icon="history" label="Histórico" onClick={() => irPara('historico')} />
+          <ConfigItem icon="history" label="Recorrentes" onClick={() => irPara('recorrentes')} />
+          <ConfigItem icon="calendar" label="Histórico" onClick={() => irPara('historico')} />
           <ConfigItem icon={ocultar ? 'eye-off' : 'eye'} label="Modo privacidade" toggleAtivo={ocultar} onToggle={() => setOcultar(!ocultar)} />
         </Card>
 
@@ -114,7 +116,7 @@ export function PerfilScreen({ ctx }) {
         </Card>
 
         <div style={{ padding: '24px 0', textAlign: 'center' }}>
-          <div style={{ fontSize: 11, color: 'var(--muted)', fontWeight: 600 }}>Finça · v1.0</div>
+          <div style={{ fontSize: 11, color: 'var(--muted)', fontWeight: 600 }}>Financeiro · v1.0</div>
         </div>
       </div>
     </div>
@@ -125,7 +127,7 @@ function Toggle({ ativo, onChange }) {
   return (
     <div onClick={() => onChange(!ativo)} style={{
       width: 42, height: 26, borderRadius: 14,
-      background: ativo ? 'var(--primary)' : '#D9D2DE',
+      background: ativo ? 'var(--primary)' : 'var(--surface-sunken)',
       position: 'relative', cursor: 'pointer', transition: 'background .15s',
     }}>
       <div style={{

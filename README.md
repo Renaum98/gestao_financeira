@@ -1,4 +1,4 @@
-# Finça — gestão financeira
+# Financeiro — gestão financeira
 
 App de finanças pessoais para uso diário no celular. **PWA** instalável, dados sincronizados em **Firebase Firestore**, gateado por **PIN local de 4 dígitos**. Stack: React + Vite + Firebase, sem backend próprio.
 

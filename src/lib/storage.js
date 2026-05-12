@@ -1,9 +1,11 @@
 // storage.js — hook que sincroniza o estado da app com um documento Firestore.
 //
-// Estrutura: users/{uid} = { txs, orcamentos, preferences }
+// Estrutura: users/{uid} = { txs, orcamentos, caixinhas, recorrentes, preferences }
 // - txs: array de transações
 // - orcamentos: objeto { catId: valor }
-// - preferences: { paleta, modo, nome }
+// - caixinhas: array de objetivos de poupança ({ id, nome, meta?, dataMeta?, cor, depositos })
+// - recorrentes: array de modelos de gastos mensais ({ id, descricao, categoria, pagamento, valor, dia, inicio, ultimoMesGerado })
+// - preferences: { paleta, modo, nome, orcamentoMensal }
 
 import { useEffect, useRef, useState } from 'react';
 import { auth, db, doc, getDoc, setDoc, onSnapshot } from './firebase.js';
@@ -16,6 +18,8 @@ const DEFAULT_STATE = {
     alimentacao: 900, transporte: 400, moradia: 1500, lazer: 350,
     saude: 250, compras: 500, educacao: 300, assinaturas: 150, outros: 200,
   },
+  caixinhas: [],
+  recorrentes: [],
   preferences: {
     paleta: '#6E4FF6',
     modo: 'claro',
@@ -47,6 +51,8 @@ export function useCloudState(uid) {
         setState({
           txs: data.txs ?? [],
           orcamentos: { ...DEFAULT_STATE.orcamentos, ...(data.orcamentos ?? {}) },
+          caixinhas: data.caixinhas ?? [],
+          recorrentes: data.recorrentes ?? [],
           preferences: { ...DEFAULT_STATE.preferences, ...(data.preferences ?? {}) },
         });
         setReady(true);
@@ -66,12 +72,20 @@ export function useCloudState(uid) {
   // API: setters parciais por chave (mesma ergonomia do useState).
   const setTxs        = (v) => setState((s) => ({ ...s, txs:        typeof v === 'function' ? v(s.txs)        : v }));
   const setOrcamentos = (v) => setState((s) => ({ ...s, orcamentos: typeof v === 'function' ? v(s.orcamentos) : v }));
+  const setCaixinhas  = (v) => setState((s) => ({ ...s, caixinhas:  typeof v === 'function' ? v(s.caixinhas)  : v }));
+  const setRecorrentes = (v) => setState((s) => ({ ...s, recorrentes: typeof v === 'function' ? v(s.recorrentes) : v }));
   const setPreferences = (patch) => setState((s) => ({ ...s, preferences: { ...s.preferences, ...patch } }));
+
+  // Mutador atômico: gerador de recorrentes precisa atualizar txs + recorrentes ao mesmo tempo.
+  const aplicarLote = (fn) => setState((s) => fn(s));
 
   return {
     ready,
     txs: state.txs, setTxs,
     orcamentos: state.orcamentos, setOrcamentos,
+    caixinhas: state.caixinhas, setCaixinhas,
+    recorrentes: state.recorrentes, setRecorrentes,
     preferences: state.preferences, setPreferences,
+    aplicarLote,
   };
 }

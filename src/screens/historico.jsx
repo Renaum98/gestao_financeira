@@ -31,7 +31,7 @@ export function HistoricoScreen({ ctx }) {
                   </div>
                   <div style={{
                     width: '100%', height: h, borderRadius: 10,
-                    background: d.mes === mes ? 'linear-gradient(180deg, var(--primary), var(--primary-2))' : '#EFEAE4',
+                    background: d.mes === mes ? 'linear-gradient(180deg, var(--primary), var(--primary-2))' : 'var(--surface-sunken)',
                     transition: 'all .25s',
                   }} />
                   <div style={{

@@ -102,6 +102,16 @@ export function ItemTransacao({ tx, ocultar, onClick }) {
               {parc.atual}/{parc.total}
             </div>
           )}
+          {tx.recorrenteId && !parc && (
+            <div title="Cobrança recorrente todo mês" style={{
+              fontSize: 10, fontWeight: 800, color: 'var(--primary)',
+              background: 'color-mix(in oklab, var(--primary) 12%, transparent)',
+              padding: '2px 6px', borderRadius: 6, letterSpacing: '-0.01em',
+              flexShrink: 0, display: 'inline-flex', alignItems: 'center', gap: 3,
+            }}>
+              <Icon name="history" size={9} color="var(--primary)" strokeWidth={2.6} /> Mensal
+            </div>
+          )}
         </div>
         <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 2, display: 'flex', alignItems: 'center', gap: 6 }}>
           <span>{cat.nome}</span>

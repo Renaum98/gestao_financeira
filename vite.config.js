@@ -15,8 +15,8 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['icon.svg', 'apple-touch-icon.png'],
       manifest: {
-        name: 'Finça',
-        short_name: 'Finça',
+        name: 'Financeiro',
+        short_name: 'Financeiro',
         description: 'Gestão financeira pessoal',
         theme_color: '#6E4FF6',
         background_color: '#FBF7F2',

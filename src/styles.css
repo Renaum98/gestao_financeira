@@ -1,11 +1,14 @@
 :root {
   --bg: #FBF7F2;
   --card: #FFFFFF;
+  --card-2: #FFFFFF;
+  --surface-sunken: #F3EEE8;
   --ink: #1A1416;
   --muted: #8A7F84;
   --linha: rgba(20, 16, 24, 0.06);
   --primary: #6E4FF6;
   --primary-2: #A085FF;
+  color-scheme: light;
 }
 
 * { box-sizing: border-box; }
@@ -32,6 +35,22 @@ input[type="date"]::-webkit-calendar-picker-indicator { cursor: pointer; opacity
 /* Esconde scrollbar */
 ::-webkit-scrollbar { display: none; width: 0; height: 0; }
 
+/* Carrossel horizontal — snap suave, momentum no iOS, scroll programático suave */
+.carrossel {
+  scroll-behavior: smooth;
+  scroll-snap-type: x proximity;
+  scroll-padding-left: 4px;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+}
+.carrossel > * {
+  scroll-snap-align: start;
+}
+
 @keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }
 @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+@keyframes scaleIn {
+  from { transform: scale(0.94); opacity: 0; }
+  to   { transform: scale(1);    opacity: 1; }
+}
 @keyframes spin { to { transform: rotate(360deg); } }

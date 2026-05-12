@@ -15,6 +15,8 @@ import { CategoriaScreen } from './screens/categoria.jsx';
 import { OrcamentosScreen } from './screens/orcamentos.jsx';
 import { HistoricoScreen } from './screens/historico.jsx';
 import { PerfilScreen } from './screens/perfil.jsx';
+import { CaixinhasScreen, CaixinhaScreen } from './screens/caixinhas.jsx';
+import { RecorrentesScreen } from './screens/recorrentes.jsx';
 import { AddExpenseModal } from './modals/add-expense.jsx';
 
 const ONBOARDING_KEY = 'finca.onboarded';
@@ -83,17 +85,26 @@ function aplicarTema(paleta, modo) {
   root.style.setProperty('--primary', pal.primary);
   root.style.setProperty('--primary-2', pal.primary2);
   if (modo === 'escuro') {
-    root.style.setProperty('--bg', '#1A161D');
-    root.style.setProperty('--card', '#26212C');
-    root.style.setProperty('--ink', '#F5F0F2');
-    root.style.setProperty('--muted', '#9B919A');
-    root.style.setProperty('--linha', 'rgba(255,255,255,0.06)');
+    // Paleta dark calibrada para contraste WCAG AA:
+    // - bg → card → card-2 formam uma escada clara de elevação
+    // - ink quase branco; muted bem mais claro que antes (era 9B919A, contraste insuficiente)
+    root.style.setProperty('--bg', '#13101A');
+    root.style.setProperty('--card', '#1F1B26');
+    root.style.setProperty('--card-2', '#2B2533');
+    root.style.setProperty('--surface-sunken', '#0D0B12');
+    root.style.setProperty('--ink', '#F4F0F2');
+    root.style.setProperty('--muted', '#B8AEB6');
+    root.style.setProperty('--linha', 'rgba(255,255,255,0.08)');
+    root.style.setProperty('color-scheme', 'dark');
   } else {
     root.style.setProperty('--bg', '#FBF7F2');
     root.style.setProperty('--card', '#FFFFFF');
+    root.style.setProperty('--card-2', '#FFFFFF');
+    root.style.setProperty('--surface-sunken', '#F3EEE8');
     root.style.setProperty('--ink', '#1A1416');
     root.style.setProperty('--muted', '#8A7F84');
     root.style.setProperty('--linha', 'rgba(20,16,24,0.06)');
+    root.style.setProperty('color-scheme', 'light');
   }
   document.querySelector('meta[name="theme-color"]')?.setAttribute('content', pal.primary);
 }
@@ -114,6 +125,58 @@ export function App() {
   React.useEffect(() => {
     aplicarTema(cloud.preferences.paleta, cloud.preferences.modo);
   }, [cloud.preferences.paleta, cloud.preferences.modo]);
+
+  // Gerador de recorrentes: roda 1× quando o storage está pronto.
+  // Para cada recorrência, gera as txs dos meses pulados entre ultimoMesGerado e hoje.
+  const geradorRodou = React.useRef(false);
+  React.useEffect(() => {
+    if (!cloud.ready || geradorRodou.current) return;
+    geradorRodou.current = true;
+    const recs = cloud.recorrentes;
+    if (!recs || recs.length === 0) return;
+
+    const hoje = new Date();
+    const yyyymmHoje = `${hoje.getFullYear()}-${String(hoje.getMonth()+1).padStart(2,'0')}`;
+    const novosTxs = [];
+    let mutou = false;
+
+    const recsAtualizadas = recs.map(r => {
+      if (!r.ultimoMesGerado || r.ultimoMesGerado >= yyyymmHoje) return r;
+      let cur = r.ultimoMesGerado;
+      while (cur < yyyymmHoje) {
+        const [y, m] = cur.split('-').map(Number);
+        const proxData = new Date(y, m, 1); // primeiro dia do mês seguinte (m é 1-indexed, JS aceita)
+        const ny = proxData.getFullYear();
+        const nm0 = proxData.getMonth(); // 0-indexed
+        const yyyymm = `${ny}-${String(nm0+1).padStart(2,'0')}`;
+        const ultDia = new Date(ny, nm0 + 1, 0).getDate();
+        const dia = Math.min(r.dia, ultDia);
+        const data = `${yyyymm}-${String(dia).padStart(2,'0')}`;
+        novosTxs.push({
+          id: `${r.id}-${yyyymm}`,
+          descricao: r.descricao,
+          categoria: r.categoria,
+          pagamento: r.pagamento,
+          valor: r.valor,
+          data,
+          recorrenteId: r.id,
+        });
+        cur = yyyymm;
+      }
+      mutou = true;
+      return { ...r, ultimoMesGerado: cur };
+    });
+
+    if (mutou) {
+      cloud.setTxs((atual) => {
+        const existentes = new Set(atual.map(t => t.id));
+        const aAdicionar = novosTxs.filter(t => !existentes.has(t.id));
+        if (aAdicionar.length === 0) return atual;
+        return [...aAdicionar, ...atual].sort((a, b) => b.data.localeCompare(a.data));
+      });
+      cloud.setRecorrentes(recsAtualizadas);
+    }
+  }, [cloud.ready]);
 
   // Navegação local
   const [mes, setMes] = React.useState(chaveMes(new Date()));
@@ -149,6 +212,9 @@ export function App() {
   };
 
   const salvarTx = (tx, editando) => {
+    const ehRec = tx.ehRecorrente;
+    delete tx.ehRecorrente; // flag de UI, não persistir
+
     const expandir = (base) => {
       if (!base.parcelas) { const { parcelas, ...rest } = base; return [rest]; }
       const { total, valorTotal } = base.parcelas;
@@ -172,6 +238,27 @@ export function App() {
       return out;
     };
 
+    // Se for recorrente, cria a recorrência E marca a tx atual com recorrenteId.
+    if (ehRec) {
+      const recId = `rec-${Date.now()}`;
+      const [yy, mm, dd] = tx.data.split('-').map(Number);
+      const yyyymm = `${yy}-${String(mm).padStart(2,'0')}`;
+      tx = { ...tx, recorrenteId: recId };
+      cloud.setRecorrentes((atual) => [
+        ...atual,
+        {
+          id: recId,
+          descricao: tx.descricao,
+          categoria: tx.categoria,
+          pagamento: tx.pagamento,
+          valor: tx.valor,
+          dia: dd,
+          inicio: yyyymm,
+          ultimoMesGerado: yyyymm,
+        },
+      ]);
+    }
+
     cloud.setTxs((atual) => {
       if (editando) {
         const original = atual.find(t => t.id === tx.id);
@@ -187,12 +274,42 @@ export function App() {
     if (!editando) setTela('gastos');
   };
 
+  const cancelarRecorrente = (recId) => {
+    cloud.setRecorrentes((atual) => atual.filter(r => r.id !== recId));
+  };
+
   const excluirTx = (id) => {
     cloud.setTxs((atual) => {
       const t = atual.find(x => x.id === id);
       if (t && t.parcelas) return atual.filter(x => !x.parcelas || x.parcelas.grupoId !== t.parcelas.grupoId);
       return atual.filter(x => x.id !== id);
     });
+  };
+
+  // ─── Caixinhas ───
+  const salvarCaixinha = (dados) => {
+    cloud.setCaixinhas((atual) => {
+      if (dados.id) {
+        // Editando existente
+        return atual.map(c => c.id === dados.id ? { ...c, ...dados } : c);
+      }
+      // Nova
+      const nova = {
+        id: `cx-${Date.now()}`,
+        criadoEm: new Date().toISOString().slice(0, 10),
+        depositos: [],
+        ...dados,
+      };
+      return [nova, ...atual];
+    });
+  };
+  const excluirCaixinha = (id) => {
+    cloud.setCaixinhas((atual) => atual.filter(c => c.id !== id));
+  };
+  const depositarCaixinha = (id, deposito) => {
+    cloud.setCaixinhas((atual) => atual.map(c =>
+      c.id === id ? { ...c, depositos: [...(c.depositos || []), deposito] } : c
+    ));
   };
 
   if (!uid || !cloud.ready) return <Splash />;
@@ -213,6 +330,8 @@ export function App() {
     txs: cloud.txs, mes, setMes, todosMeses, mesAnterior, ocultar, setOcultar,
     irPara, voltar, salvarTx, excluirTx,
     orcamentos: cloud.orcamentos, setOrcamentos: cloud.setOrcamentos,
+    caixinhas: cloud.caixinhas, salvarCaixinha, excluirCaixinha, depositarCaixinha,
+    recorrentes: cloud.recorrentes, cancelarRecorrente,
     preferences: cloud.preferences, setPreferences: cloud.setPreferences,
     fechar: () => setAddModal(null),
     setOnboarding: (v) => { if (!v) localStorage.setItem(ONBOARDING_KEY, '1'); setOnboarding(v); },
@@ -227,6 +346,9 @@ export function App() {
   else if (tela === 'categoria') conteudo = <CategoriaScreen ctx={ctx} params={params} />;
   else if (tela === 'orcamentos')conteudo = <OrcamentosScreen ctx={ctx} />;
   else if (tela === 'historico') conteudo = <HistoricoScreen ctx={ctx} />;
+  else if (tela === 'caixinhas') conteudo = <CaixinhasScreen ctx={ctx} />;
+  else if (tela === 'caixinha')  conteudo = <CaixinhaScreen ctx={ctx} params={params} />;
+  else if (tela === 'recorrentes') conteudo = <RecorrentesScreen ctx={ctx} />;
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg)', color: 'var(--ink)' }}>

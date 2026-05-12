@@ -24,7 +24,7 @@ export function PinScreen({ onUnlock, modoTroca = false, onCancelarTroca }) {
   const subtitulo = etapa === 'criar'
     ? 'Você vai usar esse PIN sempre que abrir o app.'
     : etapa === 'confirmar' ? 'Digite o mesmo PIN novamente.'
-    : 'Digite o PIN para desbloquear o Finça.';
+    : 'Digite o PIN para desbloquear o Financeiro.';
 
   const tremer = () => { setShake(true); setTimeout(() => setShake(false), 400); };
 
@@ -102,7 +102,7 @@ export function PinScreen({ onUnlock, modoTroca = false, onCancelarTroca }) {
           <div key={i} style={{
             width: 16, height: 16, borderRadius: 8,
             background: i < pinAtual.length ? 'var(--primary)' : 'transparent',
-            border: `2px solid ${i < pinAtual.length ? 'var(--primary)' : '#D9D2DE'}`,
+            border: `2px solid ${i < pinAtual.length ? 'var(--primary)' : 'var(--surface-sunken)'}`,
             transition: 'all .15s',
           }} />
         ))}

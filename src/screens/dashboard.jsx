@@ -5,9 +5,10 @@ import { CATEGORIAS, ORDEM_CATS, fmtBRL, rotuloMes, totalGeral, totalPorCategori
 import { Icon } from '../ui/icons.jsx';
 import { Card, ItemTransacao, SeletorMes } from '../ui/common.jsx';
 import { PieChart, LineChart } from '../ui/charts.jsx';
+import { CardCaixinha } from './caixinhas.jsx';
 
 export function DashboardScreen({ ctx }) {
-  const { txs, mes, setMes, todosMeses, mesAnterior, ocultar, setOcultar, irPara, orcamentos, preferences } = ctx;
+  const { txs, mes, setMes, todosMeses, mesAnterior, ocultar, setOcultar, irPara, orcamentos, preferences, caixinhas } = ctx;
   const [fatiaAtiva, setFatiaAtiva] = React.useState(null);
   const primeiroNome = (preferences.nome || '').trim().split(' ')[0];
 
@@ -218,6 +219,24 @@ export function DashboardScreen({ ctx }) {
           ))}
         </Card>
       </div>
+
+      {/* Caixinhas (só aparece se houver pelo menos uma) */}
+      {caixinhas && caixinhas.length > 0 && (
+        <div style={{ padding: '20px 20px 0' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 4px 8px' }}>
+            <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--ink)' }}>Caixinhas</div>
+            <button onClick={() => irPara('caixinhas')} style={{
+              background: 'transparent', border: 'none', color: 'var(--primary)',
+              fontSize: 12, fontWeight: 700, cursor: 'pointer', padding: 0,
+            }}>Ver todas →</button>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {caixinhas.slice(0, 3).map(cx => (
+              <CardCaixinha key={cx.id} cx={cx} ocultar={ocultar} onClick={() => irPara('caixinha', { id: cx.id })} />
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

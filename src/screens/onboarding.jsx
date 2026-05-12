@@ -28,7 +28,7 @@ export function Onboarding({ onFim }) {
   const s = slides[slide];
 
   return (
-    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', background: '#fff', paddingTop: 60 }}>
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', background: 'var(--bg)', paddingTop: 60 }}>
       <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '0 20px' }}>
         <button onClick={onFim} style={{
           background: 'transparent', border: 'none', color: 'var(--muted)',
@@ -47,7 +47,7 @@ export function Onboarding({ onFim }) {
           <div style={{ position: 'absolute', top: -30, left: -30, width: 90, height: 90, borderRadius: '50%', background: 'rgba(255,255,255,0.25)' }} />
           <div style={{ position: 'absolute', bottom: -20, right: -20, width: 60, height: 60, borderRadius: '50%', background: 'rgba(255,255,255,0.18)' }} />
           <div style={{
-            width: 96, height: 96, borderRadius: 28, background: '#fff',
+            width: 96, height: 96, borderRadius: 28, background: 'var(--card)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             position: 'relative', boxShadow: '0 10px 24px rgba(0,0,0,0.08)',
           }}>
@@ -68,14 +68,14 @@ export function Onboarding({ onFim }) {
           {slides.map((_, i) => (
             <div key={i} style={{
               width: i === slide ? 22 : 6, height: 6, borderRadius: 3,
-              background: i === slide ? 'var(--primary)' : '#E5DFE6',
+              background: i === slide ? 'var(--primary)' : 'var(--linha)',
               transition: 'all .2s',
             }} />
           ))}
         </div>
         <button onClick={() => slide < slides.length - 1 ? setSlide(slide + 1) : onFim()} style={{
           width: '100%', padding: '16px', borderRadius: 16,
-          background: 'var(--ink)', color: '#fff', border: 'none',
+          background: 'var(--ink)', color: 'var(--bg)', border: 'none',
           fontSize: 15, fontWeight: 800, cursor: 'pointer', letterSpacing: '-0.01em',
           fontFamily: 'inherit',
         }}>

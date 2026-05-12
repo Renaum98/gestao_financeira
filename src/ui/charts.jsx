@@ -10,8 +10,8 @@ export function PieChart({ dados, total, tamanho = 200, ativo, onHover, ocultar 
   if (total <= 0 || dados.length === 0) {
     return (
       <svg width={tamanho} height={tamanho} viewBox={`0 0 ${tamanho} ${tamanho}`}>
-        <circle cx={cx} cy={cy} r={(rOut + rIn) / 2} fill="none" stroke="#EFEAE4" strokeWidth={rOut - rIn} />
-        <text x={cx} y={cy} textAnchor="middle" fontFamily="Plus Jakarta Sans" fontSize="14" fill="#8A7F84" dy="5">sem dados</text>
+        <circle cx={cx} cy={cy} r={(rOut + rIn) / 2} fill="none" style={{ stroke: 'var(--surface-sunken)' }} strokeWidth={rOut - rIn} />
+        <text x={cx} y={cy} textAnchor="middle" fontFamily="Plus Jakarta Sans" fontSize="14" style={{ fill: 'var(--muted)' }} dy="5">sem dados</text>
       </svg>
     );
   }
@@ -113,7 +113,7 @@ export function LineChart({ pontos, pontosComp, largura = 340, altura = 140, ocu
       </defs>
       {/* gridlines horizontais */}
       {[0.25, 0.5, 0.75].map((p, i) => (
-        <line key={i} x1={padL} x2={padL + w} y1={padT + h * p} y2={padT + h * p} stroke="#EFEAE4" strokeDasharray="3 4" />
+        <line key={i} x1={padL} x2={padL + w} y1={padT + h * p} y2={padT + h * p} style={{ stroke: 'var(--surface-sunken)' }} strokeDasharray="3 4" />
       ))}
       {/* linha mês anterior (pontilhada) */}
       {pathComp && (
@@ -133,7 +133,7 @@ export function LineChart({ pontos, pontosComp, largura = 340, altura = 140, ocu
 }
 
 // Mini gráfico de barras horizontais para "top categorias"
-export function BarraProgresso({ valor, max, cor, altura = 8, fundo = '#F3EEE8' }) {
+export function BarraProgresso({ valor, max, cor, altura = 8, fundo = 'var(--surface-sunken)' }) {
   const pct = max > 0 ? Math.min(100, (valor / max) * 100) : 0;
   return (
     <div style={{ width: '100%', height: altura, background: fundo, borderRadius: altura, overflow: 'hidden' }}>
