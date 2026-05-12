@@ -1,4 +1,4 @@
-// firebase.js — inicialização do Firebase + auth anônima + Firestore
+// firebase.js — inicialização do Firebase + auth Google + Firestore.
 //
 // ┌─────────────────────────────────────────────────────────────────────┐
 // │  COLE AQUI a configuração do seu projeto Firebase.                 │
@@ -6,9 +6,23 @@
 // │  Essas chaves são públicas por design (não são segredos);          │
 // │  o acesso aos dados é controlado pelas Security Rules do Firestore.│
 // └─────────────────────────────────────────────────────────────────────┘
+//
+// IMPORTANTE: para o login com Google funcionar você precisa:
+//   1. Authentication → Sign-in method → habilitar "Google".
+//   2. Authentication → Settings → Authorized domains → adicionar:
+//      - localhost (já vem por padrão)
+//      - <seu-usuario>.github.io (necessário para GitHub Pages)
 
-import { initializeApp } from "firebase/app";
-import { getAuth, signInAnonymously, onAuthStateChanged } from "firebase/auth";
+import { initializeApp } from 'firebase/app';
+import {
+  getAuth,
+  GoogleAuthProvider,
+  signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
+  signOut,
+  onAuthStateChanged,
+} from 'firebase/auth';
 import {
   initializeFirestore,
   persistentLocalCache,
@@ -17,9 +31,8 @@ import {
   getDoc,
   setDoc,
   onSnapshot,
-} from "firebase/firestore";
+} from 'firebase/firestore';
 
-// Suporta tanto chaves hardcoded quanto via .env (VITE_FIREBASE_*).
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
@@ -32,24 +45,49 @@ const firebaseConfig = {
 export const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 
-// Firestore com cache local (funciona offline e em múltiplas abas).
 export const db = initializeFirestore(app, {
   localCache: persistentLocalCache({
     tabManager: persistentMultipleTabManager(),
   }),
 });
 
-// Inicia auth anônima na primeira carga. Retorna uma promise que resolve com o UID.
-export function ensureAuth() {
-  return new Promise((resolve, reject) => {
-    const unsub = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        unsub();
-        resolve(user.uid);
-      } else {
-        signInAnonymously(auth).catch(reject);
-      }
-    });
+const googleProvider = new GoogleAuthProvider();
+
+// Detecta PWA standalone (instalado na tela inicial) — nesse caso, popup
+// pode ser bloqueado pelo OS, então usamos redirect.
+function isStandalone() {
+  return window.matchMedia?.('(display-mode: standalone)').matches
+      || window.navigator.standalone === true;
+}
+
+export async function entrarComGoogle() {
+  if (isStandalone()) {
+    return signInWithRedirect(auth, googleProvider);
+  }
+  try {
+    return await signInWithPopup(auth, googleProvider);
+  } catch (err) {
+    // Se o popup for bloqueado (browsers conservadores, iOS Safari), cai para redirect.
+    if (err?.code === 'auth/popup-blocked' || err?.code === 'auth/operation-not-supported-in-this-environment') {
+      return signInWithRedirect(auth, googleProvider);
+    }
+    throw err;
+  }
+}
+
+export function sair() {
+  return signOut(auth);
+}
+
+export function escutarAuth(callback) {
+  return onAuthStateChanged(auth, callback);
+}
+
+// Processa o resultado de signInWithRedirect quando o app recarrega depois da
+// volta do Google. Chame uma vez no boot — onAuthStateChanged faz o resto.
+export function processarRedirect() {
+  return getRedirectResult(auth).catch((err) => {
+    console.error('[Firebase] erro processando redirect:', err);
   });
 }
 

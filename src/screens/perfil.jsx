@@ -1,20 +1,22 @@
-// perfil.jsx — Tela Perfil (nome, preferências de aparência, atalhos, sair).
-//
-// Foi para cá tudo que antes vivia no painel de Tweaks: paleta, modo claro/escuro,
-// modo privacidade. Também houve sair (trocar PIN) e refazer tour.
+// perfil.jsx — Tela Perfil (conta Google, aparência, atalhos, sair).
 
 import React from 'react';
 import { PALETAS } from '../data.js';
 import { Icon } from '../ui/icons.jsx';
 import { Card, TopBar } from '../ui/common.jsx';
+import { ConfirmModal } from '../ui/confirm-modal.jsx';
 
 export function PerfilScreen({ ctx }) {
-  const { voltar, ocultar, setOcultar, irPara, setOnboarding, preferences, setPreferences, trocarPin } = ctx;
-  const nome = preferences.nome || 'Você';
-  const inicial = (nome.trim()[0] || 'F').toUpperCase();
+  const { voltar, ocultar, setOcultar, irPara, setOnboarding, preferences, setPreferences, usuario, sair } = ctx;
+  const nomeGoogle = usuario?.displayName || '';
+  const email = usuario?.email || '';
+  const foto = usuario?.photoURL || '';
+  const nomeExibido = preferences.nome?.trim() || nomeGoogle || 'Você';
+  const inicial = (nomeExibido.trim()[0] || 'F').toUpperCase();
 
   const [editandoNome, setEditandoNome] = React.useState(false);
-  const [nomeTemp, setNomeTemp] = React.useState(nome);
+  const [nomeTemp, setNomeTemp] = React.useState(preferences.nome || nomeGoogle);
+  const [confirmarSair, setConfirmarSair] = React.useState(false);
 
   const salvarNome = () => {
     setPreferences({ nome: nomeTemp.trim() });
@@ -25,13 +27,26 @@ export function PerfilScreen({ ctx }) {
     <div style={{ paddingBottom: 110 }}>
       <TopBar voltar={voltar} />
       <div style={{ padding: '0 20px 0', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-        <div style={{
-          width: 88, height: 88, borderRadius: 44,
-          background: 'linear-gradient(135deg, var(--primary), var(--primary-2))',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          color: '#fff', fontSize: 34, fontWeight: 800, letterSpacing: '-0.04em',
-          boxShadow: '0 12px 30px rgba(110,79,246,0.25)',
-        }}>{inicial}</div>
+        {/* Avatar do Google, se houver foto */}
+        {foto ? (
+          <img
+            src={foto}
+            alt=""
+            referrerPolicy="no-referrer"
+            style={{
+              width: 88, height: 88, borderRadius: 44, objectFit: 'cover',
+              boxShadow: '0 12px 30px rgba(110,79,246,0.20)',
+            }}
+          />
+        ) : (
+          <div style={{
+            width: 88, height: 88, borderRadius: 44,
+            background: 'linear-gradient(135deg, var(--primary), var(--primary-2))',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            color: '#fff', fontSize: 34, fontWeight: 800, letterSpacing: '-0.04em',
+            boxShadow: '0 12px 30px rgba(110,79,246,0.25)',
+          }}>{inicial}</div>
+        )}
 
         {editandoNome ? (
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 12 }}>
@@ -40,10 +55,11 @@ export function PerfilScreen({ ctx }) {
               value={nomeTemp}
               onChange={(e) => setNomeTemp(e.target.value)}
               onKeyDown={(e) => { if (e.key === 'Enter') salvarNome(); if (e.key === 'Escape') setEditandoNome(false); }}
+              placeholder={nomeGoogle || 'Seu nome'}
               style={{
                 padding: '8px 12px', borderRadius: 12, border: '1.5px solid var(--primary)',
                 background: 'var(--card)', fontSize: 16, fontWeight: 700, color: 'var(--ink)',
-                fontFamily: 'inherit', outline: 'none', textAlign: 'center', width: 180,
+                fontFamily: 'inherit', outline: 'none', textAlign: 'center', width: 200,
               }}
             />
             <button onClick={salvarNome} style={{
@@ -55,18 +71,21 @@ export function PerfilScreen({ ctx }) {
             </button>
           </div>
         ) : (
-          <button onClick={() => { setNomeTemp(nome); setEditandoNome(true); }} style={{
+          <button onClick={() => { setNomeTemp(preferences.nome || nomeGoogle); setEditandoNome(true); }} style={{
             background: 'transparent', border: 'none', cursor: 'pointer', padding: 0,
             display: 'flex', alignItems: 'center', gap: 6, marginTop: 12,
           }}>
-            <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--ink)', letterSpacing: '-0.02em' }}>{nome}</div>
+            <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--ink)', letterSpacing: '-0.02em' }}>{nomeExibido}</div>
             <Icon name="edit" size={14} color="var(--muted)" strokeWidth={2} />
           </button>
+        )}
+        {email && (
+          <div style={{ fontSize: 13, color: 'var(--muted)', fontWeight: 500, marginTop: 4 }}>{email}</div>
         )}
       </div>
 
       <div style={{ padding: '24px 20px 0' }}>
-        {/* Aparência (vinha do painel de Tweaks) */}
+        {/* Aparência */}
         <Card style={{ padding: 16 }}>
           <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: 0.4, paddingBottom: 12 }}>
             Aparência
@@ -111,14 +130,39 @@ export function PerfilScreen({ ctx }) {
 
         <div style={{ height: 14 }} />
         <Card style={{ padding: '4px 16px' }}>
-          <ConfigItem icon="lock" label="Alterar PIN" onClick={trocarPin} />
           <ConfigItem icon="sparkle" label="Refazer tour" onClick={() => setOnboarding(true)} />
         </Card>
+
+        <div style={{ height: 18 }} />
+        <button onClick={() => setConfirmarSair(true)} style={{
+          width: '100%', padding: '14px', borderRadius: 16, border: 'none',
+          background: 'var(--card)', color: '#D63A55', fontSize: 14, fontWeight: 800,
+          cursor: 'pointer', fontFamily: 'inherit',
+          boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+        }}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#D63A55" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" />
+            <path d="M16 17l5-5-5-5M21 12H9" />
+          </svg>
+          Sair da conta
+        </button>
 
         <div style={{ padding: '24px 0', textAlign: 'center' }}>
           <div style={{ fontSize: 11, color: 'var(--muted)', fontWeight: 600 }}>Financeiro · v1.0</div>
         </div>
       </div>
+
+      {confirmarSair && (
+        <ConfirmModal
+          titulo="Sair da conta?"
+          mensagem="Você precisará entrar novamente com sua conta Google. Os dados continuam salvos na nuvem."
+          textoConfirmar="Sair"
+          icone="close"
+          onCancelar={() => setConfirmarSair(false)}
+          onConfirmar={() => { setConfirmarSair(false); sair(); }}
+        />
+      )}
     </div>
   );
 }

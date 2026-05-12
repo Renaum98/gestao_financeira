@@ -8,9 +8,9 @@ import { PieChart, LineChart } from '../ui/charts.jsx';
 import { CardCaixinha } from './caixinhas.jsx';
 
 export function DashboardScreen({ ctx }) {
-  const { txs, mes, setMes, todosMeses, mesAnterior, ocultar, setOcultar, irPara, orcamentos, preferences, caixinhas } = ctx;
+  const { txs, mes, setMes, todosMeses, mesAnterior, ocultar, setOcultar, irPara, orcamentos, preferences, caixinhas, usuario } = ctx;
   const [fatiaAtiva, setFatiaAtiva] = React.useState(null);
-  const primeiroNome = (preferences.nome || '').trim().split(' ')[0];
+  const primeiroNome = (preferences.nome?.trim() || usuario?.displayName || '').trim().split(' ')[0];
 
   const txMes = txDoMes(txs, mes);
   const txMesAnt = mesAnterior ? txDoMes(txs, mesAnterior) : [];

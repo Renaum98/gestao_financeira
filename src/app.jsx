@@ -3,10 +3,10 @@
 import React from 'react';
 import { PALETAS, chaveMes, listarMeses } from './data.js';
 import { Icon } from './ui/icons.jsx';
-import { ensureAuth } from './lib/firebase.js';
+import { escutarAuth, processarRedirect, sair as sairFirebase } from './lib/firebase.js';
 import { useCloudState } from './lib/storage.js';
 
-import { PinScreen } from './screens/pin.jsx';
+import { LoginScreen } from './screens/login.jsx';
 import { Onboarding } from './screens/onboarding.jsx';
 import { DashboardScreen } from './screens/dashboard.jsx';
 import { GastosScreen } from './screens/gastos.jsx';
@@ -110,15 +110,15 @@ function aplicarTema(paleta, modo) {
 }
 
 export function App() {
-  // Auth anônima → uid
-  const [uid, setUid] = React.useState(null);
-  React.useEffect(() => { ensureAuth().then(setUid).catch(console.error); }, []);
+  // Auth: undefined = carregando, null = deslogado, objeto = usuário Google
+  const [usuario, setUsuario] = React.useState(undefined);
+  React.useEffect(() => {
+    processarRedirect(); // resolve qualquer signInWithRedirect pendente
+    return escutarAuth(setUsuario);
+  }, []);
+  const uid = usuario?.uid;
 
-  // PIN gate
-  const [travado, setTravado] = React.useState(true);
-  const [modoTrocaPin, setModoTrocaPin] = React.useState(false);
-
-  // Storage Firestore
+  // Storage Firestore (só conecta quando há uid)
   const cloud = useCloudState(uid);
 
   // Tema reativo às preferências
@@ -312,17 +312,10 @@ export function App() {
     ));
   };
 
-  if (!uid || !cloud.ready) return <Splash />;
-
-  if (travado) {
-    return (
-      <PinScreen
-        modoTroca={modoTrocaPin}
-        onCancelarTroca={modoTrocaPin ? () => { setModoTrocaPin(false); setTravado(false); } : undefined}
-        onUnlock={() => { setTravado(false); setModoTrocaPin(false); }}
-      />
-    );
-  }
+  // Estados de carga e gateamento
+  if (usuario === undefined) return <Splash />;     // ainda decidindo se há sessão
+  if (usuario === null)      return <LoginScreen />; // deslogado
+  if (!cloud.ready)          return <Splash />;     // logado, carregando dados
 
   if (onboarding) return <Onboarding onFim={finalizarOnboarding} />;
 
@@ -333,9 +326,9 @@ export function App() {
     caixinhas: cloud.caixinhas, salvarCaixinha, excluirCaixinha, depositarCaixinha,
     recorrentes: cloud.recorrentes, cancelarRecorrente,
     preferences: cloud.preferences, setPreferences: cloud.setPreferences,
+    usuario, sair: sairFirebase,
     fechar: () => setAddModal(null),
     setOnboarding: (v) => { if (!v) localStorage.setItem(ONBOARDING_KEY, '1'); setOnboarding(v); },
-    trocarPin: () => { setModoTrocaPin(true); setTravado(true); },
   };
 
   let conteudo;
