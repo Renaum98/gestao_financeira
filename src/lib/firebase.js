@@ -13,7 +13,7 @@
 //      - localhost (já vem por padrão)
 //      - <seu-usuario>.github.io (necessário para GitHub Pages)
 
-import { initializeApp } from 'firebase/app';
+import { initializeApp } from "firebase/app";
 import {
   getAuth,
   GoogleAuthProvider,
@@ -22,7 +22,7 @@ import {
   getRedirectResult,
   signOut,
   onAuthStateChanged,
-} from 'firebase/auth';
+} from "firebase/auth";
 import {
   initializeFirestore,
   persistentLocalCache,
@@ -31,7 +31,7 @@ import {
   getDoc,
   setDoc,
   onSnapshot,
-} from 'firebase/firestore';
+} from "firebase/firestore";
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -56,8 +56,10 @@ const googleProvider = new GoogleAuthProvider();
 // Detecta PWA standalone (instalado na tela inicial) — nesse caso, popup
 // pode ser bloqueado pelo OS, então usamos redirect.
 function isStandalone() {
-  return window.matchMedia?.('(display-mode: standalone)').matches
-      || window.navigator.standalone === true;
+  return (
+    window.matchMedia?.("(display-mode: standalone)").matches ||
+    window.navigator.standalone === true
+  );
 }
 
 export async function entrarComGoogle() {
@@ -68,7 +70,10 @@ export async function entrarComGoogle() {
     return await signInWithPopup(auth, googleProvider);
   } catch (err) {
     // Se o popup for bloqueado (browsers conservadores, iOS Safari), cai para redirect.
-    if (err?.code === 'auth/popup-blocked' || err?.code === 'auth/operation-not-supported-in-this-environment') {
+    if (
+      err?.code === "auth/popup-blocked" ||
+      err?.code === "auth/operation-not-supported-in-this-environment"
+    ) {
       return signInWithRedirect(auth, googleProvider);
     }
     throw err;
@@ -87,7 +92,7 @@ export function escutarAuth(callback) {
 // volta do Google. Chame uma vez no boot — onAuthStateChanged faz o resto.
 export function processarRedirect() {
   return getRedirectResult(auth).catch((err) => {
-    console.error('[Firebase] erro processando redirect:', err);
+    console.error("[Firebase] erro processando redirect:", err);
   });
 }
 
