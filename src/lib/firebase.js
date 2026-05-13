@@ -96,7 +96,7 @@ async function entrarComIdToken(idToken) {
 }
 
 let gisInicializado = false;
-function inicializarGIS(onCredential) {
+function inicializarGIS() {
   if (gisInicializado) {
     window.google.accounts.id.cancel(); // limpa callback anterior
   }

@@ -116,9 +116,6 @@ export function useCloudState(uid) {
   const setPreferences = (patch) =>
     setState((s) => ({ ...s, preferences: { ...s.preferences, ...patch } }));
 
-  // Mutador atômico: gerador de recorrentes precisa atualizar txs + recorrentes ao mesmo tempo.
-  const aplicarLote = (fn) => setState((s) => fn(s));
-
   return {
     ready,
     txs: state.txs,
@@ -133,6 +130,5 @@ export function useCloudState(uid) {
     setCategoriasCustom,
     preferences: state.preferences,
     setPreferences,
-    aplicarLote,
   };
 }

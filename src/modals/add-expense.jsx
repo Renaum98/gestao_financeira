@@ -9,6 +9,7 @@ import {
   fmtBRLCompacto,
 } from "../data.js";
 import { CatChip, Icon, iconePagamento } from "../ui/icons.jsx";
+import { vibrar } from "../lib/haptics.js";
 
 function hojeISO() {
   const d = new Date();
@@ -21,7 +22,7 @@ const CORES_CAT = [
 ];
 
 export function AddExpenseModal({ ctx, params }) {
-  const { fechar, salvarTx, mes, adicionarCategoria } = ctx;
+  const { fechar, salvarTx, adicionarCategoria } = ctx;
   const editar = params && params.editar;
   const [valor, setValor] = React.useState(
     editar
@@ -53,6 +54,7 @@ export function AddExpenseModal({ ctx, params }) {
   const confirmarNovaCat = () => {
     const nome = novoNomeCat.trim();
     if (!nome) return;
+    vibrar(14);
     const id = adicionarCategoria(nome, novaCorCat);
     setCategoria(id);
     setNovoNomeCat("");
@@ -289,7 +291,7 @@ export function AddExpenseModal({ ctx, params }) {
               return (
                 <button
                   key={c}
-                  onClick={() => setCategoria(c)}
+                  onClick={() => { vibrar(); setCategoria(c); }}
                   style={{
                     display: "flex",
                     flexDirection: "column",
@@ -427,7 +429,7 @@ export function AddExpenseModal({ ctx, params }) {
                 {CORES_CAT.map((cor) => (
                   <button
                     key={cor}
-                    onClick={() => setNovaCorCat(cor)}
+                    onClick={() => { vibrar(); setNovaCorCat(cor); }}
                     aria-label={`Cor ${cor}`}
                     style={{
                       width: 26,
@@ -587,7 +589,7 @@ export function AddExpenseModal({ ctx, params }) {
             return (
               <button
                 key={p}
-                onClick={() => setPagamento(p)}
+                onClick={() => { vibrar(); setPagamento(p); }}
                 style={{
                   flex: 1,
                   padding: "10px 4px",
@@ -667,7 +669,7 @@ export function AddExpenseModal({ ctx, params }) {
                 return (
                   <button
                     key={n}
-                    onClick={() => setParcelas(n)}
+                    onClick={() => { vibrar(); setParcelas(n); }}
                     style={{
                       flex: "1 0 auto",
                       minWidth: 56,

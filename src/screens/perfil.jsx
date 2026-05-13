@@ -5,6 +5,7 @@ import { PALETAS } from '../data.js';
 import { Icon } from '../ui/icons.jsx';
 import { Card, TopBar } from '../ui/common.jsx';
 import { ConfirmModal } from '../ui/confirm-modal.jsx';
+import { vibrar } from '../lib/haptics.js';
 
 export function PerfilScreen({ ctx }) {
   const { voltar, ocultar, setOcultar, irPara, setOnboarding, preferences, setPreferences, usuario, sair } = ctx;
@@ -104,7 +105,7 @@ export function PerfilScreen({ ctx }) {
                 const sel = preferences.paleta === p.primary;
                 return (
                   <button key={p.primary}
-                    onClick={() => setPreferences({ paleta: p.primary })}
+                    onClick={() => { vibrar(); setPreferences({ paleta: p.primary }); }}
                     title={p.nome}
                     className={`swatch-raised${sel ? ' is-selected' : ''}`}
                     style={{
@@ -169,7 +170,7 @@ export function PerfilScreen({ ctx }) {
 
 function Toggle({ ativo, onChange }) {
   return (
-    <div onClick={() => onChange(!ativo)} style={{
+    <div onClick={() => { vibrar(); onChange(!ativo); }} style={{
       width: 42, height: 26, borderRadius: 14,
       background: ativo ? 'var(--primary)' : 'var(--surface-sunken)',
       position: 'relative', cursor: 'pointer', transition: 'background .15s',

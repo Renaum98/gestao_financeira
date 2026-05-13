@@ -15,19 +15,27 @@ import {
   sair as sairFirebase,
 } from "./lib/firebase.js";
 import { useCloudState } from "./lib/storage.js";
+import { vibrar } from "./lib/haptics.js";
 
+// LoginScreen fica no bundle principal (primeira tela para deslogados).
+// As demais telas e o modal são carregados sob demanda (code-splitting).
 import { LoginScreen } from "./screens/login.jsx";
-import { Onboarding } from "./screens/onboarding.jsx";
-import { DashboardScreen } from "./screens/dashboard.jsx";
-import { GastosScreen } from "./screens/gastos.jsx";
-import { AnaliseScreen } from "./screens/analise.jsx";
-import { CategoriaScreen } from "./screens/categoria.jsx";
-import { OrcamentosScreen } from "./screens/orcamentos.jsx";
-import { HistoricoScreen } from "./screens/historico.jsx";
-import { PerfilScreen } from "./screens/perfil.jsx";
-import { CaixinhasScreen, CaixinhaScreen } from "./screens/caixinhas.jsx";
-import { RecorrentesScreen } from "./screens/recorrentes.jsx";
-import { AddExpenseModal } from "./modals/add-expense.jsx";
+
+const lazyNamed = (importar, nome) =>
+  React.lazy(() => importar().then((m) => ({ default: m[nome] })));
+
+const Onboarding        = lazyNamed(() => import("./screens/onboarding.jsx"), "Onboarding");
+const DashboardScreen   = lazyNamed(() => import("./screens/dashboard.jsx"), "DashboardScreen");
+const GastosScreen      = lazyNamed(() => import("./screens/gastos.jsx"), "GastosScreen");
+const AnaliseScreen     = lazyNamed(() => import("./screens/analise.jsx"), "AnaliseScreen");
+const CategoriaScreen   = lazyNamed(() => import("./screens/categoria.jsx"), "CategoriaScreen");
+const OrcamentosScreen  = lazyNamed(() => import("./screens/orcamentos.jsx"), "OrcamentosScreen");
+const HistoricoScreen   = lazyNamed(() => import("./screens/historico.jsx"), "HistoricoScreen");
+const PerfilScreen      = lazyNamed(() => import("./screens/perfil.jsx"), "PerfilScreen");
+const CaixinhasScreen   = lazyNamed(() => import("./screens/caixinhas.jsx"), "CaixinhasScreen");
+const CaixinhaScreen    = lazyNamed(() => import("./screens/caixinhas.jsx"), "CaixinhaScreen");
+const RecorrentesScreen = lazyNamed(() => import("./screens/recorrentes.jsx"), "RecorrentesScreen");
+const AddExpenseModal   = lazyNamed(() => import("./modals/add-expense.jsx"), "AddExpenseModal");
 
 const ONBOARDING_KEY = "finca.onboarded";
 
@@ -457,6 +465,7 @@ export function App() {
 
   const TABS = ["inicio", "gastos", "analise", "perfil"];
   const irPara = (t, p = {}) => {
+    vibrar();
     if (TABS.includes(t)) {
       setStack([]);
       setTela(t);
@@ -482,6 +491,7 @@ export function App() {
   };
 
   const salvarTx = (tx, editando) => {
+    vibrar(14);
     const ehRec = tx.ehRecorrente;
     delete tx.ehRecorrente; // flag de UI, não persistir
 
@@ -606,7 +616,12 @@ export function App() {
   if (usuario === null) return <LoginScreen />; // deslogado
   if (!cloud.ready) return <Splash />; // logado, carregando dados
 
-  if (onboarding) return <Onboarding onFim={finalizarOnboarding} />;
+  if (onboarding)
+    return (
+      <React.Suspense fallback={<Splash />}>
+        <Onboarding onFim={finalizarOnboarding} />
+      </React.Suspense>
+    );
 
   const ctx = {
     txs: cloud.txs,
@@ -669,14 +684,13 @@ export function App() {
         <Sidebar
           tela={tela}
           irPara={irPara}
-          abrirAdd={() => setAddModal({})}
+          abrirAdd={() => { vibrar(); setAddModal({}); }}
           usuario={usuario}
         />
         <main
           style={{ flex: 1, minWidth: 0, overflowY: "auto", height: "100vh" }}
         >
           <div
-            data-screen-label={tela}
             style={{
               maxWidth: tela === "inicio" || tela === "analise" ? 1080 : 640,
               margin: "0 auto",
@@ -688,11 +702,15 @@ export function App() {
               key={tela + JSON.stringify(params || {})}
               className="page-transition"
             >
-              {conteudo}
+              <React.Suspense fallback={<Splash />}>{conteudo}</React.Suspense>
             </div>
           </div>
         </main>
-        {addModal && <AddExpenseModal ctx={ctx} params={addModal} />}
+        {addModal && (
+          <React.Suspense fallback={null}>
+            <AddExpenseModal ctx={ctx} params={addModal} />
+          </React.Suspense>
+        )}
       </div>
     );
   }
@@ -705,19 +723,20 @@ export function App() {
         color: "var(--ink)",
       }}
     >
-      <div
-        data-screen-label={tela}
-        style={{ maxWidth: 480, margin: "0 auto", minHeight: "100vh" }}
-      >
+      <div style={{ maxWidth: 480, margin: "0 auto", minHeight: "100vh" }}>
         <div
           key={tela + JSON.stringify(params || {})}
           className="page-transition"
         >
-          {conteudo}
+          <React.Suspense fallback={<Splash />}>{conteudo}</React.Suspense>
         </div>
       </div>
-      <TabBar tela={tela} irPara={irPara} abrirAdd={() => setAddModal({})} />
-      {addModal && <AddExpenseModal ctx={ctx} params={addModal} />}
+      <TabBar tela={tela} irPara={irPara} abrirAdd={() => { vibrar(); setAddModal({}); }} />
+      {addModal && (
+        <React.Suspense fallback={null}>
+          <AddExpenseModal ctx={ctx} params={addModal} />
+        </React.Suspense>
+      )}
     </div>
   );
 }
