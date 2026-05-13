@@ -13,7 +13,7 @@ import { Icon } from "../ui/icons.jsx";
 import { Card, TopBar } from "../ui/common.jsx";
 
 export function HistoricoScreen({ ctx }) {
-  const { txs, todosMeses, ocultar, voltar, setMes, irPara, mesAnterior, mes } =
+  const { txs, todosMeses, ocultar, voltar, setMes, irPara, mesAnterior, mes, ehDesktop } =
     ctx;
   const dadosMeses = todosMeses.map((m) => {
     const t = totalGeral(txDoMes(txs, m));
@@ -22,8 +22,8 @@ export function HistoricoScreen({ ctx }) {
   const maxTot = Math.max(...dadosMeses.map((d) => d.total), 1);
 
   return (
-    <div style={{ paddingBottom: 110 }}>
-      <TopBar voltar={voltar} titulo="Histórico" />
+    <div style={{ paddingBottom: "var(--pad-bottom)" }}>
+      <TopBar voltar={ehDesktop ? undefined : voltar} titulo="Histórico" />
       <div style={{ padding: "4px 20px 0" }}>
         <Card>
           <div

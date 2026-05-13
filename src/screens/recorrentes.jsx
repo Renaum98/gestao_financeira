@@ -12,12 +12,12 @@ function rotuloDataDeRec(yyyymm) {
 }
 
 export function RecorrentesScreen({ ctx }) {
-  const { recorrentes, cancelarRecorrente, voltar, ocultar } = ctx;
+  const { recorrentes, cancelarRecorrente, voltar, ocultar, ehDesktop } = ctx;
   const [confirmar, setConfirmar] = React.useState(null);
 
   return (
-    <div style={{ paddingBottom: 110 }}>
-      <TopBar voltar={voltar} titulo="Recorrentes" />
+    <div style={{ paddingBottom: "var(--pad-bottom)" }}>
+      <TopBar voltar={ehDesktop ? undefined : voltar} titulo="Recorrentes" />
 
       <div style={{ padding: '0 20px 12px', fontSize: 13, color: 'var(--muted)', fontWeight: 500, lineHeight: 1.45 }}>
         Esses gastos são adicionados automaticamente todo mês. Cancele se a cobrança parar.
@@ -78,7 +78,7 @@ export function RecorrentesScreen({ ctx }) {
       {confirmar && (
         <ConfirmModal
           titulo={`Cancelar "${confirmar.descricao}"?`}
-          mensagem="Os lançamentos já criados ficam no histórico. Nenhum novo será gerado nos próximos meses."
+          mensagem="Os lançamentos de meses passados continuam no histórico. Os do mês atual em diante serão removidos."
           textoConfirmar="Cancelar recorrência"
           icone="close"
           onCancelar={() => setConfirmar(null)}

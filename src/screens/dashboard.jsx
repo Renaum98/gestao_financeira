@@ -6,6 +6,7 @@ import {
   ORDEM_CATS,
   fmtBRL,
   rotuloMes,
+  totalEntradas,
   totalGeral,
   totalPorCategoria,
   txDoMes,
@@ -40,10 +41,13 @@ export function DashboardScreen({ ctx }) {
   const txMesAnt = mesAnterior ? txDoMes(txs, mesAnterior) : [];
   const total = totalGeral(txMes);
   const totalAnt = totalGeral(txMesAnt);
+  const entradas = totalEntradas(txMes);
   const delta = totalAnt > 0 ? ((total - totalAnt) / totalAnt) * 100 : 0;
   const somaOrcCats = Object.values(orcamentos).reduce((s, v) => s + v, 0);
-  const orcTotal =
+  const orcBase =
     preferences.orcamentoMensal > 0 ? preferences.orcamentoMensal : somaOrcCats;
+  // Entradas do mês somam ao orçamento disponível
+  const orcTotal = orcBase + entradas;
   const restante = orcTotal - total;
 
   const porCat = totalPorCategoria(txMes);
@@ -56,11 +60,12 @@ export function DashboardScreen({ ctx }) {
     }),
   );
 
-  // pontos do gráfico de linha — acumulado
+  // pontos do gráfico de linha — acumulado (só gastos, ignora entradas)
   const acumPorDia = (txArr) => {
     if (!txArr.length) return [{ dia: 1, valor: 0 }];
     const map = {};
     for (const t of txArr) {
+      if (t.tipo === "entrada") continue;
       const d = parseInt(t.data.split("-")[2], 10);
       map[d] = (map[d] || 0) + t.valor;
     }
@@ -79,14 +84,15 @@ export function DashboardScreen({ ctx }) {
   const pontosAnt = mesAnterior ? acumPorDia(txMesAnt) : null;
 
   const recentes = txMes.slice(0, 4);
+  const temEntrada = entradas > 0;
   const hojeHora = new Date().getHours();
   const saudacao =
     hojeHora < 12 ? "Bom dia" : hojeHora < 18 ? "Boa tarde" : "Boa noite";
 
   return (
-    <div className={ehDesktop ? "cols-desktop" : undefined} style={{ paddingBottom: 110 }}>
+    <div className={ehDesktop ? "cols-desktop" : undefined} style={{ paddingBottom: "var(--pad-bottom)" }}>
       {/* Cabeçalho */}
-      <div className={ehDesktop ? "col-span-all" : undefined} style={{ padding: "60px 20px 0" }}>
+      <div className={ehDesktop ? "col-span-all" : undefined} style={{ padding: "var(--pad-top) 20px 0" }}>
         <div
           style={{
             display: "flex",
@@ -302,6 +308,18 @@ export function DashboardScreen({ ctx }) {
               <div style={{ fontSize: 15, fontWeight: 700, marginTop: 2 }}>
                 {fmtBRL(orcTotal, ocultar)}
               </div>
+              {temEntrada && (
+                <div
+                  style={{
+                    fontSize: 10,
+                    fontWeight: 700,
+                    opacity: 0.85,
+                    marginTop: 2,
+                  }}
+                >
+                  +{fmtBRL(entradas, ocultar)} entradas
+                </div>
+              )}
             </div>
             <div style={{ textAlign: "right" }}>
               <div style={{ fontSize: 11, opacity: 0.8, fontWeight: 600 }}>

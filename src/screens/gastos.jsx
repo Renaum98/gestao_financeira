@@ -51,7 +51,7 @@ export function GastosScreen({ ctx }) {
   const cats = ["todas", ...ORDEM_CATS];
 
   return (
-    <div style={{ paddingBottom: 110 }}>
+    <div style={{ paddingBottom: "var(--pad-bottom)" }}>
       <TopBar
         titulo="Gastos"
         acao={

@@ -99,12 +99,19 @@ export function rotuloMesCurto(yyyymm) {
 
 export function totalPorCategoria(txs) {
   const m = {};
-  for (const t of txs) m[t.categoria] = (m[t.categoria] || 0) + t.valor;
+  for (const t of txs) {
+    if (t.tipo === 'entrada') continue;
+    m[t.categoria] = (m[t.categoria] || 0) + t.valor;
+  }
   return m;
 }
 
 export function totalGeral(txs) {
-  return txs.reduce((s, t) => s + t.valor, 0);
+  return txs.reduce((s, t) => (t.tipo === 'entrada' ? s : s + t.valor), 0);
+}
+
+export function totalEntradas(txs) {
+  return txs.reduce((s, t) => (t.tipo === 'entrada' ? s + t.valor : s), 0);
 }
 
 // Retorna a lista de meses (yyyy-mm) presentes nas transações + o mês atual,

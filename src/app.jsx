@@ -214,7 +214,7 @@ function Sidebar({ tela, irPara, abrirAdd, usuario, fotoPerfil }) {
         }}
       >
         <Icon name="plus" size={18} color="#fff" strokeWidth={2.6} />
-        Novo gasto
+        Nova Transação
       </button>
 
       <nav style={{ display: "flex", flexDirection: "column", gap: 2 }}>
@@ -414,6 +414,7 @@ export function App() {
         const data = `${yyyymm}-${String(dia).padStart(2, "0")}`;
         novosTxs.push({
           id: `${r.id}-${yyyymm}`,
+          tipo: r.tipo,
           descricao: r.descricao,
           categoria: r.categoria,
           pagamento: r.pagamento,
@@ -525,25 +526,64 @@ export function App() {
       return out;
     };
 
-    // Se for recorrente, cria a recorrência E marca a tx atual com recorrenteId.
+    // Se for recorrente, cria a recorrência E pré-gera 12 meses (1 ano).
+    // A primeira tx (mês atual) mantém o id "tx-..."; as 11 seguintes usam "${recId}-${yyyymm}".
     if (ehRec) {
       const recId = `rec-${Date.now()}`;
       const [yy, mm, dd] = tx.data.split("-").map(Number);
-      const yyyymm = `${yy}-${String(mm).padStart(2, "0")}`;
+      const inicioYYMM = `${yy}-${String(mm).padStart(2, "0")}`;
       tx = { ...tx, recorrenteId: recId };
+
+      const TOTAL_MESES = 12;
+      const txsRec = [];
+      for (let i = 0; i < TOTAL_MESES; i++) {
+        const d = new Date(yy, mm - 1 + i, 1);
+        const ny = d.getFullYear();
+        const nm0 = d.getMonth();
+        const yyyymm = `${ny}-${String(nm0 + 1).padStart(2, "0")}`;
+        const ultDia = new Date(ny, nm0 + 1, 0).getDate();
+        const diaReal = Math.min(dd, ultDia);
+        const data = `${yyyymm}-${String(diaReal).padStart(2, "0")}`;
+        txsRec.push(
+          i === 0
+            ? { ...tx, data }
+            : {
+                id: `${recId}-${yyyymm}`,
+                tipo: tx.tipo,
+                descricao: tx.descricao,
+                categoria: tx.categoria,
+                pagamento: tx.pagamento,
+                valor: tx.valor,
+                data,
+                recorrenteId: recId,
+              },
+        );
+      }
+      const ultimoMes = txsRec[txsRec.length - 1].data.slice(0, 7);
+
       cloud.setRecorrentes((atual) => [
         ...atual,
         {
           id: recId,
+          tipo: tx.tipo,
           descricao: tx.descricao,
           categoria: tx.categoria,
           pagamento: tx.pagamento,
           valor: tx.valor,
           dia: dd,
-          inicio: yyyymm,
-          ultimoMesGerado: yyyymm,
+          inicio: inicioYYMM,
+          ultimoMesGerado: ultimoMes,
         },
       ]);
+
+      cloud.setTxs((atual) => {
+        if (inicioYYMM !== mes) setMes(inicioYYMM);
+        return [...txsRec, ...atual].sort((a, b) =>
+          b.data.localeCompare(a.data),
+        );
+      });
+      if (!editando) setTela("gastos");
+      return;
     }
 
     cloud.setTxs((atual) => {
@@ -568,8 +608,18 @@ export function App() {
     if (!editando) setTela("gastos");
   };
 
+  // Cancela a recorrência: remove apenas as txs futuras (do mês atual em diante).
+  // Os lançamentos de meses passados ficam preservados no histórico.
   const cancelarRecorrente = (recId) => {
+    const hoje = new Date();
+    const yyyymmHoje = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, "0")}`;
     cloud.setRecorrentes((atual) => atual.filter((r) => r.id !== recId));
+    cloud.setTxs((atual) =>
+      atual.filter((t) => {
+        if (t.recorrenteId !== recId) return true;
+        return t.data.slice(0, 7) < yyyymmHoje; // mantém passados
+      }),
+    );
   };
 
   const excluirTx = (id) => {
@@ -695,6 +745,7 @@ export function App() {
           fotoPerfil={cloud.preferences.fotoUrl}
         />
         <main
+          className="desktop-shell"
           style={{ flex: 1, minWidth: 0, overflowY: "auto", height: "100vh" }}
         >
           <div

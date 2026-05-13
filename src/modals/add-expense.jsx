@@ -24,6 +24,9 @@ const CORES_CAT = [
 export function AddExpenseModal({ ctx, params }) {
   const { fechar, salvarTx, adicionarCategoria } = ctx;
   const editar = params && params.editar;
+  const [tipo, setTipo] = React.useState(
+    editar?.tipo === "entrada" ? "entrada" : "saida",
+  );
   const [valor, setValor] = React.useState(
     editar
       ? String(
@@ -40,16 +43,19 @@ export function AddExpenseModal({ ctx, params }) {
     editar ? editar.descricao : "",
   );
   const [pagamento, setPagamento] = React.useState(
-    editar ? editar.pagamento : "Cartão de crédito",
+    editar?.pagamento || "Cartão de crédito",
   );
   const [data, setData] = React.useState(editar ? editar.data : hojeISO());
   const [parcelas, setParcelas] = React.useState(
     editar && editar.parcelas ? editar.parcelas.total : 1,
   );
   const [ehRecorrente, setEhRecorrente] = React.useState(false);
+
+  const ehEntrada = tipo === "entrada";
   const [criandoCat, setCriandoCat] = React.useState(false);
   const [novoNomeCat, setNovoNomeCat] = React.useState("");
   const [novaCorCat, setNovaCorCat] = React.useState(CORES_CAT[0]);
+  const [parcelasAberto, setParcelasAberto] = React.useState(false);
 
   const confirmarNovaCat = () => {
     const nome = novoNomeCat.trim();
@@ -78,21 +84,26 @@ export function AddExpenseModal({ ctx, params }) {
   };
 
   const valorNum = parseFloat(valor.replace(",", ".")) || 0;
-  const ehCredito = pagamento === "Cartão de crédito";
+  const ehCredito = !ehEntrada && pagamento === "Cartão de crédito";
   const numParcelas = ehCredito ? parcelas : 1;
   const valorParcela = numParcelas > 0 ? valorNum / numParcelas : valorNum;
 
   const salvar = () => {
     if (valorNum <= 0) return;
+    const descFinal = descricao.trim()
+      || (ehEntrada ? "Entrada" : CATEGORIAS[categoria].nome);
     const tx = {
       id: editar ? editar.id : `tx-${Date.now()}`,
+      tipo,
       valor: valorNum,
-      categoria,
-      descricao: descricao || CATEGORIAS[categoria].nome,
-      pagamento,
+      categoria: ehEntrada ? null : categoria,
+      descricao: descFinal,
+      pagamento: ehEntrada ? null : pagamento,
       data,
       parcelas:
-        numParcelas > 1 ? { total: numParcelas, valorTotal: valorNum } : null,
+        !ehEntrada && numParcelas > 1
+          ? { total: numParcelas, valorTotal: valorNum }
+          : null,
       // Marca para o app.jsx criar a recorrência (só faz sentido quando não é parcelado e não está editando)
       ehRecorrente: ehRecorrente && numParcelas === 1 && !editar,
     };
@@ -163,13 +174,15 @@ export function AddExpenseModal({ ctx, params }) {
               letterSpacing: "-0.01em",
             }}
           >
-            {editar ? "Editar gasto" : "Novo gasto"}
+            {editar ? "Editar transação" : "Nova transação"}
           </div>
           <button
             onClick={salvar}
             disabled={valorNum <= 0}
             style={{
-              background: valorNum > 0 ? "var(--primary)" : "var(--linha)",
+              background: valorNum > 0
+                ? (ehEntrada ? "#1B9E6A" : "var(--primary)")
+                : "var(--linha)",
               color: valorNum > 0 ? "#fff" : "var(--muted)",
               border: "none",
               padding: "6px 14px",
@@ -209,7 +222,7 @@ export function AddExpenseModal({ ctx, params }) {
             style={{
               fontSize: 48,
               fontWeight: 800,
-              color: "var(--ink)",
+              color: ehEntrada ? "#1B9E6A" : "var(--ink)",
               letterSpacing: "-0.04em",
               marginTop: 4,
               fontVariantNumeric: "tabular-nums",
@@ -218,12 +231,13 @@ export function AddExpenseModal({ ctx, params }) {
             <span
               style={{
                 fontSize: 24,
-                color: "var(--muted)",
+                color: ehEntrada ? "#1B9E6A" : "var(--muted)",
                 marginRight: 6,
                 verticalAlign: "top",
+                opacity: ehEntrada ? 0.9 : 1,
               }}
             >
-              R$
+              {ehEntrada ? "+R$" : "R$"}
             </span>
             {valor}
           </div>
@@ -261,7 +275,62 @@ export function AddExpenseModal({ ctx, params }) {
           )}
         </label>
 
-        {/* Categoria */}
+        {/* Tipo: Saída / Entrada */}
+        <div style={{ marginTop: 14 }}>
+          <div
+            style={{
+              display: "flex",
+              gap: 6,
+              padding: 4,
+              borderRadius: 14,
+              background: "var(--card-2)",
+              boxShadow: "0 1px 2px rgba(0,0,0,0.06)",
+            }}
+          >
+            {[
+              { id: "saida", label: "Saída", icon: "arrow-right", bgSel: "var(--card)", textoSel: "var(--ink)" },
+              { id: "entrada", label: "Entrada", icon: "arrow-left", bgSel: "#1B9E6A", textoSel: "#fff" },
+            ].map((opt) => {
+              const sel = tipo === opt.id;
+              const txtColor = sel ? opt.textoSel : "var(--muted)";
+              return (
+                <button
+                  key={opt.id}
+                  onClick={() => { vibrar(); setTipo(opt.id); }}
+                  style={{
+                    flex: 1,
+                    padding: "10px 8px",
+                    borderRadius: 10,
+                    border: "none",
+                    background: sel ? opt.bgSel : "transparent",
+                    color: txtColor,
+                    fontSize: 13,
+                    fontWeight: 800,
+                    cursor: "pointer",
+                    fontFamily: "inherit",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 6,
+                    boxShadow: sel && opt.id === "saida" ? "0 1px 2px rgba(0,0,0,0.08)" : "none",
+                    transition: "background .15s",
+                  }}
+                >
+                  <Icon
+                    name={opt.icon}
+                    size={14}
+                    color={txtColor}
+                    strokeWidth={2.6}
+                  />
+                  {opt.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Categoria (só saída) */}
+        {!ehEntrada && (
         <div style={{ marginTop: 14 }}>
           <div
             style={{
@@ -512,6 +581,7 @@ export function AddExpenseModal({ ctx, params }) {
             </div>
           )}
         </div>
+        )}
 
         {/* Descrição */}
         <div style={{ marginTop: 12 }}>
@@ -582,7 +652,8 @@ export function AddExpenseModal({ ctx, params }) {
           </label>
         </div>
 
-        {/* Pagamento */}
+        {/* Pagamento (só saída) */}
+        {!ehEntrada && (
         <div style={{ marginTop: 10, display: "flex", gap: 8 }}>
           {PAGAMENTOS.map((p) => {
             const sel = pagamento === p;
@@ -619,10 +690,11 @@ export function AddExpenseModal({ ctx, params }) {
             );
           })}
         </div>
+        )}
 
-        {/* Parcelas (só crédito) */}
+        {/* Parcelas (só crédito) — dropdown 1 a 24x */}
         {ehCredito && (
-          <div style={{ marginTop: 10 }}>
+          <div style={{ marginTop: 10, position: "relative" }}>
             <div
               style={{
                 display: "flex",
@@ -654,74 +726,114 @@ export function AddExpenseModal({ ctx, params }) {
                 </div>
               )}
             </div>
-            <div
-              className="carrossel"
+
+            <button
+              onClick={() => { vibrar(); setParcelasAberto((v) => !v); }}
               style={{
+                width: "100%",
                 display: "flex",
-                gap: 6,
-                overflowX: "auto",
-                scrollbarWidth: "none",
-                paddingBottom: 2,
+                alignItems: "center",
+                justifyContent: "space-between",
+                padding: "12px 14px",
+                borderRadius: 12,
+                border: "none",
+                background: "var(--card-2)",
+                color: "var(--ink)",
+                fontSize: 14,
+                fontWeight: 700,
+                fontFamily: "inherit",
+                cursor: "pointer",
+                boxShadow: "0 1px 2px rgba(0,0,0,0.06)",
               }}
             >
-              {[1, 2, 3, 4, 6, 10, 12].map((n) => {
-                const sel = parcelas === n;
-                return (
-                  <button
-                    key={n}
-                    onClick={() => { vibrar(); setParcelas(n); }}
-                    style={{
-                      flex: "1 0 auto",
-                      minWidth: 56,
-                      padding: "10px 6px",
-                      borderRadius: 12,
-                      border: "none",
-                      background: sel ? "var(--primary)" : "var(--card-2)",
-                      color: sel ? "#fff" : "var(--ink)",
-                      fontSize: 13,
-                      fontWeight: 800,
-                      cursor: "pointer",
-                      fontFamily: "inherit",
-                      letterSpacing: "-0.02em",
-                      boxShadow: sel
-                        ? "0 2px 8px color-mix(in oklab, var(--primary) 25%, transparent)"
-                        : "0 1px 2px rgba(0,0,0,0.06)",
-                      display: "flex",
-                      flexDirection: "column",
-                      alignItems: "center",
-                      gap: 0,
-                      lineHeight: 1.15,
-                    }}
-                  >
-                    <span>{n}×</span>
-                    {n > 1 && valorNum > 0 && (
+              <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <span style={{ fontWeight: 800, letterSpacing: "-0.02em" }}>
+                  {parcelas}×
+                </span>
+                <span style={{ color: "var(--muted)", fontWeight: 600, fontSize: 13 }}>
+                  {parcelas === 1
+                    ? "à vista"
+                    : valorNum > 0
+                      ? `de ${fmtBRL(valorNum / parcelas)}`
+                      : ""}
+                </span>
+              </span>
+              <Icon
+                name="chevron-down"
+                size={16}
+                color="var(--muted)"
+                strokeWidth={2.4}
+              />
+            </button>
+
+            {parcelasAberto && (
+              <div
+                style={{
+                  position: "absolute",
+                  top: "100%",
+                  left: 0,
+                  right: 0,
+                  marginTop: 4,
+                  zIndex: 10,
+                  maxHeight: 260,
+                  overflowY: "auto",
+                  background: "var(--card)",
+                  borderRadius: 12,
+                  boxShadow:
+                    "0 12px 32px rgba(0,0,0,0.18), 0 2px 6px rgba(0,0,0,0.08)",
+                  padding: 4,
+                }}
+              >
+                {Array.from({ length: 24 }, (_, i) => i + 1).map((n) => {
+                  const sel = parcelas === n;
+                  return (
+                    <button
+                      key={n}
+                      onClick={() => {
+                        vibrar();
+                        setParcelas(n);
+                        setParcelasAberto(false);
+                      }}
+                      style={{
+                        width: "100%",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        padding: "10px 12px",
+                        borderRadius: 10,
+                        border: "none",
+                        background: sel
+                          ? "color-mix(in oklab, var(--primary) 12%, transparent)"
+                          : "transparent",
+                        color: sel ? "var(--primary)" : "var(--ink)",
+                        fontSize: 14,
+                        fontWeight: sel ? 800 : 600,
+                        fontFamily: "inherit",
+                        cursor: "pointer",
+                        textAlign: "left",
+                      }}
+                    >
+                      <span style={{ letterSpacing: "-0.02em" }}>{n}×</span>
                       <span
                         style={{
-                          fontSize: 9,
+                          fontSize: 13,
                           fontWeight: 700,
-                          opacity: 0.75,
-                          marginTop: 1,
+                          color: sel ? "var(--primary)" : "var(--muted)",
                         }}
                       >
-                        {fmtBRLCompacto(valorNum / n)}
+                        {n === 1
+                          ? valorNum > 0
+                            ? `${fmtBRL(valorNum)} à vista`
+                            : "à vista"
+                          : valorNum > 0
+                            ? fmtBRL(valorNum / n)
+                            : "—"}
                       </span>
-                    )}
-                    {n === 1 && (
-                      <span
-                        style={{
-                          fontSize: 9,
-                          fontWeight: 700,
-                          opacity: 0.65,
-                          marginTop: 1,
-                        }}
-                      >
-                        à vista
-                      </span>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
           </div>
         )}
 

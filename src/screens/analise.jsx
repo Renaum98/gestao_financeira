@@ -75,7 +75,7 @@ export function AnaliseScreen({ ctx }) {
     mes === mesAtual ? hoje.getDate() : diasNoMes(mes);
   const mediaDia = diasDecorridos > 0 ? total / diasDecorridos : 0;
   const maiorTx = txMes.reduce(
-    (a, t) => (!a || t.valor > a.valor ? t : a),
+    (a, t) => (t.tipo === "entrada" ? a : !a || t.valor > a.valor ? t : a),
     null,
   );
   const diffTotal =
@@ -98,20 +98,22 @@ export function AnaliseScreen({ ctx }) {
   const mediaEvol =
     evolucao.reduce((s, e) => s + e.total, 0) / evolucao.length;
 
-  // ─── Por forma de pagamento ───
+  // ─── Por forma de pagamento (só saídas) ───
   const porPagamento = React.useMemo(() => {
     const m = {};
     for (const t of txMes) {
+      if (t.tipo === "entrada") continue;
       const k = t.pagamento || "Outros";
       m[k] = (m[k] || 0) + t.valor;
     }
     return Object.entries(m).sort((a, b) => b[1] - a[1]);
   }, [txMes]);
 
-  // ─── Gasto acumulado ───
+  // ─── Gasto acumulado (só saídas) ───
   const acumular = (lista) => {
     const porDia = {};
     for (const t of lista) {
+      if (t.tipo === "entrada") continue;
       const d = Number(t.data.slice(8, 10));
       porDia[d] = (porDia[d] || 0) + t.valor;
     }
@@ -129,14 +131,14 @@ export function AnaliseScreen({ ctx }) {
     [txMesAnt],
   );
 
-  // ─── Maiores gastos ───
+  // ─── Maiores gastos (só saídas) ───
   const maioresGastos = React.useMemo(
-    () => [...txMes].sort((a, b) => b.valor - a.valor).slice(0, 5),
+    () => txMes.filter((t) => t.tipo !== "entrada").sort((a, b) => b.valor - a.valor).slice(0, 5),
     [txMes],
   );
 
   return (
-    <div className={ehDesktop ? "cols-desktop" : undefined} style={{ paddingBottom: 110 }}>
+    <div className={ehDesktop ? "cols-desktop" : undefined} style={{ paddingBottom: "var(--pad-bottom)" }}>
       <div className={spanAll}>
         <TopBar titulo="Análise" />
       </div>

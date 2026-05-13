@@ -6,7 +6,7 @@ import { Icon, CatChip, iconePagamento } from './icons.jsx';
 export function TopBar({ titulo, voltar, acao, subtitulo }) {
   return (
     <div style={{
-      paddingTop: 60, padding: '60px 20px 12px', display: 'flex',
+      padding: 'var(--pad-top) 20px 12px', display: 'flex',
       flexDirection: 'column', gap: 4,
     }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', minHeight: 32 }}>
@@ -77,16 +77,29 @@ export function Card({ children, style = {}, onClick }) {
 }
 
 export function ItemTransacao({ tx, ocultar, onClick }) {
-  const cat = CATEGORIAS[tx.categoria];
+  const ehEntrada = tx.tipo === 'entrada';
+  const cat = ehEntrada ? null : CATEGORIAS[tx.categoria];
   const d = new Date(tx.data + 'T12:00:00');
   const dia = d.getDate(), mesC = MESES_CURTO[d.getMonth()];
   const parc = tx.parcelas;
+  const valorFmt = fmtBRL(tx.valor, ocultar);
   return (
     <div onClick={onClick} style={{
       display: 'flex', alignItems: 'center', gap: 12, padding: '12px 4px',
       cursor: onClick ? 'pointer' : 'default',
     }}>
-      <CatChip catId={tx.categoria} size={42} />
+      {ehEntrada ? (
+        <div style={{
+          width: 42, height: 42, borderRadius: 14,
+          background: '#DAF5E9',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          flexShrink: 0,
+        }}>
+          <Icon name="plus" size={22} color="#1B9E6A" strokeWidth={2.6} />
+        </div>
+      ) : (
+        <CatChip catId={tx.categoria} size={42} />
+      )}
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
           <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--ink)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', minWidth: 0 }}>
@@ -114,15 +127,25 @@ export function ItemTransacao({ tx, ocultar, onClick }) {
           )}
         </div>
         <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 2, display: 'flex', alignItems: 'center', gap: 6 }}>
-          <span>{cat.nome}</span>
-          <span style={{ width: 3, height: 3, borderRadius: 3, background: 'var(--muted)', opacity: 0.5 }} />
-          <Icon name={iconePagamento(tx.pagamento)} size={12} color="var(--muted)" strokeWidth={2} />
+          {ehEntrada ? (
+            <span style={{ fontWeight: 700, color: '#1B9E6A' }}>Entrada</span>
+          ) : (
+            <>
+              <span>{cat.nome}</span>
+              <span style={{ width: 3, height: 3, borderRadius: 3, background: 'var(--muted)', opacity: 0.5 }} />
+              <Icon name={iconePagamento(tx.pagamento)} size={12} color="var(--muted)" strokeWidth={2} />
+            </>
+          )}
           {parc && <span style={{ fontWeight: 600 }}>· {parc.total}× {fmtBRLCompacto(parc.valorTotal, ocultar)}</span>}
         </div>
       </div>
       <div style={{ textAlign: 'right' }}>
-        <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--ink)', letterSpacing: '-0.01em' }}>
-          {fmtBRL(tx.valor, ocultar)}
+        <div style={{
+          fontSize: 15, fontWeight: 700,
+          color: ehEntrada ? '#1B9E6A' : 'var(--ink)',
+          letterSpacing: '-0.01em',
+        }}>
+          {ehEntrada && !ocultar ? `+${valorFmt}` : valorFmt}
         </div>
         <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 2 }}>
           {dia} {mesC}

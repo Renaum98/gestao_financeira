@@ -1,18 +1,21 @@
 // orcamentos.jsx — Tela Orçamentos (total mensal + limites por categoria).
 
 import React from 'react';
-import { CATEGORIAS, ORDEM_CATS, fmtBRL, fmtBRLCompacto, totalGeral, totalPorCategoria, txDoMes } from '../data.js';
+import { CATEGORIAS, ORDEM_CATS, fmtBRL, fmtBRLCompacto, totalEntradas, totalGeral, totalPorCategoria, txDoMes } from '../data.js';
 import { CatChip, Icon } from '../ui/icons.jsx';
 import { Card, TopBar } from '../ui/common.jsx';
 import { BarraProgresso } from '../ui/charts.jsx';
 
 export function OrcamentosScreen({ ctx }) {
-  const { txs, mes, ocultar, voltar, orcamentos, setOrcamentos, preferences, setPreferences } = ctx;
+  const { txs, mes, ocultar, voltar, orcamentos, setOrcamentos, preferences, setPreferences, ehDesktop } = ctx;
 
   const txMes = txDoMes(txs, mes);
   const porCat = totalPorCategoria(txMes);
+  const entradas = totalEntradas(txMes);
   const somaCats = Object.values(orcamentos).reduce((s, v) => s + v, 0);
-  const orcMensal = preferences.orcamentoMensal > 0 ? preferences.orcamentoMensal : somaCats;
+  const orcBase = preferences.orcamentoMensal > 0 ? preferences.orcamentoMensal : somaCats;
+  // Entradas do mês somam ao orçamento disponível
+  const orcMensal = orcBase + entradas;
   const totalGasto = totalGeral(txMes);
   const pctGeral = orcMensal > 0 ? (totalGasto / orcMensal) * 100 : 0;
 
@@ -35,8 +38,8 @@ export function OrcamentosScreen({ ctx }) {
   };
 
   return (
-    <div style={{ paddingBottom: 110 }}>
-      <TopBar voltar={voltar} titulo="Orçamentos" />
+    <div style={{ paddingBottom: "var(--pad-bottom)" }}>
+      <TopBar voltar={ehDesktop ? undefined : voltar} titulo="Orçamentos" />
 
       {/* Card principal — total mensal editável */}
       <div style={{ padding: '4px 20px 0' }}>

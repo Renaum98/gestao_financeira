@@ -21,7 +21,7 @@ export function CategoriaScreen({ ctx, params }) {
   const pct = orc > 0 ? (total / orc) * 100 : 0;
 
   return (
-    <div style={{ paddingBottom: 110 }}>
+    <div style={{ paddingBottom: "var(--pad-bottom)" }}>
       <TopBar voltar={voltar} />
       <div style={{ padding: "4px 20px 0" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 14 }}>

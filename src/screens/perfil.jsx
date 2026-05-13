@@ -9,7 +9,7 @@ import { vibrar } from '../lib/haptics.js';
 import { lerFotoPerfil } from '../lib/imagem.js';
 
 export function PerfilScreen({ ctx }) {
-  const { voltar, ocultar, setOcultar, irPara, setOnboarding, preferences, setPreferences, usuario, sair } = ctx;
+  const { voltar, ocultar, setOcultar, irPara, setOnboarding, preferences, setPreferences, usuario, sair, ehDesktop } = ctx;
   const nomeConta = usuario?.displayName || '';
   const email = usuario?.email || '';
   const foto = preferences.fotoUrl || usuario?.photoURL || '';
@@ -47,8 +47,8 @@ export function PerfilScreen({ ctx }) {
   const removerFoto = () => { setErroFoto(''); setPreferences({ fotoUrl: '' }); vibrar(); };
 
   return (
-    <div style={{ paddingBottom: 110 }}>
-      <TopBar voltar={voltar} />
+    <div style={{ paddingBottom: "var(--pad-bottom)" }}>
+      <TopBar voltar={ehDesktop ? undefined : voltar} />
       <div style={{ padding: '0 20px 0', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
         {/* Avatar — clique para trocar a foto */}
         <input

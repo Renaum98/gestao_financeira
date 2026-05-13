@@ -89,12 +89,12 @@ function rotuloDataCurto(yyyymmdd) {
 
 // ─────────── Tela: lista de caixinhas ───────────
 export function CaixinhasScreen({ ctx }) {
-  const { caixinhas, salvarCaixinha, voltar, irPara, ocultar } = ctx;
+  const { caixinhas, salvarCaixinha, voltar, irPara, ocultar, ehDesktop } = ctx;
   const [modal, setModal] = React.useState(null); // null | 'nova' | { editando: caixinha }
 
   return (
-    <div style={{ paddingBottom: 110 }}>
-      <TopBar voltar={voltar} titulo="Caixinhas" />
+    <div style={{ paddingBottom: "var(--pad-bottom)" }}>
+      <TopBar voltar={ehDesktop ? undefined : voltar} titulo="Caixinhas" />
 
       <div style={{ padding: "4px 20px 0" }}>
         {caixinhas.length === 0 ? (
@@ -188,12 +188,46 @@ export function CaixinhasScreen({ ctx }) {
 export function CaixinhaScreen({ ctx, params }) {
   const {
     caixinhas,
+    txs,
     voltar,
     depositarCaixinha,
     excluirCaixinha,
     salvarCaixinha,
     ocultar,
   } = ctx;
+  const entradas = React.useMemo(
+    () => (txs || []).filter((t) => t.tipo === "entrada"),
+    [txs],
+  );
+  // Agrupa entradas pela descrição (ex: várias txs "Shopee" viram uma única origem)
+  const gruposEntrada = React.useMemo(() => {
+    const m = {};
+    for (const t of entradas) {
+      const k = t.descricao;
+      if (!m[k]) m[k] = { descricao: k, total: 0, ultimaData: t.data, count: 0 };
+      m[k].total += t.valor;
+      m[k].count += 1;
+      if (t.data > m[k].ultimaData) m[k].ultimaData = t.data;
+    }
+    return Object.values(m);
+  }, [entradas]);
+  // Soma o que já foi alocado de cada grupo de entradas em todas as caixinhas.
+  // Aceita depósitos antigos (origem.entradaId) resolvendo pela descrição da tx.
+  const alocadoPorDescricao = React.useMemo(() => {
+    const m = {};
+    for (const c of caixinhas) {
+      for (const dep of (c.depositos || [])) {
+        if (dep.origem?.tipo !== "entrada") continue;
+        let desc = dep.origem.descricao;
+        if (!desc && dep.origem.entradaId) {
+          const tx = entradas.find((e) => e.id === dep.origem.entradaId);
+          desc = tx?.descricao;
+        }
+        if (desc) m[desc] = (m[desc] || 0) + dep.valor;
+      }
+    }
+    return m;
+  }, [caixinhas, entradas]);
   const cx = caixinhas.find((c) => c.id === params.id);
   const [modalDeposito, setModalDeposito] = React.useState(false);
   const [modalEditar, setModalEditar] = React.useState(false);
@@ -226,7 +260,7 @@ export function CaixinhaScreen({ ctx, params }) {
   };
 
   return (
-    <div style={{ paddingBottom: 110 }}>
+    <div style={{ paddingBottom: "var(--pad-bottom)" }}>
       <TopBar
         voltar={voltar}
         acao={
@@ -542,58 +576,71 @@ export function CaixinhaScreen({ ctx, params }) {
         </div>
         {depositos.length > 0 && (
           <Card style={{ padding: "4px 16px" }}>
-            {depositos.map((d, i) => (
-              <div
-                key={d.id}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 12,
-                  padding: "12px 0",
-                  borderTop: i === 0 ? "none" : "1px solid var(--linha)",
-                }}
-              >
+            {depositos.map((d, i) => {
+              let labelOrigem = "Do orçamento";
+              if (d.origem?.tipo === "entrada") {
+                let desc = d.origem.descricao;
+                if (!desc && d.origem.entradaId) {
+                  desc = entradas.find((t) => t.id === d.origem.entradaId)?.descricao;
+                }
+                labelOrigem = `Da entrada: ${desc || "removida"}`;
+              }
+              return (
                 <div
+                  key={d.id}
                   style={{
-                    width: 36,
-                    height: 36,
-                    borderRadius: 12,
-                    background: `${cx.cor}22`,
                     display: "flex",
                     alignItems: "center",
-                    justifyContent: "center",
+                    gap: 12,
+                    padding: "12px 0",
+                    borderTop: i === 0 ? "none" : "1px solid var(--linha)",
                   }}
                 >
-                  <Icon
-                    name="plus"
-                    size={16}
-                    color={cx.cor}
-                    strokeWidth={2.4}
-                  />
-                </div>
-                <div style={{ flex: 1 }}>
                   <div
                     style={{
-                      fontSize: 14,
-                      fontWeight: 700,
-                      color: "var(--ink)",
+                      width: 36,
+                      height: 36,
+                      borderRadius: 12,
+                      background: `${cx.cor}22`,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
                     }}
                   >
-                    {fmtBRL(d.valor, ocultar)}
+                    <Icon
+                      name="plus"
+                      size={16}
+                      color={cx.cor}
+                      strokeWidth={2.4}
+                    />
                   </div>
-                  <div
-                    style={{
-                      fontSize: 11,
-                      color: "var(--muted)",
-                      fontWeight: 600,
-                      marginTop: 1,
-                    }}
-                  >
-                    {rotuloDataCurto(d.data)}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div
+                      style={{
+                        fontSize: 14,
+                        fontWeight: 700,
+                        color: "var(--ink)",
+                      }}
+                    >
+                      {fmtBRL(d.valor, ocultar)}
+                    </div>
+                    <div
+                      style={{
+                        fontSize: 11,
+                        color: "var(--muted)",
+                        fontWeight: 600,
+                        marginTop: 1,
+                        whiteSpace: "nowrap",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                      }}
+                    >
+                      {rotuloDataCurto(d.data)} · {labelOrigem}
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </Card>
         )}
 
@@ -626,6 +673,8 @@ export function CaixinhaScreen({ ctx, params }) {
       {modalDeposito && (
         <ModalDeposito
           cor={cx.cor}
+          gruposEntrada={gruposEntrada}
+          alocadoPorDescricao={alocadoPorDescricao}
           onFechar={() => setModalDeposito(false)}
           onSalvar={(dep) => {
             depositarCaixinha(cx.id, dep);
@@ -942,9 +991,23 @@ function ModalCaixinha({ editando, onFechar, onSalvar }) {
 }
 
 // ─────────── Modal: depositar valor ───────────
-function ModalDeposito({ cor, onFechar, onSalvar }) {
+function ModalDeposito({ cor, gruposEntrada = [], alocadoPorDescricao = {}, onFechar, onSalvar }) {
   const [valor, setValor] = React.useState("0,00");
   const [data, setData] = React.useState(hojeISO());
+  const [origemTipo, setOrigemTipo] = React.useState("orcamento"); // 'orcamento' | 'entrada'
+  const [entradaDesc, setEntradaDesc] = React.useState("");
+
+  // Grupos com saldo (uma linha por descrição, somando todas as txs com o mesmo nome)
+  const gruposComSaldo = React.useMemo(() => {
+    return [...gruposEntrada]
+      .map((g) => {
+        const alocado = alocadoPorDescricao[g.descricao] || 0;
+        return { ...g, alocado, disponivel: Math.max(0, g.total - alocado) };
+      })
+      .sort((a, b) => b.ultimaData.localeCompare(a.ultimaData));
+  }, [gruposEntrada, alocadoPorDescricao]);
+
+  const temEntradas = gruposComSaldo.length > 0;
 
   const aoDigitar = (texto) => {
     let v = texto.replace(/\D/g, "");
@@ -960,9 +1023,20 @@ function ModalDeposito({ cor, onFechar, onSalvar }) {
   };
 
   const valorNum = parseFloat(valor.replace(",", ".")) || 0;
+  const grupoEscolhido = gruposComSaldo.find((g) => g.descricao === entradaDesc);
+  const excedeEntrada =
+    origemTipo === "entrada" && grupoEscolhido && valorNum > grupoEscolhido.disponivel + 0.001;
+  const origemValida =
+    origemTipo === "orcamento" || (grupoEscolhido && !excedeEntrada);
+  const podeSalvar = valorNum > 0 && origemValida;
+
   const salvar = () => {
-    if (valorNum <= 0) return;
-    onSalvar({ id: `dp-${Date.now()}`, valor: valorNum, data });
+    if (!podeSalvar) return;
+    const origem =
+      origemTipo === "entrada"
+        ? { tipo: "entrada", descricao: entradaDesc }
+        : { tipo: "orcamento" };
+    onSalvar({ id: `dp-${Date.now()}`, valor: valorNum, data, origem });
   };
 
   return (
@@ -970,7 +1044,7 @@ function ModalDeposito({ cor, onFechar, onSalvar }) {
       titulo="Adicionar valor"
       onFechar={onFechar}
       onSalvar={salvar}
-      salvarAtivo={valorNum > 0}
+      salvarAtivo={podeSalvar}
       corAcento={cor}
     >
       <label
@@ -1080,6 +1154,167 @@ function ModalDeposito({ cor, onFechar, onSalvar }) {
             }}
           />
         </label>
+      </Campo>
+
+      <Campo label="Origem do valor">
+        <div
+          style={{
+            display: "flex",
+            gap: 6,
+            padding: 4,
+            borderRadius: 12,
+            background: "var(--card-2)",
+            boxShadow: "0 1px 2px rgba(0,0,0,0.06)",
+          }}
+        >
+          {[
+            { id: "orcamento", label: "Orçamento" },
+            { id: "entrada", label: "Entrada", disabled: !temEntradas },
+          ].map((opt) => {
+            const sel = origemTipo === opt.id;
+            return (
+              <button
+                key={opt.id}
+                onClick={() => {
+                  if (opt.disabled) return;
+                  setOrigemTipo(opt.id);
+                  if (opt.id === "entrada" && !entradaDesc && temEntradas) {
+                    setEntradaDesc(gruposComSaldo[0].descricao);
+                  }
+                }}
+                disabled={opt.disabled}
+                style={{
+                  flex: 1,
+                  padding: "9px 8px",
+                  borderRadius: 10,
+                  border: "none",
+                  background: sel ? "var(--card)" : "transparent",
+                  color: opt.disabled ? "var(--linha)" : sel ? "var(--ink)" : "var(--muted)",
+                  fontSize: 13,
+                  fontWeight: 800,
+                  cursor: opt.disabled ? "default" : "pointer",
+                  fontFamily: "inherit",
+                  boxShadow: sel ? "0 1px 2px rgba(0,0,0,0.08)" : "none",
+                  transition: "background .15s",
+                }}
+              >
+                {opt.label}
+              </button>
+            );
+          })}
+        </div>
+
+        {origemTipo === "orcamento" && (
+          <div
+            style={{
+              marginTop: 10,
+              fontSize: 12,
+              color: "var(--muted)",
+              fontWeight: 500,
+              padding: "0 4px",
+              lineHeight: 1.4,
+            }}
+          >
+            Será debitado do orçamento do mês.
+          </div>
+        )}
+
+        {origemTipo === "entrada" && temEntradas && (
+          <div
+            style={{
+              marginTop: 10,
+              display: "flex",
+              flexDirection: "column",
+              gap: 6,
+              maxHeight: 220,
+              overflowY: "auto",
+            }}
+          >
+            {gruposComSaldo.map((g) => {
+              const sel = entradaDesc === g.descricao;
+              const semSaldo = g.disponivel <= 0;
+              return (
+                <button
+                  key={g.descricao}
+                  onClick={() => !semSaldo && setEntradaDesc(g.descricao)}
+                  disabled={semSaldo}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 10,
+                    padding: "10px 12px",
+                    borderRadius: 12,
+                    border: sel ? `2px solid #1B9E6A` : "2px solid transparent",
+                    background: "var(--card-2)",
+                    cursor: semSaldo ? "default" : "pointer",
+                    fontFamily: "inherit",
+                    textAlign: "left",
+                    opacity: semSaldo ? 0.5 : 1,
+                  }}
+                >
+                  <div
+                    style={{
+                      width: 30,
+                      height: 30,
+                      borderRadius: 10,
+                      background: "#DAF5E9",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      flexShrink: 0,
+                    }}
+                  >
+                    <Icon name="plus" size={14} color="#1B9E6A" strokeWidth={2.6} />
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div
+                      style={{
+                        fontSize: 13,
+                        fontWeight: 700,
+                        color: "var(--ink)",
+                        whiteSpace: "nowrap",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                      }}
+                    >
+                      {g.descricao}
+                      {g.count > 1 && (
+                        <span style={{ color: "var(--muted)", fontWeight: 600 }}>
+                          {" "}· {g.count} lançamentos
+                        </span>
+                      )}
+                    </div>
+                    <div
+                      style={{
+                        fontSize: 11,
+                        color: "var(--muted)",
+                        fontWeight: 600,
+                        marginTop: 1,
+                      }}
+                    >
+                      disponível {fmtBRLCompacto(g.disponivel)}
+                      {g.alocado > 0 && ` · alocado ${fmtBRLCompacto(g.alocado)}`}
+                    </div>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        )}
+
+        {origemTipo === "entrada" && excedeEntrada && (
+          <div
+            style={{
+              marginTop: 8,
+              fontSize: 12,
+              color: "#D63A55",
+              fontWeight: 700,
+              padding: "0 4px",
+            }}
+          >
+            Valor excede o disponível desta entrada.
+          </div>
+        )}
       </Campo>
     </ModalShell>
   );

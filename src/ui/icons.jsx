@@ -95,6 +95,7 @@ export function Icon({ name, size = 22, color = 'currentColor', strokeWidth = 2 
 }
 
 export function iconePagamento(pag) {
+  if (!pag) return 'cash';
   if (pag.startsWith('Cartão de cr')) return 'card';
   if (pag.startsWith('Cartão de d')) return 'wallet';
   if (pag === 'Pix') return 'pix';

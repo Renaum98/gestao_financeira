@@ -8,7 +8,16 @@
   --linha: rgba(20, 16, 24, 0.06);
   --primary: #6E4FF6;
   --primary-2: #A085FF;
+  /* Espaçamentos padrão (mobile): topo reserva o notch; base reserva a tab bar flutuante */
+  --pad-top: 60px;
+  --pad-bottom: 110px;
   color-scheme: light;
+}
+
+/* No desktop a sidebar substitui a tab bar e não há notch — reduzimos os reservados. */
+.desktop-shell {
+  --pad-top: 28px;
+  --pad-bottom: 32px;
 }
 
 * { box-sizing: border-box; }
