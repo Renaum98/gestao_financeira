@@ -12,7 +12,6 @@ import { Icon } from "./ui/icons.jsx";
 import { escutarAuth, sair as sairFirebase } from "./lib/firebase.js";
 import { useCloudState } from "./lib/storage.js";
 import { vibrar } from "./lib/haptics.js";
-import { tocarClique } from "./lib/som.js";
 
 // LoginScreen fica no bundle principal (primeira tela para deslogados).
 // As demais telas e o modal são carregados sob demanda (code-splitting).
@@ -468,7 +467,6 @@ export function App() {
   const TABS = ["inicio", "gastos", "analise", "perfil"];
   const irPara = (t, p = {}) => {
     vibrar();
-    if (t !== "add" && t !== tela) tocarClique();
     if (TABS.includes(t)) {
       setStack([]);
       setTela(t);

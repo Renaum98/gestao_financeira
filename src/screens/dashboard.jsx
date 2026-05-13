@@ -199,9 +199,11 @@ export function DashboardScreen({ ctx }) {
       {/* Card principal — saldo do mês */}
       <div className={ehDesktop ? "col-span-all" : undefined} style={{ padding: "18px 20px 0" }}>
         <div
+          className="card-saldo"
           style={{
             background:
-              "linear-gradient(135deg, var(--primary), var(--primary-2))",
+              "linear-gradient(135deg, var(--primary) 0%, var(--primary-2) 50%, var(--primary) 100%)",
+            backgroundSize: "200% 200%",
             color: "#fff",
             borderRadius: 28,
             padding: 22,
@@ -210,8 +212,25 @@ export function DashboardScreen({ ctx }) {
             boxShadow: "0 8px 24px color-mix(in oklab, var(--primary) 22%, transparent)",
           }}
         >
-          {/* círculos decorativos */}
+          {/* brilho diagonal que atravessa o card */}
           <div
+            aria-hidden="true"
+            className="card-saldo__brilho"
+            style={{
+              position: "absolute",
+              top: 0,
+              left: "-40%",
+              width: "60%",
+              height: "100%",
+              background:
+                "linear-gradient(115deg, transparent 35%, rgba(255,255,255,0.10) 50%, transparent 65%)",
+              pointerEvents: "none",
+            }}
+          />
+          {/* círculos decorativos (com flutuação suave) */}
+          <div
+            aria-hidden="true"
+            className="card-saldo__bolha card-saldo__bolha--a"
             style={{
               position: "absolute",
               right: -40,
@@ -223,6 +242,8 @@ export function DashboardScreen({ ctx }) {
             }}
           />
           <div
+            aria-hidden="true"
+            className="card-saldo__bolha card-saldo__bolha--b"
             style={{
               position: "absolute",
               right: 30,
