@@ -1,26 +1,26 @@
-// firebase.js — inicialização do Firebase + auth Google + Firestore.
+// firebase.js — inicialização do Firebase + autenticação por e-mail/senha + Firestore.
 //
 // ┌─────────────────────────────────────────────────────────────────────┐
-// │  COLE AQUI a configuração do seu projeto Firebase.                 │
-// │  Console Firebase → Configurações do projeto → "Seus apps" → Web. │
+// │  Configuração do projeto Firebase via variáveis de ambiente (.env). │
 // │  Essas chaves são públicas por design (não são segredos);          │
 // │  o acesso aos dados é controlado pelas Security Rules do Firestore.│
 // └─────────────────────────────────────────────────────────────────────┘
 //
-// IMPORTANTE: para o login com Google funcionar você precisa:
-//   1. Authentication → Sign-in method → habilitar "Google".
+// IMPORTANTE no Console do Firebase:
+//   1. Authentication → Sign-in method → habilitar "E-mail/senha".
 //   2. Authentication → Settings → Authorized domains → adicionar:
 //      - localhost (já vem por padrão)
-//      - <seu-usuario>.github.io (necessário para GitHub Pages)
+//      - <seu-usuario>.github.io (para o GitHub Pages)
+//   3. (Opcional) Authentication → Templates → personalizar o e-mail de verificação.
 
 import { initializeApp } from "firebase/app";
 import {
   getAuth,
-  GoogleAuthProvider,
-  signInWithPopup,
-  signInWithRedirect,
-  signInWithCredential,
-  getRedirectResult,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  sendEmailVerification,
+  sendPasswordResetEmail,
+  updateProfile,
   signOut,
   onAuthStateChanged,
 } from "firebase/auth";
@@ -52,112 +52,42 @@ export const db = initializeFirestore(app, {
   }),
 });
 
-const googleProvider = new GoogleAuthProvider();
+// ─── Autenticação por e-mail/senha ───
 
-// ─── Login com Google ───
-//
-// Em PWA instalado (iOS/Android), signInWithPopup abre o navegador do sistema
-// num contexto separado e o app nunca recebe o resultado; signInWithRedirect
-// também falha quando o app não está hospedado no mesmo domínio do authDomain
-// (caso do GitHub Pages: app em *.github.io, authDomain em *.firebaseapp.com —
-// o Safari particiona o storage e perde a sessão).
-//
-// Solução: usar o Google Identity Services (GIS) para obter o ID token dentro
-// da própria janela do PWA e trocá-lo por uma credencial do Firebase.
-// O <script> do GIS é carregado no index.html.
-
-const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
-
-function gisDisponivel() {
-  return typeof window !== "undefined" && !!window.google?.accounts?.id && !!GOOGLE_CLIENT_ID;
-}
-
-// Espera o script do GIS carregar (no-op se já estiver pronto).
-function aguardarGIS(timeoutMs = 6000) {
-  return new Promise((resolve, reject) => {
-    if (window.google?.accounts?.id) return resolve();
-    const inicio = Date.now();
-    const t = setInterval(() => {
-      if (window.google?.accounts?.id) {
-        clearInterval(t);
-        resolve();
-      } else if (Date.now() - inicio > timeoutMs) {
-        clearInterval(t);
-        reject(new Error("GIS não carregou"));
-      }
-    }, 100);
-  });
-}
-
-// Troca o ID token do Google por uma sessão Firebase.
-async function entrarComIdToken(idToken) {
-  const cred = GoogleAuthProvider.credential(idToken);
-  return signInWithCredential(auth, cred);
-}
-
-let gisInicializado = false;
-function inicializarGIS() {
-  if (gisInicializado) {
-    window.google.accounts.id.cancel(); // limpa callback anterior
-  }
-  window.google.accounts.id.initialize({
-    client_id: GOOGLE_CLIENT_ID,
-    callback: (resp) => {
-      if (resp?.credential) entrarComIdToken(resp.credential).catch((e) => console.error("[Firebase] signInWithCredential:", e));
-    },
-    use_fedcm_for_prompt: true,
-    auto_select: false,
-  });
-  gisInicializado = true;
-}
-
-// Renderiza o botão oficial "Entrar com Google" do GIS dentro de `elemento`.
-// É o caminho mais confiável em PWA. Retorna true se conseguiu renderizar.
-export async function renderizarBotaoGoogle(elemento, { onErro } = {}) {
-  if (!GOOGLE_CLIENT_ID) {
-    onErro?.("VITE_GOOGLE_CLIENT_ID não configurado");
-    return false;
-  }
-  try {
-    await aguardarGIS();
-  } catch {
-    onErro?.("Não foi possível carregar o login do Google");
-    return false;
-  }
-  inicializarGIS();
-  elemento.innerHTML = "";
-  window.google.accounts.id.renderButton(elemento, {
-    type: "standard",
-    theme: "outline",
-    size: "large",
-    text: "continue_with",
-    shape: "pill",
-    logo_alignment: "left",
-    width: Math.min(elemento.clientWidth || 320, 400),
-  });
-  // Mostra também o One Tap quando disponível (não atrapalha o botão).
-  window.google.accounts.id.prompt();
-  return true;
-}
-
-// Fallback (navegador normal, GIS indisponível): popup → redirect.
-export async function entrarComGoogle() {
-  if (gisDisponivel()) {
-    inicializarGIS();
-    window.google.accounts.id.prompt();
-    return;
-  }
-  try {
-    return await signInWithPopup(auth, googleProvider);
-  } catch (err) {
-    if (
-      err?.code === "auth/popup-blocked" ||
-      err?.code === "auth/operation-not-supported-in-this-environment"
-    ) {
-      return signInWithRedirect(auth, googleProvider);
+// Cria a conta, define o nome, envia o e-mail de verificação e deixa o usuário
+// "logado mas não verificado" — o app só libera o acesso depois que ele confirma.
+export async function criarConta(nome, email, senha) {
+  const cred = await createUserWithEmailAndPassword(auth, email, senha);
+  if (nome) {
+    try {
+      await updateProfile(cred.user, { displayName: nome });
+    } catch {
+      /* ignora — não é crítico */
     }
-    throw err;
   }
+  await sendEmailVerification(cred.user);
+  return cred.user;
+}
+
+export async function entrar(email, senha) {
+  const cred = await signInWithEmailAndPassword(auth, email, senha);
+  return cred.user;
+}
+
+export function reenviarVerificacao() {
+  if (!auth.currentUser) return Promise.reject(new Error("sem usuário"));
+  return sendEmailVerification(auth.currentUser);
+}
+
+// Recarrega o usuário do servidor (para detectar que o e-mail acabou de ser confirmado).
+export async function recarregarUsuario() {
+  if (!auth.currentUser) return null;
+  await auth.currentUser.reload();
+  return auth.currentUser;
+}
+
+export function redefinirSenha(email) {
+  return sendPasswordResetEmail(auth, email);
 }
 
 export function sair() {
@@ -166,14 +96,6 @@ export function sair() {
 
 export function escutarAuth(callback) {
   return onAuthStateChanged(auth, callback);
-}
-
-// Processa o resultado de signInWithRedirect quando o app recarrega depois da
-// volta do Google. Chame uma vez no boot — onAuthStateChanged faz o resto.
-export function processarRedirect() {
-  return getRedirectResult(auth).catch((err) => {
-    console.error("[Firebase] erro processando redirect:", err);
-  });
 }
 
 export { doc, getDoc, setDoc, onSnapshot };

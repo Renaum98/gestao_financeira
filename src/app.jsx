@@ -9,17 +9,13 @@ import {
   novaCategoriaCustom,
 } from "./data.js";
 import { Icon } from "./ui/icons.jsx";
-import {
-  escutarAuth,
-  processarRedirect,
-  sair as sairFirebase,
-} from "./lib/firebase.js";
+import { escutarAuth, sair as sairFirebase } from "./lib/firebase.js";
 import { useCloudState } from "./lib/storage.js";
 import { vibrar } from "./lib/haptics.js";
 
 // LoginScreen fica no bundle principal (primeira tela para deslogados).
 // As demais telas e o modal são carregados sob demanda (code-splitting).
-import { LoginScreen } from "./screens/login.jsx";
+import { LoginScreen, VerifyEmailScreen } from "./screens/login.jsx";
 
 const lazyNamed = (importar, nome) =>
   React.lazy(() => importar().then((m) => ({ default: m[nome] })));
@@ -350,15 +346,15 @@ function aplicarTema(paleta, modo) {
 }
 
 export function App() {
-  // Auth: undefined = carregando, null = deslogado, objeto = usuário Google
+  // Auth: undefined = carregando, null = deslogado, objeto = usuário (verificado ou não)
   const [usuario, setUsuario] = React.useState(undefined);
-  React.useEffect(() => {
-    processarRedirect(); // resolve qualquer signInWithRedirect pendente
-    return escutarAuth(setUsuario);
-  }, []);
-  const uid = usuario?.uid;
+  const [, forcarRender] = React.useReducer((n) => n + 1, 0); // re-renderiza após user.reload()
+  React.useEffect(() => escutarAuth(setUsuario), []);
 
-  // Storage Firestore (só conecta quando há uid)
+  // Só conecta ao Firestore quando o usuário existe E confirmou o e-mail
+  // (não criamos os dados de quem ainda não verificou a conta).
+  const verificado = !!usuario?.emailVerified;
+  const uid = verificado ? usuario.uid : null;
   const cloud = useCloudState(uid);
 
   // Mescla categorias personalizadas em CATEGORIAS/ORDEM_CATS antes de renderizar as telas.
@@ -614,7 +610,11 @@ export function App() {
   // Estados de carga e gateamento
   if (usuario === undefined) return <Splash />; // ainda decidindo se há sessão
   if (usuario === null) return <LoginScreen />; // deslogado
-  if (!cloud.ready) return <Splash />; // logado, carregando dados
+  if (!usuario.emailVerified)
+    return (
+      <VerifyEmailScreen email={usuario.email} onAtualizar={forcarRender} />
+    );
+  if (!cloud.ready) return <Splash />; // logado e verificado, carregando dados
 
   if (onboarding)
     return (

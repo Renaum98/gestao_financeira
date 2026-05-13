@@ -1,134 +1,275 @@
-// login.jsx — Tela de boas-vindas + entrar com Google.
+// login.jsx — Tela de login/cadastro por e-mail e senha + tela de verificação de e-mail.
 
 import React from 'react';
-import { entrarComGoogle, renderizarBotaoGoogle } from '../lib/firebase.js';
+import {
+  criarConta,
+  entrar as entrarFirebase,
+  reenviarVerificacao,
+  recarregarUsuario,
+  redefinirSenha,
+  sair as sairFirebase,
+} from '../lib/firebase.js';
+import { Icon } from '../ui/icons.jsx';
+import { vibrar } from '../lib/haptics.js';
 
-export function LoginScreen() {
-  const [carregando, setCarregando] = React.useState(false);
-  const [erro, setErro] = React.useState('');
-  const [usarFallback, setUsarFallback] = React.useState(false);
-  const botaoRef = React.useRef(null);
+const EMAIL_OK = (e) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test((e || '').trim());
+const SENHA_OK = (s) => (s || '').length >= 8 && /[a-zA-Z]/.test(s) && /[0-9]/.test(s);
 
-  // Renderiza o botão oficial do Google Identity Services (funciona em PWA).
-  // Se não der (script bloqueado, client id ausente), mostra o botão de fallback.
-  React.useEffect(() => {
-    let cancelado = false;
-    (async () => {
-      const ok = botaoRef.current
-        ? await renderizarBotaoGoogle(botaoRef.current, {
-            onErro: (m) => console.warn('[Login] GIS indisponível:', m),
-          })
-        : false;
-      if (!cancelado && !ok) setUsarFallback(true);
-    })();
-    return () => { cancelado = true; };
-  }, []);
+function msgErro(code) {
+  switch (code) {
+    case 'auth/invalid-email': return 'E-mail inválido.';
+    case 'auth/missing-password': return 'Digite a senha.';
+    case 'auth/user-not-found':
+    case 'auth/wrong-password':
+    case 'auth/invalid-credential': return 'E-mail ou senha incorretos.';
+    case 'auth/email-already-in-use': return 'Já existe uma conta com esse e-mail.';
+    case 'auth/weak-password': return 'Senha muito fraca (mínimo 8 caracteres).';
+    case 'auth/too-many-requests': return 'Muitas tentativas. Tente novamente em alguns minutos.';
+    case 'auth/network-request-failed': return 'Sem conexão. Verifique sua internet.';
+    default: return 'Algo deu errado. Tente novamente.';
+  }
+}
 
-  const entrar = async () => {
-    setErro('');
-    setCarregando(true);
-    try {
-      await entrarComGoogle();
-    } catch (err) {
-      console.error(err);
-      const msg = err?.code === 'auth/popup-closed-by-user'
-        ? ''
-        : 'Não foi possível entrar. Tente novamente.';
-      setErro(msg);
-      setCarregando(false);
-    }
-  };
+const inputStyle = {
+  width: '100%', padding: '13px 14px', borderRadius: 14, border: '1.5px solid var(--linha)',
+  background: 'var(--card)', outline: 'none', fontSize: 15, fontWeight: 600,
+  color: 'var(--ink)', fontFamily: 'inherit', boxSizing: 'border-box',
+};
 
+function Campo({ label, ...props }) {
+  return (
+    <label style={{ display: 'block' }}>
+      <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--muted)', marginBottom: 6, paddingLeft: 2 }}>{label}</div>
+      <input {...props} style={inputStyle} />
+    </label>
+  );
+}
+
+function Logo({ size = 84 }) {
   return (
     <div style={{
-      minHeight: '100vh', display: 'flex', flexDirection: 'column',
-      alignItems: 'center', justifyContent: 'space-between',
-      padding: 'max(48px, env(safe-area-inset-top)) 28px max(40px, env(safe-area-inset-bottom))',
+      width: size, height: size, borderRadius: size * 0.34,
+      background: 'linear-gradient(135deg, var(--primary), var(--primary-2))',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      boxShadow: '0 16px 36px color-mix(in oklab, var(--primary) 30%, transparent)',
+      position: 'relative', overflow: 'hidden', flexShrink: 0,
+    }}>
+      <div style={{ position: 'absolute', top: -18, left: -18, width: 44, height: 44, borderRadius: '50%', background: 'rgba(255,255,255,0.18)' }} />
+      <div style={{ fontSize: size * 0.6, fontWeight: 800, color: '#fff', letterSpacing: '-0.05em', lineHeight: 1, position: 'relative' }}>F</div>
+    </div>
+  );
+}
+
+function Casca({ children }) {
+  return (
+    <div style={{
+      minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center',
+      justifyContent: 'center', gap: 22,
+      padding: 'max(40px, env(safe-area-inset-top)) 24px max(32px, env(safe-area-inset-bottom))',
       background: 'var(--bg)',
     }}>
-      <div />
-
-      {/* Identidade do app */}
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', gap: 16 }}>
-        <div style={{
-          width: 96, height: 96, borderRadius: 32,
-          background: 'linear-gradient(135deg, var(--primary), var(--primary-2))',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          boxShadow: '0 16px 36px color-mix(in oklab, var(--primary) 30%, transparent)',
-          position: 'relative', overflow: 'hidden',
-        }}>
-          <div style={{ position: 'absolute', top: -20, left: -20, width: 50, height: 50, borderRadius: '50%', background: 'rgba(255,255,255,0.18)' }} />
-          <div style={{ position: 'absolute', bottom: -16, right: -10, width: 36, height: 36, borderRadius: '50%', background: 'rgba(255,255,255,0.12)' }} />
-          <div style={{
-            fontSize: 56, fontWeight: 800, color: '#fff',
-            letterSpacing: '-0.05em', lineHeight: 1, position: 'relative',
-          }}>F</div>
-        </div>
-
-        <div style={{ fontSize: 30, fontWeight: 800, color: 'var(--ink)', letterSpacing: '-0.03em', marginTop: 8 }}>
-          Financeiro
-        </div>
-        <div style={{ fontSize: 15, color: 'var(--muted)', fontWeight: 500, maxWidth: 300, lineHeight: 1.45 }}>
-          Suas finanças no bolso. Acompanhe gastos, defina orçamentos e crie caixinhas para metas.
-        </div>
-      </div>
-
-      {/* Botão Google */}
-      <div style={{ width: '100%', maxWidth: 360, display: 'flex', flexDirection: 'column', gap: 12, alignItems: 'center' }}>
-        {/* Botão oficial do Google Identity Services (renderizado via JS) */}
-        <div ref={botaoRef} style={{ minHeight: usarFallback ? 0 : 44, display: 'flex', justifyContent: 'center' }} />
-
-        {usarFallback && (
-          <button
-            onClick={entrar}
-            disabled={carregando}
-            style={{
-              width: '100%', padding: '14px 18px', borderRadius: 16, border: 'none',
-              background: 'var(--card)', color: 'var(--ink)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12,
-              fontSize: 15, fontWeight: 800, fontFamily: 'inherit',
-              cursor: carregando ? 'default' : 'pointer',
-              opacity: carregando ? 0.7 : 1,
-              boxShadow: '0 4px 14px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04)',
-              transition: 'transform .1s, opacity .15s',
-            }}
-          >
-            {carregando ? <SpinnerLocal /> : <GoogleLogo />}
-            <span>{carregando ? 'Entrando…' : 'Entrar com Google'}</span>
-          </button>
-        )}
-
-        {erro && (
-          <div style={{ fontSize: 12, fontWeight: 700, color: '#D63A55', textAlign: 'center' }}>
-            {erro}
-          </div>
-        )}
-
-        <div style={{ fontSize: 11, color: 'var(--muted)', fontWeight: 500, textAlign: 'center', lineHeight: 1.45, maxWidth: 280, marginTop: 8 }}>
-          Usamos sua conta Google só para identificar e sincronizar seus dados. Não compartilhamos nada.
-        </div>
+      <div style={{ width: '100%', maxWidth: 380, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 22 }}>
+        {children}
       </div>
     </div>
   );
 }
 
-function GoogleLogo() {
+function BotaoPrimario({ children, ...props }) {
   return (
-    <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true">
-      <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-      <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-      <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-      <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-    </svg>
+    <button {...props} style={{
+      width: '100%', padding: '14px 18px', borderRadius: 14, border: 'none',
+      background: props.disabled ? 'var(--linha)' : 'linear-gradient(135deg, var(--primary), var(--primary-2))',
+      color: props.disabled ? 'var(--muted)' : '#fff',
+      fontSize: 15, fontWeight: 800, fontFamily: 'inherit',
+      cursor: props.disabled ? 'default' : 'pointer',
+      boxShadow: props.disabled ? 'none' : '0 8px 20px color-mix(in oklab, var(--primary) 28%, transparent)',
+      transition: 'opacity .15s',
+    }}>{children}</button>
   );
 }
 
-function SpinnerLocal() {
+// ─── Tela de login / cadastro ───
+export function LoginScreen() {
+  const [modo, setModo] = React.useState('entrar'); // 'entrar' | 'cadastrar' | 'recuperar'
+  const [nome, setNome] = React.useState('');
+  const [email, setEmail] = React.useState('');
+  const [senha, setSenha] = React.useState('');
+  const [carregando, setCarregando] = React.useState(false);
+  const [erro, setErro] = React.useState('');
+  const [info, setInfo] = React.useState('');
+
+  const limpar = () => { setErro(''); setInfo(''); };
+  const trocarModo = (m) => { setModo(m); setSenha(''); limpar(); };
+
+  const validar = () => {
+    if (!EMAIL_OK(email)) return 'Digite um e-mail válido.';
+    if (modo === 'recuperar') return null;
+    if (modo === 'cadastrar' && !nome.trim()) return 'Digite seu nome.';
+    if (!senha) return 'Digite a senha.';
+    if (modo === 'cadastrar' && !SENHA_OK(senha))
+      return 'A senha precisa ter ao menos 8 caracteres, com letras e números.';
+    return null;
+  };
+
+  const enviar = async (e) => {
+    e?.preventDefault();
+    limpar();
+    const v = validar();
+    if (v) { setErro(v); return; }
+    vibrar();
+    setCarregando(true);
+    try {
+      if (modo === 'recuperar') {
+        await redefinirSenha(email.trim());
+        setInfo('Enviamos um link para redefinir sua senha. Confira seu e-mail.');
+      } else if (modo === 'cadastrar') {
+        await criarConta(nome.trim(), email.trim(), senha);
+        // onAuthStateChanged dispara → o app mostra a tela de verificação de e-mail.
+      } else {
+        await entrarFirebase(email.trim(), senha);
+        // onAuthStateChanged dispara; se o e-mail não estiver confirmado,
+        // o app mostra a tela de verificação.
+      }
+    } catch (err) {
+      setErro(msgErro(err?.code));
+      setCarregando(false);
+    }
+  };
+
+  const titulo = modo === 'cadastrar' ? 'Criar conta' : modo === 'recuperar' ? 'Recuperar senha' : 'Entrar';
+  const subtitulo = modo === 'cadastrar'
+    ? 'Crie sua conta para começar a organizar suas finanças.'
+    : modo === 'recuperar'
+      ? 'Digite seu e-mail e enviaremos um link para redefinir a senha.'
+      : 'Bem-vindo de volta. Acesse sua conta.';
+
   return (
-    <div style={{
-      width: 18, height: 18, border: '2.5px solid var(--linha)',
-      borderTopColor: 'var(--primary)', borderRadius: '50%',
-      animation: 'spin 0.8s linear infinite',
-    }} />
+    <Casca>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', gap: 14 }}>
+        <Logo />
+        <div>
+          <div style={{ fontSize: 26, fontWeight: 800, color: 'var(--ink)', letterSpacing: '-0.03em' }}>{titulo}</div>
+          <div style={{ fontSize: 14, color: 'var(--muted)', fontWeight: 500, marginTop: 6, lineHeight: 1.45, maxWidth: 300 }}>{subtitulo}</div>
+        </div>
+      </div>
+
+      <form onSubmit={enviar} style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 12 }}>
+        {modo === 'cadastrar' && (
+          <Campo label="Nome" type="text" autoComplete="name" placeholder="Como quer ser chamado(a)?"
+            value={nome} onChange={(e) => setNome(e.target.value)} />
+        )}
+        <Campo label="E-mail" type="email" autoComplete="email" inputMode="email" placeholder="voce@email.com"
+          value={email} onChange={(e) => setEmail(e.target.value)} />
+        {modo !== 'recuperar' && (
+          <Campo label="Senha" type="password"
+            autoComplete={modo === 'cadastrar' ? 'new-password' : 'current-password'}
+            placeholder={modo === 'cadastrar' ? 'Mín. 8 caracteres, letras e números' : 'Sua senha'}
+            value={senha} onChange={(e) => setSenha(e.target.value)} />
+        )}
+        {modo === 'cadastrar' && (
+          <div style={{ fontSize: 11, color: 'var(--muted)', fontWeight: 500, paddingLeft: 2, lineHeight: 1.4 }}>
+            Você receberá um e-mail de confirmação. A conta só é ativada depois que você clicar no link.
+          </div>
+        )}
+
+        {erro && <div style={{ fontSize: 12.5, fontWeight: 700, color: '#D63A55' }}>{erro}</div>}
+        {info && <div style={{ fontSize: 12.5, fontWeight: 700, color: '#1B9E6A' }}>{info}</div>}
+
+        <BotaoPrimario type="submit" disabled={carregando}>
+          {carregando ? 'Aguarde…' : modo === 'cadastrar' ? 'Criar conta' : modo === 'recuperar' ? 'Enviar link' : 'Entrar'}
+        </BotaoPrimario>
+
+        {modo === 'entrar' && (
+          <button type="button" onClick={() => trocarModo('recuperar')} style={linkStyle}>Esqueci minha senha</button>
+        )}
+      </form>
+
+      <div style={{ fontSize: 13, color: 'var(--muted)', fontWeight: 600 }}>
+        {modo === 'cadastrar' ? (
+          <>Já tem conta? <button type="button" onClick={() => trocarModo('entrar')} style={linkInlineStyle}>Entrar</button></>
+        ) : modo === 'recuperar' ? (
+          <button type="button" onClick={() => trocarModo('entrar')} style={linkInlineStyle}>Voltar para o login</button>
+        ) : (
+          <>Não tem conta? <button type="button" onClick={() => trocarModo('cadastrar')} style={linkInlineStyle}>Cadastre-se</button></>
+        )}
+      </div>
+    </Casca>
+  );
+}
+
+const linkStyle = {
+  background: 'transparent', border: 'none', color: 'var(--muted)',
+  fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', alignSelf: 'center', padding: 4,
+};
+const linkInlineStyle = {
+  background: 'transparent', border: 'none', color: 'var(--primary)',
+  fontSize: 13, fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit', padding: 0,
+};
+
+// ─── Tela "confirme seu e-mail" (usuário logado mas sem verificação) ───
+export function VerifyEmailScreen({ email, onAtualizar }) {
+  const [carregando, setCarregando] = React.useState(false);
+  const [reenviando, setReenviando] = React.useState(false);
+  const [msg, setMsg] = React.useState('');
+  const [erro, setErro] = React.useState('');
+
+  const jaConfirmei = async () => {
+    setMsg(''); setErro(''); setCarregando(true);
+    try {
+      const u = await recarregarUsuario();
+      if (u?.emailVerified) { vibrar(14); onAtualizar?.(u); }
+      else setErro('Ainda não detectamos a confirmação. Abra o link do e-mail e tente de novo.');
+    } catch {
+      setErro('Não foi possível verificar agora. Tente novamente.');
+    }
+    setCarregando(false);
+  };
+
+  const reenviar = async () => {
+    setMsg(''); setErro(''); setReenviando(true);
+    try {
+      await reenviarVerificacao();
+      setMsg('E-mail de confirmação reenviado. Confira sua caixa de entrada (e o spam).');
+    } catch (err) {
+      setErro(err?.code === 'auth/too-many-requests'
+        ? 'Você pediu muitos e-mails. Aguarde alguns minutos.'
+        : 'Não foi possível reenviar agora.');
+    }
+    setReenviando(false);
+  };
+
+  return (
+    <Casca>
+      <div style={{
+        width: 72, height: 72, borderRadius: 22, background: 'color-mix(in oklab, var(--primary) 12%, transparent)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+      }}>
+        <Icon name="mail" size={32} color="var(--primary)" strokeWidth={2} />
+      </div>
+      <div style={{ textAlign: 'center' }}>
+        <div style={{ fontSize: 22, fontWeight: 800, color: 'var(--ink)', letterSpacing: '-0.02em' }}>Confirme seu e-mail</div>
+        <div style={{ fontSize: 14, color: 'var(--muted)', fontWeight: 500, marginTop: 8, lineHeight: 1.5 }}>
+          Enviamos um link de confirmação para{' '}
+          <span style={{ color: 'var(--ink)', fontWeight: 700 }}>{email}</span>.
+          Clique nele para ativar sua conta e depois volte aqui.
+        </div>
+      </div>
+
+      {msg && <div style={{ fontSize: 12.5, fontWeight: 700, color: '#1B9E6A', textAlign: 'center' }}>{msg}</div>}
+      {erro && <div style={{ fontSize: 12.5, fontWeight: 700, color: '#D63A55', textAlign: 'center' }}>{erro}</div>}
+
+      <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <BotaoPrimario type="button" onClick={jaConfirmei} disabled={carregando}>
+          {carregando ? 'Verificando…' : 'Já confirmei, entrar'}
+        </BotaoPrimario>
+        <button type="button" onClick={reenviar} disabled={reenviando} style={{
+          width: '100%', padding: '12px', borderRadius: 14, border: '1.5px solid var(--linha)',
+          background: 'var(--card)', color: 'var(--ink)', fontSize: 14, fontWeight: 700,
+          cursor: reenviando ? 'default' : 'pointer', fontFamily: 'inherit',
+        }}>{reenviando ? 'Reenviando…' : 'Reenviar e-mail'}</button>
+        <button type="button" onClick={() => sairFirebase()} style={linkStyle}>Usar outra conta</button>
+      </div>
+    </Casca>
   );
 }

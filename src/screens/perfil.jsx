@@ -1,4 +1,4 @@
-// perfil.jsx — Tela Perfil (conta Google, aparência, atalhos, sair).
+// perfil.jsx — Tela Perfil (conta, aparência, atalhos, sair).
 
 import React from 'react';
 import { PALETAS } from '../data.js';
@@ -9,14 +9,14 @@ import { vibrar } from '../lib/haptics.js';
 
 export function PerfilScreen({ ctx }) {
   const { voltar, ocultar, setOcultar, irPara, setOnboarding, preferences, setPreferences, usuario, sair } = ctx;
-  const nomeGoogle = usuario?.displayName || '';
+  const nomeConta = usuario?.displayName || '';
   const email = usuario?.email || '';
   const foto = usuario?.photoURL || '';
-  const nomeExibido = preferences.nome?.trim() || nomeGoogle || 'Você';
+  const nomeExibido = preferences.nome?.trim() || nomeConta || 'Você';
   const inicial = (nomeExibido.trim()[0] || 'F').toUpperCase();
 
   const [editandoNome, setEditandoNome] = React.useState(false);
-  const [nomeTemp, setNomeTemp] = React.useState(preferences.nome || nomeGoogle);
+  const [nomeTemp, setNomeTemp] = React.useState(preferences.nome || nomeConta);
   const [confirmarSair, setConfirmarSair] = React.useState(false);
 
   const salvarNome = () => {
@@ -28,7 +28,7 @@ export function PerfilScreen({ ctx }) {
     <div style={{ paddingBottom: 110 }}>
       <TopBar voltar={voltar} />
       <div style={{ padding: '0 20px 0', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-        {/* Avatar do Google, se houver foto */}
+        {/* Avatar — foto se houver, senão inicial do nome */}
         {foto ? (
           <img
             src={foto}
@@ -56,7 +56,7 @@ export function PerfilScreen({ ctx }) {
               value={nomeTemp}
               onChange={(e) => setNomeTemp(e.target.value)}
               onKeyDown={(e) => { if (e.key === 'Enter') salvarNome(); if (e.key === 'Escape') setEditandoNome(false); }}
-              placeholder={nomeGoogle || 'Seu nome'}
+              placeholder={nomeConta || 'Seu nome'}
               style={{
                 padding: '8px 12px', borderRadius: 12, border: '1.5px solid var(--primary)',
                 background: 'var(--card)', fontSize: 16, fontWeight: 700, color: 'var(--ink)',
@@ -72,7 +72,7 @@ export function PerfilScreen({ ctx }) {
             </button>
           </div>
         ) : (
-          <button onClick={() => { setNomeTemp(preferences.nome || nomeGoogle); setEditandoNome(true); }} style={{
+          <button onClick={() => { setNomeTemp(preferences.nome || nomeConta); setEditandoNome(true); }} style={{
             background: 'transparent', border: 'none', cursor: 'pointer', padding: 0,
             display: 'flex', alignItems: 'center', gap: 6, marginTop: 12,
           }}>
@@ -157,7 +157,7 @@ export function PerfilScreen({ ctx }) {
       {confirmarSair && (
         <ConfirmModal
           titulo="Sair da conta?"
-          mensagem="Você precisará entrar novamente com sua conta Google. Os dados continuam salvos na nuvem."
+          mensagem="Você precisará entrar novamente com seu e-mail e senha. Os dados continuam salvos na nuvem."
           textoConfirmar="Sair"
           icone="close"
           onCancelar={() => setConfirmarSair(false)}
