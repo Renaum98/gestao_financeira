@@ -115,17 +115,17 @@ export function DashboardScreen({ ctx }) {
           <div style={{ display: "flex", gap: 8 }}>
             <button
               onClick={() => setOcultar(!ocultar)}
+              className="glass-surface"
               style={{
                 width: 40,
                 height: 40,
                 borderRadius: 20,
-                background: "var(--card)",
-                border: "none",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
                 cursor: "pointer",
-                boxShadow: "0 1px 2px rgba(0,0,0,0.04)",
+                boxShadow:
+                  "0 4px 14px rgba(20,16,24,0.08), inset 0 1px 0 rgba(255,255,255,0.3)",
               }}
             >
               <Icon
@@ -137,24 +137,24 @@ export function DashboardScreen({ ctx }) {
             </button>
             <button
               onClick={() => irPara("perfil")}
+              className="glass-surface"
               style={{
                 width: 40,
                 height: 40,
                 padding: 0,
                 borderRadius: 20,
-                background: "var(--card)",
-                border: "none",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
                 cursor: "pointer",
-                boxShadow: "0 1px 2px rgba(0,0,0,0.04)",
+                boxShadow:
+                  "0 4px 14px rgba(20,16,24,0.08), inset 0 1px 0 rgba(255,255,255,0.3)",
                 overflow: "hidden",
               }}
             >
-              {usuario?.photoURL ? (
+              {(preferences.fotoUrl || usuario?.photoURL) ? (
                 <img
-                  src={usuario.photoURL}
+                  src={preferences.fotoUrl || usuario.photoURL}
                   alt={primeiroNome || "Perfil"}
                   referrerPolicy="no-referrer"
                   style={{

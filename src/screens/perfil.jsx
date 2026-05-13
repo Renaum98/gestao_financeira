@@ -6,47 +6,100 @@ import { Icon } from '../ui/icons.jsx';
 import { Card, TopBar } from '../ui/common.jsx';
 import { ConfirmModal } from '../ui/confirm-modal.jsx';
 import { vibrar } from '../lib/haptics.js';
+import { lerFotoPerfil } from '../lib/imagem.js';
 
 export function PerfilScreen({ ctx }) {
   const { voltar, ocultar, setOcultar, irPara, setOnboarding, preferences, setPreferences, usuario, sair } = ctx;
   const nomeConta = usuario?.displayName || '';
   const email = usuario?.email || '';
-  const foto = usuario?.photoURL || '';
+  const foto = preferences.fotoUrl || usuario?.photoURL || '';
   const nomeExibido = preferences.nome?.trim() || nomeConta || 'Você';
   const inicial = (nomeExibido.trim()[0] || 'F').toUpperCase();
 
   const [editandoNome, setEditandoNome] = React.useState(false);
   const [nomeTemp, setNomeTemp] = React.useState(preferences.nome || nomeConta);
   const [confirmarSair, setConfirmarSair] = React.useState(false);
+  const [erroFoto, setErroFoto] = React.useState('');
+  const [carregandoFoto, setCarregandoFoto] = React.useState(false);
+  const inputFotoRef = React.useRef(null);
 
   const salvarNome = () => {
     setPreferences({ nome: nomeTemp.trim() });
     setEditandoNome(false);
   };
 
+  const escolherFoto = () => { setErroFoto(''); inputFotoRef.current?.click(); };
+  const aoSelecionarFoto = async (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = ''; // permite re-selecionar o mesmo arquivo depois
+    if (!file) return;
+    setErroFoto('');
+    setCarregandoFoto(true);
+    try {
+      const dataUrl = await lerFotoPerfil(file);
+      setPreferences({ fotoUrl: dataUrl });
+      vibrar(14);
+    } catch (err) {
+      setErroFoto(err?.message || 'Não foi possível usar essa imagem.');
+    }
+    setCarregandoFoto(false);
+  };
+  const removerFoto = () => { setErroFoto(''); setPreferences({ fotoUrl: '' }); vibrar(); };
+
   return (
     <div style={{ paddingBottom: 110 }}>
       <TopBar voltar={voltar} />
       <div style={{ padding: '0 20px 0', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-        {/* Avatar — foto se houver, senão inicial do nome */}
-        {foto ? (
-          <img
-            src={foto}
-            alt=""
-            referrerPolicy="no-referrer"
-            style={{
-              width: 88, height: 88, borderRadius: 44, objectFit: 'cover',
-              boxShadow: '0 12px 30px color-mix(in oklab, var(--primary) 20%, transparent)',
-            }}
-          />
-        ) : (
-          <div style={{
-            width: 88, height: 88, borderRadius: 44,
-            background: 'linear-gradient(135deg, var(--primary), var(--primary-2))',
+        {/* Avatar — clique para trocar a foto */}
+        <input
+          ref={inputFotoRef}
+          type="file"
+          accept="image/*"
+          onChange={aoSelecionarFoto}
+          style={{ display: 'none' }}
+        />
+        <button
+          onClick={escolherFoto}
+          aria-label="Alterar foto de perfil"
+          style={{
+            position: 'relative', width: 88, height: 88, borderRadius: 44, border: 'none',
+            padding: 0, cursor: 'pointer', background: 'transparent',
+            boxShadow: '0 12px 30px color-mix(in oklab, var(--primary) 22%, transparent)',
+            opacity: carregandoFoto ? 0.6 : 1,
+          }}
+        >
+          {foto ? (
+            <img
+              src={foto}
+              alt=""
+              referrerPolicy="no-referrer"
+              style={{ width: '100%', height: '100%', borderRadius: 44, objectFit: 'cover', display: 'block' }}
+            />
+          ) : (
+            <div style={{
+              width: '100%', height: '100%', borderRadius: 44,
+              background: 'linear-gradient(135deg, var(--primary), var(--primary-2))',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              color: '#fff', fontSize: 34, fontWeight: 800, letterSpacing: '-0.04em',
+            }}>{inicial}</div>
+          )}
+          {/* Selo de câmera */}
+          <div className="glass-surface" style={{
+            position: 'absolute', right: -2, bottom: -2, width: 30, height: 30, borderRadius: 15,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            color: '#fff', fontSize: 34, fontWeight: 800, letterSpacing: '-0.04em',
-            boxShadow: '0 12px 30px color-mix(in oklab, var(--primary) 25%, transparent)',
-          }}>{inicial}</div>
+            boxShadow: '0 2px 8px rgba(0,0,0,0.18)',
+          }}>
+            <Icon name="edit" size={14} color="var(--ink)" strokeWidth={2.2} />
+          </div>
+        </button>
+        {(foto && preferences.fotoUrl) ? (
+          <button onClick={removerFoto} style={{
+            background: 'transparent', border: 'none', cursor: 'pointer', marginTop: 8,
+            color: 'var(--muted)', fontSize: 12, fontWeight: 700, fontFamily: 'inherit',
+          }}>Remover foto</button>
+        ) : null}
+        {erroFoto && (
+          <div style={{ fontSize: 12, fontWeight: 700, color: '#D63A55', marginTop: 6, textAlign: 'center' }}>{erroFoto}</div>
         )}
 
         {editandoNome ? (

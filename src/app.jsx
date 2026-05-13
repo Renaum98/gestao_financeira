@@ -12,6 +12,7 @@ import { Icon } from "./ui/icons.jsx";
 import { escutarAuth, sair as sairFirebase } from "./lib/firebase.js";
 import { useCloudState } from "./lib/storage.js";
 import { vibrar } from "./lib/haptics.js";
+import { tocarClique } from "./lib/som.js";
 
 // LoginScreen fica no bundle principal (primeira tela para deslogados).
 // As demais telas e o modal são carregados sob demanda (code-splitting).
@@ -53,17 +54,18 @@ function TabBar({ tela, irPara, abrirAdd }) {
         zIndex: 40,
         padding: `8px 14px max(28px, env(safe-area-inset-bottom))`,
         background:
-          "linear-gradient(180deg, rgba(251,247,242,0) 0%, var(--bg) 50%)",
+          "linear-gradient(180deg, transparent 0%, var(--bg) 92%)",
         pointerEvents: "none",
       }}
     >
       <div
+        className="glass-surface"
         style={{
           maxWidth: 480,
           margin: "0 auto",
-          background: "var(--card)",
           borderRadius: 26,
-          boxShadow: "0 8px 24px rgba(20,16,24,0.10), 0 1px 0 rgba(0,0,0,0.02)",
+          boxShadow:
+            "0 10px 30px rgba(20,16,24,0.12), inset 0 1px 0 rgba(255,255,255,0.25)",
           padding: "8px 6px",
           display: "flex",
           alignItems: "center",
@@ -151,17 +153,19 @@ const NAV_DESKTOP = [
   { id: "perfil", icon: "user", label: "Perfil" },
 ];
 
-function Sidebar({ tela, irPara, abrirAdd, usuario }) {
+function Sidebar({ tela, irPara, abrirAdd, usuario, fotoPerfil }) {
   return (
     <aside
+      className="glass-surface"
       style={{
         width: 248,
         flexShrink: 0,
         height: "100vh",
         position: "sticky",
         top: 0,
-        borderRight: "1px solid var(--linha)",
-        background: "var(--card)",
+        borderTop: "none",
+        borderBottom: "none",
+        borderLeft: "none",
         display: "flex",
         flexDirection: "column",
         padding: "20px 14px",
@@ -263,11 +267,12 @@ function Sidebar({ tela, irPara, abrirAdd, usuario }) {
             background: "var(--surface-sunken)",
           }}
         >
-          {usuario.photoURL ? (
+          {(fotoPerfil || usuario.photoURL) ? (
             <img
-              src={usuario.photoURL}
+              src={fotoPerfil || usuario.photoURL}
               alt=""
-              style={{ width: 30, height: 30, borderRadius: 15 }}
+              referrerPolicy="no-referrer"
+              style={{ width: 30, height: 30, borderRadius: 15, objectFit: "cover" }}
             />
           ) : (
             <div
@@ -462,6 +467,7 @@ export function App() {
   const TABS = ["inicio", "gastos", "analise", "perfil"];
   const irPara = (t, p = {}) => {
     vibrar();
+    if (t !== "add" && t !== tela) tocarClique();
     if (TABS.includes(t)) {
       setStack([]);
       setTela(t);
@@ -686,6 +692,7 @@ export function App() {
           irPara={irPara}
           abrirAdd={() => { vibrar(); setAddModal({}); }}
           usuario={usuario}
+          fotoPerfil={cloud.preferences.fotoUrl}
         />
         <main
           style={{ flex: 1, minWidth: 0, overflowY: "auto", height: "100vh" }}

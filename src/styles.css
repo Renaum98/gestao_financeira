@@ -77,6 +77,19 @@ input[type="date"]::-webkit-calendar-picker-indicator { cursor: pointer; opacity
 }
 .cols-desktop > .col-span-all { grid-column: 1 / -1; }
 
+/* "Liquid glass" — superfície translúcida com blur, hairline e brilho no topo.
+   Funciona em claro e escuro porque parte de var(--card)/var(--ink). */
+.glass-surface {
+  background: color-mix(in srgb, var(--card) 70%, transparent);
+  -webkit-backdrop-filter: blur(22px) saturate(180%);
+  backdrop-filter: blur(22px) saturate(180%);
+  border: 1px solid color-mix(in srgb, var(--ink) 10%, transparent);
+}
+/* Quando o navegador não suporta backdrop-filter, volta ao sólido */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .glass-surface { background: var(--card); }
+}
+
 /* Primeira opção de cada card de configuração não tem linha em cima */
 .config-item:first-child { border-top: none !important; }
 
