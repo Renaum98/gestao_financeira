@@ -1,19 +1,34 @@
 // login.jsx — Tela de boas-vindas + entrar com Google.
 
 import React from 'react';
-import { entrarComGoogle } from '../lib/firebase.js';
+import { entrarComGoogle, renderizarBotaoGoogle } from '../lib/firebase.js';
 
 export function LoginScreen() {
   const [carregando, setCarregando] = React.useState(false);
   const [erro, setErro] = React.useState('');
+  const [usarFallback, setUsarFallback] = React.useState(false);
+  const botaoRef = React.useRef(null);
+
+  // Renderiza o botão oficial do Google Identity Services (funciona em PWA).
+  // Se não der (script bloqueado, client id ausente), mostra o botão de fallback.
+  React.useEffect(() => {
+    let cancelado = false;
+    (async () => {
+      const ok = botaoRef.current
+        ? await renderizarBotaoGoogle(botaoRef.current, {
+            onErro: (m) => console.warn('[Login] GIS indisponível:', m),
+          })
+        : false;
+      if (!cancelado && !ok) setUsarFallback(true);
+    })();
+    return () => { cancelado = true; };
+  }, []);
 
   const entrar = async () => {
     setErro('');
     setCarregando(true);
     try {
       await entrarComGoogle();
-      // Se for popup, onAuthStateChanged dispara em seguida.
-      // Se for redirect, a página recarrega — esse estado é descartado.
     } catch (err) {
       console.error(err);
       const msg = err?.code === 'auth/popup-closed-by-user'
@@ -60,23 +75,28 @@ export function LoginScreen() {
 
       {/* Botão Google */}
       <div style={{ width: '100%', maxWidth: 360, display: 'flex', flexDirection: 'column', gap: 12, alignItems: 'center' }}>
-        <button
-          onClick={entrar}
-          disabled={carregando}
-          style={{
-            width: '100%', padding: '14px 18px', borderRadius: 16, border: 'none',
-            background: 'var(--card)', color: 'var(--ink)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12,
-            fontSize: 15, fontWeight: 800, fontFamily: 'inherit',
-            cursor: carregando ? 'default' : 'pointer',
-            opacity: carregando ? 0.7 : 1,
-            boxShadow: '0 4px 14px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04)',
-            transition: 'transform .1s, opacity .15s',
-          }}
-        >
-          {carregando ? <SpinnerLocal /> : <GoogleLogo />}
-          <span>{carregando ? 'Entrando…' : 'Entrar com Google'}</span>
-        </button>
+        {/* Botão oficial do Google Identity Services (renderizado via JS) */}
+        <div ref={botaoRef} style={{ minHeight: usarFallback ? 0 : 44, display: 'flex', justifyContent: 'center' }} />
+
+        {usarFallback && (
+          <button
+            onClick={entrar}
+            disabled={carregando}
+            style={{
+              width: '100%', padding: '14px 18px', borderRadius: 16, border: 'none',
+              background: 'var(--card)', color: 'var(--ink)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12,
+              fontSize: 15, fontWeight: 800, fontFamily: 'inherit',
+              cursor: carregando ? 'default' : 'pointer',
+              opacity: carregando ? 0.7 : 1,
+              boxShadow: '0 4px 14px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04)',
+              transition: 'transform .1s, opacity .15s',
+            }}
+          >
+            {carregando ? <SpinnerLocal /> : <GoogleLogo />}
+            <span>{carregando ? 'Entrando…' : 'Entrar com Google'}</span>
+          </button>
+        )}
 
         {erro && (
           <div style={{ fontSize: 12, fontWeight: 700, color: '#D63A55', textAlign: 'center' }}>

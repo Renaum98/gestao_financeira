@@ -360,7 +360,6 @@ export function AddExpenseModal({ ctx, params }) {
             <input
               type="date"
               value={data}
-              max={hojeISO()}
               onChange={(e) => setData(e.target.value)}
               style={{
                 border: "none",
@@ -570,8 +569,7 @@ export function AddExpenseModal({ ctx, params }) {
                   lineHeight: 1.35,
                 }}
               >
-                Útil para assinaturas, aluguel, mensalidades. Você pode cancelar
-                depois em Perfil → Recorrentes.
+                Útil para assinaturas, aluguel e mensalidades.
               </div>
             </div>
             <ToggleSimples ativo={ehRecorrente} onChange={setEhRecorrente} />

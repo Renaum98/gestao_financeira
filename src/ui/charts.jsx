@@ -61,10 +61,10 @@ export function PieChart({ dados, total, tamanho = 200, ativo, onHover, ocultar 
         flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
         pointerEvents: 'none', textAlign: 'center',
       }}>
-        <div style={{ fontSize: 11, color: '#8A7F84', fontWeight: 600, letterSpacing: 0.4, textTransform: 'uppercase' }}>
+        <div style={{ fontSize: 11, color: 'var(--muted)', fontWeight: 600, letterSpacing: 0.4, textTransform: 'uppercase' }}>
           {exibirRotulo}
         </div>
-        <div style={{ fontSize: 22, color: '#1A1416', fontWeight: 800, marginTop: 4, letterSpacing: '-0.02em' }}>
+        <div style={{ fontSize: 22, color: 'var(--ink)', fontWeight: 800, marginTop: 4, letterSpacing: '-0.02em' }}>
           {fmtBRL(exibirValor, ocultar)}
         </div>
         {ativoData && (
@@ -117,7 +117,7 @@ export function LineChart({ pontos, pontosComp, largura = 340, altura = 140, ocu
       ))}
       {/* linha mês anterior (pontilhada) */}
       {pathComp && (
-        <path d={pathComp} fill="none" stroke="#C9C2D8" strokeWidth="2" strokeDasharray="3 4" strokeLinecap="round" />
+        <path d={pathComp} fill="none" stroke="var(--linha)" strokeWidth="2" strokeDasharray="3 4" strokeLinecap="round" />
       )}
       <path d={areaPath} fill="url(#lineGrad)" />
       <path d={path} fill="none" stroke="var(--primary)" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
@@ -126,7 +126,7 @@ export function LineChart({ pontos, pontosComp, largura = 340, altura = 140, ocu
       <circle cx={x(pontos[pontos.length - 1].dia)} cy={y(pontos[pontos.length - 1].valor)} r="9" fill="var(--primary)" opacity="0.18" />
       {/* eixo dias */}
       {ticks.map(t => (
-        <text key={t} x={x(t)} y={altura - 6} fontFamily="Plus Jakarta Sans" fontSize="10" fill="#8A7F84" textAnchor="middle">{t}</text>
+        <text key={t} x={x(t)} y={altura - 6} fontFamily="Plus Jakarta Sans" fontSize="10" fill="var(--muted)" textAnchor="middle">{t}</text>
       ))}
     </svg>
   );

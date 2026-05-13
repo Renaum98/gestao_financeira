@@ -79,6 +79,94 @@ function TabBar({ tela, irPara, abrirAdd }) {
   );
 }
 
+// ─── Sidebar (layout desktop) ───
+const NAV_DESKTOP = [
+  { id: 'inicio',      icon: 'home',     label: 'Início' },
+  { id: 'gastos',      icon: 'list',     label: 'Gastos' },
+  { id: 'analise',     icon: 'chart',    label: 'Análise' },
+  { id: 'orcamentos',  icon: 'target',   label: 'Orçamentos' },
+  { id: 'caixinhas',   icon: 'piggy',    label: 'Caixinhas' },
+  { id: 'recorrentes', icon: 'history',  label: 'Recorrentes' },
+  { id: 'historico',   icon: 'calendar', label: 'Histórico' },
+  { id: 'perfil',      icon: 'user',     label: 'Perfil' },
+];
+
+function Sidebar({ tela, irPara, abrirAdd, usuario }) {
+  return (
+    <aside style={{
+      width: 248, flexShrink: 0, height: '100vh', position: 'sticky', top: 0,
+      borderRight: '1px solid var(--linha)', background: 'var(--card)',
+      display: 'flex', flexDirection: 'column', padding: '20px 14px',
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '4px 10px 20px' }}>
+        <div style={{
+          width: 34, height: 34, borderRadius: 11,
+          background: 'linear-gradient(135deg, var(--primary), var(--primary-2))',
+        }} />
+        <span style={{ fontSize: 17, fontWeight: 800, color: 'var(--ink)', letterSpacing: '-0.02em' }}>Finça</span>
+      </div>
+
+      <button onClick={abrirAdd} style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+        margin: '0 6px 14px', padding: '11px 12px', borderRadius: 14, border: 'none',
+        background: 'linear-gradient(135deg, var(--primary), var(--primary-2))', color: '#fff',
+        fontSize: 14, fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit',
+        boxShadow: '0 6px 16px rgba(110,79,246,0.30)',
+      }}>
+        <Icon name="plus" size={18} color="#fff" strokeWidth={2.6} />
+        Novo gasto
+      </button>
+
+      <nav style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+        {NAV_DESKTOP.map(it => {
+          const ativo = tela === it.id;
+          return (
+            <button key={it.id} onClick={() => irPara(it.id)} style={{
+              display: 'flex', alignItems: 'center', gap: 12,
+              padding: '10px 12px', borderRadius: 12, border: 'none', cursor: 'pointer',
+              background: ativo ? 'color-mix(in oklab, var(--primary) 12%, transparent)' : 'transparent',
+              color: ativo ? 'var(--primary)' : 'var(--ink)',
+              fontSize: 14, fontWeight: ativo ? 800 : 600, fontFamily: 'inherit',
+              textAlign: 'left',
+            }}>
+              <Icon name={it.icon} size={20} color={ativo ? 'var(--primary)' : 'var(--muted)'} strokeWidth={ativo ? 2.4 : 2} />
+              {it.label}
+            </button>
+          );
+        })}
+      </nav>
+
+      <div style={{ flex: 1 }} />
+
+      {usuario && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px', borderRadius: 12, background: 'var(--surface-sunken)' }}>
+          {usuario.photoURL
+            ? <img src={usuario.photoURL} alt="" style={{ width: 30, height: 30, borderRadius: 15 }} />
+            : <div style={{ width: 30, height: 30, borderRadius: 15, background: 'var(--primary)' }} />}
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--ink)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              {usuario.displayName || usuario.email}
+            </div>
+          </div>
+        </div>
+      )}
+    </aside>
+  );
+}
+
+function useEhDesktop() {
+  const consulta = '(min-width: 900px)';
+  const [ehDesktop, setEhDesktop] = React.useState(() =>
+    typeof window !== 'undefined' && window.matchMedia(consulta).matches);
+  React.useEffect(() => {
+    const mq = window.matchMedia(consulta);
+    const handler = (e) => setEhDesktop(e.matches);
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  }, []);
+  return ehDesktop;
+}
+
 function aplicarTema(paleta, modo) {
   const root = document.documentElement;
   const pal = PALETAS.find(p => p.primary === paleta) || PALETAS[0];
@@ -177,6 +265,8 @@ export function App() {
       cloud.setRecorrentes(recsAtualizadas);
     }
   }, [cloud.ready]);
+
+  const ehDesktop = useEhDesktop();
 
   // Navegação local
   const [mes, setMes] = React.useState(chaveMes(new Date()));
@@ -342,6 +432,20 @@ export function App() {
   else if (tela === 'caixinhas') conteudo = <CaixinhasScreen ctx={ctx} />;
   else if (tela === 'caixinha')  conteudo = <CaixinhaScreen ctx={ctx} params={params} />;
   else if (tela === 'recorrentes') conteudo = <RecorrentesScreen ctx={ctx} />;
+
+  if (ehDesktop) {
+    return (
+      <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg)', color: 'var(--ink)' }}>
+        <Sidebar tela={tela} irPara={irPara} abrirAdd={() => setAddModal({})} usuario={usuario} />
+        <main style={{ flex: 1, minWidth: 0, overflowY: 'auto', height: '100vh' }}>
+          <div data-screen-label={tela} style={{ maxWidth: 620, margin: '0 auto', minHeight: '100vh' }}>
+            {conteudo}
+          </div>
+        </main>
+        {addModal && <AddExpenseModal ctx={ctx} params={addModal} />}
+      </div>
+    );
+  }
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg)', color: 'var(--ink)' }}>
