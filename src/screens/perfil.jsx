@@ -35,7 +35,7 @@ export function PerfilScreen({ ctx }) {
             referrerPolicy="no-referrer"
             style={{
               width: 88, height: 88, borderRadius: 44, objectFit: 'cover',
-              boxShadow: '0 12px 30px rgba(110,79,246,0.20)',
+              boxShadow: '0 12px 30px color-mix(in oklab, var(--primary) 20%, transparent)',
             }}
           />
         ) : (
@@ -44,7 +44,7 @@ export function PerfilScreen({ ctx }) {
             background: 'linear-gradient(135deg, var(--primary), var(--primary-2))',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             color: '#fff', fontSize: 34, fontWeight: 800, letterSpacing: '-0.04em',
-            boxShadow: '0 12px 30px rgba(110,79,246,0.25)',
+            boxShadow: '0 12px 30px color-mix(in oklab, var(--primary) 25%, transparent)',
           }}>{inicial}</div>
         )}
 
@@ -106,11 +106,11 @@ export function PerfilScreen({ ctx }) {
                   <button key={p.primary}
                     onClick={() => setPreferences({ paleta: p.primary })}
                     title={p.nome}
+                    className={`swatch-raised${sel ? ' is-selected' : ''}`}
                     style={{
-                      width: 36, height: 36, borderRadius: 18,
+                      width: 30, height: 30, borderRadius: 15,
                       background: `linear-gradient(135deg, ${p.primary}, ${p.primary2})`,
-                      border: sel ? '3px solid var(--ink)' : '3px solid transparent',
-                      cursor: 'pointer', padding: 0,
+                      color: p.primary,
                     }}
                   />
                 );
@@ -185,7 +185,7 @@ function Toggle({ ativo, onChange }) {
 
 function ConfigItem({ icon, label, onClick, toggleAtivo, onToggle }) {
   return (
-    <div onClick={onClick} style={{
+    <div onClick={onClick} className="config-item" style={{
       display: 'flex', alignItems: 'center', gap: 14, padding: '14px 0',
       borderTop: '1px solid var(--linha)',
       cursor: (onClick || onToggle) ? 'pointer' : 'default',

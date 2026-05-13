@@ -29,6 +29,7 @@ export function DashboardScreen({ ctx }) {
     preferences,
     caixinhas,
     usuario,
+    ehDesktop,
   } = ctx;
   const [fatiaAtiva, setFatiaAtiva] = React.useState(null);
   const primeiroNome = (preferences.nome?.trim() || usuario?.displayName || "")
@@ -83,9 +84,9 @@ export function DashboardScreen({ ctx }) {
     hojeHora < 12 ? "Bom dia" : hojeHora < 18 ? "Boa tarde" : "Boa noite";
 
   return (
-    <div style={{ paddingBottom: 110 }}>
+    <div className={ehDesktop ? "cols-desktop" : undefined} style={{ paddingBottom: 110 }}>
       {/* Cabeçalho */}
-      <div style={{ padding: "60px 20px 0" }}>
+      <div className={ehDesktop ? "col-span-all" : undefined} style={{ padding: "60px 20px 0" }}>
         <div
           style={{
             display: "flex",
@@ -190,7 +191,7 @@ export function DashboardScreen({ ctx }) {
       </div>
 
       {/* Card principal — saldo do mês */}
-      <div style={{ padding: "18px 20px 0" }}>
+      <div className={ehDesktop ? "col-span-all" : undefined} style={{ padding: "18px 20px 0" }}>
         <div
           style={{
             background:
@@ -200,7 +201,7 @@ export function DashboardScreen({ ctx }) {
             padding: 22,
             position: "relative",
             overflow: "hidden",
-            boxShadow: "0 8px 24px rgba(110, 79, 246, 0.22)",
+            boxShadow: "0 8px 24px color-mix(in oklab, var(--primary) 22%, transparent)",
           }}
         >
           {/* círculos decorativos */}

@@ -54,7 +54,7 @@ export function LoginScreen() {
           width: 96, height: 96, borderRadius: 32,
           background: 'linear-gradient(135deg, var(--primary), var(--primary-2))',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          boxShadow: '0 16px 36px rgba(110,79,246,0.30)',
+          boxShadow: '0 16px 36px color-mix(in oklab, var(--primary) 30%, transparent)',
           position: 'relative', overflow: 'hidden',
         }}>
           <div style={{ position: 'absolute', top: -20, left: -20, width: 50, height: 50, borderRadius: '50%', background: 'rgba(255,255,255,0.18)' }} />

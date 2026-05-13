@@ -158,7 +158,7 @@ export function CaixinhasScreen({ ctx }) {
             fontSize: 14,
             fontWeight: 800,
             fontFamily: "inherit",
-            boxShadow: "0 6px 16px rgba(110,79,246,0.30)",
+            boxShadow: "0 6px 16px color-mix(in oklab, var(--primary) 30%, transparent)",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",

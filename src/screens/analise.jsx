@@ -45,7 +45,8 @@ function SecaoTitulo({ children }) {
 }
 
 export function AnaliseScreen({ ctx }) {
-  const { txs, mes, setMes, todosMeses, mesAnterior, ocultar, irPara } = ctx;
+  const { txs, mes, setMes, todosMeses, mesAnterior, ocultar, irPara, ehDesktop } = ctx;
+  const spanAll = ehDesktop ? "col-span-all" : undefined;
   const [ativa, setAtiva] = React.useState(null);
 
   const txMes = React.useMemo(() => txDoMes(txs, mes), [txs, mes]);
@@ -135,9 +136,12 @@ export function AnaliseScreen({ ctx }) {
   );
 
   return (
-    <div style={{ paddingBottom: 110 }}>
-      <TopBar titulo="Análise" />
+    <div className={ehDesktop ? "cols-desktop" : undefined} style={{ paddingBottom: 110 }}>
+      <div className={spanAll}>
+        <TopBar titulo="Análise" />
+      </div>
       <div
+        className={spanAll}
         style={{
           padding: "0 20px 12px",
           display: "flex",
@@ -148,7 +152,7 @@ export function AnaliseScreen({ ctx }) {
       </div>
 
       {total === 0 ? (
-        <div style={{ padding: "0 20px" }}>
+        <div className={spanAll} style={{ padding: "0 20px" }}>
           <Card style={{ textAlign: "center", padding: "40px 20px" }}>
             <div style={{ fontSize: 14, color: "var(--muted)", fontWeight: 600 }}>
               Nenhum gasto registrado neste mês.
@@ -158,7 +162,7 @@ export function AnaliseScreen({ ctx }) {
       ) : (
         <>
           {/* Resumo do mês */}
-          <div style={{ padding: "0 20px" }}>
+          <div className={spanAll} style={{ padding: "0 20px" }}>
             <div
               style={{
                 display: "grid",
@@ -595,7 +599,7 @@ export function AnaliseScreen({ ctx }) {
       )}
 
       {/* Atalho para orçamentos */}
-      <div style={{ padding: "16px 20px 0" }}>
+      <div className={spanAll} style={{ padding: "16px 20px 0" }}>
         <Card
           onClick={() => irPara("orcamentos")}
           style={{

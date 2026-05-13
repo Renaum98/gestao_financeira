@@ -682,7 +682,7 @@ export function AddExpenseModal({ ctx, params }) {
                       fontFamily: "inherit",
                       letterSpacing: "-0.02em",
                       boxShadow: sel
-                        ? "0 2px 8px rgba(110,79,246,0.25)"
+                        ? "0 2px 8px color-mix(in oklab, var(--primary) 25%, transparent)"
                         : "0 1px 2px rgba(0,0,0,0.06)",
                       display: "flex",
                       flexDirection: "column",

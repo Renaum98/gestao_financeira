@@ -54,3 +54,69 @@ input[type="date"]::-webkit-calendar-picker-indicator { cursor: pointer; opacity
   to   { transform: scale(1);    opacity: 1; }
 }
 @keyframes spin { to { transform: rotate(360deg); } }
+
+/* Transição de página ao trocar de aba */
+@keyframes pageIn {
+  from { opacity: 0; transform: translateY(8px) scale(0.992); }
+  to   { opacity: 1; transform: translateY(0)   scale(1); }
+}
+.page-transition {
+  animation: pageIn .26s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: opacity, transform;
+}
+@media (prefers-reduced-motion: reduce) {
+  .page-transition { animation: none; }
+}
+
+/* Layout em colunas (desktop) — telas que aderem ficam mais amplas */
+.cols-desktop {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px 28px;
+  align-items: start;
+}
+.cols-desktop > .col-span-all { grid-column: 1 / -1; }
+
+/* Primeira opção de cada card de configuração não tem linha em cima */
+.config-item:first-child { border-top: none !important; }
+
+/* Botão "swatch" de cor de destaque — efeito de alto relevo (convexo) */
+.swatch-raised {
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  transition: transform .08s ease, box-shadow .12s ease;
+  box-shadow:
+    0 5px 10px rgba(0,0,0,0.20),
+    0 2px 3px rgba(0,0,0,0.14),
+    inset 0 2px 3px rgba(255,255,255,0.55),
+    inset 0 -4px 6px rgba(0,0,0,0.25);
+}
+.swatch-raised:hover {
+  transform: translateY(-1px);
+  box-shadow:
+    0 7px 14px rgba(0,0,0,0.24),
+    0 2px 3px rgba(0,0,0,0.14),
+    inset 0 2px 3px rgba(255,255,255,0.55),
+    inset 0 -4px 6px rgba(0,0,0,0.25);
+}
+.swatch-raised:active {
+  transform: translateY(1px);
+  box-shadow:
+    0 1px 2px rgba(0,0,0,0.22),
+    inset 0 3px 7px rgba(0,0,0,0.32),
+    inset 0 -1px 2px rgba(255,255,255,0.28);
+}
+.swatch-raised.is-selected {
+  transform: translateY(1px);
+  box-shadow:
+    0 1px 2px rgba(0,0,0,0.22),
+    inset 0 3px 7px rgba(0,0,0,0.30),
+    inset 0 -1px 2px rgba(255,255,255,0.28),
+    0 0 0 3px var(--card),
+    0 0 0 5px currentColor;
+}
+@media (prefers-reduced-motion: reduce) {
+  .swatch-raised { transition: none; }
+  .swatch-raised:hover, .swatch-raised:active { transform: none; }
+}

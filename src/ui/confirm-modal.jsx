@@ -74,7 +74,7 @@ export function ConfirmModal({
             flex: 1, padding: '12px', borderRadius: 14, border: 'none',
             background: corAcao, color: '#fff',
             fontSize: 14, fontWeight: 800, fontFamily: 'inherit', cursor: 'pointer',
-            boxShadow: destrutivo ? '0 4px 14px rgba(214,58,85,0.32)' : '0 4px 14px rgba(110,79,246,0.32)',
+            boxShadow: destrutivo ? '0 4px 14px rgba(214,58,85,0.32)' : '0 4px 14px color-mix(in oklab, var(--primary) 32%, transparent)',
           }}>{textoConfirmar}</button>
         </div>
       </div>
