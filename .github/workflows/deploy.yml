@@ -23,7 +23,10 @@ jobs:
         with:
           node-version: 20
           cache: npm
-      - run: npm ci
+      # npm install (não npm ci): o package-lock.json gerado no Windows pode omitir
+      # dependências opcionais específicas de Linux (ex.: @emnapi/* do rolldown),
+      # o que faz o `npm ci` falhar no runner Ubuntu.
+      - run: npm install --no-audit --no-fund
       - run: npm run build
         env:
           VITE_FIREBASE_API_KEY:             ${{ vars.VITE_FIREBASE_API_KEY }}
