@@ -159,6 +159,7 @@ export function OrcamentosScreen({ ctx }) {
                         type="text"
                         inputMode="decimal"
                         value={tempCat}
+                        placeholder="0,00"
                         onChange={(e) => setTempCat(e.target.value)}
                         onKeyDown={(e) => { if (e.key === 'Enter') salvarCat(c); if (e.key === 'Escape') setEditandoCat(null); }}
                         style={{
@@ -177,7 +178,7 @@ export function OrcamentosScreen({ ctx }) {
                       </button>
                     </div>
                   ) : (
-                    <button onClick={() => { setEditandoCat(c); setTempCat(String(orc)); }} style={{
+                    <button onClick={() => { setEditandoCat(c); setTempCat(orc > 0 ? String(orc) : ''); }} style={{
                       background: 'transparent', border: 'none', cursor: 'pointer', padding: 4,
                       color: 'var(--muted)',
                     }}>

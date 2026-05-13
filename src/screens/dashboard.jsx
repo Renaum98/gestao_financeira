@@ -139,6 +139,7 @@ export function DashboardScreen({ ctx }) {
               style={{
                 width: 40,
                 height: 40,
+                padding: 0,
                 borderRadius: 20,
                 background: "var(--card)",
                 border: "none",
@@ -150,24 +151,39 @@ export function DashboardScreen({ ctx }) {
                 overflow: "hidden",
               }}
             >
-              <div
-                style={{
-                  width: 32,
-                  height: 32,
-                  borderRadius: 16,
-                  background:
-                    "linear-gradient(135deg, var(--primary), var(--primary-2))",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  color: "#fff",
-                  fontWeight: 800,
-                  fontSize: 13,
-                  letterSpacing: "-0.02em",
-                }}
-              >
-                {primeiroNome ? primeiroNome[0].toUpperCase() : "+"}
-              </div>
+              {usuario?.photoURL ? (
+                <img
+                  src={usuario.photoURL}
+                  alt={primeiroNome || "Perfil"}
+                  referrerPolicy="no-referrer"
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "cover",
+                    display: "block",
+                    borderRadius: 20,
+                  }}
+                />
+              ) : (
+                <div
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    borderRadius: 20,
+                    background:
+                      "linear-gradient(135deg, var(--primary), var(--primary-2))",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    color: "#fff",
+                    fontWeight: 800,
+                    fontSize: 15,
+                    letterSpacing: "-0.02em",
+                  }}
+                >
+                  {primeiroNome ? primeiroNome[0].toUpperCase() : "+"}
+                </div>
+              )}
             </button>
           </div>
         </div>

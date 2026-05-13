@@ -37,6 +37,11 @@ export function PieChart({ dados, total, tamanho = 200, ativo, onHover, ocultar 
   const exibirValor = ativoData ? ativoData.valor : total;
   const exibirRotulo = ativoData ? ativoData.nome : 'Total do mês';
 
+  // Espaço útil dentro do furo da rosca; a fonte do valor encolhe pra nunca encostar nas fatias.
+  const larguraInterna = rIn * 2 * 0.94;
+  const valorStr = fmtBRL(exibirValor, ocultar);
+  const fonteValor = Math.max(11, Math.min(22, Math.floor(larguraInterna / (valorStr.length * 0.62))));
+
   return (
     <div style={{ position: 'relative', width: tamanho, height: tamanho }}>
       <svg width={tamanho} height={tamanho} viewBox={`0 0 ${tamanho} ${tamanho}`}>
@@ -61,11 +66,17 @@ export function PieChart({ dados, total, tamanho = 200, ativo, onHover, ocultar 
         flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
         pointerEvents: 'none', textAlign: 'center',
       }}>
-        <div style={{ fontSize: 11, color: 'var(--muted)', fontWeight: 600, letterSpacing: 0.4, textTransform: 'uppercase' }}>
+        <div style={{
+          fontSize: 11, color: 'var(--muted)', fontWeight: 600, letterSpacing: 0.4, textTransform: 'uppercase',
+          maxWidth: larguraInterna, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+        }}>
           {exibirRotulo}
         </div>
-        <div style={{ fontSize: 22, color: 'var(--ink)', fontWeight: 800, marginTop: 4, letterSpacing: '-0.02em' }}>
-          {fmtBRL(exibirValor, ocultar)}
+        <div style={{
+          fontSize: fonteValor, color: 'var(--ink)', fontWeight: 800, marginTop: 4, letterSpacing: '-0.02em',
+          maxWidth: larguraInterna, whiteSpace: 'nowrap',
+        }}>
+          {valorStr}
         </div>
         {ativoData && (
           <div style={{ fontSize: 12, color: ativoData.cor, fontWeight: 700, marginTop: 2 }}>

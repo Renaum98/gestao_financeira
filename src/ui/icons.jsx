@@ -20,7 +20,7 @@ export function CatChip({ catId, size = 40, style = {} }) {
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         color: '#fff', fontWeight: 800, fontSize: fz, lineHeight: 1,
         letterSpacing: '-0.02em',
-      }}>{cat.nome[0]}</div>
+      }}>{(cat.nome[0] || '?').toUpperCase()}</div>
     </div>
   );
 }

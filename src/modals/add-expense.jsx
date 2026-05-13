@@ -15,8 +15,13 @@ function hojeISO() {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
+const CORES_CAT = [
+  "#6E4FF6", "#FF9B6E", "#5DA8FF", "#9B7BFF", "#FF7AA8",
+  "#3FCB9A", "#F0C13B", "#6FB8D9", "#C58BFF", "#EF6B5C",
+];
+
 export function AddExpenseModal({ ctx, params }) {
-  const { fechar, salvarTx, mes } = ctx;
+  const { fechar, salvarTx, mes, adicionarCategoria } = ctx;
   const editar = params && params.editar;
   const [valor, setValor] = React.useState(
     editar
@@ -41,6 +46,19 @@ export function AddExpenseModal({ ctx, params }) {
     editar && editar.parcelas ? editar.parcelas.total : 1,
   );
   const [ehRecorrente, setEhRecorrente] = React.useState(false);
+  const [criandoCat, setCriandoCat] = React.useState(false);
+  const [novoNomeCat, setNovoNomeCat] = React.useState("");
+  const [novaCorCat, setNovaCorCat] = React.useState(CORES_CAT[0]);
+
+  const confirmarNovaCat = () => {
+    const nome = novoNomeCat.trim();
+    if (!nome) return;
+    const id = adicionarCategoria(nome, novaCorCat);
+    setCategoria(id);
+    setNovoNomeCat("");
+    setNovaCorCat(CORES_CAT[0]);
+    setCriandoCat(false);
+  };
 
   // Mantém o estilo "calculadora" (cada dígito vira centavo, vai empurrando para reais)
   // mas usando o teclado numérico nativo do sistema via input invisível.
@@ -302,7 +320,195 @@ export function AddExpenseModal({ ctx, params }) {
                 </button>
               );
             })}
+
+            {/* + Nova categoria */}
+            <button
+              onClick={() => setCriandoCat((v) => !v)}
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                gap: 4,
+                padding: "8px 10px 6px",
+                borderRadius: 14,
+                border: "none",
+                background: criandoCat ? "var(--card-2)" : "transparent",
+                cursor: "pointer",
+                minWidth: 72,
+                flexShrink: 0,
+              }}
+            >
+              <div
+                style={{
+                  width: 32,
+                  height: 32,
+                  borderRadius: 10,
+                  border: "2px dashed var(--linha)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <Icon name="plus" size={16} color="var(--muted)" strokeWidth={2.4} />
+              </div>
+              <span style={{ fontSize: 10, fontWeight: 700, color: "var(--muted)" }}>
+                Nova
+              </span>
+            </button>
           </div>
+
+          {/* Formulário de nova categoria */}
+          {criandoCat && (
+            <div
+              style={{
+                margin: "2px 4px 4px",
+                padding: "12px 14px",
+                borderRadius: 14,
+                background: "var(--card-2)",
+                boxShadow: "0 1px 2px rgba(0,0,0,0.06)",
+                display: "flex",
+                flexDirection: "column",
+                gap: 10,
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <div
+                  style={{
+                    width: 36,
+                    height: 36,
+                    borderRadius: 11,
+                    background: novaCorCat + "22",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    flexShrink: 0,
+                  }}
+                >
+                  <div
+                    style={{
+                      width: 18,
+                      height: 18,
+                      borderRadius: "50%",
+                      background: novaCorCat,
+                      color: "#fff",
+                      fontWeight: 800,
+                      fontSize: 10,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    {(novoNomeCat.trim()[0] || "?").toUpperCase()}
+                  </div>
+                </div>
+                <input
+                  value={novoNomeCat}
+                  onChange={(e) => setNovoNomeCat(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && confirmarNovaCat()}
+                  placeholder="Nome da categoria"
+                  maxLength={20}
+                  autoFocus
+                  style={{
+                    flex: 1,
+                    minWidth: 0,
+                    padding: "10px 12px",
+                    borderRadius: 10,
+                    border: "none",
+                    background: "var(--bg)",
+                    outline: "none",
+                    fontSize: 14,
+                    fontWeight: 600,
+                    color: "var(--ink)",
+                    fontFamily: "inherit",
+                  }}
+                />
+              </div>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                {CORES_CAT.map((cor) => (
+                  <button
+                    key={cor}
+                    onClick={() => setNovaCorCat(cor)}
+                    aria-label={`Cor ${cor}`}
+                    style={{
+                      width: 26,
+                      height: 26,
+                      borderRadius: "50%",
+                      background: cor,
+                      border:
+                        novaCorCat === cor
+                          ? "3px solid var(--ink)"
+                          : "3px solid transparent",
+                      cursor: "pointer",
+                      flexShrink: 0,
+                    }}
+                  />
+                ))}
+                <label
+                  style={{
+                    width: 26,
+                    height: 26,
+                    borderRadius: "50%",
+                    border: "2px dashed var(--linha)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    cursor: "pointer",
+                    overflow: "hidden",
+                    position: "relative",
+                  }}
+                >
+                  <Icon name="edit" size={12} color="var(--muted)" strokeWidth={2} />
+                  <input
+                    type="color"
+                    value={novaCorCat}
+                    onChange={(e) => setNovaCorCat(e.target.value)}
+                    style={{
+                      position: "absolute",
+                      inset: 0,
+                      opacity: 0,
+                      cursor: "pointer",
+                    }}
+                  />
+                </label>
+              </div>
+              <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
+                <button
+                  onClick={() => {
+                    setCriandoCat(false);
+                    setNovoNomeCat("");
+                  }}
+                  style={{
+                    background: "transparent",
+                    border: "none",
+                    color: "var(--muted)",
+                    fontSize: 13,
+                    fontWeight: 700,
+                    cursor: "pointer",
+                    fontFamily: "inherit",
+                  }}
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={confirmarNovaCat}
+                  disabled={!novoNomeCat.trim()}
+                  style={{
+                    background: novoNomeCat.trim() ? "var(--primary)" : "var(--linha)",
+                    color: novoNomeCat.trim() ? "#fff" : "var(--muted)",
+                    border: "none",
+                    padding: "8px 16px",
+                    borderRadius: 999,
+                    fontWeight: 800,
+                    fontSize: 13,
+                    cursor: novoNomeCat.trim() ? "pointer" : "default",
+                    fontFamily: "inherit",
+                  }}
+                >
+                  Criar categoria
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Descrição */}

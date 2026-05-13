@@ -14,19 +14,21 @@ const DOC_PATH = (uid) => `users/${uid}`;
 
 const DEFAULT_STATE = {
   txs: [],
+  // Todas as categorias começam zeradas; o usuário define quanto quer gastar em cada uma.
   orcamentos: {
-    alimentacao: 900,
-    transporte: 400,
-    moradia: 1500,
-    lazer: 350,
-    saude: 250,
-    compras: 500,
-    educacao: 300,
-    assinaturas: 150,
-    outros: 200,
+    alimentacao: 0,
+    transporte: 0,
+    moradia: 0,
+    lazer: 0,
+    saude: 0,
+    compras: 0,
+    educacao: 0,
+    assinaturas: 0,
+    outros: 0,
   },
   caixinhas: [],
   recorrentes: [],
+  categoriasCustom: [],
   preferences: {
     paleta: "#6E4FF6",
     modo: "claro",
@@ -63,6 +65,7 @@ export function useCloudState(uid) {
           },
           caixinhas: data.caixinhas ?? [],
           recorrentes: data.recorrentes ?? [],
+          categoriasCustom: data.categoriasCustom ?? [],
           preferences: {
             ...DEFAULT_STATE.preferences,
             ...(data.preferences ?? {}),
@@ -105,6 +108,11 @@ export function useCloudState(uid) {
       ...s,
       recorrentes: typeof v === "function" ? v(s.recorrentes) : v,
     }));
+  const setCategoriasCustom = (v) =>
+    setState((s) => ({
+      ...s,
+      categoriasCustom: typeof v === "function" ? v(s.categoriasCustom) : v,
+    }));
   const setPreferences = (patch) =>
     setState((s) => ({ ...s, preferences: { ...s.preferences, ...patch } }));
 
@@ -121,6 +129,8 @@ export function useCloudState(uid) {
     setCaixinhas,
     recorrentes: state.recorrentes,
     setRecorrentes,
+    categoriasCustom: state.categoriasCustom,
+    setCategoriasCustom,
     preferences: state.preferences,
     setPreferences,
     aplicarLote,

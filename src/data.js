@@ -14,6 +14,41 @@ export const CATEGORIAS = {
 
 export const ORDEM_CATS = ['alimentacao','transporte','moradia','lazer','saude','compras','educacao','assinaturas','outros'];
 
+// ─── Categorias personalizadas ───
+// O usuário pode criar categorias com nome + cor; o "logo" é a primeira letra do nome.
+// Ficam guardadas no Firestore e, no boot, são mescladas em CATEGORIAS / ORDEM_CATS
+// via aplicarCategoriasCustom() — assim todo o app (CatChip, telas, análises) funciona sem mudanças.
+
+export function novaCategoriaCustom(nome, cor) {
+  const limpo = String(nome || '').trim() || 'Categoria';
+  return {
+    id: `cat-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+    nome: limpo,
+    cor: cor || '#B3AAB8',
+    corFundo: (cor || '#B3AAB8') + '22', // tom claro (hex de 8 dígitos = +alpha)
+    custom: true,
+  };
+}
+
+export function aplicarCategoriasCustom(lista) {
+  for (const c of lista || []) {
+    if (!c || !c.id) continue;
+    CATEGORIAS[c.id] = {
+      id: c.id,
+      nome: c.nome,
+      cor: c.cor,
+      corFundo: c.corFundo || (c.cor + '22'),
+      custom: true,
+    };
+    if (!ORDEM_CATS.includes(c.id)) {
+      // Insere antes de "outros" para manter "outros" como último.
+      const i = ORDEM_CATS.indexOf('outros');
+      if (i >= 0) ORDEM_CATS.splice(i, 0, c.id);
+      else ORDEM_CATS.push(c.id);
+    }
+  }
+}
+
 export const PAGAMENTOS = ['Cartão de crédito','Cartão de débito','Pix','Dinheiro'];
 
 export const MESES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];

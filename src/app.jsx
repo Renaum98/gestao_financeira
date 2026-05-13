@@ -1,7 +1,7 @@
 // app.jsx — Componente raiz: gateamento (PIN/auth), estado central, navegação.
 
 import React from 'react';
-import { PALETAS, chaveMes, listarMeses } from './data.js';
+import { PALETAS, chaveMes, listarMeses, aplicarCategoriasCustom, novaCategoriaCustom } from './data.js';
 import { Icon } from './ui/icons.jsx';
 import { escutarAuth, processarRedirect, sair as sairFirebase } from './lib/firebase.js';
 import { useCloudState } from './lib/storage.js';
@@ -209,6 +209,19 @@ export function App() {
   // Storage Firestore (só conecta quando há uid)
   const cloud = useCloudState(uid);
 
+  // Mescla categorias personalizadas em CATEGORIAS/ORDEM_CATS antes de renderizar as telas.
+  React.useMemo(() => aplicarCategoriasCustom(cloud.categoriasCustom), [cloud.categoriasCustom]);
+
+  const adicionarCategoria = React.useCallback((nome, cor) => {
+    const cat = novaCategoriaCustom(nome, cor);
+    aplicarCategoriasCustom([cat]);
+    cloud.setCategoriasCustom((atual) => [
+      ...atual,
+      { id: cat.id, nome: cat.nome, cor: cat.cor, corFundo: cat.corFundo },
+    ]);
+    return cat.id;
+  }, [cloud.setCategoriasCustom]);
+
   // Tema reativo às preferências
   React.useEffect(() => {
     aplicarTema(cloud.preferences.paleta, cloud.preferences.modo);
@@ -415,6 +428,7 @@ export function App() {
     orcamentos: cloud.orcamentos, setOrcamentos: cloud.setOrcamentos,
     caixinhas: cloud.caixinhas, salvarCaixinha, excluirCaixinha, depositarCaixinha,
     recorrentes: cloud.recorrentes, cancelarRecorrente,
+    categoriasCustom: cloud.categoriasCustom, adicionarCategoria,
     preferences: cloud.preferences, setPreferences: cloud.setPreferences,
     usuario, sair: sairFirebase,
     fechar: () => setAddModal(null),
