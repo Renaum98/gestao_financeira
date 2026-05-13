@@ -1,0 +1,14 @@
+{
+  "name": "Finça — Gestão financeira",
+  "short_name": "Finça",
+  "description": "Acompanhe gastos, defina orçamentos e crie caixinhas para suas metas.",
+  "start_url": ".",
+  "scope": ".",
+  "display": "standalone",
+  "background_color": "#FBF7F2",
+  "theme_color": "#6E4FF6",
+  "icons": [
+    { "src": "icon.svg", "type": "image/svg+xml", "sizes": "any", "purpose": "any" },
+    { "src": "icon.svg", "type": "image/svg+xml", "sizes": "any", "purpose": "maskable" }
+  ]
+}
