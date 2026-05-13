@@ -55,11 +55,12 @@ export const MESES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Jul
 export const MESES_CURTO = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
 
 export const PALETAS = [
-  { primary: '#6E4FF6', primary2: '#A085FF', nome: 'Violeta' },
+  { primary: '#3a19cf', primary2: '#5f5192', nome: 'Violeta' },
   { primary: '#EF6B5C', primary2: '#FFA98B', nome: 'Coral' },
   { primary: '#1B9E6A', primary2: '#5BD8A0', nome: 'Esmeralda' },
   { primary: '#2566EA', primary2: '#6BA6FF', nome: 'Oceano' },
   { primary: '#E08A00', primary2: '#FFC766', nome: 'Mostarda' },
+  { primary: '#e000d5', primary2: '#ff66f2', nome: 'Rosa' },
 ];
 
 export function fmtBRL(v, ocultar = false) {
