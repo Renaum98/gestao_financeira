@@ -183,3 +183,84 @@ input[type="date"]::-webkit-calendar-picker-indicator { cursor: pointer; opacity
   .swatch-raised { transition: none; }
   .swatch-raised:hover, .swatch-raised:active { transform: none; }
 }
+
+/* ─── Loader orgânico → letra F ──────────────────────────────────────────────
+   Forma "gota viva" que respira/deforma e, no meio do ciclo, se concretiza
+   numa silhueta quase-quadrada onde a letra F aparece com fade+scale. Depois
+   volta a se dissolver no blob. Tudo via border-radius (interpolado pelo CSS).
+*/
+.finca-loader {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  font-family: inherit;
+}
+.finca-loader__blob {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, var(--primary), var(--primary-2));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-weight: 800;
+  letter-spacing: -0.05em;
+  line-height: 1;
+  box-shadow: 0 12px 28px color-mix(in oklab, var(--primary) 28%, transparent);
+  position: relative;
+  overflow: hidden;
+  animation: fincaLoaderMorph 3.4s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+  will-change: border-radius, transform;
+}
+/* Brilho interno que escorre, reforçando a sensação "viva" */
+.finca-loader__blob::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 30% 25%, rgba(255,255,255,0.22), transparent 55%);
+  pointer-events: none;
+}
+.finca-loader__letter {
+  position: relative;
+  opacity: 0;
+  transform: scale(0.4);
+  animation: fincaLoaderLetter 3.4s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+  will-change: opacity, transform;
+}
+
+@keyframes fincaLoaderMorph {
+  0%   { border-radius: 50% 50% 50% 50% / 50% 50% 50% 50%;
+         transform: scale(0.96) rotate(0deg); }
+  18%  { border-radius: 64% 36% 56% 44% / 50% 64% 36% 50%;
+         transform: scale(1.04) rotate(10deg); }
+  34%  { border-radius: 30% 70% 32% 68% / 64% 30% 70% 36%;
+         transform: scale(0.93) rotate(-8deg); }
+  /* "Momento F": forma quase quadrada — palco pra letra. */
+  50%  { border-radius: 30% 30% 28% 28% / 30% 30% 28% 28%;
+         transform: scale(1.06) rotate(0deg); }
+  64%  { border-radius: 30% 30% 28% 28% / 30% 30% 28% 28%;
+         transform: scale(1.06) rotate(0deg); }
+  80%  { border-radius: 42% 58% 56% 44% / 60% 38% 62% 40%;
+         transform: scale(0.97) rotate(6deg); }
+  100% { border-radius: 50% 50% 50% 50% / 50% 50% 50% 50%;
+         transform: scale(0.96) rotate(0deg); }
+}
+@keyframes fincaLoaderLetter {
+  0%, 36%    { opacity: 0; transform: scale(0.4); }
+  50%, 64%   { opacity: 1; transform: scale(1); }
+  78%, 100%  { opacity: 0; transform: scale(0.4); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .finca-loader__blob {
+    animation: none;
+    border-radius: 50%;
+    transform: none;
+  }
+  .finca-loader__letter {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+}

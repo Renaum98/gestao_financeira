@@ -22,6 +22,7 @@ import {
 } from "./lib/partnership.js";
 import { vibrar } from "./lib/haptics.js";
 import { useInstallPrompt, InstallPromptModal } from "./ui/install-prompt.jsx";
+import { LoaderTela } from "./ui/loader.jsx";
 
 // LoginScreen fica no bundle principal (primeira tela para deslogados).
 // As demais telas e o modal são carregados sob demanda (code-splitting).
@@ -907,28 +908,7 @@ export function App() {
   );
 }
 
+// Splash agora é um alias do LoaderTela oficial — mantido pelos calls existentes.
 function Splash() {
-  return (
-    <div
-      style={{
-        minHeight: "100vh",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        background: "var(--bg)",
-      }}
-    >
-      <div
-        style={{
-          width: 56,
-          height: 56,
-          borderRadius: 28,
-          background:
-            "linear-gradient(135deg, var(--primary), var(--primary-2))",
-          animation: "pulse 1.4s ease-in-out infinite",
-        }}
-      />
-      <style>{`@keyframes pulse { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(0.92); opacity: 0.7; } }`}</style>
-    </div>
-  );
+  return <LoaderTela />;
 }

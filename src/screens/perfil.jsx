@@ -11,6 +11,7 @@ import { baixarDadosXLSX } from '../lib/export.js';
 import { convidarPorEmail, cancelarConvite } from '../lib/partnership.js';
 import { reautenticarComSenha } from '../lib/firebase.js';
 import { excluirContaCompleta, precisaReautenticar } from '../lib/account.js';
+import { Loader } from '../ui/loader.jsx';
 
 export function PerfilScreen({ ctx }) {
   const {
@@ -691,10 +692,14 @@ function ExcluirContaModal({ uid, meuEmail, meuNome, partnershipId, onFechar }) 
 
         {apagando && (
           <div style={{
-            marginTop: 16, fontSize: 13, fontWeight: 700, color: 'var(--muted)',
-            textAlign: 'center',
+            marginTop: 16,
+            display: 'flex', flexDirection: 'column',
+            alignItems: 'center', gap: 10,
           }}>
-            Apagando seus dados…
+            <Loader size={44} label="Apagando seus dados" />
+            <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--muted)' }}>
+              Apagando seus dados…
+            </div>
           </div>
         )}
       </form>
