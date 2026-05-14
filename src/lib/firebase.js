@@ -23,6 +23,9 @@ import {
   updateProfile,
   signOut,
   onAuthStateChanged,
+  EmailAuthProvider,
+  reauthenticateWithCredential,
+  deleteUser,
 } from "firebase/auth";
 import {
   initializeFirestore,
@@ -104,6 +107,21 @@ export function redefinirSenha(email) {
 
 export function sair() {
   return signOut(auth);
+}
+
+// Reautentica o usuário atual com a senha — necessário antes de operações
+// sensíveis como deleteUser. Lança erro se a senha estiver incorreta.
+export async function reautenticarComSenha(senha) {
+  if (!auth.currentUser?.email) throw new Error("Sem sessão ativa.");
+  const cred = EmailAuthProvider.credential(auth.currentUser.email, senha);
+  await reauthenticateWithCredential(auth.currentUser, cred);
+}
+
+// Apaga o usuário do Firebase Auth. Pode lançar `auth/requires-recent-login`
+// se o login for antigo — nesse caso o caller precisa pedir reautenticação.
+export async function excluirContaAuth() {
+  if (!auth.currentUser) throw new Error("Sem sessão ativa.");
+  await deleteUser(auth.currentUser);
 }
 
 export function escutarAuth(callback) {

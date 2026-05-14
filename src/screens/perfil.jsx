@@ -9,6 +9,8 @@ import { vibrar } from '../lib/haptics.js';
 import { lerFotoPerfil } from '../lib/imagem.js';
 import { baixarDadosXLSX } from '../lib/export.js';
 import { convidarPorEmail, cancelarConvite } from '../lib/partnership.js';
+import { reautenticarComSenha } from '../lib/firebase.js';
+import { excluirContaCompleta, precisaReautenticar } from '../lib/account.js';
 
 export function PerfilScreen({ ctx }) {
   const {
@@ -16,6 +18,7 @@ export function PerfilScreen({ ctx }) {
     preferences, setPreferences, usuario, sair, ehDesktop,
     txs, caixinhas, recorrentes, orcamentos, todosMeses,
     partnerUid, partnerNome, convitesEnviados, desfazerParceria,
+    partnershipId,
   } = ctx;
   const nomeConta = usuario?.displayName || '';
   const email = usuario?.email || '';
@@ -33,6 +36,7 @@ export function PerfilScreen({ ctx }) {
   const [convidando, setConvidando] = React.useState(false); // modal de convite aberto?
   const [confirmandoDesfazer, setConfirmandoDesfazer] = React.useState(false);
   const [desfazendo, setDesfazendo] = React.useState(false);
+  const [excluindoConta, setExcluindoConta] = React.useState(false);
 
   const salvarNome = () => {
     setPreferences({ nome: nomeTemp.trim() });
@@ -246,6 +250,17 @@ export function PerfilScreen({ ctx }) {
           Sair da conta
         </button>
 
+        <button onClick={() => setExcluindoConta(true)} style={{
+          width: '100%', marginTop: 10, padding: '12px', borderRadius: 14, border: 'none',
+          background: 'transparent', color: 'var(--muted)',
+          fontSize: 12, fontWeight: 700,
+          cursor: 'pointer', fontFamily: 'inherit',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+        }}>
+          <Icon name="trash" size={13} color="var(--muted)" strokeWidth={2.2} />
+          Excluir conta permanentemente
+        </button>
+
         <div style={{ padding: '24px 0', textAlign: 'center' }}>
           <div style={{ fontSize: 11, color: 'var(--muted)', fontWeight: 600 }}>Financeiro · v1.0</div>
         </div>
@@ -280,6 +295,16 @@ export function PerfilScreen({ ctx }) {
             }
             setDesfazendo(false);
           }}
+        />
+      )}
+
+      {excluindoConta && (
+        <ExcluirContaModal
+          uid={usuario?.uid}
+          meuEmail={usuario?.email || ''}
+          meuNome={preferences.nome || usuario?.displayName || ''}
+          partnershipId={partnershipId}
+          onFechar={() => setExcluindoConta(false)}
         />
       )}
 
@@ -457,6 +482,223 @@ function OpcaoBaixar({ label, descricao, selecionado, onClick }) {
         )}
       </div>
     </button>
+  );
+}
+
+// ─── Exclusão de conta ─────────────────────────────────────────────────────
+
+function ExcluirContaModal({ uid, meuEmail, meuNome, partnershipId, onFechar }) {
+  // 'aviso'    → tela inicial com a confirmação textual
+  // 'senha'    → pedindo senha (reautenticação)
+  // 'apagando' → spinner
+  const [etapa, setEtapa] = React.useState('aviso');
+  const [senha, setSenha] = React.useState('');
+  const [erro, setErro] = React.useState('');
+
+  const tentarExcluir = async () => {
+    setErro('');
+    setEtapa('apagando');
+    try {
+      await excluirContaCompleta({ uid, meuEmail, meuNome, partnershipId });
+      // O onAuthStateChanged dispara → o app vai pra LoginScreen sozinho.
+    } catch (err) {
+      if (precisaReautenticar(err)) {
+        setEtapa('senha');
+      } else {
+        setErro(err?.message || 'Não foi possível excluir a conta.');
+        setEtapa('aviso');
+      }
+    }
+  };
+
+  const confirmarSenha = async (e) => {
+    e?.preventDefault();
+    setErro('');
+    if (!senha) { setErro('Digite sua senha.'); return; }
+    setEtapa('apagando');
+    try {
+      await reautenticarComSenha(senha);
+      await excluirContaCompleta({ uid, meuEmail, meuNome, partnershipId });
+    } catch (err) {
+      const cod = err?.code;
+      if (cod === 'auth/wrong-password' || cod === 'auth/invalid-credential') {
+        setErro('Senha incorreta.');
+      } else {
+        setErro(err?.message || 'Não foi possível excluir a conta.');
+      }
+      setEtapa('senha');
+    }
+  };
+
+  const apagando = etapa === 'apagando';
+
+  return (
+    <div
+      onClick={apagando ? undefined : onFechar}
+      style={{
+        position: 'fixed', inset: 0, height: '100dvh', zIndex: 9999,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        padding: 20,
+        background: 'rgba(20, 16, 24, 0.45)',
+        backdropFilter: 'blur(12px) saturate(140%)',
+        WebkitBackdropFilter: 'blur(12px) saturate(140%)',
+        animation: 'fadeIn .28s ease-out',
+      }}
+    >
+      <form
+        onClick={(e) => e.stopPropagation()}
+        onSubmit={etapa === 'senha' ? confirmarSenha : (e) => e.preventDefault()}
+        role="dialog"
+        aria-modal="true"
+        style={{
+          width: '100%', maxWidth: 380,
+          maxHeight: 'calc(100dvh - 40px)', overflowY: 'auto',
+          background: 'var(--bg)', borderRadius: 24,
+          padding: '22px 20px 18px',
+          boxShadow: '0 24px 60px rgba(0,0,0,0.28), 0 4px 12px rgba(0,0,0,0.08)',
+          animation: 'scaleIn .34s cubic-bezier(0.22, 1, 0.36, 1)',
+        }}
+      >
+        <div style={{
+          width: 56, height: 56, borderRadius: 28,
+          background: '#FFE5EA',
+          margin: '0 auto 14px',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+        }}>
+          <Icon name="trash" size={26} color="#D63A55" strokeWidth={2.2} />
+        </div>
+
+        <div style={{
+          fontSize: 18, fontWeight: 800, color: 'var(--ink)',
+          letterSpacing: '-0.02em', textAlign: 'center',
+        }}>
+          Excluir sua conta?
+        </div>
+
+        {etapa === 'aviso' && (
+          <>
+            <div style={{
+              fontSize: 13, color: 'var(--muted)', fontWeight: 500,
+              marginTop: 8, lineHeight: 1.45, textAlign: 'center',
+            }}>
+              Essa ação é <strong style={{ color: 'var(--ink)' }}>irreversível</strong>.
+              Todos os seus dados (gastos, caixinhas, orçamentos, recorrentes)
+              serão apagados permanentemente da nuvem.
+            </div>
+            {partnershipId && (
+              <div style={{
+                marginTop: 10, padding: '10px 12px', borderRadius: 12,
+                background: 'color-mix(in oklab, #D63A55 8%, transparent)',
+                fontSize: 12, color: 'var(--muted)', fontWeight: 600,
+                lineHeight: 1.4,
+              }}>
+                Você está em uma conta compartilhada — seu parceiro receberá uma
+                notificação avisando que você saiu, e as caixinhas dele serão limpas.
+              </div>
+            )}
+            {erro && (
+              <div style={{
+                marginTop: 10, fontSize: 12.5, fontWeight: 700,
+                color: '#D63A55', textAlign: 'center',
+              }}>{erro}</div>
+            )}
+            <div style={{ display: 'flex', gap: 10, marginTop: 18 }}>
+              <button
+                type="button"
+                onClick={onFechar}
+                style={{
+                  flex: 1, padding: 12, borderRadius: 14, border: 'none',
+                  background: 'var(--card-2)', color: 'var(--ink)',
+                  fontSize: 14, fontWeight: 800, fontFamily: 'inherit',
+                  cursor: 'pointer',
+                  boxShadow: '0 1px 2px rgba(0,0,0,0.06)',
+                }}
+              >Cancelar</button>
+              <button
+                type="button"
+                onClick={tentarExcluir}
+                style={{
+                  flex: 1, padding: 12, borderRadius: 14, border: 'none',
+                  background: '#D63A55', color: '#fff',
+                  fontSize: 14, fontWeight: 800, fontFamily: 'inherit',
+                  cursor: 'pointer',
+                  boxShadow: '0 4px 14px rgba(214,58,85,0.32)',
+                }}
+              >Excluir</button>
+            </div>
+          </>
+        )}
+
+        {etapa === 'senha' && (
+          <>
+            <div style={{
+              fontSize: 13, color: 'var(--muted)', fontWeight: 500,
+              marginTop: 8, lineHeight: 1.45, textAlign: 'center',
+            }}>
+              Por segurança, digite sua senha pra confirmar a exclusão.
+            </div>
+            <label style={{ display: 'block', marginTop: 14 }}>
+              <div style={{
+                fontSize: 12, fontWeight: 700, color: 'var(--muted)',
+                marginBottom: 6, paddingLeft: 2,
+              }}>Senha</div>
+              <input
+                autoFocus
+                type="password"
+                autoComplete="current-password"
+                value={senha}
+                onChange={(e) => setSenha(e.target.value)}
+                placeholder="Sua senha"
+                style={{
+                  width: '100%', padding: '13px 14px', borderRadius: 14,
+                  border: '1.5px solid var(--linha)', background: 'var(--card)',
+                  outline: 'none', fontSize: 15, fontWeight: 600, color: 'var(--ink)',
+                  fontFamily: 'inherit', boxSizing: 'border-box',
+                }}
+              />
+            </label>
+            {erro && (
+              <div style={{
+                marginTop: 10, fontSize: 12.5, fontWeight: 700,
+                color: '#D63A55', textAlign: 'center',
+              }}>{erro}</div>
+            )}
+            <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
+              <button
+                type="button"
+                onClick={onFechar}
+                style={{
+                  flex: 1, padding: 12, borderRadius: 14, border: 'none',
+                  background: 'var(--card-2)', color: 'var(--ink)',
+                  fontSize: 14, fontWeight: 800, fontFamily: 'inherit',
+                  cursor: 'pointer',
+                  boxShadow: '0 1px 2px rgba(0,0,0,0.06)',
+                }}
+              >Cancelar</button>
+              <button
+                type="submit"
+                style={{
+                  flex: 1, padding: 12, borderRadius: 14, border: 'none',
+                  background: '#D63A55', color: '#fff',
+                  fontSize: 14, fontWeight: 800, fontFamily: 'inherit',
+                  cursor: 'pointer',
+                  boxShadow: '0 4px 14px rgba(214,58,85,0.32)',
+                }}
+              >Confirmar exclusão</button>
+            </div>
+          </>
+        )}
+
+        {apagando && (
+          <div style={{
+            marginTop: 16, fontSize: 13, fontWeight: 700, color: 'var(--muted)',
+            textAlign: 'center',
+          }}>
+            Apagando seus dados…
+          </div>
+        )}
+      </form>
+    </div>
   );
 }
 
