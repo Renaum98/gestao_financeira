@@ -397,6 +397,7 @@ export function App() {
   const shared = useSharedCaixinhas({
     partnershipId: cloud.partnershipId,
     uid,
+    partnerNome: cloud.partnerNome || partner.nome,
   });
   useLimparParceriaOrfa({
     uid,

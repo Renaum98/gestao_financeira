@@ -137,6 +137,22 @@ export async function convidarPorEmail({
   });
 }
 
+// ─── Notificações de parceria ─────────────────────────────────────────────
+
+// Anexa uma notificação ao MEU próprio user doc. `notif.id` deve ser
+// determinístico (ex: `np-<tipo>-<entityId>`) — assim `arrayUnion` dedup
+// previne duplicatas se a mesma operação for detectada mais de uma vez.
+async function adicionarNotifParceria(uid, notif) {
+  if (!uid || !notif?.id) return;
+  try {
+    await updateDoc(doc(db, USERS, uid), {
+      notificacoesParceria: arrayUnion(notif),
+    });
+  } catch (err) {
+    console.warn("[notif parceria]", err);
+  }
+}
+
 // ─── Aceitar / Recusar ─────────────────────────────────────────────────────
 
 // Tag cada caixinha + depósitos com o uid do dono atual e compacta o
@@ -243,6 +259,15 @@ export async function finalizarPareamento({ invite, meuUid }) {
   const novas = minhasCaixinhas.filter((c) => !idsExistentes.has(c.id));
   const merged = [...cxExistentes, ...novas];
 
+  // Notificação "Joana aceitou seu convite!" — adicionada no mesmo update do
+  // user doc pra ficar atômica com a finalização do pareamento.
+  const notifAceita = {
+    id: `np-aceita-${invite.partnershipId}`,
+    tipo: "parceria-aceita",
+    por: invite.toNome || "Seu parceiro",
+    em: new Date().toISOString(),
+  };
+
   const batch = writeBatch(db);
   if (novas.length > 0) {
     batch.update(partnershipRef, { caixinhas: merged });
@@ -252,6 +277,7 @@ export async function finalizarPareamento({ invite, meuUid }) {
     partnerNome: invite.toNome || deleteField(),
     partnershipId: invite.partnershipId,
     caixinhas: deleteField(), // migradas pra partnership
+    notificacoesParceria: arrayUnion(notifAceita),
   });
   batch.delete(doc(db, INVITES, invite.id));
   await batch.commit();
@@ -431,7 +457,7 @@ export function usePartnerData(partnerUid) {
 // Em casos concorrentes raros (ambos editando ao mesmo tempo), o último write
 // ganha — aceitável pra uso de casal. Se virar problema, dá pra envolver em
 // runTransaction depois.
-export function useSharedCaixinhas({ partnershipId, uid }) {
+export function useSharedCaixinhas({ partnershipId, uid, partnerNome }) {
   const [caixinhas, setCaixinhas] = useState([]);
   const [ready, setReady] = useState(false);
   const [existe, setExiste] = useState(true); // false = partnership foi deletada
@@ -440,11 +466,31 @@ export function useSharedCaixinhas({ partnershipId, uid }) {
   const [desfeito, setDesfeito] = useState(null);
   const caixinhasRef = useRef([]);
 
+  // Detecção de eventos pra gerar notificações ao parceiro:
+  //  • inicializadoRef → primeira snapshot é "estado conhecido", não gera notif
+  //  • idsConhecidosRef / depsConhecidosRef → conjuntos de IDs já vistos
+  //  • Heurística antimigração: se MAIS DE UMA caixinha (ou depósito) novo
+  //    chega numa única snapshot, é provável uma migração (ex: parceiro
+  //    finalizando pareamento depois) — silenciamos as notifs nesse caso.
+  const inicializadoRef = useRef(false);
+  const idsConhecidosRef = useRef(new Set());
+  const depsConhecidosRef = useRef(new Set());
+  // Lê partnerNome via ref pra não re-subscrever quando ele muda.
+  const partnerNomeRef = useRef(partnerNome);
+  useEffect(() => {
+    partnerNomeRef.current = partnerNome;
+  }, [partnerNome]);
+
   useEffect(() => {
     caixinhasRef.current = caixinhas;
   }, [caixinhas]);
 
   useEffect(() => {
+    // Reseta o estado de detecção sempre que troca de partnership.
+    inicializadoRef.current = false;
+    idsConhecidosRef.current = new Set();
+    depsConhecidosRef.current = new Set();
+
     if (!partnershipId) {
       setCaixinhas([]);
       setReady(false);
@@ -456,18 +502,75 @@ export function useSharedCaixinhas({ partnershipId, uid }) {
     const unsub = onSnapshot(
       ref,
       (snap) => {
-        if (snap.exists()) {
-          const d = snap.data();
-          setCaixinhas(d.caixinhas || []);
-          setExiste(true);
-          if (d.desfeitoPor && d.desfeitoPor !== uid) {
-            setDesfeito({ por: d.desfeitoPor, nome: d.desfeitoNome || "" });
-          } else {
-            setDesfeito(null);
-          }
-        } else {
+        if (!snap.exists()) {
           setCaixinhas([]);
           setExiste(false);
+          setDesfeito(null);
+          setReady(true);
+          return;
+        }
+        const d = snap.data();
+        const novas = d.caixinhas || [];
+
+        // ── Detecção de eventos ──
+        const cxNovas = [];
+        const depsNovos = [];
+        for (const cx of novas) {
+          if (!idsConhecidosRef.current.has(cx.id)) cxNovas.push(cx);
+          for (const dep of cx.depositos || []) {
+            if (!depsConhecidosRef.current.has(dep.id)) {
+              depsNovos.push({ cx, dep });
+            }
+          }
+        }
+
+        // Atualiza conjuntos antes de qualquer notif.
+        for (const cx of novas) {
+          idsConhecidosRef.current.add(cx.id);
+          for (const dep of cx.depositos || []) {
+            depsConhecidosRef.current.add(dep.id);
+          }
+        }
+
+        // Só emite notif depois da primeira snapshot, e só pra UMA novidade por
+        // vez (mais que isso costuma ser migração no aceite, não criação real).
+        if (inicializadoRef.current) {
+          const nome = partnerNomeRef.current || "Seu parceiro";
+
+          if (cxNovas.length === 1) {
+            const cx = cxNovas[0];
+            if (cx.criadoPor && cx.criadoPor !== uid) {
+              adicionarNotifParceria(uid, {
+                id: `np-cx-criada-${cx.id}`,
+                tipo: "caixinha-criada",
+                por: nome,
+                caixinhaNome: cx.nome,
+                em: new Date().toISOString(),
+              });
+            }
+          }
+          if (depsNovos.length === 1) {
+            const { cx, dep } = depsNovos[0];
+            if (dep.feitoPor && dep.feitoPor !== uid) {
+              adicionarNotifParceria(uid, {
+                id: `np-dep-${dep.id}`,
+                tipo: "caixinha-deposito",
+                por: nome,
+                caixinhaNome: cx.nome,
+                valor: dep.valor,
+                em: new Date().toISOString(),
+              });
+            }
+          }
+        }
+        inicializadoRef.current = true;
+
+        // Atualiza estado/UI.
+        setCaixinhas(novas);
+        setExiste(true);
+        if (d.desfeitoPor && d.desfeitoPor !== uid) {
+          setDesfeito({ por: d.desfeitoPor, nome: d.desfeitoNome || "" });
+        } else {
           setDesfeito(null);
         }
         setReady(true);

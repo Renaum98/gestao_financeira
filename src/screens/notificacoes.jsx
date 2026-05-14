@@ -541,34 +541,127 @@ export function NotificacoesScreen({ ctx }) {
   );
 }
 
+// Configuração visual por tipo de notificação de parceria.
+function configNotif(notif) {
+  switch (notif.tipo) {
+    case 'parceria-aceita':
+      return {
+        cor: '#1B9E6A',
+        icone: 'check',
+        titulo: (
+          <>
+            <strong>{notif.por}</strong> aceitou seu convite!
+          </>
+        ),
+        subtitulo: 'Conta compartilhada ativada.',
+      };
+    case 'caixinha-criada':
+      return {
+        cor: 'var(--primary)',
+        icone: 'piggy',
+        titulo: (
+          <>
+            <strong>{notif.por}</strong> criou uma caixinha
+          </>
+        ),
+        subtitulo: notif.caixinhaNome ? `"${notif.caixinhaNome}"` : null,
+      };
+    case 'caixinha-deposito':
+      return {
+        cor: '#1B9E6A',
+        icone: 'plus',
+        titulo: (
+          <>
+            <strong>{notif.por}</strong> depositou {fmtBRL(notif.valor || 0)}
+          </>
+        ),
+        subtitulo: notif.caixinhaNome
+          ? `Na caixinha "${notif.caixinhaNome}"`
+          : null,
+      };
+    case 'parceria-desfeita':
+    default:
+      return {
+        cor: '#D63A55',
+        icone: 'close',
+        titulo: (
+          <>
+            <strong>{notif.por}</strong> desfez a conta compartilhada
+          </>
+        ),
+        subtitulo: null,
+      };
+  }
+}
+
 function NotifParceriaItem({ notif, primeiro, onDispensar }) {
-  const inicial = (notif.por?.trim()[0] || '?').toUpperCase();
+  const cfg = configNotif(notif);
   const formatarData = (iso) => {
     try {
       const d = new Date(iso);
-      const dn = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'][d.getDay()];
-      return `${dn}, ${d.getDate()} ${MESES_CURTO[d.getMonth()]} · ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
-    } catch { return ''; }
+      const dn = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'][d.getDay()];
+      return `${dn}, ${d.getDate()} ${MESES_CURTO[d.getMonth()]} · ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+    } catch {
+      return '';
+    }
   };
 
   return (
-    <div style={{
-      padding: '14px 0',
-      borderTop: primeiro ? 'none' : '1px solid var(--linha)',
-    }}>
+    <div
+      style={{
+        padding: '14px 0',
+        borderTop: primeiro ? 'none' : '1px solid var(--linha)',
+      }}
+    >
       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-        <div style={{
-          width: 44, height: 44, borderRadius: 22,
-          background: 'color-mix(in oklab, #D63A55 14%, transparent)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          color: '#D63A55', fontSize: 18, fontWeight: 800, letterSpacing: '-0.02em',
-          flexShrink: 0,
-        }}>{inicial}</div>
+        <div
+          style={{
+            width: 44,
+            height: 44,
+            borderRadius: 14,
+            background: `color-mix(in oklab, ${cfg.cor} 14%, transparent)`,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexShrink: 0,
+          }}
+        >
+          <Icon name={cfg.icone} size={22} color={cfg.cor} strokeWidth={2.4} />
+        </div>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--ink)' }}>
-            {notif.por} desfez a conta compartilhada
+          <div
+            style={{
+              fontSize: 14,
+              fontWeight: 600,
+              color: 'var(--ink)',
+              lineHeight: 1.35,
+            }}
+          >
+            {cfg.titulo}
           </div>
-          <div style={{ fontSize: 11.5, color: 'var(--muted)', fontWeight: 600, marginTop: 2 }}>
+          {cfg.subtitulo && (
+            <div
+              style={{
+                fontSize: 12,
+                color: 'var(--muted)',
+                fontWeight: 600,
+                marginTop: 2,
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+              }}
+            >
+              {cfg.subtitulo}
+            </div>
+          )}
+          <div
+            style={{
+              fontSize: 11,
+              color: 'var(--muted)',
+              fontWeight: 600,
+              marginTop: 3,
+            }}
+          >
             {formatarData(notif.em)}
           </div>
         </div>
@@ -576,13 +669,21 @@ function NotifParceriaItem({ notif, primeiro, onDispensar }) {
       <button
         onClick={onDispensar}
         style={{
-          marginTop: 10, width: '100%',
-          padding: '8px 12px', borderRadius: 12,
-          border: '1.5px solid var(--linha)', background: 'var(--card)',
-          color: 'var(--ink)', fontSize: 13, fontWeight: 800,
-          fontFamily: 'inherit', cursor: 'pointer',
+          marginTop: 10,
+          width: '100%',
+          padding: '8px 12px',
+          borderRadius: 12,
+          border: '1.5px solid var(--linha)',
+          background: 'var(--card)',
+          color: 'var(--ink)',
+          fontSize: 13,
+          fontWeight: 800,
+          fontFamily: 'inherit',
+          cursor: 'pointer',
         }}
-      >Entendi</button>
+      >
+        Entendi
+      </button>
     </div>
   );
 }
