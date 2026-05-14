@@ -40,13 +40,29 @@ const PARTNERSHIPS = "partnerships";
 
 // ─── Busca de usuário por e-mail ──────────────────────────────────────────
 
-// Retorna { uid, nome } ou null se não encontrou.
+// Retorna { uid, nome, temParceiro } ou null se não encontrou.
 async function buscarUidPorEmail(emailLower) {
   const ref = doc(db, USER_INDEX, emailLower);
   const snap = await getDoc(ref);
   if (!snap.exists()) return null;
   const data = snap.data();
-  return { uid: data.uid, nome: data.nome || "" };
+  return {
+    uid: data.uid,
+    nome: data.nome || "",
+    temParceiro: data.temParceiro === true,
+  };
+}
+
+// Atualiza meu próprio userIndex com a flag temParceiro. Usado pra bloquear
+// convites a alguém já em uma parceria — verificado no convidarPorEmail.
+async function definirFlagParceriaNoIndex(uid, email, temParceiro) {
+  if (!uid || !email) return;
+  const ref = doc(db, USER_INDEX, email.toLowerCase());
+  try {
+    await setDoc(ref, { uid, temParceiro }, { merge: true });
+  } catch (err) {
+    console.error("[userIndex temParceiro]", err);
+  }
 }
 
 // ─── Convite ───────────────────────────────────────────────────────────────
@@ -69,6 +85,13 @@ export async function convidarPorEmail({
   if (!parceiro) throw new Error("Ninguém com esse e-mail está usando o app.");
   if (parceiro.uid === meuUid)
     throw new Error("Você não pode convidar a si mesmo.");
+
+  // Parceiro já está em outra parceria? (a conta só pode ser entre 2 pessoas)
+  if (parceiro.temParceiro) {
+    throw new Error(
+      "Essa pessoa já está em uma conta compartilhada com outra pessoa.",
+    );
+  }
 
   // Eu já estou em uma parceria? (leitura permitida — meu próprio doc)
   const meuDoc = await getDoc(doc(db, USERS, meuUid));
@@ -121,7 +144,7 @@ function tagearCaixinhas(caixinhas, uid) {
 //
 // Etapa 4: minhas caixinhas migram pra partnership no momento do aceite e são
 // limpas do meu user doc.
-export async function aceitarConvite({ invite, meuUid, meuNome }) {
+export async function aceitarConvite({ invite, meuUid, meuNome, meuEmail }) {
   // Re-checa que eu ainda não estou em outra parceria.
   const meuDoc = await getDoc(doc(db, USERS, meuUid));
   if (meuDoc.exists() && meuDoc.data().partnerUid) {
@@ -158,6 +181,11 @@ export async function aceitarConvite({ invite, meuUid, meuNome }) {
     toNome: meuNome || invite.toNome || "",
   });
   await batch.commit();
+  // Marca no userIndex que agora estou em uma parceria.
+  // Falha silenciosa: o pareamento já foi feito; índice é otimização.
+  if (meuEmail) {
+    await definirFlagParceriaNoIndex(meuUid, meuEmail, true);
+  }
 }
 
 export async function recusarConvite(inviteId) {
@@ -210,6 +238,11 @@ export async function finalizarPareamento({ invite, meuUid }) {
   });
   batch.delete(doc(db, INVITES, invite.id));
   await batch.commit();
+  // Atualiza userIndex pra refletir que agora tenho parceria.
+  const meuEmail = meuDoc.data()?.email;
+  if (meuEmail) {
+    await definirFlagParceriaNoIndex(meuUid, meuEmail, true);
+  }
 }
 
 // ─── Desfazer parceria ────────────────────────────────────────────────────
@@ -217,7 +250,7 @@ export async function finalizarPareamento({ invite, meuUid }) {
 // Quem clica em "Desfazer" leva todas as caixinhas (combinado na Etapa 1).
 // O parceiro tem seus campos de parceria limpos por `useLimparParceriaOrfa`
 // quando ele detecta que a partnership sumiu.
-export async function desfazerParceria({ uid, partnershipId }) {
+export async function desfazerParceria({ uid, partnershipId, meuEmail }) {
   if (!partnershipId) throw new Error("Sem parceria ativa.");
   const pRef = doc(db, PARTNERSHIPS, partnershipId);
   const pDoc = await getDoc(pRef);
@@ -232,6 +265,10 @@ export async function desfazerParceria({ uid, partnershipId }) {
   });
   batch.delete(pRef);
   await batch.commit();
+  // Libera o índice pra novos convites.
+  if (meuEmail) {
+    await definirFlagParceriaNoIndex(uid, meuEmail, false);
+  }
 }
 
 // ─── Hooks ─────────────────────────────────────────────────────────────────
@@ -293,6 +330,7 @@ export function usePartnerData(partnerUid) {
     recorrentes: [],
     categoriasCustom: [],
     orcamentos: {},
+    orcamentoMensal: 0,
     nome: "",
     email: null,
     ready: false,
@@ -314,6 +352,7 @@ export function usePartnerData(partnerUid) {
           recorrentes: d.recorrentes ?? [],
           categoriasCustom: d.categoriasCustom ?? [],
           orcamentos: d.orcamentos ?? {},
+          orcamentoMensal: d.preferences?.orcamentoMensal || 0,
           nome: d.preferences?.nome || "",
           email: d.email || null,
           ready: true,
@@ -424,16 +463,30 @@ export function useSharedCaixinhas({ partnershipId, uid }) {
 
 // Se eu tenho `partnershipId` setado mas a partnership não existe mais (parceiro
 // desfez), limpa meus próprios campos de parceria.
-export function useLimparParceriaOrfa({ uid, partnershipId, partnershipExiste }) {
+export function useLimparParceriaOrfa({
+  uid,
+  meuEmail,
+  partnershipId,
+  partnershipExiste,
+}) {
   useEffect(() => {
     if (!uid || !partnershipId) return;
     if (partnershipExiste !== false) return; // só age quando confirmado que sumiu
-    updateDoc(doc(db, USERS, uid), {
-      partnerUid: null,
-      partnerNome: null,
-      partnershipId: null,
-    }).catch((err) => console.error("[limpar parceria órfã]", err));
-  }, [uid, partnershipId, partnershipExiste]);
+    (async () => {
+      try {
+        await updateDoc(doc(db, USERS, uid), {
+          partnerUid: null,
+          partnerNome: null,
+          partnershipId: null,
+        });
+        if (meuEmail) {
+          await definirFlagParceriaNoIndex(uid, meuEmail, false);
+        }
+      } catch (err) {
+        console.error("[limpar parceria órfã]", err);
+      }
+    })();
+  }, [uid, meuEmail, partnershipId, partnershipExiste]);
 }
 
 // Hook auxiliar pro App: detecta quando um convite enviado por mim ficou

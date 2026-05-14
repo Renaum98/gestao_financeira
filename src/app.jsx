@@ -399,6 +399,7 @@ export function App() {
   });
   useLimparParceriaOrfa({
     uid,
+    meuEmail: cloud.email,
     partnershipId: cloud.partnershipId,
     partnershipExiste: shared.existe,
   });
@@ -732,6 +733,7 @@ export function App() {
     await desfazerParceriaFn({
       uid,
       partnershipId: cloud.partnershipId,
+      meuEmail: cloud.email,
     });
   };
 
@@ -783,6 +785,8 @@ export function App() {
     partnerEmail: partner.email,
     partnershipId: cloud.partnershipId,
     partnerTxs,
+    partnerOrcamentos: partner.orcamentos,
+    partnerOrcamentoMensal: partner.orcamentoMensal,
     partnerReady: partner.ready,
     convitesRecebidos,
     convitesEnviados,

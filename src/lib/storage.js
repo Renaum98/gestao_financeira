@@ -99,10 +99,15 @@ async function garantirDocInicial(uid) {
     const indexRef = doc(db, INDEX_PATH(emailLower));
     const indexSnap = await getDoc(indexRef);
     const nome = u?.displayName || snap.data()?.preferences?.nome || "";
+    const temParceiro = !!snap.data()?.partnerUid;
     if (!indexSnap.exists() || indexSnap.data().uid !== uid) {
-      await setDoc(indexRef, { uid, nome });
-    } else if (indexSnap.data().nome !== nome && nome) {
-      await updateDoc(indexRef, { nome });
+      await setDoc(indexRef, { uid, nome, temParceiro });
+    } else {
+      const patch = {};
+      if (indexSnap.data().nome !== nome && nome) patch.nome = nome;
+      if (indexSnap.data().temParceiro !== temParceiro)
+        patch.temParceiro = temParceiro;
+      if (Object.keys(patch).length) await updateDoc(indexRef, patch);
     }
   }
 }

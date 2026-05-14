@@ -38,6 +38,9 @@ export function DashboardScreen({ ctx }) {
     convitesRecebidos = [],
     partnerTxs = [],
     partnerNome = '',
+    partnerOrcamentos = {},
+    partnerOrcamentoMensal = 0,
+    partnerUid,
   } = ctx;
   const notifInfo = React.useMemo(
     () => calcularNotificacoes(txs, recorrentes, preferences?.notifLidas || [], convitesRecebidos),
@@ -73,18 +76,23 @@ export function DashboardScreen({ ctx }) {
   const orcTotal = orcBase + entradas;
   const restante = orcTotal - total;
 
-  // "Últimos gastos" mistura meus + os do parceiro, ordenados por data desc.
-  // Os totais e cards do mês continuam só com os meus (acima).
+  // No Dashboard, "Últimos gastos" mostra somente OS MEUS — txs do parceiro
+  // ficam na aba de Transações (por opção de UX: o resumo aqui é pessoal).
+  const recentes = txMes.slice(0, 4);
+
+  // Já precisamos das txs do parceiro pra o resumo no card de saldo abaixo.
   const parceiroDoMes = React.useMemo(
     () => txDoMes(partnerTxs, mes),
     [partnerTxs, mes],
   );
-  const recentes = React.useMemo(() => {
-    const juntos = [...txMes, ...parceiroDoMes].sort((a, b) =>
-      b.data.localeCompare(a.data),
-    );
-    return juntos.slice(0, 4);
-  }, [txMes, parceiroDoMes]);
+  const totalParceiro = totalGeral(parceiroDoMes);
+  const entradasParceiro = totalEntradas(parceiroDoMes);
+  const somaOrcCatsParceiro = Object.values(partnerOrcamentos).reduce((s, v) => s + v, 0);
+  const orcBaseParceiro = partnerOrcamentoMensal > 0 ? partnerOrcamentoMensal : somaOrcCatsParceiro;
+  const orcTotalParceiro = orcBaseParceiro + entradasParceiro;
+  const restanteParceiro = orcTotalParceiro - totalParceiro;
+  const disponivelConjunto = restante + restanteParceiro;
+  const ehCompartilhado = !!partnerUid;
 
   // Próximas a vencer — recorrentes e parcelas dos próximos 35 dias, ordenadas
   // do mais próximo para o mais distante. Independente do mês selecionado.
@@ -542,6 +550,96 @@ export function DashboardScreen({ ctx }) {
               </div>
             </div>
           </div>
+
+          {/* Resumo do parceiro — só aparece em conta compartilhada */}
+          {ehCompartilhado && (
+            <div
+              style={{
+                marginTop: 14,
+                paddingTop: 12,
+                borderTop: "1px dashed rgba(255,255,255,0.22)",
+                position: "relative",
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  fontSize: 10,
+                  fontWeight: 700,
+                  opacity: 0.78,
+                  letterSpacing: 0.4,
+                  textTransform: "uppercase",
+                }}
+              >
+                <span>
+                  {partnerNome || "Parceiro"}
+                </span>
+                <span style={{ opacity: 0.85 }}>
+                  {fmtBRLCompacto(totalParceiro, ocultar)} gasto
+                </span>
+              </div>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  marginTop: 6,
+                  fontSize: 11,
+                  fontWeight: 600,
+                  opacity: 0.85,
+                }}
+              >
+                <span>
+                  Orçamento {fmtBRLCompacto(orcTotalParceiro, ocultar)}
+                </span>
+                <span
+                  style={{
+                    color: restanteParceiro >= 0 ? "#D9F5C8" : "#FFD0D9",
+                    fontWeight: 700,
+                  }}
+                >
+                  {restanteParceiro >= 0 ? "Resta " : "Acima "}
+                  {fmtBRLCompacto(Math.abs(restanteParceiro), ocultar)}
+                </span>
+              </div>
+
+              {/* Disponível conjunto dos dois */}
+              <div
+                style={{
+                  marginTop: 10,
+                  padding: "8px 12px",
+                  borderRadius: 12,
+                  background: "rgba(255,255,255,0.12)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                }}
+              >
+                <span
+                  style={{
+                    fontSize: 11,
+                    fontWeight: 700,
+                    opacity: 0.9,
+                    letterSpacing: 0.3,
+                    textTransform: "uppercase",
+                  }}
+                >
+                  Disponível conjunto
+                </span>
+                <span
+                  style={{
+                    fontSize: 14,
+                    fontWeight: 800,
+                    color: disponivelConjunto >= 0 ? "#D9F5C8" : "#FFD0D9",
+                    letterSpacing: "-0.01em",
+                  }}
+                >
+                  {fmtBRL(Math.abs(disponivelConjunto), ocultar)}
+                </span>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -902,8 +1000,6 @@ export function DashboardScreen({ ctx }) {
               <ItemTransacao
                 tx={tx}
                 ocultar={ocultar}
-                doParceiro={!!tx._parceiro}
-                nomeParceiro={partnerNome}
                 onClick={() => irPara("gastos")}
               />
             </div>

@@ -241,6 +241,7 @@ export function NotificacoesScreen({ ctx }) {
                 convite={c}
                 meuUid={usuario?.uid}
                 meuNome={preferences?.nome || usuario?.displayName || ''}
+                meuEmail={usuario?.email || ''}
                 primeiro={i === 0}
               />
             ))}
@@ -517,7 +518,7 @@ export function NotificacoesScreen({ ctx }) {
   );
 }
 
-function ConviteItem({ convite, meuUid, meuNome, primeiro }) {
+function ConviteItem({ convite, meuUid, meuNome, meuEmail, primeiro }) {
   const [acao, setAcao] = React.useState(null); // 'aceitando' | 'recusando' | null
   const [erro, setErro] = React.useState('');
   const inicial = (convite.fromNome?.trim()[0] || '?').toUpperCase();
@@ -530,6 +531,7 @@ function ConviteItem({ convite, meuUid, meuNome, primeiro }) {
         invite: convite,
         meuUid,
         meuNome,
+        meuEmail,
       });
       // O onSnapshot remove o convite da lista automaticamente.
     } catch (err) {

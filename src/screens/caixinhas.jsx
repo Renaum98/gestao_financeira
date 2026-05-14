@@ -1382,7 +1382,7 @@ function ModalShell({
         position: "fixed",
         inset: 0,
         height: "100dvh",
-        zIndex: 100,
+        zIndex: 9999,
         display: "flex",
         alignItems: "center",
         justifyContent: "center",

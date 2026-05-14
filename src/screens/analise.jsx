@@ -45,7 +45,11 @@ function SecaoTitulo({ children }) {
 }
 
 export function AnaliseScreen({ ctx }) {
-  const { txs, mes, setMes, todosMeses, mesAnterior, ocultar, irPara, ehDesktop } = ctx;
+  const {
+    txs, mes, setMes, todosMeses, mesAnterior, ocultar, irPara, ehDesktop,
+    partnerTxs = [], partnerNome = '', partnerUid,
+  } = ctx;
+  const ehCompartilhado = !!partnerUid;
   const spanAll = ehDesktop ? "col-span-all" : undefined;
   const [ativa, setAtiva] = React.useState(null);
 
@@ -97,6 +101,25 @@ export function AnaliseScreen({ ctx }) {
   const maxEvol = Math.max(...evolucao.map((e) => e.total), 1);
   const mediaEvol =
     evolucao.reduce((s, e) => s + e.total, 0) / evolucao.length;
+
+  // Evolução conjunta (eu + parceiro), 6 meses, barras lado a lado por mês.
+  const evolucaoConjunta = React.useMemo(() => {
+    if (!ehCompartilhado) return null;
+    const out = [];
+    for (let i = 5; i >= 0; i--) {
+      const k = mesShift(mes, -i);
+      out.push({
+        key: k,
+        label: rotuloMesCurto(k).replace(/ \d+$/, ""),
+        meu: totalGeral(txDoMes(txs, k)),
+        parceiro: totalGeral(txDoMes(partnerTxs, k)),
+      });
+    }
+    return out;
+  }, [ehCompartilhado, txs, partnerTxs, mes]);
+  const maxEvolConjunta = evolucaoConjunta
+    ? Math.max(...evolucaoConjunta.flatMap((e) => [e.meu, e.parceiro]), 1)
+    : 1;
 
   // ─── Por forma de pagamento (só saídas) ───
   const porPagamento = React.useMemo(() => {
@@ -153,7 +176,7 @@ export function AnaliseScreen({ ctx }) {
         <SeletorMes mes={mes} setMes={setMes} todosMeses={todosMeses} />
       </div>
 
-      {total === 0 ? (
+      {total === 0 && (!ehCompartilhado || totalGeral(txDoMes(partnerTxs, mes)) === 0) ? (
         <div className={spanAll} style={{ padding: "0 20px" }}>
           <Card style={{ textAlign: "center", padding: "40px 20px" }}>
             <div style={{ fontSize: 14, color: "var(--muted)", fontWeight: 600 }}>
@@ -361,6 +384,121 @@ export function AnaliseScreen({ ctx }) {
               </div>
             </Card>
           </div>
+
+          {/* Evolução conjunta (você + parceiro) */}
+          {evolucaoConjunta && (
+            <div style={{ padding: "16px 20px 0" }}>
+              <SecaoTitulo>Você vs. {partnerNome || "parceiro"}</SecaoTitulo>
+              <Card>
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "flex-end",
+                    justifyContent: "space-between",
+                    gap: 8,
+                    height: 150,
+                  }}
+                >
+                  {evolucaoConjunta.map((e) => {
+                    const hMeu = Math.max((e.meu / maxEvolConjunta) * 100, e.meu > 0 ? 4 : 0);
+                    const hParc = Math.max((e.parceiro / maxEvolConjunta) * 100, e.parceiro > 0 ? 4 : 0);
+                    const atual = e.key === mes;
+                    return (
+                      <div
+                        key={e.key}
+                        onClick={() => setMes(e.key)}
+                        style={{
+                          flex: 1,
+                          display: "flex",
+                          flexDirection: "column",
+                          alignItems: "center",
+                          gap: 4,
+                          cursor: "pointer",
+                          height: "100%",
+                          justifyContent: "flex-end",
+                        }}
+                      >
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "flex-end",
+                            gap: 3,
+                            height: "100%",
+                            width: "100%",
+                            justifyContent: "center",
+                          }}
+                        >
+                          <div
+                            title={`Você: ${fmtBRL(e.meu, ocultar)}`}
+                            style={{
+                              flex: 1,
+                              maxWidth: 16,
+                              height: `${hMeu}%`,
+                              borderRadius: 6,
+                              background: "linear-gradient(180deg, var(--primary), var(--primary-2))",
+                              transition: "height .2s",
+                              minHeight: e.meu > 0 ? 4 : 0,
+                            }}
+                          />
+                          <div
+                            title={`${partnerNome || "Parceiro"}: ${fmtBRL(e.parceiro, ocultar)}`}
+                            style={{
+                              flex: 1,
+                              maxWidth: 16,
+                              height: `${hParc}%`,
+                              borderRadius: 6,
+                              background: "var(--surface-sunken)",
+                              border: "1px solid var(--linha)",
+                              transition: "height .2s",
+                              minHeight: e.parceiro > 0 ? 4 : 0,
+                            }}
+                          />
+                        </div>
+                        <div
+                          style={{
+                            fontSize: 10,
+                            fontWeight: 700,
+                            color: atual ? "var(--primary)" : "var(--muted)",
+                          }}
+                        >
+                          {e.label}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <div
+                  style={{
+                    marginTop: 12,
+                    paddingTop: 12,
+                    borderTop: "1px solid var(--linha)",
+                    display: "flex",
+                    justifyContent: "center",
+                    gap: 18,
+                    fontSize: 11,
+                    fontWeight: 700,
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                    <div style={{
+                      width: 12, height: 12, borderRadius: 4,
+                      background: "linear-gradient(180deg, var(--primary), var(--primary-2))",
+                    }} />
+                    <span style={{ color: "var(--ink)" }}>Você</span>
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                    <div style={{
+                      width: 12, height: 12, borderRadius: 4,
+                      background: "var(--surface-sunken)",
+                      border: "1px solid var(--linha)",
+                    }} />
+                    <span style={{ color: "var(--muted)" }}>{partnerNome || "Parceiro"}</span>
+                  </div>
+                </div>
+              </Card>
+            </div>
+          )}
 
           {/* Gasto acumulado */}
           <div style={{ padding: "16px 20px 0" }}>
