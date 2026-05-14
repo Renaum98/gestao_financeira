@@ -17,15 +17,18 @@ import { Card, TopBar } from "../ui/common.jsx";
 import { BarraProgresso } from "../ui/charts.jsx";
 import { ConfirmModal } from "../ui/confirm-modal.jsx";
 
+// Cores selecionáveis pra colorir cada caixinha. Todas calibradas pra dar
+// contraste ≥4 com texto branco (o cabeçalho do card de detalhe usa
+// `linear-gradient(135deg, ${cor}, ${cor}CC)` com texto branco em cima).
 const CORES_CAIXINHA = [
-  "#6E4FF6",
-  "#EF6B5C",
-  "#1B9E6A",
-  "#2566EA",
-  "#E08A00",
-  "#FF7AA8",
-  "#3FCB9A",
-  "#9B7BFF",
+  "#6E4FF6", // roxo (mesma da Violeta)
+  "#D44B3F", // coral
+  "#0E8554", // esmeralda
+  "#2563EA", // oceano
+  "#A26200", // mostarda
+  "#D43D85", // rosa profundo
+  "#168F6E", // teal
+  "#7456E0", // lilás
 ];
 
 function hojeISO() {

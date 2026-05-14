@@ -54,13 +54,35 @@ export const PAGAMENTOS = ['Cartão de crédito','Cartão de débito','Pix','Din
 export const MESES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
 export const MESES_CURTO = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
 
+// Paletas de destaque. Todas calibradas pra dar contraste ≥3 com texto branco
+// nos dois extremos do gradiente (primary → primary2). Pra ler:
+//
+//   • primary  → cor sólida usada em texto colorido (chips, links, ícones)
+//   • primary2 → segunda parada do gradiente nos cards/botões grandes
+//
+// Campos opcionais `primaryDark` / `primary2Dark` definem variantes pro modo
+// escuro — usadas quando a paleta clara seria invisível contra o `--bg`
+// escuro do app. Hoje só a paleta "Preto" precisa disso.
+//
+// O texto sobre o gradiente é sempre branco; saturação/luminância das duas
+// cores são mantidas próximas pra que o branco continue legível ao longo do
+// degradê todo.
 export const PALETAS = [
-  { primary: '#3a19cf', primary2: '#5f5192', nome: 'Violeta' },
-  { primary: '#EF6B5C', primary2: '#FFA98B', nome: 'Coral' },
-  { primary: '#1B9E6A', primary2: '#5BD8A0', nome: 'Esmeralda' },
-  { primary: '#2566EA', primary2: '#6BA6FF', nome: 'Oceano' },
-  { primary: '#E08A00', primary2: '#FFC766', nome: 'Mostarda' },
-  { primary: '#e000d5', primary2: '#ff66f2', nome: 'Rosa' },
+  { primary: '#6E4FF6', primary2: '#8C72FF', nome: 'Violeta' },
+  { primary: '#D44B3F', primary2: '#E66659', nome: 'Coral' },
+  { primary: '#0E8554', primary2: '#1FA970', nome: 'Esmeralda' },
+  { primary: '#2563EA', primary2: '#487EE8', nome: 'Oceano' },
+  { primary: '#A26200', primary2: '#C97C0E', nome: 'Mostarda' },
+  { primary: '#B8208A', primary2: '#D43DAA', nome: 'Rosa' },
+  {
+    primary: '#1A1416',
+    primary2: '#3D3338',
+    // No dark mode, preto puro some no fundo (#13101A) — usamos um grafite
+    // mais claro que ainda comunica "neutro elegante" e mantém branco legível.
+    primaryDark: '#4A3D44',
+    primary2Dark: '#6E5D66',
+    nome: 'Preto',
+  },
 ];
 
 export function fmtBRL(v, ocultar = false) {

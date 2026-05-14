@@ -332,9 +332,15 @@ function useEhDesktop() {
 function aplicarTema(paleta, modo) {
   const root = document.documentElement;
   const pal = PALETAS.find((p) => p.primary === paleta) || PALETAS[0];
-  root.style.setProperty("--primary", pal.primary);
-  root.style.setProperty("--primary-2", pal.primary2);
-  if (modo === "escuro") {
+  const ehEscuro = modo === "escuro";
+  // Paletas podem ter variantes dark (ex: "Preto" usa grafite claro pra
+  // continuar visível contra o --bg escuro). Se não houver, usa a clara.
+  const primary = ehEscuro && pal.primaryDark ? pal.primaryDark : pal.primary;
+  const primary2 =
+    ehEscuro && pal.primary2Dark ? pal.primary2Dark : pal.primary2;
+  root.style.setProperty("--primary", primary);
+  root.style.setProperty("--primary-2", primary2);
+  if (ehEscuro) {
     // Paleta dark calibrada para contraste WCAG AA:
     // - bg → card → card-2 formam uma escada clara de elevação
     // - ink quase branco; muted bem mais claro que antes (era 9B919A, contraste insuficiente)
@@ -358,7 +364,7 @@ function aplicarTema(paleta, modo) {
   }
   document
     .querySelector('meta[name="theme-color"]')
-    ?.setAttribute("content", pal.primary);
+    ?.setAttribute("content", primary);
 }
 
 export function App() {
