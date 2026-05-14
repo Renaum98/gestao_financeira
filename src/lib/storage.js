@@ -23,7 +23,9 @@ import {
   setDoc,
   updateDoc,
   onSnapshot,
+  deleteField,
 } from "./firebase.js";
+import { compactarPorChave } from "./compact.js";
 
 const DOC_PATH = (uid) => `users/${uid}`;
 const INDEX_PATH = (emailLower) => `userIndex/${emailLower}`;
@@ -77,40 +79,44 @@ const SYNCED_KEYS = [
 ];
 
 // Garante que o user doc exista e tenha email/userIndex preenchidos. Idempotente.
+// Doc inicial é mínimo: só `email` (e `preferences.nome` se houver).
+// Todos os outros campos (txs, orcamentos, caixinhas, recorrentes…) ficam
+// ausentes e a leitura completa via DEFAULT_STATE.
 async function garantirDocInicial(uid) {
   const ref = doc(db, DOC_PATH(uid));
   const snap = await getDoc(ref);
   const u = auth.currentUser;
   const emailLower = (u?.email || "").trim().toLowerCase();
+  const nomeUsuario = u?.displayName || "";
 
   if (!snap.exists()) {
-    // Primeira vez: cria com defaults + email/nome já preenchidos.
-    await setDoc(ref, {
-      ...DEFAULT_STATE,
-      email: emailLower || null,
-      preferences: {
-        ...DEFAULT_STATE.preferences,
-        nome: u?.displayName || "",
-      },
-    });
+    const inicial = {};
+    if (emailLower) inicial.email = emailLower;
+    if (nomeUsuario) inicial.preferences = { nome: nomeUsuario };
+    await setDoc(ref, inicial);
   } else if (emailLower && snap.data().email !== emailLower) {
     // Conta antiga sem email registrado — preenche agora.
     await updateDoc(ref, { email: emailLower });
   }
 
-  // Índice por e-mail (pra busca do parceiro). Só escrevemos se mudou.
+  // Índice por e-mail (pra busca do parceiro). Só salva `temParceiro` quando
+  // for true — ausência do campo equivale a false.
   if (emailLower) {
     const indexRef = doc(db, INDEX_PATH(emailLower));
     const indexSnap = await getDoc(indexRef);
-    const nome = u?.displayName || snap.data()?.preferences?.nome || "";
+    const nome = nomeUsuario || snap.data()?.preferences?.nome || "";
     const temParceiro = !!snap.data()?.partnerUid;
     if (!indexSnap.exists() || indexSnap.data().uid !== uid) {
-      await setDoc(indexRef, { uid, nome, temParceiro });
+      const docIndice = { uid };
+      if (nome) docIndice.nome = nome;
+      if (temParceiro) docIndice.temParceiro = true;
+      await setDoc(indexRef, docIndice);
     } else {
       const patch = {};
       if (indexSnap.data().nome !== nome && nome) patch.nome = nome;
-      if (indexSnap.data().temParceiro !== temParceiro)
-        patch.temParceiro = temParceiro;
+      const flagAtual = indexSnap.data().temParceiro === true;
+      if (temParceiro && !flagAtual) patch.temParceiro = true;
+      else if (!temParceiro && flagAtual) patch.temParceiro = deleteField();
       if (Object.keys(patch).length) await updateDoc(indexRef, patch);
     }
   }
@@ -172,7 +178,7 @@ export function useCloudState(uid) {
     const ref = doc(db, DOC_PATH(uid));
     const patch = {};
     for (const k of dirtyKeys.current) {
-      if (SYNCED_KEYS.includes(k)) patch[k] = state[k];
+      if (SYNCED_KEYS.includes(k)) patch[k] = compactarPorChave(k, state[k]);
     }
     dirtyKeys.current.clear();
 

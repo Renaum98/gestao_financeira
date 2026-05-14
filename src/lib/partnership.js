@@ -23,6 +23,7 @@ import {
   setDoc,
   updateDoc,
   deleteDoc,
+  deleteField,
   collection,
   addDoc,
   getDocs,
@@ -33,6 +34,7 @@ import {
   writeBatch,
   arrayUnion,
 } from "./firebase.js";
+import { compactarCaixinha, compactarCaixinhas } from "./compact.js";
 
 const INVITES = "invites";
 const USERS = "users";
@@ -56,11 +58,21 @@ async function buscarUidPorEmail(emailLower) {
 
 // Atualiza meu próprio userIndex com a flag temParceiro. Usado pra bloquear
 // convites a alguém já em uma parceria — verificado no convidarPorEmail.
+// Quando false, removemos o campo (ausência = false).
 async function definirFlagParceriaNoIndex(uid, email, temParceiro) {
   if (!uid || !email) return;
   const ref = doc(db, USER_INDEX, email.toLowerCase());
   try {
-    await setDoc(ref, { uid, temParceiro }, { merge: true });
+    if (temParceiro) {
+      await setDoc(ref, { uid, temParceiro: true }, { merge: true });
+    } else {
+      try {
+        await updateDoc(ref, { temParceiro: deleteField() });
+      } catch {
+        // Doc pode não existir ainda — cria sem a flag.
+        await setDoc(ref, { uid }, { merge: true });
+      }
+    }
   } catch (err) {
     console.error("[userIndex temParceiro]", err);
   }
@@ -127,17 +139,19 @@ export async function convidarPorEmail({
 
 // ─── Aceitar / Recusar ─────────────────────────────────────────────────────
 
-// Tag cada caixinha + depósitos com o uid do dono atual. Não altera caixinhas
-// que já tenham tag.
+// Tag cada caixinha + depósitos com o uid do dono atual e compacta o
+// resultado pra remover defaults antes de salvar na partnership.
 function tagearCaixinhas(caixinhas, uid) {
-  return (caixinhas || []).map((cx) => ({
-    ...cx,
-    criadoPor: cx.criadoPor || uid,
-    depositos: (cx.depositos || []).map((d) => ({
-      ...d,
-      feitoPor: d.feitoPor || uid,
-    })),
-  }));
+  return (caixinhas || []).map((cx) =>
+    compactarCaixinha({
+      ...cx,
+      criadoPor: cx.criadoPor || uid,
+      depositos: (cx.depositos || []).map((d) => ({
+        ...d,
+        feitoPor: d.feitoPor || uid,
+      })),
+    }),
+  );
 }
 
 // Quem aceita faz tudo o que pode fazer sozinho. O lado de quem enviou é
@@ -165,22 +179,24 @@ export async function aceitarConvite({ invite, meuUid, meuNome, meuEmail }) {
   const inviteRef = doc(db, INVITES, invite.id);
 
   const batch = writeBatch(db);
-  batch.set(partnershipRef, {
+  const partnershipDoc = {
     members: [invite.fromUid, meuUid],
-    caixinhas: minhasCaixinhas,
     criadoEm: serverTimestamp(),
-  });
+  };
+  if (minhasCaixinhas.length > 0) partnershipDoc.caixinhas = minhasCaixinhas;
+  batch.set(partnershipRef, partnershipDoc);
   batch.update(userRef, {
     partnerUid: invite.fromUid,
-    partnerNome: invite.fromNome || "",
+    partnerNome: invite.fromNome || deleteField(),
     partnershipId: pId,
-    caixinhas: [], // migradas pra partnership
+    caixinhas: deleteField(), // migradas pra partnership
   });
-  batch.update(inviteRef, {
+  const inviteUpdate = {
     status: "aceito",
     partnershipId: pId,
-    toNome: meuNome || invite.toNome || "",
-  });
+  };
+  if (meuNome || invite.toNome) inviteUpdate.toNome = meuNome || invite.toNome;
+  batch.update(inviteRef, inviteUpdate);
   await batch.commit();
   // Marca no userIndex que agora estou em uma parceria.
   // Falha silenciosa: o pareamento já foi feito; índice é otimização.
@@ -233,9 +249,9 @@ export async function finalizarPareamento({ invite, meuUid }) {
   }
   batch.update(doc(db, USERS, meuUid), {
     partnerUid: invite.toUid,
-    partnerNome: invite.toNome || "",
+    partnerNome: invite.toNome || deleteField(),
     partnershipId: invite.partnershipId,
-    caixinhas: [], // migradas pra partnership
+    caixinhas: deleteField(), // migradas pra partnership
   });
   batch.delete(doc(db, INVITES, invite.id));
   await batch.commit();
@@ -269,13 +285,15 @@ export async function desfazerParceria({
   const pRef = doc(db, PARTNERSHIPS, partnershipId);
   const pDoc = await getDoc(pRef);
 
-  if (!pDoc.exists()) {
-    // Parceria já não existe (parceiro pode ter sumido). Só limpa meus campos.
-    await updateDoc(doc(db, USERS, uid), {
-      partnerUid: null,
-      partnerNome: null,
-      partnershipId: null,
+  const limparMeuUserSemCaixinhas = () =>
+    updateDoc(doc(db, USERS, uid), {
+      partnerUid: deleteField(),
+      partnerNome: deleteField(),
+      partnershipId: deleteField(),
     });
+
+  if (!pDoc.exists()) {
+    await limparMeuUserSemCaixinhas();
     if (meuEmail) await definirFlagParceriaNoIndex(uid, meuEmail, false);
     return;
   }
@@ -284,31 +302,30 @@ export async function desfazerParceria({
   // processou), faço o cleanup local também — afinal, eu quis desfazer mesmo.
   const dataP = pDoc.data();
   if (dataP.desfeitoPor && dataP.desfeitoPor !== uid) {
-    await updateDoc(doc(db, USERS, uid), {
-      partnerUid: null,
-      partnerNome: null,
-      partnershipId: null,
-    });
+    await limparMeuUserSemCaixinhas();
     if (meuEmail) await definirFlagParceriaNoIndex(uid, meuEmail, false);
     return;
   }
 
-  const caixinhasFinais = dataP.caixinhas || [];
+  const caixinhasFinais = compactarCaixinhas(dataP.caixinhas || []);
 
   const batch = writeBatch(db);
   // Marca a partnership: o outro lado vê pelo snapshot e cria a notificação.
-  batch.update(pRef, {
+  const updatePartnership = {
     desfeitoPor: uid,
-    desfeitoNome: meuNome || "",
     desfeitoEm: serverTimestamp(),
-  });
+  };
+  if (meuNome) updatePartnership.desfeitoNome = meuNome;
+  batch.update(pRef, updatePartnership);
   // Limpa meus campos e levo as caixinhas comigo (combinado da Etapa 1).
-  batch.update(doc(db, USERS, uid), {
-    caixinhas: caixinhasFinais,
-    partnerUid: null,
-    partnerNome: null,
-    partnershipId: null,
-  });
+  const userUpdate = {
+    partnerUid: deleteField(),
+    partnerNome: deleteField(),
+    partnershipId: deleteField(),
+  };
+  userUpdate.caixinhas =
+    caixinhasFinais.length > 0 ? caixinhasFinais : deleteField();
+  batch.update(doc(db, USERS, uid), userUpdate);
   await batch.commit();
 
   if (meuEmail) await definirFlagParceriaNoIndex(uid, meuEmail, false);
@@ -462,6 +479,12 @@ export function useSharedCaixinhas({ partnershipId, uid }) {
 
   const ref = partnershipId ? doc(db, PARTNERSHIPS, partnershipId) : null;
 
+  const persistir = (novaLista) =>
+    updateDoc(ref, {
+      caixinhas:
+        novaLista.length > 0 ? compactarCaixinhas(novaLista) : deleteField(),
+    });
+
   const salvarCaixinha = async (dados) => {
     if (!ref) return;
     const lista = caixinhasRef.current;
@@ -480,13 +503,12 @@ export function useSharedCaixinhas({ partnershipId, uid }) {
       };
       novaLista = [nova, ...lista];
     }
-    await updateDoc(ref, { caixinhas: novaLista });
+    await persistir(novaLista);
   };
 
   const excluirCaixinha = async (id) => {
     if (!ref) return;
-    const novaLista = caixinhasRef.current.filter((c) => c.id !== id);
-    await updateDoc(ref, { caixinhas: novaLista });
+    await persistir(caixinhasRef.current.filter((c) => c.id !== id));
   };
 
   const depositarCaixinha = async (id, deposito) => {
@@ -502,7 +524,7 @@ export function useSharedCaixinhas({ partnershipId, uid }) {
           }
         : c,
     );
-    await updateDoc(ref, { caixinhas: novaLista });
+    await persistir(novaLista);
   };
 
   return {
@@ -552,9 +574,9 @@ export function useLimparParceriaOrfa({
             em: new Date().toISOString(),
           };
           await updateDoc(doc(db, USERS, uid), {
-            partnerUid: null,
-            partnerNome: null,
-            partnershipId: null,
+            partnerUid: deleteField(),
+            partnerNome: deleteField(),
+            partnershipId: deleteField(),
             notificacoesParceria: arrayUnion(notif),
           });
           if (meuEmail) {
@@ -575,9 +597,9 @@ export function useLimparParceriaOrfa({
       (async () => {
         try {
           await updateDoc(doc(db, USERS, uid), {
-            partnerUid: null,
-            partnerNome: null,
-            partnershipId: null,
+            partnerUid: deleteField(),
+            partnerNome: deleteField(),
+            partnershipId: deleteField(),
           });
           if (meuEmail) {
             await definirFlagParceriaNoIndex(uid, meuEmail, false);
