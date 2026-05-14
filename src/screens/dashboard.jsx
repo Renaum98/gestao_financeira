@@ -3,17 +3,18 @@
 import React from "react";
 import {
   CATEGORIAS,
-  ORDEM_CATS,
+  MESES_CURTO,
   fmtBRL,
+  fmtBRLCompacto,
   rotuloMes,
   totalEntradas,
   totalGeral,
   totalPorCategoria,
   txDoMes,
 } from "../data.js";
-import { Icon } from "../ui/icons.jsx";
+import { CatChip, Icon } from "../ui/icons.jsx";
 import { Card, ItemTransacao, SeletorMes } from "../ui/common.jsx";
-import { PieChart, LineChart } from "../ui/charts.jsx";
+import { BarraProgresso } from "../ui/charts.jsx";
 import { CardCaixinha } from "./caixinhas.jsx";
 
 export function DashboardScreen({ ctx }) {
@@ -32,7 +33,6 @@ export function DashboardScreen({ ctx }) {
     usuario,
     ehDesktop,
   } = ctx;
-  const [fatiaAtiva, setFatiaAtiva] = React.useState(null);
   const primeiroNome = (preferences.nome?.trim() || usuario?.displayName || "")
     .trim()
     .split(" ")[0];
@@ -50,40 +50,139 @@ export function DashboardScreen({ ctx }) {
   const orcTotal = orcBase + entradas;
   const restante = orcTotal - total;
 
-  const porCat = totalPorCategoria(txMes);
-  const dadosPizza = ORDEM_CATS.filter((c) => (porCat[c] || 0) > 0).map(
-    (c) => ({
-      id: c,
-      valor: porCat[c],
-      cor: CATEGORIAS[c].cor,
-      nome: CATEGORIAS[c].nome,
-    }),
-  );
-
-  // pontos do gráfico de linha — acumulado (só gastos, ignora entradas)
-  const acumPorDia = (txArr) => {
-    if (!txArr.length) return [{ dia: 1, valor: 0 }];
-    const map = {};
-    for (const t of txArr) {
-      if (t.tipo === "entrada") continue;
-      const d = parseInt(t.data.split("-")[2], 10);
-      map[d] = (map[d] || 0) + t.valor;
-    }
-    const dias = Object.keys(map)
-      .map(Number)
-      .sort((a, b) => a - b);
-    const arr = [{ dia: 1, valor: 0 }];
-    let acc = 0;
-    for (const d of dias) {
-      acc += map[d];
-      arr.push({ dia: d, valor: acc });
-    }
-    return arr;
-  };
-  const pontos = acumPorDia(txMes);
-  const pontosAnt = mesAnterior ? acumPorDia(txMesAnt) : null;
-
   const recentes = txMes.slice(0, 4);
+
+  // Próximas a vencer — recorrentes e parcelas dos próximos 35 dias, ordenadas
+  // do mais próximo para o mais distante. Independente do mês selecionado.
+  const proximas = React.useMemo(() => {
+    const hoje = new Date();
+    hoje.setHours(0, 0, 0, 0);
+    const limite = new Date(hoje);
+    limite.setDate(limite.getDate() + 35);
+    const candidatas = txs.filter((t) => {
+      if (t.tipo === "entrada") return false;
+      if (!t.recorrenteId && !t.parcelas) return false;
+      const [y, m, d] = t.data.split("-").map(Number);
+      const dt = new Date(y, m - 1, d);
+      return dt >= hoje && dt <= limite;
+    });
+    candidatas.sort((a, b) => a.data.localeCompare(b.data));
+    return candidatas.slice(0, 3);
+  }, [txs]);
+
+  // Top categorias com orçamento estourando ou perto do limite
+  const orcCategorias = React.useMemo(() => {
+    const porCat = totalPorCategoria(txMes);
+    const lista = Object.entries(orcamentos)
+      .filter(([, v]) => v > 0)
+      .map(([id, orc]) => {
+        const gasto = porCat[id] || 0;
+        const pct = (gasto / orc) * 100;
+        return { id, gasto, orc, pct, cat: CATEGORIAS[id] };
+      })
+      .filter((d) => d.cat);
+    lista.sort((a, b) => b.pct - a.pct);
+    return lista.slice(0, 3);
+  }, [txMes, orcamentos]);
+
+  // Insights textuais — gerados conforme dados disponíveis. Prioriza o mais informativo.
+  const insights = React.useMemo(() => {
+    const out = [];
+    const porCatAnt = totalPorCategoria(txMesAnt);
+    const porCatAtual = totalPorCategoria(txMes);
+    const topCat = (mapa) => {
+      const entradas = Object.entries(mapa).filter(([, v]) => v > 0);
+      if (!entradas.length) return null;
+      entradas.sort((a, b) => b[1] - a[1]);
+      const [id, valor] = entradas[0];
+      return CATEGORIAS[id] ? { id, valor, nome: CATEGORIAS[id].nome, cor: CATEGORIAS[id].cor } : null;
+    };
+
+    const topAnt = topCat(porCatAnt);
+    if (topAnt && totalAnt > 0) {
+      const pct = Math.round((topAnt.valor / totalAnt) * 100);
+      out.push({
+        icon: "history",
+        cor: topAnt.cor,
+        texto: (
+          <>
+            No mês passado você gastou mais em{" "}
+            <strong style={{ color: "var(--ink)" }}>{topAnt.nome}</strong> —{" "}
+            {fmtBRLCompacto(topAnt.valor, ocultar)} ({pct}% do total).
+          </>
+        ),
+      });
+    }
+
+    if (totalAnt > 0 && total > 0) {
+      const diff = Math.round(Math.abs(delta));
+      if (diff >= 5) {
+        const subiu = total > totalAnt;
+        out.push({
+          icon: subiu ? "chart" : "sparkle",
+          cor: subiu ? "#D63A55" : "#1B9E6A",
+          texto: (
+            <>
+              Você está gastando{" "}
+              <strong style={{ color: subiu ? "#D63A55" : "#1B9E6A" }}>
+                {diff}% {subiu ? "a mais" : "a menos"}
+              </strong>{" "}
+              que no mês passado.
+            </>
+          ),
+        });
+      }
+    }
+
+    // Categoria que mais cresceu de um mês pro outro
+    if (topAnt && Object.keys(porCatAtual).length) {
+      let maiorAlta = null;
+      for (const id of Object.keys(porCatAtual)) {
+        const atual = porCatAtual[id] || 0;
+        const ant = porCatAnt[id] || 0;
+        if (atual > ant && ant > 0) {
+          const crescimento = ((atual - ant) / ant) * 100;
+          if (!maiorAlta || crescimento > maiorAlta.crescimento) {
+            maiorAlta = { id, crescimento, atual, ant, ...CATEGORIAS[id] };
+          }
+        }
+      }
+      if (maiorAlta && maiorAlta.crescimento >= 20 && out.length < 3) {
+        out.push({
+          icon: "target",
+          cor: maiorAlta.cor || "var(--primary)",
+          texto: (
+            <>
+              Sua maior alta foi em{" "}
+              <strong style={{ color: "var(--ink)" }}>{maiorAlta.nome}</strong>{" "}
+              (+{Math.round(maiorAlta.crescimento)}%).
+            </>
+          ),
+        });
+      }
+    }
+
+    // Sem mês anterior: dá uma dica baseada apenas no mês atual
+    if (out.length === 0) {
+      const topAtual = topCat(porCatAtual);
+      if (topAtual && total > 0) {
+        const pct = Math.round((topAtual.valor / total) * 100);
+        out.push({
+          icon: "chart",
+          cor: topAtual.cor,
+          texto: (
+            <>
+              Sua maior categoria este mês é{" "}
+              <strong style={{ color: "var(--ink)" }}>{topAtual.nome}</strong> —{" "}
+              {pct}% dos gastos.
+            </>
+          ),
+        });
+      }
+    }
+
+    return out.slice(0, 3);
+  }, [txMes, txMesAnt, total, totalAnt, delta, ocultar]);
   const temEntrada = entradas > 0;
   const hojeHora = new Date().getHours();
   const saudacao =
@@ -91,41 +190,36 @@ export function DashboardScreen({ ctx }) {
 
   return (
     <div className={ehDesktop ? "cols-desktop" : undefined} style={{ paddingBottom: "var(--pad-bottom)" }}>
-      {/* Cabeçalho */}
-      <div className={ehDesktop ? "col-span-all" : undefined} style={{ padding: "var(--pad-top) 20px 0" }}>
+      {/* Cabeçalho — mesma métrica vertical do TopBar para padronizar todas as abas */}
+      <div
+        className={ehDesktop ? "col-span-all" : undefined}
+        style={{
+          padding: "var(--pad-top) 20px 12px",
+          display: "flex",
+          flexDirection: "column",
+          gap: 4,
+        }}
+      >
         <div
           style={{
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
+            minHeight: 32,
           }}
         >
-          <div>
-            <div
-              style={{ fontSize: 13, color: "var(--muted)", fontWeight: 600 }}
-            >
-              {saudacao}
-              {primeiroNome && ","}
-            </div>
-            <div
-              style={{
-                fontSize: 22,
-                fontWeight: 800,
-                color: "var(--ink)",
-                letterSpacing: "-0.02em",
-              }}
-            >
-              {primeiroNome ? `${primeiroNome} ✦` : "Bem-vindo ✦"}
-            </div>
+          <div style={{ fontSize: 13, color: "var(--muted)", fontWeight: 600 }}>
+            {saudacao}
+            {primeiroNome && ","}
           </div>
           <div style={{ display: "flex", gap: 8 }}>
             <button
               onClick={() => setOcultar(!ocultar)}
               className="glass-surface"
               style={{
-                width: 40,
-                height: 40,
-                borderRadius: 20,
+                width: 36,
+                height: 36,
+                borderRadius: 18,
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
@@ -145,10 +239,10 @@ export function DashboardScreen({ ctx }) {
               onClick={() => irPara("perfil")}
               className="glass-surface"
               style={{
-                width: 40,
-                height: 40,
+                width: 36,
+                height: 36,
                 padding: 0,
-                borderRadius: 20,
+                borderRadius: 18,
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
@@ -168,7 +262,7 @@ export function DashboardScreen({ ctx }) {
                     height: "100%",
                     objectFit: "cover",
                     display: "block",
-                    borderRadius: 20,
+                    borderRadius: 18,
                   }}
                 />
               ) : (
@@ -176,7 +270,7 @@ export function DashboardScreen({ ctx }) {
                   style={{
                     width: "100%",
                     height: "100%",
-                    borderRadius: 20,
+                    borderRadius: 18,
                     background:
                       "linear-gradient(135deg, var(--primary), var(--primary-2))",
                     display: "flex",
@@ -184,7 +278,7 @@ export function DashboardScreen({ ctx }) {
                     justifyContent: "center",
                     color: "#fff",
                     fontWeight: 800,
-                    fontSize: 15,
+                    fontSize: 14,
                     letterSpacing: "-0.02em",
                   }}
                 >
@@ -194,10 +288,21 @@ export function DashboardScreen({ ctx }) {
             </button>
           </div>
         </div>
+        <div
+          style={{
+            fontSize: 28,
+            fontWeight: 800,
+            color: "var(--ink)",
+            letterSpacing: "-0.02em",
+            marginTop: 6,
+          }}
+        >
+          {primeiroNome ? `${primeiroNome} ✦` : "Bem-vindo ✦"}
+        </div>
       </div>
 
       {/* Card principal — saldo do mês */}
-      <div className={ehDesktop ? "col-span-all" : undefined} style={{ padding: "18px 20px 0" }}>
+      <div className={ehDesktop ? "col-span-all" : undefined} style={{ padding: "4px 20px 0" }}>
         <div
           className="card-saldo"
           style={{
@@ -361,22 +466,89 @@ export function DashboardScreen({ ctx }) {
         </div>
       </div>
 
-      {/* Pizza por categoria */}
-      <div style={{ padding: "16px 20px 0" }}>
-        <Card>
+      {/* Insights — análises textuais do mês */}
+      {insights.length > 0 && (
+        <div className={ehDesktop ? "col-span-all" : undefined} style={{ padding: "16px 20px 0" }}>
+          <Card style={{ padding: "14px 16px" }}>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                marginBottom: 10,
+              }}
+            >
+              <div
+                style={{
+                  width: 26,
+                  height: 26,
+                  borderRadius: 13,
+                  background: "color-mix(in oklab, var(--primary) 14%, transparent)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  flexShrink: 0,
+                }}
+              >
+                <Icon name="sparkle" size={14} color="var(--primary)" strokeWidth={2.4} />
+              </div>
+              <div style={{ fontSize: 14, fontWeight: 700, color: "var(--ink)" }}>
+                Insights do mês
+              </div>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              {insights.map((it, i) => (
+                <div
+                  key={i}
+                  style={{
+                    display: "flex",
+                    alignItems: "flex-start",
+                    gap: 10,
+                  }}
+                >
+                  <div
+                    style={{
+                      width: 8,
+                      height: 8,
+                      borderRadius: 4,
+                      background: it.cor,
+                      marginTop: 6,
+                      flexShrink: 0,
+                    }}
+                  />
+                  <div
+                    style={{
+                      fontSize: 13,
+                      lineHeight: 1.45,
+                      color: "var(--muted)",
+                      fontWeight: 500,
+                    }}
+                  >
+                    {it.texto}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </Card>
+        </div>
+      )}
+
+      {/* Próximas a vencer — recorrentes e parcelas dos próximos 35 dias */}
+      {proximas.length > 0 && (
+        <div className={ehDesktop ? "col-span-all" : undefined} style={{ padding: "16px 20px 0" }}>
           <div
             style={{
               display: "flex",
               alignItems: "center",
               justifyContent: "space-between",
-              marginBottom: 4,
+              padding: "0 4px 6px",
             }}
           >
             <div style={{ fontSize: 15, fontWeight: 700, color: "var(--ink)" }}>
-              Por categoria
+              Próximas a vencer
             </div>
             <button
-              onClick={() => irPara("analise")}
+              onClick={() => irPara("recorrentes")}
               style={{
                 background: "transparent",
                 border: "none",
@@ -390,159 +562,217 @@ export function DashboardScreen({ ctx }) {
               Ver tudo →
             </button>
           </div>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 6,
-              marginTop: 8,
-            }}
-          >
-            <PieChart
-              dados={dadosPizza}
-              total={total}
-              tamanho={170}
-              ativo={fatiaAtiva}
-              onHover={setFatiaAtiva}
-              ocultar={ocultar}
-            />
-            <div
-              style={{
-                flex: 1,
-                display: "flex",
-                flexDirection: "column",
-                gap: 8,
-                minWidth: 0,
-              }}
-            >
-              {dadosPizza.slice(0, 5).map((d) => (
+          <Card style={{ padding: "4px 16px" }}>
+            {proximas.map((tx, i) => {
+              const [, mm, dd] = tx.data.split("-").map(Number);
+              const diasAte = Math.ceil(
+                (new Date(tx.data + "T12:00:00") - new Date()) /
+                  (1000 * 60 * 60 * 24),
+              );
+              const urgente = diasAte <= 3;
+              const rotuloPrazo =
+                diasAte <= 0
+                  ? "Hoje"
+                  : diasAte === 1
+                    ? "Amanhã"
+                    : `Em ${diasAte} dias`;
+              return (
                 <div
-                  key={d.id}
-                  onClick={() =>
-                    setFatiaAtiva(fatiaAtiva === d.id ? null : d.id)
-                  }
+                  key={tx.id}
                   style={{
                     display: "flex",
                     alignItems: "center",
-                    gap: 8,
-                    cursor: "pointer",
-                    opacity: fatiaAtiva && fatiaAtiva !== d.id ? 0.4 : 1,
-                    transition: "opacity .15s",
+                    gap: 12,
+                    padding: "12px 0",
+                    borderTop: i === 0 ? "none" : "1px solid var(--linha)",
                   }}
                 >
                   <div
                     style={{
-                      width: 8,
-                      height: 8,
-                      borderRadius: 4,
-                      background: d.cor,
+                      width: 42,
+                      height: 42,
+                      borderRadius: 12,
+                      background: urgente
+                        ? "color-mix(in oklab, #D63A55 12%, transparent)"
+                        : "var(--surface-sunken)",
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      justifyContent: "center",
                       flexShrink: 0,
                     }}
-                  />
-                  <div
-                    style={{
-                      fontSize: 12,
-                      color: "var(--ink)",
-                      fontWeight: 600,
-                      flex: 1,
-                      minWidth: 0,
-                      whiteSpace: "nowrap",
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                    }}
                   >
-                    {d.nome}
+                    <div
+                      style={{
+                        fontSize: 16,
+                        fontWeight: 800,
+                        color: urgente ? "#D63A55" : "var(--ink)",
+                        lineHeight: 1,
+                        letterSpacing: "-0.02em",
+                      }}
+                    >
+                      {dd}
+                    </div>
+                    <div
+                      style={{
+                        fontSize: 9,
+                        fontWeight: 700,
+                        color: urgente ? "#D63A55" : "var(--muted)",
+                        marginTop: 2,
+                        textTransform: "uppercase",
+                      }}
+                    >
+                      {MESES_CURTO[mm - 1]}
+                    </div>
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div
+                      style={{
+                        fontSize: 14,
+                        fontWeight: 700,
+                        color: "var(--ink)",
+                        whiteSpace: "nowrap",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                      }}
+                    >
+                      {tx.descricao}
+                    </div>
+                    <div
+                      style={{
+                        fontSize: 11,
+                        color: urgente ? "#D63A55" : "var(--muted)",
+                        fontWeight: 600,
+                        marginTop: 2,
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 6,
+                      }}
+                    >
+                      {rotuloPrazo}
+                      <span style={{ opacity: 0.5 }}>·</span>
+                      {tx.parcelas ? (
+                        <span>
+                          Parcela {tx.parcelas.atual}/{tx.parcelas.total}
+                        </span>
+                      ) : (
+                        <span style={{ display: "inline-flex", alignItems: "center", gap: 3 }}>
+                          <Icon name="history" size={10} color={urgente ? "#D63A55" : "var(--muted)"} strokeWidth={2.4} />
+                          Mensal
+                        </span>
+                      )}
+                    </div>
                   </div>
                   <div
                     style={{
-                      fontSize: 11,
-                      color: "var(--muted)",
-                      fontWeight: 700,
+                      fontSize: 14,
+                      fontWeight: 800,
+                      color: "var(--ink)",
+                      letterSpacing: "-0.01em",
                     }}
                   >
-                    {((d.valor / total) * 100).toFixed(0)}%
+                    {fmtBRL(tx.valor, ocultar)}
                   </div>
                 </div>
-              ))}
-            </div>
-          </div>
-        </Card>
-      </div>
+              );
+            })}
+          </Card>
+        </div>
+      )}
 
-      {/* Linha — tendência */}
-      <div style={{ padding: "12px 20px 0" }}>
-        <Card>
+      {/* Orçamento por categoria — top 3 mais consumidas */}
+      {orcCategorias.length > 0 && (
+        <div className={ehDesktop ? "col-span-all" : undefined} style={{ padding: "16px 20px 0" }}>
           <div
             style={{
               display: "flex",
-              alignItems: "baseline",
+              alignItems: "center",
               justifyContent: "space-between",
-              marginBottom: 4,
+              padding: "0 4px 6px",
             }}
           >
-            <div>
-              <div
-                style={{ fontSize: 15, fontWeight: 700, color: "var(--ink)" }}
-              >
-                Tendência do mês
-              </div>
-              <div
-                style={{
-                  fontSize: 11,
-                  color: "var(--muted)",
-                  marginTop: 2,
-                  fontWeight: 600,
-                }}
-              >
-                Acumulado ao longo dos dias
-              </div>
+            <div style={{ fontSize: 15, fontWeight: 700, color: "var(--ink)" }}>
+              Orçamento por categoria
             </div>
-            {pontosAnt && (
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 10,
-                  fontSize: 10,
-                  fontWeight: 600,
-                  color: "var(--muted)",
-                }}
-              >
-                <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                  <div
-                    style={{
-                      width: 12,
-                      height: 2,
-                      background: "var(--primary)",
-                      borderRadius: 2,
-                    }}
-                  />
-                  Atual
-                </div>
-                <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                  <div
-                    style={{
-                      width: 12,
-                      height: 2,
-                      background: "#C9C2D8",
-                      borderRadius: 2,
-                      borderTop: "1px dashed",
-                    }}
-                  />
-                  Anterior
-                </div>
-              </div>
-            )}
+            <button
+              onClick={() => irPara("orcamentos")}
+              style={{
+                background: "transparent",
+                border: "none",
+                color: "var(--primary)",
+                fontSize: 12,
+                fontWeight: 700,
+                cursor: "pointer",
+                padding: 0,
+              }}
+            >
+              Ver tudo →
+            </button>
           </div>
-          <LineChart
-            pontos={pontos}
-            pontosComp={pontosAnt}
-            largura={310}
-            altura={130}
-            ocultar={ocultar}
-          />
-        </Card>
-      </div>
+          <Card style={{ padding: "8px 16px 12px" }}>
+            {orcCategorias.map((d, i) => {
+              const corPct = d.pct > 100 ? "#D63A55" : d.pct > 80 ? "#E08A00" : "#1B9E6A";
+              return (
+                <div
+                  key={d.id}
+                  style={{
+                    padding: "10px 0",
+                    borderTop: i === 0 ? "none" : "1px solid var(--linha)",
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <CatChip catId={d.id} size={32} />
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div
+                        style={{
+                          fontSize: 13,
+                          fontWeight: 700,
+                          color: "var(--ink)",
+                          whiteSpace: "nowrap",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                        }}
+                      >
+                        {d.cat.nome}
+                      </div>
+                      <div
+                        style={{
+                          fontSize: 11,
+                          color: "var(--muted)",
+                          fontWeight: 600,
+                          marginTop: 1,
+                        }}
+                      >
+                        {fmtBRLCompacto(d.gasto, ocultar)} de{" "}
+                        {fmtBRLCompacto(d.orc, ocultar)}
+                      </div>
+                    </div>
+                    <div
+                      style={{
+                        fontSize: 12,
+                        fontWeight: 800,
+                        color: corPct,
+                        minWidth: 38,
+                        textAlign: "right",
+                      }}
+                    >
+                      {d.pct.toFixed(0)}%
+                    </div>
+                  </div>
+                  <div style={{ marginTop: 8 }}>
+                    <BarraProgresso
+                      valor={Math.min(d.gasto, d.orc)}
+                      max={d.orc || 1}
+                      cor={d.pct > 100 ? "#D63A55" : d.cat.cor}
+                      altura={6}
+                    />
+                  </div>
+                </div>
+              );
+            })}
+          </Card>
+        </div>
+      )}
 
       {/* Transações recentes */}
       <div style={{ padding: "16px 20px 0" }}>

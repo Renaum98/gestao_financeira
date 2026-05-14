@@ -21,6 +21,21 @@ export function HistoricoScreen({ ctx }) {
   });
   const maxTot = Math.max(...dadosMeses.map((d) => d.total), 1);
 
+  // Chart: somente os 5 meses anteriores ao atual (independente de haver
+  // transações), ordenados do mais antigo para o mais recente.
+  const mesesGrafico = React.useMemo(() => {
+    const [y, m] = mes.split("-").map(Number);
+    const out = [];
+    for (let i = 5; i >= 1; i--) {
+      const d = new Date(y, m - 1 - i, 1);
+      const yyyymm = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+      const total = totalGeral(txDoMes(txs, yyyymm));
+      out.push({ mes: yyyymm, total });
+    }
+    return out;
+  }, [txs, mes]);
+  const maxTotGrafico = Math.max(...mesesGrafico.map((d) => d.total), 1);
+
   return (
     <div style={{ paddingBottom: "var(--pad-bottom)" }}>
       <TopBar voltar={ehDesktop ? undefined : voltar} titulo="Histórico" />
@@ -36,60 +51,63 @@ export function HistoricoScreen({ ctx }) {
           >
             Gastos nos últimos meses
           </div>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "flex-end",
-              gap: 14,
-              height: 140,
-            }}
-          >
-            {[...dadosMeses].reverse().map((d) => {
-              const h = (d.total / maxTot) * 110;
-              return (
-                <div
-                  key={d.mes}
-                  style={{
-                    flex: 1,
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "center",
-                    gap: 8,
-                  }}
-                >
+          <div>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "flex-end",
+                gap: 10,
+                height: 170,
+                width: "100%",
+              }}
+            >
+              {mesesGrafico.map((d) => {
+                const h = (d.total / maxTotGrafico) * 110;
+                return (
                   <div
+                    key={d.mes}
                     style={{
-                      fontSize: 10,
-                      color: "var(--muted)",
-                      fontWeight: 700,
+                      flex: 1,
+                      minWidth: 0,
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      gap: 6,
                     }}
                   >
-                    {fmtBRLCompacto(d.total, ocultar)}
+                    <div
+                      style={{
+                        fontSize: 10,
+                        color: "var(--muted)",
+                        fontWeight: 700,
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {fmtBRLCompacto(d.total, ocultar)}
+                    </div>
+                    <div
+                      style={{
+                        width: "100%",
+                        height: h,
+                        borderRadius: 10,
+                        background: "var(--surface-sunken)",
+                        transition: "all .25s",
+                      }}
+                    />
+                    <div
+                      style={{
+                        fontSize: 11,
+                        fontWeight: 700,
+                        color: "var(--muted)",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {rotuloMesCurto(d.mes)}
+                    </div>
                   </div>
-                  <div
-                    style={{
-                      width: "100%",
-                      height: h,
-                      borderRadius: 10,
-                      background:
-                        d.mes === mes
-                          ? "linear-gradient(180deg, var(--primary), var(--primary-2))"
-                          : "var(--surface-sunken)",
-                      transition: "all .25s",
-                    }}
-                  />
-                  <div
-                    style={{
-                      fontSize: 11,
-                      fontWeight: 700,
-                      color: d.mes === mes ? "var(--primary)" : "var(--muted)",
-                    }}
-                  >
-                    {rotuloMesCurto(d.mes)}
-                  </div>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
         </Card>
       </div>

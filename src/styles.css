@@ -9,7 +9,7 @@
   --primary: #6E4FF6;
   --primary-2: #A085FF;
   /* Espaçamentos padrão (mobile): topo reserva o notch; base reserva a tab bar flutuante */
-  --pad-top: 60px;
+  --pad-top: 38px;
   --pad-bottom: 110px;
   color-scheme: light;
 }
@@ -27,6 +27,11 @@ html, body {
   padding: 0;
   -webkit-tap-highlight-color: transparent;
   overscroll-behavior-y: none;
+  /* Bloqueia double-tap zoom e gestos de pinch em toda a UI. */
+  touch-action: pan-x pan-y;
+  -ms-touch-action: pan-x pan-y;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
 body {
@@ -37,7 +42,12 @@ body {
   min-height: 100vh;
 }
 
-button, input { font-family: inherit; }
+button, input, select, textarea { font-family: inherit; }
+
+/* iOS faz zoom automático ao focar inputs com fonte < 16px. Forçamos o mínimo. */
+input, select, textarea {
+  font-size: 16px;
+}
 
 input[type="date"]::-webkit-calendar-picker-indicator { cursor: pointer; opacity: 0.6; }
 

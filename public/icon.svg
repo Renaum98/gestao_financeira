@@ -1,26 +1,20 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Finça">
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#7B5BFF"/>
+      <stop offset="0%" stop-color="#6E4FF6"/>
       <stop offset="100%" stop-color="#A085FF"/>
     </linearGradient>
-    <radialGradient id="glow" cx="32%" cy="26%" r="75%">
-      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.28"/>
-      <stop offset="60%" stop-color="#FFFFFF" stop-opacity="0"/>
-    </radialGradient>
     <clipPath id="round">
-      <rect width="512" height="512" rx="120"/>
+      <rect width="512" height="512" rx="174"/>
     </clipPath>
   </defs>
 
   <g clip-path="url(#round)">
     <rect width="512" height="512" fill="url(#bg)"/>
-    <rect width="512" height="512" fill="url(#glow)"/>
-    <circle cx="86" cy="74" r="120" fill="#FFFFFF" opacity="0.12"/>
-    <circle cx="452" cy="470" r="92" fill="#FFFFFF" opacity="0.10"/>
+    <circle cx="24" cy="24" r="134" fill="#FFFFFF" opacity="0.18"/>
   </g>
 
-  <text x="256" y="270" text-anchor="middle" dominant-baseline="central"
+  <text x="256" y="276" text-anchor="middle" dominant-baseline="central"
         font-family="'Plus Jakarta Sans', -apple-system, 'Segoe UI', Roboto, sans-serif"
-        font-size="312" font-weight="800" letter-spacing="-14" fill="#FFFFFF">F</text>
+        font-size="307" font-weight="800" letter-spacing="-15" fill="#FFFFFF">F</text>
 </svg>

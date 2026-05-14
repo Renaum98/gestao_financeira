@@ -53,7 +53,7 @@ export function GastosScreen({ ctx }) {
   return (
     <div style={{ paddingBottom: "var(--pad-bottom)" }}>
       <TopBar
-        titulo="Gastos"
+        titulo="Transações"
         acao={
           <button
             onClick={() => irPara("historico")}

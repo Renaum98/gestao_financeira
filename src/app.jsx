@@ -12,6 +12,7 @@ import { Icon } from "./ui/icons.jsx";
 import { escutarAuth, sair as sairFirebase } from "./lib/firebase.js";
 import { useCloudState } from "./lib/storage.js";
 import { vibrar } from "./lib/haptics.js";
+import { useInstallPrompt, InstallPromptModal } from "./ui/install-prompt.jsx";
 
 // LoginScreen fica no bundle principal (primeira tela para deslogados).
 // As demais telas e o modal são carregados sob demanda (code-splitting).
@@ -38,7 +39,7 @@ const ONBOARDING_KEY = "finca.onboarded";
 function TabBar({ tela, irPara, abrirAdd }) {
   const itens = [
     { id: "inicio", icon: "home", label: "Início" },
-    { id: "gastos", icon: "list", label: "Gastos" },
+    { id: "gastos", icon: "list", label: "Transações" },
     { id: "add", icon: "plus", label: "", destaque: true },
     { id: "analise", icon: "chart", label: "Análise" },
     { id: "perfil", icon: "user", label: "Perfil" },
@@ -143,7 +144,7 @@ function TabBar({ tela, irPara, abrirAdd }) {
 // ─── Sidebar (layout desktop) ───
 const NAV_DESKTOP = [
   { id: "inicio", icon: "home", label: "Início" },
-  { id: "gastos", icon: "list", label: "Gastos" },
+  { id: "gastos", icon: "list", label: "Transações" },
   { id: "analise", icon: "chart", label: "Análise" },
   { id: "orcamentos", icon: "target", label: "Orçamentos" },
   { id: "caixinhas", icon: "piggy", label: "Caixinhas" },
@@ -441,6 +442,7 @@ export function App() {
   }, [cloud.ready]);
 
   const ehDesktop = useEhDesktop();
+  const install = useInstallPrompt();
 
   // Navegação local
   const [mes, setMes] = React.useState(chaveMes(new Date()));
@@ -792,6 +794,14 @@ export function App() {
         <React.Suspense fallback={null}>
           <AddExpenseModal ctx={ctx} params={addModal} />
         </React.Suspense>
+      )}
+      {install.mostrar && !addModal && (
+        <InstallPromptModal
+          temAtalho={install.temAtalho}
+          plataformaIOS={install.plataformaIOS}
+          onInstalar={install.instalar}
+          onDispensar={install.dispensar}
+        />
       )}
     </div>
   );
