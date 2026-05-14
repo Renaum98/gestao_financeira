@@ -76,39 +76,65 @@ export function Card({ children, style = {}, onClick }) {
   );
 }
 
-export function ItemTransacao({ tx, ocultar, onClick }) {
+export function ItemTransacao({ tx, ocultar, onClick, doParceiro = false, nomeParceiro = '' }) {
   const ehEntrada = tx.tipo === 'entrada';
   const cat = ehEntrada ? null : CATEGORIAS[tx.categoria];
   const d = new Date(tx.data + 'T12:00:00');
   const dia = d.getDate(), mesC = MESES_CURTO[d.getMonth()];
   const parc = tx.parcelas;
   const valorFmt = fmtBRL(tx.valor, ocultar);
+  const inicialParceiro = (nomeParceiro?.trim()[0] || '?').toUpperCase();
+  // No modo "parceiro" deixamos tudo bem mais discreto: cores muted, sem hover.
+  const corTitulo = doParceiro ? 'var(--muted)' : 'var(--ink)';
+  const corValor = doParceiro
+    ? 'var(--muted)'
+    : (ehEntrada ? '#1B9E6A' : 'var(--ink)');
   return (
     <div onClick={onClick} style={{
       display: 'flex', alignItems: 'center', gap: 12, padding: '12px 4px',
       cursor: onClick ? 'pointer' : 'default',
+      opacity: doParceiro ? 0.78 : 1,
     }}>
-      {ehEntrada ? (
-        <div style={{
-          width: 42, height: 42, borderRadius: 14,
-          background: '#DAF5E9',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          flexShrink: 0,
-        }}>
-          <Icon name="plus" size={22} color="#1B9E6A" strokeWidth={2.6} />
-        </div>
-      ) : (
-        <CatChip catId={tx.categoria} size={42} />
-      )}
+      <div style={{ position: 'relative', flexShrink: 0 }}>
+        {ehEntrada ? (
+          <div style={{
+            width: 42, height: 42, borderRadius: 14,
+            background: doParceiro ? 'var(--surface-sunken)' : '#DAF5E9',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>
+            <Icon name="plus" size={22} color={doParceiro ? 'var(--muted)' : '#1B9E6A'} strokeWidth={2.6} />
+          </div>
+        ) : (
+          <CatChip catId={tx.categoria} size={42} />
+        )}
+        {doParceiro && (
+          <div
+            title={nomeParceiro ? `Do(a) ${nomeParceiro}` : 'Do parceiro'}
+            style={{
+              position: 'absolute', right: -3, bottom: -3,
+              width: 18, height: 18, borderRadius: 9,
+              background: 'var(--card)',
+              border: '2px solid var(--bg)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: 9, fontWeight: 800, color: 'var(--primary)',
+              letterSpacing: '-0.02em',
+              boxShadow: '0 1px 3px rgba(0,0,0,0.12)',
+            }}
+          >{inicialParceiro}</div>
+        )}
+      </div>
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
-          <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--ink)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', minWidth: 0 }}>
+          <div style={{ fontSize: 15, fontWeight: 600, color: corTitulo, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', minWidth: 0 }}>
             {tx.descricao}
           </div>
           {parc && (
             <div style={{
-              fontSize: 10, fontWeight: 800, color: 'var(--primary)',
-              background: 'color-mix(in oklab, var(--primary) 12%, transparent)',
+              fontSize: 10, fontWeight: 800,
+              color: doParceiro ? 'var(--muted)' : 'var(--primary)',
+              background: doParceiro
+                ? 'var(--surface-sunken)'
+                : 'color-mix(in oklab, var(--primary) 12%, transparent)',
               padding: '2px 6px', borderRadius: 6, letterSpacing: '-0.01em',
               flexShrink: 0,
             }}>
@@ -117,35 +143,44 @@ export function ItemTransacao({ tx, ocultar, onClick }) {
           )}
           {tx.recorrenteId && !parc && (
             <div title="Cobrança recorrente todo mês" style={{
-              fontSize: 10, fontWeight: 800, color: 'var(--primary)',
-              background: 'color-mix(in oklab, var(--primary) 12%, transparent)',
+              fontSize: 10, fontWeight: 800,
+              color: doParceiro ? 'var(--muted)' : 'var(--primary)',
+              background: doParceiro
+                ? 'var(--surface-sunken)'
+                : 'color-mix(in oklab, var(--primary) 12%, transparent)',
               padding: '2px 6px', borderRadius: 6, letterSpacing: '-0.01em',
               flexShrink: 0, display: 'inline-flex', alignItems: 'center', gap: 3,
             }}>
-              <Icon name="history" size={9} color="var(--primary)" strokeWidth={2.6} /> Mensal
+              <Icon name="history" size={9} color={doParceiro ? 'var(--muted)' : 'var(--primary)'} strokeWidth={2.6} /> Mensal
             </div>
           )}
         </div>
         <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 2, display: 'flex', alignItems: 'center', gap: 6 }}>
           {ehEntrada ? (
-            <span style={{ fontWeight: 700, color: '#1B9E6A' }}>Entrada</span>
+            <span style={{ fontWeight: 700, color: doParceiro ? 'var(--muted)' : '#1B9E6A' }}>Entrada</span>
           ) : (
             <>
-              <span>{cat.nome}</span>
+              <span>{cat?.nome || 'Outros'}</span>
               <span style={{ width: 3, height: 3, borderRadius: 3, background: 'var(--muted)', opacity: 0.5 }} />
               <Icon name={iconePagamento(tx.pagamento)} size={12} color="var(--muted)" strokeWidth={2} />
             </>
           )}
           {parc && <span style={{ fontWeight: 600 }}>· {parc.total}× {fmtBRLCompacto(parc.valorTotal, ocultar)}</span>}
+          {doParceiro && nomeParceiro && (
+            <>
+              <span style={{ width: 3, height: 3, borderRadius: 3, background: 'var(--muted)', opacity: 0.5 }} />
+              <span style={{ fontWeight: 700, fontStyle: 'italic' }}>{nomeParceiro}</span>
+            </>
+          )}
         </div>
       </div>
       <div style={{ textAlign: 'right' }}>
         <div style={{
           fontSize: 15, fontWeight: 700,
-          color: ehEntrada ? '#1B9E6A' : 'var(--ink)',
+          color: corValor,
           letterSpacing: '-0.01em',
         }}>
-          {ehEntrada && !ocultar ? `+${valorFmt}` : valorFmt}
+          {ehEntrada && !ocultar && !doParceiro ? `+${valorFmt}` : valorFmt}
         </div>
         <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 2 }}>
           {dia} {mesC}

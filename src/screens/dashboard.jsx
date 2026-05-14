@@ -35,10 +35,13 @@ export function DashboardScreen({ ctx }) {
     recorrentes,
     usuario,
     ehDesktop,
+    convitesRecebidos = [],
+    partnerTxs = [],
+    partnerNome = '',
   } = ctx;
   const notifInfo = React.useMemo(
-    () => calcularNotificacoes(txs, recorrentes, preferences?.notifLidas || []),
-    [txs, recorrentes, preferences?.notifLidas],
+    () => calcularNotificacoes(txs, recorrentes, preferences?.notifLidas || [], convitesRecebidos),
+    [txs, recorrentes, preferences?.notifLidas, convitesRecebidos],
   );
   const totalNotif = notifInfo.naoLidas;
 
@@ -70,7 +73,18 @@ export function DashboardScreen({ ctx }) {
   const orcTotal = orcBase + entradas;
   const restante = orcTotal - total;
 
-  const recentes = txMes.slice(0, 4);
+  // "Últimos gastos" mistura meus + os do parceiro, ordenados por data desc.
+  // Os totais e cards do mês continuam só com os meus (acima).
+  const parceiroDoMes = React.useMemo(
+    () => txDoMes(partnerTxs, mes),
+    [partnerTxs, mes],
+  );
+  const recentes = React.useMemo(() => {
+    const juntos = [...txMes, ...parceiroDoMes].sort((a, b) =>
+      b.data.localeCompare(a.data),
+    );
+    return juntos.slice(0, 4);
+  }, [txMes, parceiroDoMes]);
 
   // Próximas a vencer — recorrentes e parcelas dos próximos 35 dias, ordenadas
   // do mais próximo para o mais distante. Independente do mês selecionado.
@@ -888,6 +902,8 @@ export function DashboardScreen({ ctx }) {
               <ItemTransacao
                 tx={tx}
                 ocultar={ocultar}
+                doParceiro={!!tx._parceiro}
+                nomeParceiro={partnerNome}
                 onClick={() => irPara("gastos")}
               />
             </div>

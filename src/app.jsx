@@ -11,6 +11,15 @@ import {
 import { Icon } from "./ui/icons.jsx";
 import { escutarAuth, sair as sairFirebase } from "./lib/firebase.js";
 import { useCloudState } from "./lib/storage.js";
+import {
+  useConvitesRecebidos,
+  useConvitesEnviados,
+  useFinalizarPareamento,
+  usePartnerData,
+  useSharedCaixinhas,
+  useLimparParceriaOrfa,
+  desfazerParceria as desfazerParceriaFn,
+} from "./lib/partnership.js";
 import { vibrar } from "./lib/haptics.js";
 import { useInstallPrompt, InstallPromptModal } from "./ui/install-prompt.jsx";
 
@@ -363,11 +372,49 @@ export function App() {
   const uid = verificado ? usuario.uid : null;
   const cloud = useCloudState(uid);
 
+  // Conta compartilhada: escuta convites e finaliza o pareamento do meu lado
+  // quando o convite que eu enviei é aceito (ver partnership.js).
+  const convitesRecebidos = useConvitesRecebidos(uid);
+  const convitesEnviados = useConvitesEnviados(uid);
+  useFinalizarPareamento({
+    uid,
+    jaTenhoParceiro: !!cloud.partnerUid,
+    enviados: convitesEnviados,
+  });
+
+  // Dados do parceiro (read-only). Só carrega quando há parceria firmada.
+  const partner = usePartnerData(cloud.partnerUid);
+  // Cada tx do parceiro recebe uma flag interna pra a UI saber renderizar
+  // com o estilo "apagado" + badge da inicial dele.
+  const partnerTxs = React.useMemo(
+    () => (partner.txs || []).map((t) => ({ ...t, _parceiro: true })),
+    [partner.txs],
+  );
+
+  // Caixinhas compartilhadas: quando há parceria, vivem em partnerships/{pId}.
+  // Sem parceria, ficam no user doc como sempre (via cloud).
+  const shared = useSharedCaixinhas({
+    partnershipId: cloud.partnershipId,
+    uid,
+  });
+  useLimparParceriaOrfa({
+    uid,
+    partnershipId: cloud.partnershipId,
+    partnershipExiste: shared.existe,
+  });
+
   // Mescla categorias personalizadas em CATEGORIAS/ORDEM_CATS antes de renderizar as telas.
+  // Quando há parceria, mescla também as do parceiro pra que as txs dele rendam
+  // a categoria certa (sem cair em "Outros").
   React.useMemo(
     () => aplicarCategoriasCustom(cloud.categoriasCustom),
     [cloud.categoriasCustom],
   );
+  React.useMemo(() => {
+    if (partner.categoriasCustom?.length) {
+      aplicarCategoriasCustom(partner.categoriasCustom);
+    }
+  }, [partner.categoriasCustom]);
 
   const adicionarCategoria = React.useCallback(
     (nome, cor) => {
@@ -635,13 +682,20 @@ export function App() {
   };
 
   // ─── Caixinhas ───
+  // Quando há parceria, as caixinhas vivem em partnerships/{pId}.caixinhas e
+  // são editadas pelos dois usuários. Caso contrário, ficam no user doc.
+  const ehCompartilhado = !!cloud.partnershipId;
+  const caixinhasAtivas = ehCompartilhado ? shared.caixinhas : cloud.caixinhas;
+
   const salvarCaixinha = (dados) => {
+    if (ehCompartilhado) {
+      shared.salvarCaixinha(dados);
+      return;
+    }
     cloud.setCaixinhas((atual) => {
       if (dados.id) {
-        // Editando existente
         return atual.map((c) => (c.id === dados.id ? { ...c, ...dados } : c));
       }
-      // Nova
       const nova = {
         id: `cx-${Date.now()}`,
         criadoEm: new Date().toISOString().slice(0, 10),
@@ -652,9 +706,17 @@ export function App() {
     });
   };
   const excluirCaixinha = (id) => {
+    if (ehCompartilhado) {
+      shared.excluirCaixinha(id);
+      return;
+    }
     cloud.setCaixinhas((atual) => atual.filter((c) => c.id !== id));
   };
   const depositarCaixinha = (id, deposito) => {
+    if (ehCompartilhado) {
+      shared.depositarCaixinha(id, deposito);
+      return;
+    }
     cloud.setCaixinhas((atual) =>
       atual.map((c) =>
         c.id === id
@@ -662,6 +724,15 @@ export function App() {
           : c,
       ),
     );
+  };
+
+  // Desfazer parceria — quem clica leva as caixinhas (combinado na Etapa 1).
+  const desfazerParceria = async () => {
+    if (!cloud.partnershipId) return;
+    await desfazerParceriaFn({
+      uid,
+      partnershipId: cloud.partnershipId,
+    });
   };
 
   // Estados de carga e gateamento
@@ -694,7 +765,8 @@ export function App() {
     excluirTx,
     orcamentos: cloud.orcamentos,
     setOrcamentos: cloud.setOrcamentos,
-    caixinhas: cloud.caixinhas,
+    caixinhas: caixinhasAtivas,
+    caixinhasCompartilhadas: ehCompartilhado,
     salvarCaixinha,
     excluirCaixinha,
     depositarCaixinha,
@@ -704,6 +776,17 @@ export function App() {
     adicionarCategoria,
     preferences: cloud.preferences,
     setPreferences: cloud.setPreferences,
+    // ─── Conta compartilhada ───
+    email: cloud.email,
+    partnerUid: cloud.partnerUid,
+    partnerNome: cloud.partnerNome || partner.nome || '',
+    partnerEmail: partner.email,
+    partnershipId: cloud.partnershipId,
+    partnerTxs,
+    partnerReady: partner.ready,
+    convitesRecebidos,
+    convitesEnviados,
+    desfazerParceria,
     usuario,
     sair: sairFirebase,
     ehDesktop,

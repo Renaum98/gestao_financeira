@@ -14,20 +14,38 @@ import { Card, ItemTransacao, SeletorMes, TopBar } from "../ui/common.jsx";
 import { ConfirmModal } from "../ui/confirm-modal.jsx";
 
 export function GastosScreen({ ctx }) {
-  const { txs, mes, setMes, todosMeses, ocultar, irPara, excluirTx } = ctx;
+  const {
+    txs, mes, setMes, todosMeses, ocultar, irPara, excluirTx,
+    partnerTxs = [], partnerNome = '',
+  } = ctx;
   const [filtro, setFiltro] = React.useState("todas");
   const [busca, setBusca] = React.useState("");
   const [acaoAberta, setAcaoAberta] = React.useState(null);
   const [confirmarExclusao, setConfirmarExclusao] = React.useState(null); // tx pendente de confirmação
 
-  let txMes = txDoMes(txs, mes);
-  if (filtro !== "todas") txMes = txMes.filter((t) => t.categoria === filtro);
-  if (busca)
-    txMes = txMes.filter((t) =>
-      t.descricao.toLowerCase().includes(busca.toLowerCase()),
-    );
+  // Minhas e as do parceiro são listadas juntas, ordenadas por data.
+  // O total exibido é APENAS o meu — o do parceiro aparece como informação extra.
+  const meusDoMes = txDoMes(txs, mes);
+  const parceiroDoMes = txDoMes(partnerTxs, mes);
 
-  const total = totalGeral(txMes);
+  const aplicarFiltros = (lista) => {
+    let r = lista;
+    if (filtro !== "todas") r = r.filter((t) => t.categoria === filtro);
+    if (busca)
+      r = r.filter((t) =>
+        t.descricao.toLowerCase().includes(busca.toLowerCase()),
+      );
+    return r;
+  };
+
+  const meusFiltrados = aplicarFiltros(meusDoMes);
+  const parceiroFiltrado = aplicarFiltros(parceiroDoMes);
+  const txMes = [...meusFiltrados, ...parceiroFiltrado].sort((a, b) =>
+    b.data.localeCompare(a.data),
+  );
+
+  const total = totalGeral(meusFiltrados);
+  const totalParceiro = totalGeral(parceiroFiltrado);
 
   // agrupar por dia
   const porDia = {};
@@ -89,10 +107,16 @@ export function GastosScreen({ ctx }) {
           }}
         >
           <div style={{ fontSize: 13, color: "var(--muted)", fontWeight: 600 }}>
-            {txMes.length} transações ·<br/> Total:{" "}
+            {meusFiltrados.length} transações ·<br /> Total:{" "}
             <span style={{ color: "var(--ink)", fontWeight: 700 }}>
               {fmtBRL(total, ocultar)}
             </span>
+            {parceiroFiltrado.length > 0 && (
+              <div style={{ fontSize: 11, fontWeight: 600, marginTop: 4, opacity: 0.85 }}>
+                + {parceiroFiltrado.length} {parceiroFiltrado.length === 1 ? 'transação' : 'transações'} de {partnerNome || 'parceiro'}{' '}
+                ({fmtBRL(totalParceiro, ocultar)})
+              </div>
+            )}
           </div>
           <SeletorMes mes={mes} setMes={setMes} todosMeses={todosMeses} />
         </div>
@@ -290,9 +314,11 @@ export function GastosScreen({ ctx }) {
                       <ItemTransacao
                         tx={tx}
                         ocultar={ocultar}
-                        onClick={() => setAcaoAberta(tx.id)}
+                        doParceiro={!!tx._parceiro}
+                        nomeParceiro={partnerNome}
+                        onClick={tx._parceiro ? undefined : () => setAcaoAberta(tx.id)}
                       />
-                      {acaoAberta === tx.id && (
+                      {acaoAberta === tx.id && !tx._parceiro && (
                         <div
                           style={{
                             display: "flex",

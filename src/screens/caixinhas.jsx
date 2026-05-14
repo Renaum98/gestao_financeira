@@ -194,6 +194,9 @@ export function CaixinhaScreen({ ctx, params }) {
     excluirCaixinha,
     salvarCaixinha,
     ocultar,
+    usuario,
+    partnerNome,
+    caixinhasCompartilhadas,
   } = ctx;
   const entradas = React.useMemo(
     () => (txs || []).filter((t) => t.tipo === "entrada"),
@@ -585,6 +588,14 @@ export function CaixinhaScreen({ ctx, params }) {
                 }
                 labelOrigem = `Da entrada: ${desc || "removida"}`;
               }
+              // Só mostra "feito por" se for caixinha compartilhada e tiver tag.
+              const feitoPorParceiro =
+                caixinhasCompartilhadas &&
+                d.feitoPor &&
+                d.feitoPor !== usuario?.uid;
+              const inicialFeitoPor = feitoPorParceiro
+                ? (partnerNome?.trim()[0] || "?").toUpperCase()
+                : null;
               return (
                 <div
                   key={d.id}
@@ -596,23 +607,50 @@ export function CaixinhaScreen({ ctx, params }) {
                     borderTop: i === 0 ? "none" : "1px solid var(--linha)",
                   }}
                 >
-                  <div
-                    style={{
-                      width: 36,
-                      height: 36,
-                      borderRadius: 12,
-                      background: `${cx.cor}22`,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
-                  >
-                    <Icon
-                      name="plus"
-                      size={16}
-                      color={cx.cor}
-                      strokeWidth={2.4}
-                    />
+                  <div style={{ position: "relative", flexShrink: 0 }}>
+                    <div
+                      style={{
+                        width: 36,
+                        height: 36,
+                        borderRadius: 12,
+                        background: `${cx.cor}22`,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      <Icon
+                        name="plus"
+                        size={16}
+                        color={cx.cor}
+                        strokeWidth={2.4}
+                      />
+                    </div>
+                    {feitoPorParceiro && (
+                      <div
+                        title={partnerNome ? `Por ${partnerNome}` : "Pelo parceiro"}
+                        style={{
+                          position: "absolute",
+                          right: -3,
+                          bottom: -3,
+                          width: 16,
+                          height: 16,
+                          borderRadius: 8,
+                          background: "var(--card)",
+                          border: "2px solid var(--bg)",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          fontSize: 8,
+                          fontWeight: 800,
+                          color: "var(--primary)",
+                          letterSpacing: "-0.02em",
+                          boxShadow: "0 1px 2px rgba(0,0,0,0.12)",
+                        }}
+                      >
+                        {inicialFeitoPor}
+                      </div>
+                    )}
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div
@@ -636,6 +674,14 @@ export function CaixinhaScreen({ ctx, params }) {
                       }}
                     >
                       {rotuloDataCurto(d.data)} · {labelOrigem}
+                      {feitoPorParceiro && partnerNome && (
+                        <>
+                          {" · "}
+                          <span style={{ fontStyle: "italic" }}>
+                            {partnerNome}
+                          </span>
+                        </>
+                      )}
                     </div>
                   </div>
                 </div>

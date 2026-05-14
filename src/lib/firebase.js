@@ -31,7 +31,17 @@ import {
   doc,
   getDoc,
   setDoc,
+  updateDoc,
+  deleteDoc,
+  deleteField,
   onSnapshot,
+  collection,
+  addDoc,
+  getDocs,
+  query,
+  where,
+  serverTimestamp,
+  writeBatch,
 } from "firebase/firestore";
 
 const firebaseConfig = {
@@ -98,4 +108,19 @@ export function escutarAuth(callback) {
   return onAuthStateChanged(auth, callback);
 }
 
-export { doc, getDoc, setDoc, onSnapshot };
+export {
+  doc,
+  getDoc,
+  setDoc,
+  updateDoc,
+  deleteDoc,
+  deleteField,
+  onSnapshot,
+  collection,
+  addDoc,
+  getDocs,
+  query,
+  where,
+  serverTimestamp,
+  writeBatch,
+};
