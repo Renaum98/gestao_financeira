@@ -16,6 +16,8 @@ import { CatChip, Icon } from "../ui/icons.jsx";
 import { Card, ItemTransacao, SeletorMes } from "../ui/common.jsx";
 import { BarraProgresso } from "../ui/charts.jsx";
 import { CardCaixinha } from "./caixinhas.jsx";
+import { calcularNotificacoes } from "./notificacoes.jsx";
+import { dispararPendentes } from "../lib/notifications.js";
 
 export function DashboardScreen({ ctx }) {
   const {
@@ -30,9 +32,27 @@ export function DashboardScreen({ ctx }) {
     orcamentos,
     preferences,
     caixinhas,
+    recorrentes,
     usuario,
     ehDesktop,
   } = ctx;
+  const notifInfo = React.useMemo(
+    () => calcularNotificacoes(txs, recorrentes, preferences?.notifLidas || []),
+    [txs, recorrentes, preferences?.notifLidas],
+  );
+  const totalNotif = notifInfo.naoLidas;
+
+  // Dispara notificações nativas (se já houver permissão) ao abrir o app.
+  React.useEffect(() => {
+    if (typeof Notification === "undefined") return;
+    if (Notification.permission !== "granted") return;
+    dispararPendentes({
+      proximas: notifInfo.proximas,
+      terminando: notifInfo.terminando,
+      lidas: preferences?.notifLidas || [],
+      idsAtivos: notifInfo.idsAtivos,
+    });
+  }, [notifInfo, preferences?.notifLidas]);
   const primeiroNome = (preferences.nome?.trim() || usuario?.displayName || "")
     .trim()
     .split(" ")[0];
@@ -234,6 +254,51 @@ export function DashboardScreen({ ctx }) {
                 color="var(--ink)"
                 strokeWidth={2}
               />
+            </button>
+            <button
+              onClick={() => irPara("notificacoes")}
+              className="glass-surface"
+              aria-label={`Notificações${totalNotif ? ` (${totalNotif})` : ""}`}
+              style={{
+                position: "relative",
+                width: 36,
+                height: 36,
+                borderRadius: 18,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                cursor: "pointer",
+                boxShadow:
+                  "0 4px 14px rgba(20,16,24,0.08), inset 0 1px 0 rgba(255,255,255,0.3)",
+              }}
+            >
+              <Icon name="bell" size={18} color="var(--ink)" strokeWidth={2} />
+              {totalNotif > 0 && (
+                <div
+                  style={{
+                    position: "absolute",
+                    top: -5,
+                    right: -5,
+                    minWidth: 14,
+                    height: 14,
+                    padding: "0 3px",
+                    borderRadius: 7,
+                    background: "#D63A55",
+                    color: "#fff",
+                    fontSize: 9,
+                    fontWeight: 800,
+                    lineHeight: 1,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    boxShadow: "0 2px 6px rgba(214,58,85,0.4)",
+                    border: "1.5px solid var(--bg)",
+                    boxSizing: "content-box",
+                  }}
+                >
+                  {totalNotif > 9 ? "9+" : totalNotif}
+                </div>
+              )}
             </button>
             <button
               onClick={() => irPara("perfil")}

@@ -1,15 +1,20 @@
 // perfil.jsx — Tela Perfil (conta, aparência, atalhos, sair).
 
 import React from 'react';
-import { PALETAS } from '../data.js';
+import { PALETAS, rotuloMes } from '../data.js';
 import { Icon } from '../ui/icons.jsx';
 import { Card, TopBar } from '../ui/common.jsx';
 import { ConfirmModal } from '../ui/confirm-modal.jsx';
 import { vibrar } from '../lib/haptics.js';
 import { lerFotoPerfil } from '../lib/imagem.js';
+import { baixarDadosXLSX } from '../lib/export.js';
 
 export function PerfilScreen({ ctx }) {
-  const { voltar, ocultar, setOcultar, irPara, setOnboarding, preferences, setPreferences, usuario, sair, ehDesktop } = ctx;
+  const {
+    voltar, ocultar, setOcultar, irPara, setOnboarding,
+    preferences, setPreferences, usuario, sair, ehDesktop,
+    txs, caixinhas, recorrentes, orcamentos, todosMeses,
+  } = ctx;
   const nomeConta = usuario?.displayName || '';
   const email = usuario?.email || '';
   const foto = preferences.fotoUrl || usuario?.photoURL || '';
@@ -22,6 +27,7 @@ export function PerfilScreen({ ctx }) {
   const [erroFoto, setErroFoto] = React.useState('');
   const [carregandoFoto, setCarregandoFoto] = React.useState(false);
   const inputFotoRef = React.useRef(null);
+  const [baixar, setBaixar] = React.useState(null); // null | { mes: 'todos' | 'YYYY-MM', baixando, erro }
 
   const salvarNome = () => {
     setPreferences({ nome: nomeTemp.trim() });
@@ -45,6 +51,26 @@ export function PerfilScreen({ ctx }) {
     setCarregandoFoto(false);
   };
   const removerFoto = () => { setErroFoto(''); setPreferences({ fotoUrl: '' }); vibrar(); };
+
+  const abrirBaixar = () => {
+    vibrar();
+    setBaixar({ mes: 'todos', baixando: false, erro: '' });
+  };
+  const executarBaixar = async () => {
+    if (!baixar) return;
+    setBaixar((b) => ({ ...b, baixando: true, erro: '' }));
+    try {
+      await baixarDadosXLSX({
+        txs, caixinhas, recorrentes, orcamentos,
+        mes: baixar.mes === 'todos' ? null : baixar.mes,
+        nomeUsuario: preferences.nome || nomeConta,
+      });
+      vibrar(14);
+      setBaixar(null);
+    } catch (err) {
+      setBaixar((b) => ({ ...b, baixando: false, erro: 'Não foi possível gerar o arquivo.' }));
+    }
+  };
 
   return (
     <div style={{ paddingBottom: "var(--pad-bottom)" }}>
@@ -185,6 +211,7 @@ export function PerfilScreen({ ctx }) {
         <div style={{ height: 14 }} />
         <Card style={{ padding: '4px 16px' }}>
           <ConfigItem icon="sparkle" label="Refazer tour" onClick={() => setOnboarding(true)} />
+          <ConfigItem icon="list" label="Baixar dados (.xlsx)" onClick={abrirBaixar} />
         </Card>
 
         <div style={{ height: 18 }} />
@@ -217,7 +244,172 @@ export function PerfilScreen({ ctx }) {
           onConfirmar={() => { setConfirmarSair(false); sair(); }}
         />
       )}
+
+      {baixar && (
+        <BaixarDadosModal
+          mesSelecionado={baixar.mes}
+          onSelecionarMes={(m) => setBaixar((b) => ({ ...b, mes: m }))}
+          baixando={baixar.baixando}
+          erro={baixar.erro}
+          todosMeses={todosMeses}
+          onCancelar={() => setBaixar(null)}
+          onConfirmar={executarBaixar}
+        />
+      )}
     </div>
+  );
+}
+
+function BaixarDadosModal({
+  mesSelecionado, onSelecionarMes, baixando, erro, todosMeses,
+  onCancelar, onConfirmar,
+}) {
+  return (
+    <div
+      onClick={baixando ? undefined : onCancelar}
+      style={{
+        position: 'fixed', inset: 0, height: '100dvh', zIndex: 110,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        padding: 20,
+        background: 'rgba(20, 16, 24, 0.45)',
+        backdropFilter: 'blur(12px) saturate(140%)',
+        WebkitBackdropFilter: 'blur(12px) saturate(140%)',
+        animation: 'fadeIn .28s ease-out',
+      }}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        style={{
+          width: '100%', maxWidth: 400,
+          background: 'var(--bg)', borderRadius: 24,
+          padding: '22px 20px 18px',
+          boxShadow: '0 24px 60px rgba(0,0,0,0.28), 0 4px 12px rgba(0,0,0,0.08)',
+          animation: 'scaleIn .34s cubic-bezier(0.22, 1, 0.36, 1)',
+          maxHeight: 'calc(100dvh - 40px)',
+          display: 'flex', flexDirection: 'column',
+        }}
+      >
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14,
+        }}>
+          <div style={{
+            width: 42, height: 42, borderRadius: 14,
+            background: 'linear-gradient(135deg, var(--primary), var(--primary-2))',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            flexShrink: 0,
+          }}>
+            <Icon name="list" size={20} color="#fff" strokeWidth={2.4} />
+          </div>
+          <div>
+            <div style={{ fontSize: 17, fontWeight: 800, color: 'var(--ink)', letterSpacing: '-0.02em' }}>
+              Baixar dados
+            </div>
+            <div style={{ fontSize: 12, color: 'var(--muted)', fontWeight: 600, marginTop: 2 }}>
+              Arquivo .xlsx para abrir no Excel ou Google Sheets
+            </div>
+          </div>
+        </div>
+
+        <div style={{
+          fontSize: 11, fontWeight: 800, color: 'var(--muted)',
+          textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8, paddingLeft: 2,
+        }}>
+          Período
+        </div>
+
+        <div style={{
+          flex: 1, minHeight: 0, overflowY: 'auto',
+          border: '1px solid var(--linha)', borderRadius: 14,
+          background: 'var(--card)',
+        }}>
+          <OpcaoBaixar
+            label="Todos os dados"
+            descricao="Transações, caixinhas, recorrentes e orçamentos"
+            selecionado={mesSelecionado === 'todos'}
+            onClick={() => onSelecionarMes('todos')}
+          />
+          {todosMeses.map((m) => (
+            <OpcaoBaixar
+              key={m}
+              label={rotuloMes(m)}
+              descricao="Apenas transações deste mês"
+              selecionado={mesSelecionado === m}
+              onClick={() => onSelecionarMes(m)}
+            />
+          ))}
+        </div>
+
+        {erro && (
+          <div style={{
+            marginTop: 10, fontSize: 12.5, fontWeight: 700,
+            color: '#D63A55', textAlign: 'center',
+          }}>{erro}</div>
+        )}
+
+        <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
+          <button
+            onClick={onCancelar}
+            disabled={baixando}
+            style={{
+              flex: 1, padding: 12, borderRadius: 14, border: 'none',
+              background: 'var(--card-2)', color: 'var(--ink)',
+              fontSize: 14, fontWeight: 800, fontFamily: 'inherit',
+              cursor: baixando ? 'default' : 'pointer',
+              boxShadow: '0 1px 2px rgba(0,0,0,0.06)',
+              opacity: baixando ? 0.6 : 1,
+            }}
+          >Cancelar</button>
+          <button
+            onClick={onConfirmar}
+            disabled={baixando}
+            style={{
+              flex: 1, padding: 12, borderRadius: 14, border: 'none',
+              background: 'linear-gradient(135deg, var(--primary), var(--primary-2))',
+              color: '#fff', fontSize: 14, fontWeight: 800, fontFamily: 'inherit',
+              cursor: baixando ? 'default' : 'pointer',
+              boxShadow: '0 4px 14px color-mix(in oklab, var(--primary) 32%, transparent)',
+              opacity: baixando ? 0.7 : 1,
+            }}
+          >{baixando ? 'Gerando…' : 'Baixar'}</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function OpcaoBaixar({ label, descricao, selecionado, onClick }) {
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        width: '100%', textAlign: 'left',
+        background: selecionado ? 'color-mix(in oklab, var(--primary) 8%, transparent)' : 'transparent',
+        border: 'none', borderBottom: '1px solid var(--linha)',
+        padding: '12px 14px', cursor: 'pointer',
+        display: 'flex', alignItems: 'center', gap: 12,
+        fontFamily: 'inherit',
+      }}
+    >
+      <div style={{
+        width: 22, height: 22, borderRadius: 11,
+        border: `2px solid ${selecionado ? 'var(--primary)' : 'var(--linha)'}`,
+        background: selecionado ? 'var(--primary)' : 'transparent',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        flexShrink: 0, transition: 'all .15s',
+      }}>
+        {selecionado && <Icon name="check" size={12} color="#fff" strokeWidth={3} />}
+      </div>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--ink)' }}>{label}</div>
+        {descricao && (
+          <div style={{ fontSize: 11.5, color: 'var(--muted)', fontWeight: 500, marginTop: 2 }}>
+            {descricao}
+          </div>
+        )}
+      </div>
+    </button>
   );
 }
 

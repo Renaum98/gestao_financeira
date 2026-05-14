@@ -1,0 +1,130 @@
+// notifications.js — Disparo de notificações nativas (Web Notifications API)
+// para contas a vencer. Funciona no Chrome/Android e em PWAs instalados no iOS 16.4+.
+// As notificações são locais (não usam push remoto) — disparadas sempre que o
+// app é aberto e há itens não notificados pendentes.
+
+import { fmtBRL } from '../data.js';
+
+const ENVIADAS_KEY = 'finca.notif.enviadas';
+
+export function notificacoesSuportadas() {
+  return typeof window !== 'undefined' && 'Notification' in window;
+}
+
+export function permissaoNotificacoes() {
+  if (!notificacoesSuportadas()) return 'unsupported';
+  return Notification.permission; // 'default' | 'granted' | 'denied'
+}
+
+export async function pedirPermissaoNotificacoes() {
+  if (!notificacoesSuportadas()) return 'unsupported';
+  if (Notification.permission === 'granted') return 'granted';
+  if (Notification.permission === 'denied') return 'denied';
+  try {
+    const p = await Notification.requestPermission();
+    return p;
+  } catch {
+    return 'denied';
+  }
+}
+
+function lerEnviadas() {
+  try {
+    const raw = localStorage.getItem(ENVIADAS_KEY);
+    return raw ? new Set(JSON.parse(raw)) : new Set();
+  } catch {
+    return new Set();
+  }
+}
+
+function gravarEnviadas(set, idsAtivos) {
+  // Mantém só IDs ainda ativos para não crescer indefinidamente.
+  const ativos = new Set(idsAtivos);
+  const limpo = [...set].filter((id) => ativos.has(id));
+  try {
+    localStorage.setItem(ENVIADAS_KEY, JSON.stringify(limpo));
+  } catch {}
+}
+
+async function mostrarNotificacao(titulo, opcoes) {
+  // Prefere disparar via service worker (suporta ações, persiste, agrupa).
+  if ('serviceWorker' in navigator) {
+    try {
+      const reg = await navigator.serviceWorker.getRegistration();
+      if (reg && reg.showNotification) {
+        await reg.showNotification(titulo, opcoes);
+        return true;
+      }
+    } catch {}
+  }
+  // Fallback: Notification constructor (apenas funciona em desktop ou web).
+  try {
+    new Notification(titulo, opcoes);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+// Dispara notificações nativas para itens não lidos e ainda não notificados,
+// com vencimento até `diasJanela` dias (default 7).
+export async function dispararPendentes({
+  proximas = [],
+  terminando = [],
+  lidas = [],
+  idsAtivos = [],
+  diasJanela = 7,
+}) {
+  if (!notificacoesSuportadas()) return 0;
+  if (Notification.permission !== 'granted') return 0;
+
+  const enviadas = lerEnviadas();
+  const lidasSet = new Set(lidas);
+  const hoje = new Date();
+  hoje.setHours(0, 0, 0, 0);
+
+  const diasAte = (yyyymmdd) => {
+    const [y, m, d] = yyyymmdd.split('-').map(Number);
+    return Math.ceil((new Date(y, m - 1, d) - hoje) / (1000 * 60 * 60 * 24));
+  };
+  const rotulo = (n) =>
+    n <= 0 ? 'Vence hoje' : n === 1 ? 'Vence amanhã' : `Vence em ${n} dias`;
+
+  let disparadas = 0;
+
+  for (const tx of proximas) {
+    if (enviadas.has(tx.id) || lidasSet.has(tx.id)) continue;
+    const n = diasAte(tx.data);
+    if (n > diasJanela) continue;
+    const ok = await mostrarNotificacao(`💸 ${tx.descricao}`, {
+      body: `${rotulo(n)} · ${fmtBRL(tx.valor)}`,
+      icon: '/icon.svg',
+      badge: '/icon.svg',
+      tag: `vencimento-${tx.id}`,
+      requireInteraction: n <= 1,
+      data: { url: '/', tipo: 'vencimento', id: tx.id },
+    });
+    if (ok) {
+      enviadas.add(tx.id);
+      disparadas += 1;
+    }
+  }
+
+  for (const tx of terminando) {
+    if (enviadas.has(tx.id) || lidasSet.has(tx.id)) continue;
+    const ok = await mostrarNotificacao(`✅ Parcelamento terminando`, {
+      body: `${tx.descricao} — última parcela próxima (${tx.parcelas.atual}/${tx.parcelas.total})`,
+      icon: '/icon.svg',
+      badge: '/icon.svg',
+      tag: `parcela-fim-${tx.id}`,
+      data: { url: '/', tipo: 'parcela-fim', id: tx.id },
+    });
+    if (ok) {
+      enviadas.add(tx.id);
+      disparadas += 1;
+    }
+  }
+
+  gravarEnviadas(enviadas, idsAtivos);
+  return disparadas;
+}

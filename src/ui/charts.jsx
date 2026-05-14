@@ -115,7 +115,13 @@ export function LineChart({ pontos, pontosComp, largura = 340, altura = 140, ocu
   const ticks = [5, 10, 15, 20, 25];
 
   return (
-    <svg width={largura} height={altura} viewBox={`0 0 ${largura} ${altura}`}>
+    <svg
+      width="100%"
+      height={altura}
+      viewBox={`0 0 ${largura} ${altura}`}
+      preserveAspectRatio="none"
+      style={{ display: 'block', maxWidth: '100%' }}
+    >
       <defs>
         <linearGradient id="lineGrad" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stopColor="var(--primary)" stopOpacity="0.22" />

@@ -89,7 +89,7 @@ export function GastosScreen({ ctx }) {
           }}
         >
           <div style={{ fontSize: 13, color: "var(--muted)", fontWeight: 600 }}>
-            {txMes.length} transações · Total:{" "}
+            {txMes.length} transações ·<br/> Total:{" "}
             <span style={{ color: "var(--ink)", fontWeight: 700 }}>
               {fmtBRL(total, ocultar)}
             </span>

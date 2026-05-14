@@ -1335,6 +1335,7 @@ function ModalShell({
       style={{
         position: "fixed",
         inset: 0,
+        height: "100dvh",
         zIndex: 100,
         display: "flex",
         alignItems: "center",
@@ -1351,7 +1352,7 @@ function ModalShell({
         style={{
           width: "100%",
           maxWidth: 440,
-          maxHeight: "calc(100vh - 40px)",
+          maxHeight: "calc(100dvh - 40px)",
           overflowY: "auto",
           overflowX: "hidden",
           background: "var(--bg)",

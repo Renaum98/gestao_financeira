@@ -28,7 +28,7 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['icon.svg', 'apple-touch-icon.png'],
+      includeAssets: ['icon.svg', 'apple-touch-icon.png', 'sw-notifications.js'],
       manifest: {
         id: `${base}?v=${buildId}`,
         name: 'Financeiro',
@@ -48,6 +48,7 @@ export default defineConfig({
       workbox: {
         cacheId: `finca-${buildId}`,
         globPatterns: ['**/*.{js,css,html,svg,png,ico,woff2,webmanifest}'],
+        importScripts: ['sw-notifications.js'],
         cleanupOutdatedCaches: true,
         clientsClaim: true,
         skipWaiting: true,

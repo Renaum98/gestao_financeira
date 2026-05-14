@@ -32,6 +32,7 @@ const PerfilScreen      = lazyNamed(() => import("./screens/perfil.jsx"), "Perfi
 const CaixinhasScreen   = lazyNamed(() => import("./screens/caixinhas.jsx"), "CaixinhasScreen");
 const CaixinhaScreen    = lazyNamed(() => import("./screens/caixinhas.jsx"), "CaixinhaScreen");
 const RecorrentesScreen = lazyNamed(() => import("./screens/recorrentes.jsx"), "RecorrentesScreen");
+const NotificacoesScreen= lazyNamed(() => import("./screens/notificacoes.jsx"), "NotificacoesScreen");
 const AddExpenseModal   = lazyNamed(() => import("./modals/add-expense.jsx"), "AddExpenseModal");
 
 const ONBOARDING_KEY = "finca.onboarded";
@@ -726,6 +727,7 @@ export function App() {
   else if (tela === "caixinha")
     conteudo = <CaixinhaScreen ctx={ctx} params={params} />;
   else if (tela === "recorrentes") conteudo = <RecorrentesScreen ctx={ctx} />;
+  else if (tela === "notificacoes") conteudo = <NotificacoesScreen ctx={ctx} />;
 
   if (ehDesktop) {
     return (

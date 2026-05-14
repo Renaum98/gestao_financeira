@@ -113,7 +113,7 @@ export function InstallPromptModal({ temAtalho, plataformaIOS, onInstalar, onDis
     <div
       onClick={onDispensar}
       style={{
-        position: 'fixed', inset: 0, zIndex: 200,
+        position: 'fixed', inset: 0, height: '100dvh', zIndex: 200,
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         padding: '20px',
         background: 'rgba(20, 16, 24, 0.45)',
