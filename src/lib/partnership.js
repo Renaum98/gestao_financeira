@@ -31,6 +31,7 @@ import {
   onSnapshot,
   serverTimestamp,
   writeBatch,
+  arrayUnion,
 } from "./firebase.js";
 
 const INVITES = "invites";
@@ -250,25 +251,67 @@ export async function finalizarPareamento({ invite, meuUid }) {
 // Quem clica em "Desfazer" leva todas as caixinhas (combinado na Etapa 1).
 // O parceiro tem seus campos de parceria limpos por `useLimparParceriaOrfa`
 // quando ele detecta que a partnership sumiu.
-export async function desfazerParceria({ uid, partnershipId, meuEmail }) {
+// Em vez de deletar a partnership imediatamente, marcamos com `desfeitoPor`.
+// Assim o outro lado detecta via snapshot, registra uma notificação no próprio
+// user doc e faz o delete final. Isso evita o bug do "segundo desfazer trava"
+// (a regra `request.auth.uid in resource.data.members` falhava se o doc já
+// não existia).
+//
+// Se a partnership já não existir (caso raro de race), só limpamos o próprio
+// user doc — equivale a um cleanup órfão.
+export async function desfazerParceria({
+  uid,
+  meuNome,
+  partnershipId,
+  meuEmail,
+}) {
   if (!partnershipId) throw new Error("Sem parceria ativa.");
   const pRef = doc(db, PARTNERSHIPS, partnershipId);
   const pDoc = await getDoc(pRef);
-  const caixinhasFinais = pDoc.exists() ? pDoc.data().caixinhas || [] : [];
+
+  if (!pDoc.exists()) {
+    // Parceria já não existe (parceiro pode ter sumido). Só limpa meus campos.
+    await updateDoc(doc(db, USERS, uid), {
+      partnerUid: null,
+      partnerNome: null,
+      partnershipId: null,
+    });
+    if (meuEmail) await definirFlagParceriaNoIndex(uid, meuEmail, false);
+    return;
+  }
+
+  // Se ela já foi marcada como desfeita por OUTRO (e meu hook ainda não
+  // processou), faço o cleanup local também — afinal, eu quis desfazer mesmo.
+  const dataP = pDoc.data();
+  if (dataP.desfeitoPor && dataP.desfeitoPor !== uid) {
+    await updateDoc(doc(db, USERS, uid), {
+      partnerUid: null,
+      partnerNome: null,
+      partnershipId: null,
+    });
+    if (meuEmail) await definirFlagParceriaNoIndex(uid, meuEmail, false);
+    return;
+  }
+
+  const caixinhasFinais = dataP.caixinhas || [];
 
   const batch = writeBatch(db);
+  // Marca a partnership: o outro lado vê pelo snapshot e cria a notificação.
+  batch.update(pRef, {
+    desfeitoPor: uid,
+    desfeitoNome: meuNome || "",
+    desfeitoEm: serverTimestamp(),
+  });
+  // Limpa meus campos e levo as caixinhas comigo (combinado da Etapa 1).
   batch.update(doc(db, USERS, uid), {
     caixinhas: caixinhasFinais,
     partnerUid: null,
     partnerNome: null,
     partnershipId: null,
   });
-  batch.delete(pRef);
   await batch.commit();
-  // Libera o índice pra novos convites.
-  if (meuEmail) {
-    await definirFlagParceriaNoIndex(uid, meuEmail, false);
-  }
+
+  if (meuEmail) await definirFlagParceriaNoIndex(uid, meuEmail, false);
 }
 
 // ─── Hooks ─────────────────────────────────────────────────────────────────
@@ -375,6 +418,9 @@ export function useSharedCaixinhas({ partnershipId, uid }) {
   const [caixinhas, setCaixinhas] = useState([]);
   const [ready, setReady] = useState(false);
   const [existe, setExiste] = useState(true); // false = partnership foi deletada
+  // Quando o outro lado desfez, expomos quem foi pra o app criar a notificação.
+  // null = não desfeito; objeto = desfeito por outra pessoa.
+  const [desfeito, setDesfeito] = useState(null);
   const caixinhasRef = useRef([]);
 
   useEffect(() => {
@@ -386,6 +432,7 @@ export function useSharedCaixinhas({ partnershipId, uid }) {
       setCaixinhas([]);
       setReady(false);
       setExiste(true);
+      setDesfeito(null);
       return;
     }
     const ref = doc(db, PARTNERSHIPS, partnershipId);
@@ -393,18 +440,25 @@ export function useSharedCaixinhas({ partnershipId, uid }) {
       ref,
       (snap) => {
         if (snap.exists()) {
-          setCaixinhas(snap.data().caixinhas || []);
+          const d = snap.data();
+          setCaixinhas(d.caixinhas || []);
           setExiste(true);
+          if (d.desfeitoPor && d.desfeitoPor !== uid) {
+            setDesfeito({ por: d.desfeitoPor, nome: d.desfeitoNome || "" });
+          } else {
+            setDesfeito(null);
+          }
         } else {
           setCaixinhas([]);
-          setExiste(false); // parceiro desfez a parceria
+          setExiste(false);
+          setDesfeito(null);
         }
         setReady(true);
       },
       (err) => console.error("[shared caixinhas]", err),
     );
     return unsub;
-  }, [partnershipId]);
+  }, [partnershipId, uid]);
 
   const ref = partnershipId ? doc(db, PARTNERSHIPS, partnershipId) : null;
 
@@ -455,38 +509,91 @@ export function useSharedCaixinhas({ partnershipId, uid }) {
     caixinhas,
     ready,
     existe,
+    desfeito,
     salvarCaixinha,
     excluirCaixinha,
     depositarCaixinha,
   };
 }
 
-// Se eu tenho `partnershipId` setado mas a partnership não existe mais (parceiro
-// desfez), limpa meus próprios campos de parceria.
+// Detecta dois cenários e faz o cleanup do meu lado:
+//
+//   1) Parceiro marcou a parceria como desfeita (campo `desfeitoPor` na
+//      partnership). → Cria uma notificação no meu user doc, limpa meus campos
+//      de parceria, libera o userIndex e deleta a partnership.
+//
+//   2) Parceria simplesmente não existe mais (legado ou cleanup parcial). →
+//      Só limpa meus campos.
+//
+// Em ambos os casos, usa um `ref` pra evitar processar a mesma parceria mais
+// de uma vez (importante no React StrictMode dev e em re-snapshots).
 export function useLimparParceriaOrfa({
   uid,
   meuEmail,
   partnershipId,
   partnershipExiste,
+  partnershipDesfeito,
 }) {
+  const tratandoRef = useRef(null);
+
   useEffect(() => {
     if (!uid || !partnershipId) return;
-    if (partnershipExiste !== false) return; // só age quando confirmado que sumiu
-    (async () => {
-      try {
-        await updateDoc(doc(db, USERS, uid), {
-          partnerUid: null,
-          partnerNome: null,
-          partnershipId: null,
-        });
-        if (meuEmail) {
-          await definirFlagParceriaNoIndex(uid, meuEmail, false);
+    if (tratandoRef.current === partnershipId) return;
+
+    // Caso 1: parceiro desfez (e não fui eu).
+    if (partnershipDesfeito) {
+      tratandoRef.current = partnershipId;
+      (async () => {
+        try {
+          const notif = {
+            id: `np-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+            tipo: "parceria-desfeita",
+            por: partnershipDesfeito.nome || "Seu parceiro",
+            em: new Date().toISOString(),
+          };
+          await updateDoc(doc(db, USERS, uid), {
+            partnerUid: null,
+            partnerNome: null,
+            partnershipId: null,
+            notificacoesParceria: arrayUnion(notif),
+          });
+          if (meuEmail) {
+            await definirFlagParceriaNoIndex(uid, meuEmail, false);
+          }
+          // Cleanup final do doc da partnership (ainda sou membro nesse momento).
+          await deleteDoc(doc(db, PARTNERSHIPS, partnershipId));
+        } catch (err) {
+          console.error("[parceria desfeita pelo parceiro]", err);
         }
-      } catch (err) {
-        console.error("[limpar parceria órfã]", err);
-      }
-    })();
-  }, [uid, meuEmail, partnershipId, partnershipExiste]);
+      })();
+      return;
+    }
+
+    // Caso 2: parceria simplesmente sumiu (legado).
+    if (partnershipExiste === false) {
+      tratandoRef.current = partnershipId;
+      (async () => {
+        try {
+          await updateDoc(doc(db, USERS, uid), {
+            partnerUid: null,
+            partnerNome: null,
+            partnershipId: null,
+          });
+          if (meuEmail) {
+            await definirFlagParceriaNoIndex(uid, meuEmail, false);
+          }
+        } catch (err) {
+          console.error("[limpar parceria órfã]", err);
+        }
+      })();
+    }
+  }, [
+    uid,
+    meuEmail,
+    partnershipId,
+    partnershipExiste,
+    partnershipDesfeito?.por,
+  ]);
 }
 
 // Hook auxiliar pro App: detecta quando um convite enviado por mim ficou

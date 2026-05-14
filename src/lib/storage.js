@@ -58,6 +58,9 @@ const DEFAULT_STATE = {
   partnerUid: null,
   partnerNome: null,
   partnershipId: null,
+  // Eventos da parceria (ex: parceiro desfez) que precisam ser mostrados ao
+  // usuário. São limpos quando ele dispensa.
+  notificacoesParceria: [],
 };
 
 // Chaves que o `state` local sincroniza com o Firestore. As chaves de parceria
@@ -70,6 +73,7 @@ const SYNCED_KEYS = [
   "recorrentes",
   "categoriasCustom",
   "preferences",
+  "notificacoesParceria",
 ];
 
 // Garante que o user doc exista e tenha email/userIndex preenchidos. Idempotente.
@@ -148,6 +152,7 @@ export function useCloudState(uid) {
           partnerUid: data.partnerUid ?? null,
           partnerNome: data.partnerNome ?? null,
           partnershipId: data.partnershipId ?? null,
+          notificacoesParceria: data.notificacoesParceria ?? [],
         });
         setReady(true);
       }
@@ -192,6 +197,7 @@ export function useCloudState(uid) {
   const setCaixinhas = (v) => patchKey("caixinhas", v);
   const setRecorrentes = (v) => patchKey("recorrentes", v);
   const setCategoriasCustom = (v) => patchKey("categoriasCustom", v);
+  const setNotificacoesParceria = (v) => patchKey("notificacoesParceria", v);
   const setPreferences = (patch) => {
     dirtyKeys.current.add("preferences");
     setState((s) => ({ ...s, preferences: { ...s.preferences, ...patch } }));
@@ -216,5 +222,7 @@ export function useCloudState(uid) {
     partnerUid: state.partnerUid,
     partnerNome: state.partnerNome,
     partnershipId: state.partnershipId,
+    notificacoesParceria: state.notificacoesParceria,
+    setNotificacoesParceria,
   };
 }

@@ -42,6 +42,8 @@ import {
   where,
   serverTimestamp,
   writeBatch,
+  arrayUnion,
+  arrayRemove,
 } from "firebase/firestore";
 
 const firebaseConfig = {
@@ -123,4 +125,6 @@ export {
   where,
   serverTimestamp,
   writeBatch,
+  arrayUnion,
+  arrayRemove,
 };

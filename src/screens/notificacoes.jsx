@@ -15,7 +15,7 @@ import { aceitarConvite, recusarConvite } from '../lib/partnership.js';
 
 // Calcula as notificações a partir das transações + recorrentes.
 // Retorna também `naoLidas` (contagem das não lidas) para alimentar o badge.
-export function calcularNotificacoes(txs, recorrentes = [], lidas = [], convites = []) {
+export function calcularNotificacoes(txs, recorrentes = [], lidas = [], convites = [], notifsParceria = []) {
   const hoje = new Date();
   hoje.setHours(0, 0, 0, 0);
   const lim7 = new Date(hoje);
@@ -60,9 +60,11 @@ export function calcularNotificacoes(txs, recorrentes = [], lidas = [], convites
     ...terminando.map((t) => t.id),
     ...recsRevisar.map((r) => r.id),
   ];
-  // Convites pendentes sempre contam como "não lidos" — não há marcação manual.
+  // Convites pendentes e eventos de parceria sempre contam como "não lidos".
   const naoLidas =
-    idsAtivos.filter((id) => !setLidas.has(id)).length + convites.length;
+    idsAtivos.filter((id) => !setLidas.has(id)).length +
+    convites.length +
+    notifsParceria.length;
 
   return { proximas, terminando, recsRevisar, convites, naoLidas, idsAtivos };
 }
@@ -71,14 +73,20 @@ export function NotificacoesScreen({ ctx }) {
   const {
     txs, recorrentes, voltar, ocultar, irPara, preferences, setPreferences,
     convitesRecebidos = [], usuario,
+    notificacoesParceria = [], dispensarNotifParceria,
   } = ctx;
   const lidas = preferences?.notifLidas || [];
   const { proximas, terminando, recsRevisar, idsAtivos } = React.useMemo(
-    () => calcularNotificacoes(txs, recorrentes, lidas, convitesRecebidos),
-    [txs, recorrentes, lidas, convitesRecebidos],
+    () => calcularNotificacoes(txs, recorrentes, lidas, convitesRecebidos, notificacoesParceria),
+    [txs, recorrentes, lidas, convitesRecebidos, notificacoesParceria],
   );
 
-  const total = proximas.length + terminando.length + recsRevisar.length + convitesRecebidos.length;
+  const total =
+    proximas.length +
+    terminando.length +
+    recsRevisar.length +
+    convitesRecebidos.length +
+    notificacoesParceria.length;
   const setLidas = React.useMemo(() => new Set(lidas), [lidas]);
   const ehLida = (id) => setLidas.has(id);
 
@@ -227,6 +235,21 @@ export function NotificacoesScreen({ ctx }) {
             </div>
           </Card>
         </div>
+      )}
+
+      {notificacoesParceria.length > 0 && (
+        <Secao titulo="Conta compartilhada" subtitulo="Eventos recentes da parceria">
+          <Card style={{ padding: '4px 16px' }}>
+            {notificacoesParceria.map((n, i) => (
+              <NotifParceriaItem
+                key={n.id}
+                notif={n}
+                primeiro={i === 0}
+                onDispensar={() => dispensarNotifParceria?.(n.id)}
+              />
+            ))}
+          </Card>
+        </Secao>
       )}
 
       {convitesRecebidos.length > 0 && (
@@ -514,6 +537,52 @@ export function NotificacoesScreen({ ctx }) {
           </Card>
         </Secao>
       )}
+    </div>
+  );
+}
+
+function NotifParceriaItem({ notif, primeiro, onDispensar }) {
+  const inicial = (notif.por?.trim()[0] || '?').toUpperCase();
+  const formatarData = (iso) => {
+    try {
+      const d = new Date(iso);
+      const dn = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'][d.getDay()];
+      return `${dn}, ${d.getDate()} ${MESES_CURTO[d.getMonth()]} · ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+    } catch { return ''; }
+  };
+
+  return (
+    <div style={{
+      padding: '14px 0',
+      borderTop: primeiro ? 'none' : '1px solid var(--linha)',
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        <div style={{
+          width: 44, height: 44, borderRadius: 22,
+          background: 'color-mix(in oklab, #D63A55 14%, transparent)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          color: '#D63A55', fontSize: 18, fontWeight: 800, letterSpacing: '-0.02em',
+          flexShrink: 0,
+        }}>{inicial}</div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--ink)' }}>
+            {notif.por} desfez a conta compartilhada
+          </div>
+          <div style={{ fontSize: 11.5, color: 'var(--muted)', fontWeight: 600, marginTop: 2 }}>
+            {formatarData(notif.em)}
+          </div>
+        </div>
+      </div>
+      <button
+        onClick={onDispensar}
+        style={{
+          marginTop: 10, width: '100%',
+          padding: '8px 12px', borderRadius: 12,
+          border: '1.5px solid var(--linha)', background: 'var(--card)',
+          color: 'var(--ink)', fontSize: 13, fontWeight: 800,
+          fontFamily: 'inherit', cursor: 'pointer',
+        }}
+      >Entendi</button>
     </div>
   );
 }

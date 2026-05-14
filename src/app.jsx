@@ -402,6 +402,7 @@ export function App() {
     meuEmail: cloud.email,
     partnershipId: cloud.partnershipId,
     partnershipExiste: shared.existe,
+    partnershipDesfeito: shared.desfeito,
   });
 
   // Mescla categorias personalizadas em CATEGORIAS/ORDEM_CATS antes de renderizar as telas.
@@ -732,9 +733,17 @@ export function App() {
     if (!cloud.partnershipId) return;
     await desfazerParceriaFn({
       uid,
+      meuNome: cloud.preferences?.nome || usuario?.displayName || "",
       partnershipId: cloud.partnershipId,
       meuEmail: cloud.email,
     });
+  };
+
+  // Dispensar uma notificação de parceria já vista.
+  const dispensarNotifParceria = (id) => {
+    cloud.setNotificacoesParceria((atual) =>
+      (atual || []).filter((n) => n.id !== id),
+    );
   };
 
   // Estados de carga e gateamento
@@ -791,6 +800,8 @@ export function App() {
     convitesRecebidos,
     convitesEnviados,
     desfazerParceria,
+    notificacoesParceria: cloud.notificacoesParceria || [],
+    dispensarNotifParceria,
     usuario,
     sair: sairFirebase,
     ehDesktop,

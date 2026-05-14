@@ -36,6 +36,7 @@ export function DashboardScreen({ ctx }) {
     usuario,
     ehDesktop,
     convitesRecebidos = [],
+    notificacoesParceria = [],
     partnerTxs = [],
     partnerNome = '',
     partnerOrcamentos = {},
@@ -43,8 +44,8 @@ export function DashboardScreen({ ctx }) {
     partnerUid,
   } = ctx;
   const notifInfo = React.useMemo(
-    () => calcularNotificacoes(txs, recorrentes, preferences?.notifLidas || [], convitesRecebidos),
-    [txs, recorrentes, preferences?.notifLidas, convitesRecebidos],
+    () => calcularNotificacoes(txs, recorrentes, preferences?.notifLidas || [], convitesRecebidos, notificacoesParceria),
+    [txs, recorrentes, preferences?.notifLidas, convitesRecebidos, notificacoesParceria],
   );
   const totalNotif = notifInfo.naoLidas;
 
