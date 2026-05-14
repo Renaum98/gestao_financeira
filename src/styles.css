@@ -92,8 +92,28 @@ input[type="date"]::-webkit-calendar-picker-indicator { cursor: pointer; opacity
   85%           { transform: translateX(130%); opacity: 0.6; }
   92%           { transform: translateX(260%); opacity: 0; }
 }
+/* Respiração: scale super sutil + sombra "incha e relaxa" como se o card
+   estivesse vivo. Curva quase-senoidal pra simular inspirar/expirar. */
+@keyframes saldoRespira {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow:
+      0 8px 24px color-mix(in oklab, var(--primary) 22%, transparent);
+  }
+  50% {
+    transform: scale(1.012);
+    box-shadow:
+      0 14px 34px color-mix(in oklab, var(--primary) 30%, transparent);
+  }
+}
 .card-saldo {
-  animation: saldoGradiente 24s ease-in-out infinite;
+  /* Empilha duas animações no mesmo elemento: o gradiente continua se
+     movendo lentamente, enquanto a respiração modula scale + sombra. */
+  animation:
+    saldoGradiente 24s ease-in-out infinite,
+    saldoRespira   5.4s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+  transform-origin: center;
+  will-change: transform, box-shadow;
 }
 .card-saldo__bolha--a { animation: saldoBolhaA 18s ease-in-out infinite; }
 .card-saldo__bolha--b { animation: saldoBolhaB 22s ease-in-out infinite; }
