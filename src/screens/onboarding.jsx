@@ -326,7 +326,7 @@ function IlustracaoCategorias({ cor }) {
     { cor: '#FF9B6E', pct: 35, off: 0 },
     { cor: '#5DA8FF', pct: 25, off: 35 },
     { cor: '#9B7BFF', pct: 22, off: 60 },
-    { cor: cor,      pct: 18, off: 82 },
+    { cor: cor, pct: 18, off: 82 },
   ];
   const R = 38;
   const C = 2 * Math.PI * R; // ≈ 238.7

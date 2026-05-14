@@ -47,16 +47,29 @@ function Campo({ label, ...props }) {
 
 function Logo({ size = 84 }) {
   return (
-    <div style={{
-      width: size, height: size, borderRadius: size * 0.34,
-      background: 'linear-gradient(135deg, var(--primary), var(--primary-2))',
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      boxShadow: '0 16px 36px color-mix(in oklab, var(--primary) 30%, transparent)',
-      position: 'relative', overflow: 'hidden', flexShrink: 0,
-    }}>
-      <div style={{ position: 'absolute', top: -18, left: -18, width: 44, height: 44, borderRadius: '50%', background: 'rgba(255,255,255,0.18)' }} />
-      <div style={{ fontSize: size * 0.6, fontWeight: 800, color: '#fff', letterSpacing: '-0.05em', lineHeight: 1, position: 'relative' }}>F</div>
-    </div>
+    <>
+      <style>{`
+        @keyframes logoFloat {
+          0%, 100% { transform: translateY(0); box-shadow: 0 16px 36px color-mix(in oklab, var(--primary) 30%, transparent); }
+          50%      { transform: translateY(-8px); box-shadow: 0 24px 44px color-mix(in oklab, var(--primary) 26%, transparent); }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .login-logo-float { animation: none !important; transform: none !important; }
+        }
+      `}</style>
+      <div className="login-logo-float" style={{
+        width: size, height: size, borderRadius: size * 0.34,
+        background: 'linear-gradient(135deg, var(--primary), var(--primary-2))',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        boxShadow: '0 16px 36px color-mix(in oklab, var(--primary) 30%, transparent)',
+        position: 'relative', overflow: 'hidden', flexShrink: 0,
+        animation: 'logoFloat 3.6s ease-in-out infinite',
+        willChange: 'transform',
+      }}>
+        <div style={{ position: 'absolute', top: -18, left: -18, width: 44, height: 44, borderRadius: '50%', background: 'rgba(255,255,255,0.18)' }} />
+        <div style={{ fontSize: size * 0.6, fontWeight: 800, color: '#fff', letterSpacing: '-0.05em', lineHeight: 1, position: 'relative' }}>F</div>
+      </div>
+    </>
   );
 }
 
