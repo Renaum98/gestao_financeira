@@ -5,6 +5,7 @@ import {
   CATEGORIAS,
   ORDEM_CATS,
   PAGAMENTOS,
+  MESES,
   fmtBRL,
   fmtBRLCompacto,
 } from "../data.js";
@@ -54,6 +55,15 @@ export function AddExpenseModal({ ctx, params }) {
     editar && editar.parcelas ? editar.parcelas.total : 1,
   );
   const [ehRecorrente, setEhRecorrente] = React.useState(false);
+  // Campos extras quando recorrente: dia de vencimento + até qual mês/ano.
+  const _hoje = React.useMemo(() => new Date(), []);
+  const _fimDefault = React.useMemo(
+    () => new Date(_hoje.getFullYear(), _hoje.getMonth() + 12, 1),
+    [_hoje],
+  );
+  const [diaVenc, setDiaVenc] = React.useState(_hoje.getDate());
+  const [fimMes, setFimMes] = React.useState(_fimDefault.getMonth() + 1);
+  const [fimAno, setFimAno] = React.useState(_fimDefault.getFullYear());
 
   const ehEntrada = tipo === "entrada";
   const [criandoCat, setCriandoCat] = React.useState(false);
@@ -96,6 +106,16 @@ export function AddExpenseModal({ ctx, params }) {
     if (valorNum <= 0) return;
     const descFinal = descricao.trim()
       || (ehEntrada ? "Entrada" : CATEGORIAS[categoria].nome);
+    const vaiCriarRec = ehRecorrente && numParcelas === 1 && !editar;
+    // Data efetiva: quando recorrente, usa mês atual + dia de vencimento informado.
+    let dataFinal = data;
+    if (vaiCriarRec) {
+      const y = _hoje.getFullYear();
+      const m = _hoje.getMonth() + 1;
+      const ultDia = new Date(y, m, 0).getDate();
+      const diaReal = Math.min(diaVenc, ultDia);
+      dataFinal = `${y}-${String(m).padStart(2, "0")}-${String(diaReal).padStart(2, "0")}`;
+    }
     const tx = {
       id: editar ? editar.id : `tx-${Date.now()}`,
       tipo,
@@ -103,13 +123,16 @@ export function AddExpenseModal({ ctx, params }) {
       categoria: ehEntrada ? null : categoria,
       descricao: descFinal,
       pagamento: ehEntrada ? null : pagamento,
-      data,
+      data: dataFinal,
       parcelas:
         !ehEntrada && numParcelas > 1
           ? { total: numParcelas, valorTotal: valorNum }
           : null,
       // Marca para o app.jsx criar a recorrência (só faz sentido quando não é parcelado e não está editando)
-      ehRecorrente: ehRecorrente && numParcelas === 1 && !editar,
+      ehRecorrente: vaiCriarRec,
+      // Dia de vencimento e mês/ano final (yyyy-mm) — só usados se recorrente.
+      recDia: vaiCriarRec ? diaVenc : null,
+      recFim: vaiCriarRec ? `${fimAno}-${String(fimMes).padStart(2, "0")}` : null,
     };
     salvarTx(tx, !!editar);
     fechar();
@@ -606,7 +629,8 @@ export function AddExpenseModal({ ctx, params }) {
           />
         </div>
 
-        {/* Data */}
+        {/* Data — escondida quando vai criar recorrência (usa dia + fim abaixo) */}
+        {!(ehRecorrente && numParcelas === 1 && !editar) && (
         <div style={{ marginTop: 10 }}>
           <label
             style={{
@@ -633,7 +657,7 @@ export function AddExpenseModal({ ctx, params }) {
                 color: "var(--muted)",
               }}
             >
-              {!ehEntrada && ehRecorrente && numParcelas === 1 ? "Vence" : "Data"}
+              Data
             </span>
             <input
               type="date"
@@ -651,6 +675,7 @@ export function AddExpenseModal({ ctx, params }) {
             />
           </label>
         </div>
+        )}
 
         {/* Pagamento (só saída) */}
         {!ehEntrada && (
@@ -894,6 +919,102 @@ export function AddExpenseModal({ ctx, params }) {
             </div>
             <ToggleSimples ativo={ehRecorrente} onChange={setEhRecorrente} />
           </label>
+        )}
+
+        {/* Campos extras de recorrência: dia de vencimento + mês/ano final */}
+        {ehRecorrente && numParcelas === 1 && !editar && (
+          <div style={{ marginTop: 10, display: "flex", flexDirection: "column", gap: 10 }}>
+            {/* Vence todo dia */}
+            <label
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 10,
+                padding: "12px 16px",
+                borderRadius: 14,
+                background: "var(--card-2)",
+                boxShadow: "0 1px 2px rgba(0,0,0,0.06)",
+              }}
+            >
+              <Icon name="calendar" size={18} color="var(--muted)" strokeWidth={2} />
+              <span style={{ flex: 1, fontSize: 13, fontWeight: 700, color: "var(--muted)" }}>
+                Vence todo dia
+              </span>
+              <select
+                value={diaVenc}
+                onChange={(e) => setDiaVenc(parseInt(e.target.value, 10))}
+                style={{
+                  border: "none",
+                  background: "transparent",
+                  outline: "none",
+                  fontSize: 14,
+                  fontWeight: 700,
+                  color: "var(--ink)",
+                  fontFamily: "inherit",
+                  cursor: "pointer",
+                }}
+              >
+                {Array.from({ length: 31 }, (_, i) => i + 1).map((d) => (
+                  <option key={d} value={d}>{d}</option>
+                ))}
+              </select>
+            </label>
+
+            {/* Até mês/ano */}
+            <label
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 10,
+                padding: "12px 16px",
+                borderRadius: 14,
+                background: "var(--card-2)",
+                boxShadow: "0 1px 2px rgba(0,0,0,0.06)",
+              }}
+            >
+              <Icon name="history" size={18} color="var(--muted)" strokeWidth={2} />
+              <span style={{ flex: 1, fontSize: 13, fontWeight: 700, color: "var(--muted)" }}>
+                Até
+              </span>
+              <select
+                value={fimMes}
+                onChange={(e) => setFimMes(parseInt(e.target.value, 10))}
+                style={{
+                  border: "none",
+                  background: "transparent",
+                  outline: "none",
+                  fontSize: 14,
+                  fontWeight: 700,
+                  color: "var(--ink)",
+                  fontFamily: "inherit",
+                  cursor: "pointer",
+                  marginRight: 6,
+                }}
+              >
+                {MESES.map((nome, idx) => (
+                  <option key={idx} value={idx + 1}>{nome}</option>
+                ))}
+              </select>
+              <select
+                value={fimAno}
+                onChange={(e) => setFimAno(parseInt(e.target.value, 10))}
+                style={{
+                  border: "none",
+                  background: "transparent",
+                  outline: "none",
+                  fontSize: 14,
+                  fontWeight: 700,
+                  color: "var(--ink)",
+                  fontFamily: "inherit",
+                  cursor: "pointer",
+                }}
+              >
+                {Array.from({ length: 11 }, (_, i) => _hoje.getFullYear() + i).map((a) => (
+                  <option key={a} value={a}>{a}</option>
+                ))}
+              </select>
+            </label>
+          </div>
         )}
       </div>
     </div>

@@ -1038,7 +1038,7 @@ export function DashboardScreen({ ctx }) {
                     textTransform: "uppercase",
                   }}
                 >
-                  Disponível conjunto
+                  Disponível juntos
                 </span>
                 <span
                   style={{

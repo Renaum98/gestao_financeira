@@ -493,8 +493,11 @@ export function App() {
 
     const recsAtualizadas = recs.map((r) => {
       if (!r.ultimoMesGerado || r.ultimoMesGerado >= yyyymmHoje) return r;
+      // Se a recorrência tem fim definido e já passamos dele, não gera mais.
+      if (r.fim && r.ultimoMesGerado >= r.fim) return r;
       let cur = r.ultimoMesGerado;
-      while (cur < yyyymmHoje) {
+      const limite = r.fim && r.fim < yyyymmHoje ? r.fim : yyyymmHoje;
+      while (cur < limite) {
         const [y, m] = cur.split("-").map(Number);
         const proxData = new Date(y, m, 1); // primeiro dia do mês seguinte (m é 1-indexed, JS aceita)
         const ny = proxData.getFullYear();
@@ -587,7 +590,11 @@ export function App() {
   const salvarTx = (tx, editando) => {
     vibrar(14);
     const ehRec = tx.ehRecorrente;
+    const recDia = tx.recDia;
+    const recFim = tx.recFim;
     delete tx.ehRecorrente; // flag de UI, não persistir
+    delete tx.recDia;
+    delete tx.recFim;
 
     const expandir = (base) => {
       if (!base.parcelas) {
@@ -623,17 +630,24 @@ export function App() {
       const recId = `rec-${Date.now()}`;
       const [yy, mm, dd] = tx.data.split("-").map(Number);
       const inicioYYMM = `${yy}-${String(mm).padStart(2, "0")}`;
+      const diaCfg = recDia || dd;
+      // Quantidade de meses entre início e fim (inclusive). Garante pelo menos 1.
+      const totalMeses = (() => {
+        if (!recFim) return 12;
+        const [fy, fm] = recFim.split("-").map(Number);
+        const diff = (fy - yy) * 12 + (fm - mm) + 1;
+        return Math.max(1, diff);
+      })();
       tx = { ...tx, recorrenteId: recId };
 
-      const TOTAL_MESES = 12;
       const txsRec = [];
-      for (let i = 0; i < TOTAL_MESES; i++) {
+      for (let i = 0; i < totalMeses; i++) {
         const d = new Date(yy, mm - 1 + i, 1);
         const ny = d.getFullYear();
         const nm0 = d.getMonth();
         const yyyymm = `${ny}-${String(nm0 + 1).padStart(2, "0")}`;
         const ultDia = new Date(ny, nm0 + 1, 0).getDate();
-        const diaReal = Math.min(dd, ultDia);
+        const diaReal = Math.min(diaCfg, ultDia);
         const data = `${yyyymm}-${String(diaReal).padStart(2, "0")}`;
         txsRec.push(
           i === 0
@@ -661,8 +675,9 @@ export function App() {
           categoria: tx.categoria,
           pagamento: tx.pagamento,
           valor: tx.valor,
-          dia: dd,
+          dia: diaCfg,
           inicio: inicioYYMM,
+          fim: recFim || null,
           ultimoMesGerado: ultimoMes,
         },
       ]);
