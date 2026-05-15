@@ -3,7 +3,7 @@
 // As notificações são locais (não usam push remoto) — disparadas sempre que o
 // app é aberto e há itens não notificados pendentes.
 
-import { fmtBRL } from '../data.js';
+import { CATEGORIAS, fmtBRL } from '../data.js';
 
 const ENVIADAS_KEY = 'finca.notif.enviadas';
 
@@ -71,6 +71,8 @@ async function mostrarNotificacao(titulo, opcoes) {
 export async function dispararPendentes({
   proximas = [],
   terminando = [],
+  orcEstourados = [],
+  orcProximos = [],
   lidas = [],
   idsAtivos = [],
   diasJanela = 7,
@@ -98,8 +100,8 @@ export async function dispararPendentes({
     if (n > diasJanela) continue;
     const ok = await mostrarNotificacao(`💸 ${tx.descricao}`, {
       body: `${rotulo(n)} · ${fmtBRL(tx.valor)}`,
-      icon: '/icon.svg',
-      badge: '/icon.svg',
+      icon: '/icon-192.png',
+      badge: '/icon-192.png',
       tag: `vencimento-${tx.id}`,
       requireInteraction: n <= 1,
       data: { url: '/', tipo: 'vencimento', id: tx.id },
@@ -114,13 +116,47 @@ export async function dispararPendentes({
     if (enviadas.has(tx.id) || lidasSet.has(tx.id)) continue;
     const ok = await mostrarNotificacao(`✅ Parcelamento terminando`, {
       body: `${tx.descricao} — última parcela próxima (${tx.parcelas.atual}/${tx.parcelas.total})`,
-      icon: '/icon.svg',
-      badge: '/icon.svg',
+      icon: '/icon-192.png',
+      badge: '/icon-192.png',
       tag: `parcela-fim-${tx.id}`,
       data: { url: '/', tipo: 'parcela-fim', id: tx.id },
     });
     if (ok) {
       enviadas.add(tx.id);
+      disparadas += 1;
+    }
+  }
+
+  // Orçamento de categoria estourado (>100%) — vermelho.
+  for (const a of orcEstourados) {
+    if (enviadas.has(a.id) || lidasSet.has(a.id)) continue;
+    const nome = CATEGORIAS[a.catId]?.nome || 'Categoria';
+    const ok = await mostrarNotificacao(`⚠️ ${nome} estourou o orçamento`, {
+      body: `${fmtBRL(a.gasto)} de ${fmtBRL(a.orc)} (${Math.round(a.pct)}%).`,
+      icon: '/icon-192.png',
+      badge: '/icon-192.png',
+      tag: a.id,
+      data: { url: '/', tipo: 'orc-est', id: a.id },
+    });
+    if (ok) {
+      enviadas.add(a.id);
+      disparadas += 1;
+    }
+  }
+
+  // Orçamento de categoria perto do limite (≥90% e ≤100%) — aviso.
+  for (const a of orcProximos) {
+    if (enviadas.has(a.id) || lidasSet.has(a.id)) continue;
+    const nome = CATEGORIAS[a.catId]?.nome || 'Categoria';
+    const ok = await mostrarNotificacao(`🔔 ${nome} chegando ao limite`, {
+      body: `Você já usou ${Math.round(a.pct)}% do orçamento (${fmtBRL(a.gasto)} de ${fmtBRL(a.orc)}).`,
+      icon: '/icon-192.png',
+      badge: '/icon-192.png',
+      tag: a.id,
+      data: { url: '/', tipo: 'orc-prox', id: a.id },
+    });
+    if (ok) {
+      enviadas.add(a.id);
       disparadas += 1;
     }
   }

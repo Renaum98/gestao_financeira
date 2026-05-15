@@ -72,7 +72,7 @@ gestao_financeira/
 ├── .env.example                Template das variáveis Firebase
 ├── .github/workflows/deploy.yml  CI → GitHub Pages
 ├── public/
-│   └── icon.svg                Ícone do app (manifest e favicon)
+│   └── logo.png                Ícone-fonte do app (gera manifest e favicon via scripts/generate-icons.mjs)
 └── src/
     ├── main.jsx                Entry point (ReactDOM.createRoot)
     ├── app.jsx                 App raiz: auth, PIN, navegação, estado

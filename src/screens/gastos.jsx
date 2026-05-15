@@ -3,7 +3,6 @@
 import React from "react";
 import {
   CATEGORIAS,
-  MESES_CURTO,
   ORDEM_CATS,
   fmtBRL,
   totalGeral,
@@ -45,24 +44,12 @@ export function GastosScreen({ ctx }) {
 
   const total = totalGeral(txMes);
 
-  // agrupar por dia
-  const porDia = {};
-  for (const t of txMes) {
-    porDia[t.data] = porDia[t.data] || [];
-    porDia[t.data].push(t);
-  }
-  const dias = Object.keys(porDia).sort((a, b) => b.localeCompare(a));
-
-  const formatarDia = (yyyymmdd) => {
-    const d = new Date(yyyymmdd + "T12:00:00");
-    const hoje = new Date();
-    hoje.setHours(12, 0, 0, 0);
-    const diff = Math.round((hoje - d) / (1000 * 60 * 60 * 24));
-    if (diff === 0) return "Hoje";
-    if (diff === 1) return "Ontem";
-    const dn = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"][d.getDay()];
-    return `${dn}, ${d.getDate()} ${MESES_CURTO[d.getMonth()]}`;
-  };
+  // Lista única do mês, ordenada da mais recente para a mais antiga.
+  // O dia/mês continua visível por transação no próprio ItemTransacao.
+  const txOrdenadas = React.useMemo(
+    () => [...txMes].sort((a, b) => b.data.localeCompare(a.data)),
+    [txMes],
+  );
 
   const cats = ["todas", ...ORDEM_CATS.filter((c) => catsComTx.has(c))];
 
@@ -230,9 +217,10 @@ export function GastosScreen({ ctx }) {
         </div>
       </div>
 
-      {/* Lista por dia */}
+      {/* Lista única do mês — sem agrupamento por dia. A data de cada
+          transação aparece no próprio ItemTransacao (canto direito). */}
       <div style={{ padding: "16px 20px 0" }}>
-        {dias.length === 0 ? (
+        {txOrdenadas.length === 0 ? (
           <Card style={{ padding: 32, textAlign: "center" }}>
             <div
               style={{
@@ -261,117 +249,79 @@ export function GastosScreen({ ctx }) {
             </div>
           </Card>
         ) : (
-          dias.map((dia) => {
-            const tot = porDia[dia].reduce((s, t) => s + t.valor, 0);
-            return (
-              <div key={dia} style={{ marginBottom: 14 }}>
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "baseline",
-                    justifyContent: "space-between",
-                    padding: "0 4px 6px",
-                  }}
-                >
+          <Card style={{ padding: "6px 16px" }}>
+            {txOrdenadas.map((tx, i) => (
+              <div
+                key={tx.id}
+                style={{
+                  borderTop: i === 0 ? "none" : "1px solid var(--linha)",
+                  position: "relative",
+                }}
+              >
+                <ItemTransacao
+                  tx={tx}
+                  ocultar={ocultar}
+                  onClick={() => setAcaoAberta(tx.id)}
+                />
+                {acaoAberta === tx.id && (
                   <div
                     style={{
-                      fontSize: 12,
-                      fontWeight: 700,
-                      color: "var(--muted)",
-                      textTransform: "uppercase",
-                      letterSpacing: 0.4,
+                      display: "flex",
+                      gap: 8,
+                      padding: "0 0 12px",
                     }}
                   >
-                    {formatarDia(dia)}
-                  </div>
-                  <div
-                    style={{
-                      fontSize: 12,
-                      fontWeight: 700,
-                      color: "var(--muted)",
-                    }}
-                  >
-                    {fmtBRL(tot, ocultar)}
-                  </div>
-                </div>
-                <Card style={{ padding: "6px 16px" }}>
-                  {porDia[dia].map((tx, i) => (
-                    <div
-                      key={tx.id}
+                    <button
+                      onClick={() => {
+                        setAcaoAberta(null);
+                        irPara("add", { editar: tx });
+                      }}
                       style={{
-                        borderTop: i === 0 ? "none" : "1px solid var(--linha)",
-                        position: "relative",
+                        flex: 1,
+                        padding: "8px 12px",
+                        borderRadius: 12,
+                        border: "none",
+                        background: "var(--bg)",
+                        color: "var(--ink)",
+                        fontWeight: 700,
+                        fontSize: 13,
+                        cursor: "pointer",
+                        display: "inline-flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        gap: 6,
                       }}
                     >
-                      <ItemTransacao
-                        tx={tx}
-                        ocultar={ocultar}
-                        onClick={() => setAcaoAberta(tx.id)}
-                      />
-                      {acaoAberta === tx.id && (
-                        <div
-                          style={{
-                            display: "flex",
-                            gap: 8,
-                            padding: "0 0 12px",
-                          }}
-                        >
-                          <button
-                            onClick={() => {
-                              setAcaoAberta(null);
-                              irPara("add", { editar: tx });
-                            }}
-                            style={{
-                              flex: 1,
-                              padding: "8px 12px",
-                              borderRadius: 12,
-                              border: "none",
-                              background: "var(--bg)",
-                              color: "var(--ink)",
-                              fontWeight: 700,
-                              fontSize: 13,
-                              cursor: "pointer",
-                              display: "inline-flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              gap: 6,
-                            }}
-                          >
-                            <Icon name="edit" size={14} strokeWidth={2.2} />{" "}
-                            Editar
-                          </button>
-                          <button
-                            onClick={() => {
-                              setConfirmarExclusao(tx);
-                              setAcaoAberta(null);
-                            }}
-                            style={{
-                              flex: 1,
-                              padding: "8px 12px",
-                              borderRadius: 12,
-                              border: "none",
-                              background: "#FFE5EA",
-                              color: "#D63A55",
-                              fontWeight: 700,
-                              fontSize: 13,
-                              cursor: "pointer",
-                              display: "inline-flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              gap: 6,
-                            }}
-                          >
-                            <Icon name="trash" size={14} strokeWidth={2.2} />{" "}
-                            Excluir
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </Card>
+                      <Icon name="edit" size={14} strokeWidth={2.2} /> Editar
+                    </button>
+                    <button
+                      onClick={() => {
+                        setConfirmarExclusao(tx);
+                        setAcaoAberta(null);
+                      }}
+                      style={{
+                        flex: 1,
+                        padding: "8px 12px",
+                        borderRadius: 12,
+                        border: "none",
+                        background: "#FFE5EA",
+                        color: "#D63A55",
+                        fontWeight: 700,
+                        fontSize: 13,
+                        cursor: "pointer",
+                        display: "inline-flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        gap: 6,
+                      }}
+                    >
+                      <Icon name="trash" size={14} strokeWidth={2.2} /> Excluir
+                    </button>
+                  </div>
+                )}
               </div>
-            );
-          })
+            ))}
+          </Card>
         )}
       </div>
 

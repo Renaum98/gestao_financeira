@@ -1,17 +1,16 @@
-// Gera os ícones PNG do PWA a partir de public/icon-source.svg (full-bleed, sem cantos).
+// Gera os ícones PNG do PWA a partir de public/logo.png (full-bleed, sem cantos).
 // O iOS aplica sua própria máscara squircle no apple-touch-icon; por isso a arte precisa ir
 // até a borda, sem transparência e sem cantos arredondados.
 //
 // Uso: node scripts/generate-icons.mjs
 
 import sharp from 'sharp';
-import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const root = join(here, '..');
-const src = readFileSync(join(root, 'public', 'icon-source.svg'));
+const src = join(root, 'public', 'logo.png');
 
 const outputs = [
   { name: 'apple-touch-icon.png', size: 180 },
@@ -21,7 +20,7 @@ const outputs = [
 ];
 
 for (const { name, size } of outputs) {
-  await sharp(src, { density: 384 })
+  await sharp(src)
     .resize(size, size, { fit: 'cover' })
     .flatten({ background: '#6E4FF6' }) // sem transparência: evita borda branca no iOS
     .png({ compressionLevel: 9 })

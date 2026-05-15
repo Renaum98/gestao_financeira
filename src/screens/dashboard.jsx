@@ -14,10 +14,11 @@ import {
 } from "../data.js";
 import { CatChip, Icon } from "../ui/icons.jsx";
 import { Card, ItemTransacao, SeletorMes } from "../ui/common.jsx";
-import { BarraProgresso } from "../ui/charts.jsx";
 import { CardCaixinha } from "./caixinhas.jsx";
 import { calcularNotificacoes } from "./notificacoes.jsx";
 import { dispararPendentes } from "../lib/notifications.js";
+import { SimularGastoModal } from "../modals/simular-gasto.jsx";
+import { vibrar } from "../lib/haptics.js";
 
 export function DashboardScreen({ ctx }) {
   const {
@@ -44,8 +45,8 @@ export function DashboardScreen({ ctx }) {
     partnerUid,
   } = ctx;
   const notifInfo = React.useMemo(
-    () => calcularNotificacoes(txs, recorrentes, preferences?.notifLidas || [], convitesRecebidos, notificacoesParceria),
-    [txs, recorrentes, preferences?.notifLidas, convitesRecebidos, notificacoesParceria],
+    () => calcularNotificacoes(txs, recorrentes, preferences?.notifLidas || [], convitesRecebidos, notificacoesParceria, orcamentos),
+    [txs, recorrentes, preferences?.notifLidas, convitesRecebidos, notificacoesParceria, orcamentos],
   );
   const totalNotif = notifInfo.naoLidas;
 
@@ -56,6 +57,8 @@ export function DashboardScreen({ ctx }) {
     dispararPendentes({
       proximas: notifInfo.proximas,
       terminando: notifInfo.terminando,
+      orcEstourados: notifInfo.orcEstourados,
+      orcProximos: notifInfo.orcProximos,
       lidas: preferences?.notifLidas || [],
       idsAtivos: notifInfo.idsAtivos,
     });
@@ -102,7 +105,7 @@ export function DashboardScreen({ ctx }) {
 
   // No Dashboard, "Últimos gastos" mostra somente OS MEUS — txs do parceiro
   // ficam na aba de Transações (por opção de UX: o resumo aqui é pessoal).
-  const recentes = txMes.slice(0, 4);
+  const recentes = txMes.slice(0, 3);
 
   // Já precisamos das txs do parceiro pra o resumo no card de saldo abaixo.
   const parceiroDoMes = React.useMemo(
@@ -583,6 +586,9 @@ export function DashboardScreen({ ctx }) {
     proximas,
     orcCategorias,
   ]);
+
+  // Modal de simulação de gasto — discreto, abre via botão sob os insights.
+  const [simularAberto, setSimularAberto] = React.useState(false);
 
   // Rotaciona os insights a cada 10s. Se só houver 1, fica parado.
   const [insightIdx, setInsightIdx] = React.useState(0);
@@ -1159,6 +1165,33 @@ export function DashboardScreen({ ctx }) {
         </div>
       )}
 
+      {/* Botão discreto: simular um gasto e checar se cabe no orçamento */}
+      <div className={ehDesktop ? "col-span-all" : undefined} style={{ padding: "10px 20px 0" }}>
+        <button
+          onClick={() => { vibrar(); setSimularAberto(true); }}
+          style={{
+            width: "100%",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 8,
+            padding: "10px 14px",
+            borderRadius: 14,
+            border: "1px dashed color-mix(in oklab, var(--primary) 35%, transparent)",
+            background: "color-mix(in oklab, var(--primary) 6%, transparent)",
+            color: "var(--primary)",
+            fontSize: 13,
+            fontWeight: 700,
+            fontFamily: "inherit",
+            cursor: "pointer",
+            letterSpacing: "-0.005em",
+          }}
+        >
+          <Icon name="target" size={14} color="var(--primary)" strokeWidth={2.4} />
+          Simular um gasto
+        </button>
+      </div>
+
       {/* Próximas a vencer — recorrentes e parcelas dos próximos 35 dias */}
       {proximas.length > 0 && (
         <div className={ehDesktop ? "col-span-all" : undefined} style={{ padding: "16px 20px 0" }}>
@@ -1306,100 +1339,6 @@ export function DashboardScreen({ ctx }) {
         </div>
       )}
 
-      {/* Orçamento por categoria — top 3 mais consumidas */}
-      {orcCategorias.length > 0 && (
-        <div className={ehDesktop ? "col-span-all" : undefined} style={{ padding: "16px 20px 0" }}>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              padding: "0 4px 6px",
-            }}
-          >
-            <div style={{ fontSize: 15, fontWeight: 700, color: "var(--ink)" }}>
-              Orçamento por categoria
-            </div>
-            <button
-              onClick={() => irPara("orcamentos")}
-              style={{
-                background: "transparent",
-                border: "none",
-                color: "var(--primary)",
-                fontSize: 12,
-                fontWeight: 700,
-                cursor: "pointer",
-                padding: 0,
-              }}
-            >
-              Ver tudo →
-            </button>
-          </div>
-          <Card style={{ padding: "8px 16px 12px" }}>
-            {orcCategorias.map((d, i) => {
-              const corPct = d.pct > 100 ? "#D63A55" : d.pct > 80 ? "#E08A00" : "#1B9E6A";
-              return (
-                <div
-                  key={d.id}
-                  style={{
-                    padding: "10px 0",
-                    borderTop: i === 0 ? "none" : "1px solid var(--linha)",
-                  }}
-                >
-                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                    <CatChip catId={d.id} size={32} />
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div
-                        style={{
-                          fontSize: 13,
-                          fontWeight: 700,
-                          color: "var(--ink)",
-                          whiteSpace: "nowrap",
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                        }}
-                      >
-                        {d.cat.nome}
-                      </div>
-                      <div
-                        style={{
-                          fontSize: 11,
-                          color: "var(--muted)",
-                          fontWeight: 600,
-                          marginTop: 1,
-                        }}
-                      >
-                        {fmtBRLCompacto(d.gasto, ocultar)} de{" "}
-                        {fmtBRLCompacto(d.orc, ocultar)}
-                      </div>
-                    </div>
-                    <div
-                      style={{
-                        fontSize: 12,
-                        fontWeight: 800,
-                        color: corPct,
-                        minWidth: 38,
-                        textAlign: "right",
-                      }}
-                    >
-                      {d.pct.toFixed(0)}%
-                    </div>
-                  </div>
-                  <div style={{ marginTop: 8 }}>
-                    <BarraProgresso
-                      valor={Math.min(d.gasto, d.orc)}
-                      max={d.orc || 1}
-                      cor={d.pct > 100 ? "#D63A55" : d.cat.cor}
-                      altura={6}
-                    />
-                  </div>
-                </div>
-              );
-            })}
-          </Card>
-        </div>
-      )}
-
       {/* Transações recentes */}
       <div style={{ padding: "16px 20px 0" }}>
         <div
@@ -1496,6 +1435,16 @@ export function DashboardScreen({ ctx }) {
             ))}
           </div>
         </div>
+      )}
+
+      {simularAberto && (
+        <SimularGastoModal
+          restante={restante}
+          orcTotal={orcTotal}
+          mes={mes}
+          ocultar={ocultar}
+          fechar={() => setSimularAberto(false)}
+        />
       )}
     </div>
   );

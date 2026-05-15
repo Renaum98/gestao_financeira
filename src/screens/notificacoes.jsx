@@ -13,9 +13,19 @@ import {
 } from '../lib/notifications.js';
 import { aceitarConvite, recusarConvite } from '../lib/partnership.js';
 
-// Calcula as notificações a partir das transações + recorrentes.
+// Calcula as notificações a partir das transações + recorrentes + orçamentos.
 // Retorna também `naoLidas` (contagem das não lidas) para alimentar o badge.
-export function calcularNotificacoes(txs, recorrentes = [], lidas = [], convites = [], notifsParceria = []) {
+//
+// `orcamentos` é opcional — só geram alerta as categorias com valor > 0
+// definido pelo usuário (orçamento por categoria é uma medida opcional).
+export function calcularNotificacoes(
+  txs,
+  recorrentes = [],
+  lidas = [],
+  convites = [],
+  notifsParceria = [],
+  orcamentos = {},
+) {
   const hoje = new Date();
   hoje.setHours(0, 0, 0, 0);
   const lim7 = new Date(hoje);
@@ -54,11 +64,47 @@ export function calcularNotificacoes(txs, recorrentes = [], lidas = [], convites
     (r) => r.ultimoMesGerado && r.ultimoMesGerado < proximoYYMM,
   );
 
+  // ─── Alertas de orçamento por categoria (mês atual) ───────────────────
+  // Só categorias com orçamento explícito (>0) entram aqui. Calcula o gasto
+  // do mês corrente por categoria e classifica em "estourada" (>100%) ou
+  // "perto do limite" (≥90% e ≤100%). IDs por mês para não repetir alerta
+  // após virada de mês.
+  const mesAtual = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, '0')}`;
+  const gastosMesPorCat = {};
+  for (const t of txs) {
+    if (t.tipo === 'entrada') continue;
+    if (!t.data || !t.data.startsWith(mesAtual)) continue;
+    gastosMesPorCat[t.categoria] = (gastosMesPorCat[t.categoria] || 0) + t.valor;
+  }
+  const orcEstourados = [];
+  const orcProximos = [];
+  for (const [catId, orc] of Object.entries(orcamentos || {})) {
+    if (!(orc > 0)) continue;
+    const gasto = gastosMesPorCat[catId] || 0;
+    const pct = (gasto / orc) * 100;
+    if (pct > 100) {
+      orcEstourados.push({
+        id: `orc-est-${catId}-${mesAtual}`,
+        catId, gasto, orc, pct, mes: mesAtual,
+      });
+    } else if (pct >= 90) {
+      orcProximos.push({
+        id: `orc-prox-${catId}-${mesAtual}`,
+        catId, gasto, orc, pct, mes: mesAtual,
+      });
+    }
+  }
+  // Ordena: maiores % primeiro (mais urgente no topo).
+  orcEstourados.sort((a, b) => b.pct - a.pct);
+  orcProximos.sort((a, b) => b.pct - a.pct);
+
   const setLidas = new Set(lidas);
   const idsAtivos = [
     ...proximas.map((t) => t.id),
     ...terminando.map((t) => t.id),
     ...recsRevisar.map((r) => r.id),
+    ...orcEstourados.map((o) => o.id),
+    ...orcProximos.map((o) => o.id),
   ];
   // Convites pendentes e eventos de parceria sempre contam como "não lidos".
   const naoLidas =
@@ -66,25 +112,36 @@ export function calcularNotificacoes(txs, recorrentes = [], lidas = [], convites
     convites.length +
     notifsParceria.length;
 
-  return { proximas, terminando, recsRevisar, convites, naoLidas, idsAtivos };
+  return {
+    proximas,
+    terminando,
+    recsRevisar,
+    convites,
+    orcEstourados,
+    orcProximos,
+    naoLidas,
+    idsAtivos,
+  };
 }
 
 export function NotificacoesScreen({ ctx }) {
   const {
     txs, recorrentes, voltar, ocultar, irPara, preferences, setPreferences,
-    convitesRecebidos = [], usuario,
+    convitesRecebidos = [], usuario, orcamentos = {},
     notificacoesParceria = [], dispensarNotifParceria,
   } = ctx;
   const lidas = preferences?.notifLidas || [];
-  const { proximas, terminando, recsRevisar, idsAtivos } = React.useMemo(
-    () => calcularNotificacoes(txs, recorrentes, lidas, convitesRecebidos, notificacoesParceria),
-    [txs, recorrentes, lidas, convitesRecebidos, notificacoesParceria],
+  const { proximas, terminando, recsRevisar, orcEstourados, orcProximos, idsAtivos } = React.useMemo(
+    () => calcularNotificacoes(txs, recorrentes, lidas, convitesRecebidos, notificacoesParceria, orcamentos),
+    [txs, recorrentes, lidas, convitesRecebidos, notificacoesParceria, orcamentos],
   );
 
   const total =
     proximas.length +
     terminando.length +
     recsRevisar.length +
+    orcEstourados.length +
+    orcProximos.length +
     convitesRecebidos.length +
     notificacoesParceria.length;
   const setLidas = React.useMemo(() => new Set(lidas), [lidas]);
@@ -104,15 +161,15 @@ export function NotificacoesScreen({ ctx }) {
   // Sempre que entra na tela, dispara o que estiver pendente (se já tem permissão).
   React.useEffect(() => {
     if (permissao === 'granted') {
-      dispararPendentes({ proximas, terminando, lidas, idsAtivos });
+      dispararPendentes({ proximas, terminando, orcEstourados, orcProximos, lidas, idsAtivos });
     }
-  }, [permissao, proximas, terminando, lidas, idsAtivos]);
+  }, [permissao, proximas, terminando, orcEstourados, orcProximos, lidas, idsAtivos]);
 
   const ativarNotificacoes = async () => {
     const r = await pedirPermissaoNotificacoes();
     setPermissao(r);
     if (r === 'granted') {
-      dispararPendentes({ proximas, terminando, lidas, idsAtivos });
+      dispararPendentes({ proximas, terminando, orcEstourados, orcProximos, lidas, idsAtivos });
     }
   };
 
@@ -268,6 +325,99 @@ export function NotificacoesScreen({ ctx }) {
                 primeiro={i === 0}
               />
             ))}
+          </Card>
+        </Secao>
+      )}
+
+      {(orcEstourados.length > 0 || orcProximos.length > 0) && (
+        <Secao
+          titulo="Orçamento por categoria"
+          subtitulo="Alertas das categorias com orçamento definido"
+          acao={
+            <button
+              onClick={() => irPara('orcamentos')}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                color: 'var(--primary)',
+                fontSize: 12,
+                fontWeight: 700,
+                cursor: 'pointer',
+                padding: 0,
+                fontFamily: 'inherit',
+              }}
+            >
+              Ajustar →
+            </button>
+          }
+        >
+          <Card style={{ padding: '4px 16px' }}>
+            {[...orcEstourados, ...orcProximos].map((a, i) => {
+              const cat = CATEGORIAS[a.catId] || CATEGORIAS.outros;
+              const estourou = a.pct > 100;
+              const cor = estourou ? '#D63A55' : '#E08A00';
+              const lida = ehLida(a.id);
+              return (
+                <div
+                  key={a.id}
+                  onClick={() => marcarLida(a.id)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 12,
+                    padding: '14px 0',
+                    borderTop: i === 0 ? 'none' : '1px solid var(--linha)',
+                    cursor: lida ? 'default' : 'pointer',
+                    opacity: lida ? 0.5 : 1,
+                    transition: 'opacity .2s',
+                  }}
+                >
+                  <CatChip catId={a.catId} size={42} />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div
+                      style={{
+                        fontSize: 14,
+                        fontWeight: 700,
+                        color: 'var(--ink)',
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                      }}
+                    >
+                      {estourou
+                        ? `${cat.nome} estourou o orçamento`
+                        : `${cat.nome} chegando ao limite`}
+                    </div>
+                    <div
+                      style={{
+                        fontSize: 11,
+                        color: cor,
+                        fontWeight: 600,
+                        marginTop: 2,
+                      }}
+                    >
+                      {fmtBRL(a.gasto, ocultar)} de {fmtBRL(a.orc, ocultar)}
+                      <span style={{ opacity: 0.5, padding: '0 4px' }}>·</span>
+                      {Math.round(a.pct)}%
+                    </div>
+                  </div>
+                  <div
+                    style={{
+                      fontSize: 11,
+                      fontWeight: 800,
+                      color: cor,
+                      background: `color-mix(in oklab, ${cor} 14%, transparent)`,
+                      padding: '4px 8px',
+                      borderRadius: 8,
+                      flexShrink: 0,
+                      letterSpacing: '-0.01em',
+                    }}
+                  >
+                    {Math.round(a.pct)}%
+                  </div>
+                </div>
+              );
+            })}
           </Card>
         </Secao>
       )}
