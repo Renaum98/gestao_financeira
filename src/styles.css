@@ -95,6 +95,26 @@ input[type="date"]::-webkit-calendar-picker-indicator { cursor: pointer; opacity
    ao atualizar valores). Mantemos só o visual estático: gradiente, bolhas
    decorativas e o brilho diagonal ficam parados. */
 
+/* Crossfade dos insights rotativos no card "Insights do mês".
+   Cada insight novo entra com fade + leve subida, criando uma transição
+   suave a cada 10s sem deslocar o layout (o container tem minHeight). */
+@keyframes insightFade {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.insight-fade {
+  animation: insightFade .55s cubic-bezier(0.22, 1, 0.36, 1);
+}
+@media (prefers-reduced-motion: reduce) {
+  .insight-fade { animation: none; }
+}
+
 /* Transição de página ao trocar de aba */
 @keyframes pageIn {
   from { opacity: 0; transform: translateY(8px) scale(0.992); }

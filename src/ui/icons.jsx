@@ -2,10 +2,22 @@
 
 import { CATEGORIAS } from '../data.js';
 
-export function CatChip({ catId, size = 40, style = {} }) {
+export function CatChip({ catId, size = 40, style = {}, raised = false }) {
   const cat = CATEGORIAS[catId];
   if (!cat) return null;
   const fz = Math.round(size * 0.42);
+  // Sombras do "logo" 3D — combinam highlight no topo (luz) com sombra
+  // interna no fundo + drop-shadow externa pra parecer extrudado da plaquinha.
+  const sombraLogo = raised
+    ? [
+        // Drop-shadow colorida (a própria cor da categoria, escura) → "ancora" no fundo
+        `0 ${Math.max(2, size * 0.06)}px ${Math.max(4, size * 0.12)}px rgba(20,16,24,0.22)`,
+        // Brilho no topo (luz cenital)
+        `inset 0 ${Math.max(1, size * 0.04)}px 0 rgba(255,255,255,0.55)`,
+        // Sombra interna no fundo (volume)
+        `inset 0 -${Math.max(1, size * 0.06)}px ${Math.max(2, size * 0.10)}px rgba(0,0,0,0.30)`,
+      ].join(', ')
+    : undefined;
   return (
     <div style={{
       width: size, height: size, borderRadius: size * 0.32,
@@ -16,10 +28,14 @@ export function CatChip({ catId, size = 40, style = {} }) {
     }}>
       <div style={{
         width: size * 0.5, height: size * 0.5, borderRadius: '50%',
-        background: cat.cor,
+        background: raised
+          ? `radial-gradient(circle at 35% 28%, color-mix(in oklab, ${cat.cor} 60%, white) 0%, ${cat.cor} 55%, color-mix(in oklab, ${cat.cor} 75%, black) 100%)`
+          : cat.cor,
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         color: '#fff', fontWeight: 800, fontSize: fz, lineHeight: 1,
         letterSpacing: '-0.02em',
+        boxShadow: sombraLogo,
+        textShadow: raised ? '0 1px 1px rgba(0,0,0,0.25)' : undefined,
       }}>{(cat.nome[0] || '?').toUpperCase()}</div>
     </div>
   );

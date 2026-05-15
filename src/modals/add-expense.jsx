@@ -392,7 +392,7 @@ export function AddExpenseModal({ ctx, params }) {
                 display: "flex",
                 flexDirection: "column",
                 alignItems: "center",
-                gap: 4,
+                gap: 6,
                 padding: "8px 10px 6px",
                 borderRadius: 14,
                 border: "none",
@@ -400,6 +400,10 @@ export function AddExpenseModal({ ctx, params }) {
                 cursor: "pointer",
                 minWidth: 72,
                 flexShrink: 0,
+                WebkitTouchCallout: "none",
+                WebkitUserSelect: "none",
+                userSelect: "none",
+                touchAction: "manipulation",
               }}
             >
               <div
@@ -411,6 +415,9 @@ export function AddExpenseModal({ ctx, params }) {
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
+                  background: "var(--card)",
+                  boxShadow:
+                    "0 2px 5px rgba(20,16,24,0.10), inset 0 1px 0 rgba(255,255,255,0.6), inset 0 -2px 3px rgba(0,0,0,0.08)",
                 }}
               >
                 <Icon name="plus" size={16} color="var(--muted)" strokeWidth={2.4} />
@@ -626,7 +633,7 @@ export function AddExpenseModal({ ctx, params }) {
                 color: "var(--muted)",
               }}
             >
-              Data
+              {!ehEntrada && ehRecorrente && numParcelas === 1 ? "Vence" : "Data"}
             </span>
             <input
               type="date"
@@ -1022,7 +1029,7 @@ function CategoriaBtn({
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
-        gap: 4,
+        gap: 6,
         padding: "8px 10px 6px",
         borderRadius: 14,
         border: "none",
@@ -1033,14 +1040,13 @@ function CategoriaBtn({
         cursor: "pointer",
         minWidth: 72,
         flexShrink: 0,
-        // Sem callout/seleção no long-press — evita popup do iOS atrapalhar.
         WebkitTouchCallout: "none",
         WebkitUserSelect: "none",
         userSelect: "none",
         touchAction: "manipulation",
       }}
     >
-      <CatChip catId={catId} size={32} />
+      <CatChip catId={catId} size={32} raised />
       <span
         style={{
           fontSize: 10,
