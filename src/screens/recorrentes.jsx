@@ -5,6 +5,7 @@ import { CATEGORIAS, fmtBRL, MESES_CURTO } from '../data.js';
 import { CatChip, Icon } from '../ui/icons.jsx';
 import { Card, TopBar } from '../ui/common.jsx';
 import { ConfirmModal } from '../ui/confirm-modal.jsx';
+import { COR_NEG } from '../lib/colors.js';
 
 function rotuloDataDeRec(yyyymm) {
   const [a, m] = yyyymm.split('-');
@@ -65,7 +66,7 @@ export function RecorrentesScreen({ ctx }) {
                     </div>
                     <button onClick={() => setConfirmar(r)} style={{
                       background: 'transparent', border: 'none', cursor: 'pointer',
-                      padding: '4px 0 0', color: '#D63A55', fontSize: 11, fontWeight: 700,
+                      padding: '4px 0 0', color: COR_NEG, fontSize: 11, fontWeight: 700,
                       fontFamily: 'inherit',
                     }}>Cancelar</button>
                   </div>

@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { Icon } from '../ui/icons.jsx';
+import { COR_AVISO } from '../lib/colors.js';
 
 export function Onboarding({ onFim }) {
   const [slide, setSlide] = React.useState(0);
@@ -36,7 +37,7 @@ export function Onboarding({ onFim }) {
     },
     {
       id: 'caixinhas',
-      cor1: '#FCE7A8', cor2: '#E08A00',
+      cor1: '#FCE7A8', cor2: COR_AVISO,
       titulo: 'Guarde dinheiro\ncom propósito',
       subtitulo: 'Crie caixinhas para metas.',
       Ilustracao: IlustracaoCaixinhas,
@@ -422,7 +423,7 @@ function IlustracaoCaixinhas({ cor }) {
         <div key={i} style={{
           position: 'absolute', top: 0, left: 64, width: 24, height: 24,
           borderRadius: '50%',
-          background: 'linear-gradient(135deg, #FFE9A8, #E08A00)',
+          background: `linear-gradient(135deg, #FFE9A8, ${COR_AVISO})`,
           boxShadow: '0 4px 10px rgba(224,138,0,0.4), inset 0 -2px 0 rgba(0,0,0,0.12)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           fontWeight: 800, fontSize: 12, color: '#7a4a00',

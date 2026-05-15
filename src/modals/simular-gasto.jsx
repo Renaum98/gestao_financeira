@@ -6,11 +6,9 @@
 import React from "react";
 import { fmtBRL, MESES_CURTO } from "../data.js";
 import { Icon } from "../ui/icons.jsx";
+import { ModalOverlay } from "../ui/modal-base.jsx";
 import { vibrar } from "../lib/haptics.js";
-
-const COR_POS = "#1B9E6A";
-const COR_NEG = "#D63A55";
-const COR_AVISO = "#E08A00";
+import { COR_POS, COR_NEG, COR_AVISO } from "../lib/colors.js";
 
 export function SimularGastoModal({
   restante = 0,
@@ -172,40 +170,7 @@ export function SimularGastoModal({
   }, [valorNum, n, restante, orcTotal, mes, valorParcela]);
 
   return (
-    <div
-      onClick={fechar}
-      style={{
-        position: "fixed",
-        inset: 0,
-        height: "100dvh",
-        zIndex: 9999,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: "20px",
-        background: "rgba(20, 16, 24, 0.45)",
-        backdropFilter: "blur(12px) saturate(140%)",
-        WebkitBackdropFilter: "blur(12px) saturate(140%)",
-        animation: "fadeIn .28s ease-out",
-      }}
-    >
-      <div
-        onClick={(e) => e.stopPropagation()}
-        role="dialog"
-        aria-modal="true"
-        style={{
-          width: "100%",
-          maxWidth: 420,
-          maxHeight: "calc(100dvh - 40px)",
-          overflowY: "auto",
-          background: "var(--bg)",
-          borderRadius: 28,
-          padding: "16px 20px 22px",
-          boxShadow:
-            "0 24px 60px rgba(0,0,0,0.28), 0 4px 12px rgba(0,0,0,0.08)",
-          animation: "scaleIn .34s cubic-bezier(0.22, 1, 0.36, 1)",
-        }}
-      >
+    <ModalOverlay onClose={fechar} maxWidth={420}>
         {/* Header */}
         <div
           style={{
@@ -500,7 +465,6 @@ export function SimularGastoModal({
             </span>
           </div>
         )}
-      </div>
-    </div>
+    </ModalOverlay>
   );
 }

@@ -8,6 +8,7 @@ import {
   totalGeral,
   txDoMes,
 } from "../data.js";
+import { COR_POS, COR_NEG, COR_AVISO } from "../lib/colors.js";
 import { CatChip } from "../ui/icons.jsx";
 import { Card, ItemTransacao, TopBar } from "../ui/common.jsx";
 import { BarraProgresso } from "../ui/charts.jsx";
@@ -76,7 +77,7 @@ export function CategoriaScreen({ ctx, params }) {
                 <span
                   style={{
                     color:
-                      pct > 100 ? "#D63A55" : pct > 80 ? "#E08A00" : "#1B9E6A",
+                      pct > 100 ? COR_NEG : pct > 80 ? COR_AVISO : COR_POS,
                     fontWeight: 800,
                   }}
                 >
@@ -86,14 +87,14 @@ export function CategoriaScreen({ ctx, params }) {
               <BarraProgresso
                 valor={Math.min(total, orc)}
                 max={orc}
-                cor={pct > 100 ? "#D63A55" : cat.cor}
+                cor={pct > 100 ? COR_NEG : cat.cor}
                 altura={10}
               />
               {pct > 100 && (
                 <div
                   style={{
                     fontSize: 11,
-                    color: "#D63A55",
+                    color: COR_NEG,
                     fontWeight: 700,
                     marginTop: 6,
                   }}

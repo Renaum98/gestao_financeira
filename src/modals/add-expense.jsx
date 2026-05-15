@@ -10,8 +10,10 @@ import {
   fmtBRLCompacto,
 } from "../data.js";
 import { CatChip, Icon, iconePagamento } from "../ui/icons.jsx";
+import { ModalOverlay } from "../ui/modal-base.jsx";
 import { vibrar } from "../lib/haptics.js";
 import { ConfirmModal } from "../ui/confirm-modal.jsx";
+import { COR_POS } from "../lib/colors.js";
 
 function hojeISO() {
   const d = new Date();
@@ -148,40 +150,12 @@ export function AddExpenseModal({ ctx, params }) {
 
   return (
     <>
-    <div
-      onClick={fechar}
-      style={{
-        position: "fixed",
-        inset: 0,
-        height: "100dvh",
-        zIndex: 9999,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: "20px",
-        background: "rgba(20, 16, 24, 0.45)",
-        backdropFilter: "blur(12px) saturate(140%)",
-        WebkitBackdropFilter: "blur(12px) saturate(140%)",
-        animation: "fadeIn .28s ease-out",
-      }}
+    <ModalOverlay
+      onClose={fechar}
+      maxWidth={440}
+      padding="16px 20px 24px"
+      dialogStyle={{ overflowX: "hidden", transformOrigin: "center" }}
     >
-      <div
-        onClick={(e) => e.stopPropagation()}
-        style={{
-          width: "100%",
-          maxWidth: 440,
-          maxHeight: "calc(100dvh - 40px)",
-          overflowY: "auto",
-          overflowX: "hidden",
-          background: "var(--bg)",
-          borderRadius: 28,
-          padding: "16px 20px 24px",
-          boxShadow:
-            "0 24px 60px rgba(0,0,0,0.28), 0 4px 12px rgba(0,0,0,0.08)",
-          animation: "scaleIn .34s cubic-bezier(0.22, 1, 0.36, 1)",
-          transformOrigin: "center",
-        }}
-      >
         <div
           style={{
             display: "flex",
@@ -218,7 +192,7 @@ export function AddExpenseModal({ ctx, params }) {
             disabled={valorNum <= 0}
             style={{
               background: valorNum > 0
-                ? (ehEntrada ? "#1B9E6A" : "var(--primary)")
+                ? (ehEntrada ? COR_POS : "var(--primary)")
                 : "var(--linha)",
               color: valorNum > 0 ? "#fff" : "var(--muted)",
               border: "none",
@@ -259,7 +233,7 @@ export function AddExpenseModal({ ctx, params }) {
             style={{
               fontSize: 48,
               fontWeight: 800,
-              color: ehEntrada ? "#1B9E6A" : "var(--ink)",
+              color: ehEntrada ? COR_POS : "var(--ink)",
               letterSpacing: "-0.04em",
               marginTop: 4,
               fontVariantNumeric: "tabular-nums",
@@ -268,7 +242,7 @@ export function AddExpenseModal({ ctx, params }) {
             <span
               style={{
                 fontSize: 24,
-                color: ehEntrada ? "#1B9E6A" : "var(--muted)",
+                color: ehEntrada ? COR_POS : "var(--muted)",
                 marginRight: 6,
                 verticalAlign: "top",
                 opacity: ehEntrada ? 0.9 : 1,
@@ -326,7 +300,7 @@ export function AddExpenseModal({ ctx, params }) {
           >
             {[
               { id: "saida", label: "Saída", icon: "arrow-right", bgSel: "var(--card)", textoSel: "var(--ink)" },
-              { id: "entrada", label: "Entrada", icon: "arrow-left", bgSel: "#1B9E6A", textoSel: "#fff" },
+              { id: "entrada", label: "Entrada", icon: "arrow-left", bgSel: COR_POS, textoSel: "#fff" },
             ].map((opt) => {
               const sel = tipo === opt.id;
               const txtColor = sel ? opt.textoSel : "var(--muted)";
@@ -1016,8 +990,7 @@ export function AddExpenseModal({ ctx, params }) {
             </label>
           </div>
         )}
-      </div>
-    </div>
+    </ModalOverlay>
     {excluirCat && (
       <ConfirmModal
         titulo={`Excluir "${excluirCat.nome}"?`}

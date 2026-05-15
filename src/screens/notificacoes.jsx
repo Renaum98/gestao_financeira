@@ -12,6 +12,7 @@ import {
   dispararPendentes,
 } from '../lib/notifications.js';
 import { aceitarConvite, recusarConvite } from '../lib/partnership.js';
+import { COR_POS, COR_NEG, COR_AVISO } from '../lib/colors.js';
 
 // Calcula as notificações a partir das transações + recorrentes + orçamentos.
 // Retorna também `naoLidas` (contagem das não lidas) para alimentar o badge.
@@ -355,67 +356,44 @@ export function NotificacoesScreen({ ctx }) {
             {[...orcEstourados, ...orcProximos].map((a, i) => {
               const cat = CATEGORIAS[a.catId] || CATEGORIAS.outros;
               const estourou = a.pct > 100;
-              const cor = estourou ? '#D63A55' : '#E08A00';
-              const lida = ehLida(a.id);
+              const cor = estourou ? COR_NEG : COR_AVISO;
               return (
-                <div
+                <NotifItem
                   key={a.id}
+                  primeiro={i === 0}
+                  lida={ehLida(a.id)}
                   onClick={() => marcarLida(a.id)}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 12,
-                    padding: '14px 0',
-                    borderTop: i === 0 ? 'none' : '1px solid var(--linha)',
-                    cursor: lida ? 'default' : 'pointer',
-                    opacity: lida ? 0.5 : 1,
-                    transition: 'opacity .2s',
-                  }}
-                >
-                  <CatChip catId={a.catId} size={42} />
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div
-                      style={{
-                        fontSize: 14,
-                        fontWeight: 700,
-                        color: 'var(--ink)',
-                        whiteSpace: 'nowrap',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                      }}
-                    >
-                      {estourou
-                        ? `${cat.nome} estourou o orçamento`
-                        : `${cat.nome} chegando ao limite`}
-                    </div>
-                    <div
-                      style={{
-                        fontSize: 11,
-                        color: cor,
-                        fontWeight: 600,
-                        marginTop: 2,
-                      }}
-                    >
+                  leading={<CatChip catId={a.catId} size={42} />}
+                  titulo={
+                    estourou
+                      ? `${cat.nome} estourou o orçamento`
+                      : `${cat.nome} chegando ao limite`
+                  }
+                  subtituloCor={cor}
+                  subtitulo={
+                    <>
                       {fmtBRL(a.gasto, ocultar)} de {fmtBRL(a.orc, ocultar)}
                       <span style={{ opacity: 0.5, padding: '0 4px' }}>·</span>
                       {Math.round(a.pct)}%
+                    </>
+                  }
+                  trailing={
+                    <div
+                      style={{
+                        fontSize: 11,
+                        fontWeight: 800,
+                        color: cor,
+                        background: `color-mix(in oklab, ${cor} 14%, transparent)`,
+                        padding: '4px 8px',
+                        borderRadius: 8,
+                        flexShrink: 0,
+                        letterSpacing: '-0.01em',
+                      }}
+                    >
+                      {Math.round(a.pct)}%
                     </div>
-                  </div>
-                  <div
-                    style={{
-                      fontSize: 11,
-                      fontWeight: 800,
-                      color: cor,
-                      background: `color-mix(in oklab, ${cor} 14%, transparent)`,
-                      padding: '4px 8px',
-                      borderRadius: 8,
-                      flexShrink: 0,
-                      letterSpacing: '-0.01em',
-                    }}
-                  >
-                    {Math.round(a.pct)}%
-                  </div>
-                </div>
+                  }
+                />
               );
             })}
           </Card>
@@ -429,102 +407,76 @@ export function NotificacoesScreen({ ctx }) {
               const [, mm, dd] = tx.data.split('-').map(Number);
               const n = diasAte(tx.data);
               const urgente = n <= 3 && !ehLida(tx.id);
-              const lida = ehLida(tx.id);
               return (
-                <div
+                <NotifItem
                   key={tx.id}
+                  primeiro={i === 0}
+                  lida={ehLida(tx.id)}
                   onClick={() => marcarLida(tx.id)}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 12,
-                    padding: '14px 0',
-                    borderTop: i === 0 ? 'none' : '1px solid var(--linha)',
-                    cursor: lida ? 'default' : 'pointer',
-                    opacity: lida ? 0.5 : 1,
-                    transition: 'opacity .2s',
-                  }}
-                >
-                  <div
-                    style={{
-                      width: 44,
-                      height: 44,
-                      borderRadius: 14,
-                      background: urgente
-                        ? 'color-mix(in oklab, #D63A55 12%, transparent)'
-                        : 'var(--surface-sunken)',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      flexShrink: 0,
-                    }}
-                  >
+                  leading={
                     <div
                       style={{
-                        fontSize: 16,
-                        fontWeight: 800,
-                        color: urgente ? '#D63A55' : 'var(--ink)',
-                        lineHeight: 1,
-                        letterSpacing: '-0.02em',
-                      }}
-                    >
-                      {dd}
-                    </div>
-                    <div
-                      style={{
-                        fontSize: 9,
-                        fontWeight: 700,
-                        color: urgente ? '#D63A55' : 'var(--muted)',
-                        marginTop: 2,
-                        textTransform: 'uppercase',
-                      }}
-                    >
-                      {MESES_CURTO[mm - 1]}
-                    </div>
-                  </div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div
-                      style={{
-                        fontSize: 14,
-                        fontWeight: 700,
-                        color: 'var(--ink)',
-                        whiteSpace: 'nowrap',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                      }}
-                    >
-                      {tx.descricao}
-                    </div>
-                    <div
-                      style={{
-                        fontSize: 11,
-                        color: urgente ? '#D63A55' : 'var(--muted)',
-                        fontWeight: 600,
-                        marginTop: 2,
+                        width: 44,
+                        height: 44,
+                        borderRadius: 14,
+                        background: urgente
+                          ? `color-mix(in oklab, ${COR_NEG} 12%, transparent)`
+                          : 'var(--surface-sunken)',
                         display: 'flex',
+                        flexDirection: 'column',
                         alignItems: 'center',
-                        gap: 6,
+                        justifyContent: 'center',
+                        flexShrink: 0,
                       }}
                     >
+                      <div
+                        style={{
+                          fontSize: 16,
+                          fontWeight: 800,
+                          color: urgente ? COR_NEG : 'var(--ink)',
+                          lineHeight: 1,
+                          letterSpacing: '-0.02em',
+                        }}
+                      >
+                        {dd}
+                      </div>
+                      <div
+                        style={{
+                          fontSize: 9,
+                          fontWeight: 700,
+                          color: urgente ? COR_NEG : 'var(--muted)',
+                          marginTop: 2,
+                          textTransform: 'uppercase',
+                        }}
+                      >
+                        {MESES_CURTO[mm - 1]}
+                      </div>
+                    </div>
+                  }
+                  titulo={tx.descricao}
+                  subtituloCor={urgente ? COR_NEG : undefined}
+                  subtitulo={
+                    <>
                       {rotuloPrazo(n)}
                       <span style={{ opacity: 0.5 }}>·</span>
                       {tx.parcelas
                         ? `Parcela ${tx.parcelas.atual}/${tx.parcelas.total}`
                         : 'Mensal'}
+                    </>
+                  }
+                  trailing={
+                    <div
+                      style={{
+                        fontSize: 14,
+                        fontWeight: 800,
+                        color: 'var(--ink)',
+                        letterSpacing: '-0.01em',
+                      }}
+                    >
+                      {fmtBRL(tx.valor, ocultar)}
                     </div>
-                  </div>
-                  <div
-                    style={{
-                      fontSize: 14,
-                      fontWeight: 800,
-                      color: 'var(--ink)',
-                      letterSpacing: '-0.01em',
-                    }}
-                  >
-                    {fmtBRL(tx.valor, ocultar)}
-                  </div>
-                </div>
+                  }
+                />
               );
             })}
           </Card>
@@ -539,63 +491,37 @@ export function NotificacoesScreen({ ctx }) {
           <Card style={{ padding: '4px 16px' }}>
             {terminando.map((tx, i) => {
               const n = diasAte(tx.data);
-              const lida = ehLida(tx.id);
               return (
-                <div
+                <NotifItem
                   key={tx.id}
+                  primeiro={i === 0}
+                  lida={ehLida(tx.id)}
                   onClick={() => marcarLida(tx.id)}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 12,
-                    padding: '14px 0',
-                    borderTop: i === 0 ? 'none' : '1px solid var(--linha)',
-                    cursor: lida ? 'default' : 'pointer',
-                    opacity: lida ? 0.5 : 1,
-                    transition: 'opacity .2s',
-                  }}
-                >
-                  <CatChip catId={tx.categoria} size={42} />
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div
-                      style={{
-                        fontSize: 14,
-                        fontWeight: 700,
-                        color: 'var(--ink)',
-                        whiteSpace: 'nowrap',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                      }}
-                    >
-                      {tx.descricao}
-                    </div>
+                  leading={<CatChip catId={tx.categoria} size={42} />}
+                  titulo={tx.descricao}
+                  subtitulo={
+                    <>
+                      Última parcela {rotuloPrazo(n).toLowerCase()} ·{' '}
+                      {tx.parcelas.total}× {fmtBRL(tx.parcelas.valorTotal, ocultar)}
+                    </>
+                  }
+                  trailing={
                     <div
                       style={{
                         fontSize: 11,
-                        color: 'var(--muted)',
-                        fontWeight: 600,
-                        marginTop: 2,
+                        fontWeight: 800,
+                        color: COR_POS,
+                        background: `color-mix(in oklab, ${COR_POS} 14%, transparent)`,
+                        padding: '4px 8px',
+                        borderRadius: 8,
+                        letterSpacing: '-0.01em',
+                        flexShrink: 0,
                       }}
                     >
-                      Última parcela {rotuloPrazo(n).toLowerCase()} ·{' '}
-                      {tx.parcelas.total}× {fmtBRL(tx.parcelas.valorTotal, ocultar)}
+                      {tx.parcelas.atual}/{tx.parcelas.total}
                     </div>
-                  </div>
-                  <div
-                    style={{
-                      fontSize: 11,
-                      fontWeight: 800,
-                      color: '#1B9E6A',
-                      background: 'color-mix(in oklab, #1B9E6A 14%, transparent)',
-                      padding: '4px 8px',
-                      borderRadius: 8,
-                      letterSpacing: '-0.01em',
-                      flexShrink: 0,
-                    }}
-                  >
-                    {tx.parcelas.atual}/{tx.parcelas.total}
-                  </div>
-                </div>
+                  }
+                />
               );
             })}
           </Card>
@@ -630,58 +556,28 @@ export function NotificacoesScreen({ ctx }) {
               const [ay, am] = (r.ultimoMesGerado || '').split('-');
               const ultimo =
                 ay && am ? `${MESES_CURTO[parseInt(am, 10) - 1]}/${ay.slice(2)}` : '—';
-              const lida = ehLida(r.id);
               return (
-                <div
+                <NotifItem
                   key={r.id}
+                  primeiro={i === 0}
+                  lida={ehLida(r.id)}
                   onClick={() => marcarLida(r.id)}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 12,
-                    padding: '14px 0',
-                    borderTop: i === 0 ? 'none' : '1px solid var(--linha)',
-                    cursor: lida ? 'default' : 'pointer',
-                    opacity: lida ? 0.5 : 1,
-                    transition: 'opacity .2s',
-                  }}
-                >
-                  <CatChip catId={r.categoria} size={42} />
-                  <div style={{ flex: 1, minWidth: 0 }}>
+                  leading={<CatChip catId={r.categoria} size={42} />}
+                  titulo={r.descricao}
+                  subtitulo={`${cat.nome} · última cobrança em ${ultimo}`}
+                  trailing={
                     <div
                       style={{
                         fontSize: 14,
-                        fontWeight: 700,
+                        fontWeight: 800,
                         color: 'var(--ink)',
-                        whiteSpace: 'nowrap',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
+                        letterSpacing: '-0.01em',
                       }}
                     >
-                      {r.descricao}
+                      {fmtBRL(r.valor, ocultar)}
                     </div>
-                    <div
-                      style={{
-                        fontSize: 11,
-                        color: 'var(--muted)',
-                        fontWeight: 600,
-                        marginTop: 2,
-                      }}
-                    >
-                      {cat.nome} · última cobrança em {ultimo}
-                    </div>
-                  </div>
-                  <div
-                    style={{
-                      fontSize: 14,
-                      fontWeight: 800,
-                      color: 'var(--ink)',
-                      letterSpacing: '-0.01em',
-                    }}
-                  >
-                    {fmtBRL(r.valor, ocultar)}
-                  </div>
-                </div>
+                  }
+                />
               );
             })}
           </Card>
@@ -696,7 +592,7 @@ function configNotif(notif) {
   switch (notif.tipo) {
     case 'parceria-aceita':
       return {
-        cor: '#1B9E6A',
+        cor: COR_POS,
         icone: 'check',
         titulo: (
           <>
@@ -718,7 +614,7 @@ function configNotif(notif) {
       };
     case 'caixinha-deposito':
       return {
-        cor: '#1B9E6A',
+        cor: COR_POS,
         icone: 'plus',
         titulo: (
           <>
@@ -732,7 +628,7 @@ function configNotif(notif) {
     case 'parceria-desfeita':
     default:
       return {
-        cor: '#D63A55',
+        cor: COR_NEG,
         icone: 'close',
         titulo: (
           <>
@@ -902,7 +798,7 @@ function ConviteItem({ convite, meuUid, meuNome, meuEmail, primeiro }) {
         </div>
       </div>
       {erro && (
-        <div style={{ fontSize: 12, fontWeight: 700, color: '#D63A55', marginTop: 8 }}>
+        <div style={{ fontSize: 12, fontWeight: 700, color: COR_NEG, marginTop: 8 }}>
           {erro}
         </div>
       )}
@@ -913,7 +809,7 @@ function ConviteItem({ convite, meuUid, meuNome, meuEmail, primeiro }) {
           style={{
             flex: 1, padding: '9px 12px', borderRadius: 12,
             border: '1.5px solid var(--linha)', background: 'var(--card)',
-            color: '#D63A55', fontSize: 13, fontWeight: 800, fontFamily: 'inherit',
+            color: COR_NEG, fontSize: 13, fontWeight: 800, fontFamily: 'inherit',
             cursor: ocupado ? 'default' : 'pointer',
             opacity: acao === 'recusando' ? 0.6 : 1,
           }}
@@ -931,6 +827,69 @@ function ConviteItem({ convite, meuUid, meuNome, meuEmail, primeiro }) {
           }}
         >{acao === 'aceitando' ? 'Aceitando…' : 'Aceitar'}</button>
       </div>
+    </div>
+  );
+}
+
+// Item de notificação genérico: 3 colunas (leading | titulo+subtitulo | trailing).
+// Padroniza padding, divisor entre linhas e estado de "lida" (opacidade reduzida).
+// Usado pelas 4 listas estáticas (orçamento, próximas, terminando, recsRevisar);
+// convites e eventos de parceria têm UI dedicada com botões.
+function NotifItem({
+  leading,
+  titulo,
+  subtitulo,
+  subtituloCor,
+  trailing,
+  primeiro = false,
+  lida = false,
+  onClick,
+}) {
+  return (
+    <div
+      onClick={onClick}
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 12,
+        padding: '14px 0',
+        borderTop: primeiro ? 'none' : '1px solid var(--linha)',
+        cursor: lida ? 'default' : (onClick ? 'pointer' : 'default'),
+        opacity: lida ? 0.5 : 1,
+        transition: 'opacity .2s',
+      }}
+    >
+      {leading}
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div
+          style={{
+            fontSize: 14,
+            fontWeight: 700,
+            color: 'var(--ink)',
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+          }}
+        >
+          {titulo}
+        </div>
+        {subtitulo && (
+          <div
+            style={{
+              fontSize: 11,
+              color: subtituloCor || 'var(--muted)',
+              fontWeight: 600,
+              marginTop: 2,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 6,
+            }}
+          >
+            {subtitulo}
+          </div>
+        )}
+      </div>
+      {trailing}
     </div>
   );
 }

@@ -11,6 +11,7 @@ import {
 import { Icon } from "../ui/icons.jsx";
 import { Card, ItemTransacao, SeletorMes, TopBar } from "../ui/common.jsx";
 import { ConfirmModal } from "../ui/confirm-modal.jsx";
+import { COR_NEG, COR_NEG_FUNDO } from "../lib/colors.js";
 
 export function GastosScreen({ ctx }) {
   const { txs, mes, setMes, todosMeses, ocultar, irPara, excluirTx } = ctx;
@@ -304,8 +305,8 @@ export function GastosScreen({ ctx }) {
                         padding: "8px 12px",
                         borderRadius: 12,
                         border: "none",
-                        background: "#FFE5EA",
-                        color: "#D63A55",
+                        background: COR_NEG_FUNDO,
+                        color: COR_NEG,
                         fontWeight: 700,
                         fontSize: 13,
                         cursor: "pointer",

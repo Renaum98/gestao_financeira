@@ -11,6 +11,7 @@ import {
 } from '../lib/firebase.js';
 import { Icon } from '../ui/icons.jsx';
 import { vibrar } from '../lib/haptics.js';
+import { COR_POS, COR_NEG } from '../lib/colors.js';
 
 const EMAIL_OK = (e) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test((e || '').trim());
 const SENHA_OK = (s) => (s || '').length >= 8 && /[a-zA-Z]/.test(s) && /[0-9]/.test(s);
@@ -186,8 +187,8 @@ export function LoginScreen() {
           </div>
         )}
 
-        {erro && <div style={{ fontSize: 12.5, fontWeight: 700, color: '#D63A55' }}>{erro}</div>}
-        {info && <div style={{ fontSize: 12.5, fontWeight: 700, color: '#1B9E6A' }}>{info}</div>}
+        {erro && <div style={{ fontSize: 12.5, fontWeight: 700, color: COR_NEG }}>{erro}</div>}
+        {info && <div style={{ fontSize: 12.5, fontWeight: 700, color: COR_POS }}>{info}</div>}
 
         <BotaoPrimario type="submit" disabled={carregando}>
           {carregando ? 'Aguarde…' : modo === 'cadastrar' ? 'Criar conta' : modo === 'recuperar' ? 'Enviar link' : 'Entrar'}
@@ -269,8 +270,8 @@ export function VerifyEmailScreen({ email, onAtualizar }) {
         </div>
       </div>
 
-      {msg && <div style={{ fontSize: 12.5, fontWeight: 700, color: '#1B9E6A', textAlign: 'center' }}>{msg}</div>}
-      {erro && <div style={{ fontSize: 12.5, fontWeight: 700, color: '#D63A55', textAlign: 'center' }}>{erro}</div>}
+      {msg && <div style={{ fontSize: 12.5, fontWeight: 700, color: COR_POS, textAlign: 'center' }}>{msg}</div>}
+      {erro && <div style={{ fontSize: 12.5, fontWeight: 700, color: COR_NEG, textAlign: 'center' }}>{erro}</div>}
 
       <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 10 }}>
         <BotaoPrimario type="button" onClick={jaConfirmei} disabled={carregando}>

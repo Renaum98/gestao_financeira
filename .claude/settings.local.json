@@ -4,7 +4,8 @@
       "Bash(rm -rf node_modules package-lock.json)",
       "Bash(npm install *)",
       "Bash(npm run *)",
-      "Bash(node -e \"const p=require\\('./package.json'\\); console.log\\('deps xlsx:', p.dependencies && p.dependencies.xlsx\\); console.log\\('devDeps xlsx:', p.devDependencies && p.devDependencies.xlsx\\);\")"
+      "Bash(node -e \"const p=require\\('./package.json'\\); console.log\\('deps xlsx:', p.dependencies && p.dependencies.xlsx\\); console.log\\('devDeps xlsx:', p.devDependencies && p.devDependencies.xlsx\\);\")",
+      "Bash(grep -n \"const.*=>.*{$\\\\|function.*{$\" src/screens/notificacoes.jsx)"
     ]
   }
 }

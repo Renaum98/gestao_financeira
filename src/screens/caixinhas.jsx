@@ -13,6 +13,7 @@
 import React from "react";
 import { fmtBRL, fmtBRLCompacto, MESES_CURTO } from "../data.js";
 import { Icon } from "../ui/icons.jsx";
+import { COR_POS, COR_NEG, COR_POS_FUNDO, COR_NEG_FUNDO } from "../lib/colors.js";
 import { Card, TopBar } from "../ui/common.jsx";
 import { BarraProgresso } from "../ui/charts.jsx";
 import { ConfirmModal } from "../ui/confirm-modal.jsx";
@@ -418,9 +419,9 @@ export function CaixinhaScreen({ ctx, params }) {
                 borderRadius: 12,
                 flexShrink: 0,
                 background: lembranca.completo
-                  ? "#DAF5E9"
+                  ? COR_POS_FUNDO
                   : lembranca.vencido
-                    ? "#FFE5EA"
+                    ? COR_NEG_FUNDO
                     : "color-mix(in oklab, var(--primary) 14%, transparent)",
                 display: "flex",
                 alignItems: "center",
@@ -438,9 +439,9 @@ export function CaixinhaScreen({ ctx, params }) {
                 size={18}
                 color={
                   lembranca.completo
-                    ? "#1B9E6A"
+                    ? COR_POS
                     : lembranca.vencido
-                      ? "#D63A55"
+                      ? COR_NEG
                       : "var(--primary)"
                 }
                 strokeWidth={2.4}
@@ -450,7 +451,7 @@ export function CaixinhaScreen({ ctx, params }) {
               {lembranca.completo ? (
                 <>
                   <div
-                    style={{ fontSize: 14, fontWeight: 800, color: "#1B9E6A" }}
+                    style={{ fontSize: 14, fontWeight: 800, color: COR_POS }}
                   >
                     Meta alcançada! 🎉
                   </div>
@@ -468,7 +469,7 @@ export function CaixinhaScreen({ ctx, params }) {
               ) : lembranca.vencido ? (
                 <>
                   <div
-                    style={{ fontSize: 14, fontWeight: 800, color: "#D63A55" }}
+                    style={{ fontSize: 14, fontWeight: 800, color: COR_NEG }}
                   >
                     Prazo vencido
                   </div>
@@ -651,7 +652,7 @@ export function CaixinhaScreen({ ctx, params }) {
                         width: 36,
                         height: 36,
                         borderRadius: 12,
-                        background: ehSaque ? "#FFE5EA" : `${cx.cor}22`,
+                        background: ehSaque ? COR_NEG_FUNDO : `${cx.cor}22`,
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
@@ -660,7 +661,7 @@ export function CaixinhaScreen({ ctx, params }) {
                       <Icon
                         name={ehSaque ? "minus" : "plus"}
                         size={16}
-                        color={ehSaque ? "#D63A55" : cx.cor}
+                        color={ehSaque ? COR_NEG : cx.cor}
                         strokeWidth={2.4}
                       />
                     </div>
@@ -695,7 +696,7 @@ export function CaixinhaScreen({ ctx, params }) {
                       style={{
                         fontSize: 14,
                         fontWeight: 700,
-                        color: ehSaque ? "#D63A55" : "var(--ink)",
+                        color: ehSaque ? COR_NEG : "var(--ink)",
                       }}
                     >
                       {ehSaque ? "− " : ""}
@@ -740,7 +741,7 @@ export function CaixinhaScreen({ ctx, params }) {
             border: "none",
             cursor: "pointer",
             background: "transparent",
-            color: "#D63A55",
+            color: COR_NEG,
             fontSize: 13,
             fontWeight: 700,
             fontFamily: "inherit",
@@ -750,7 +751,7 @@ export function CaixinhaScreen({ ctx, params }) {
             gap: 6,
           }}
         >
-          <Icon name="trash" size={14} color="#D63A55" strokeWidth={2.2} />
+          <Icon name="trash" size={14} color={COR_NEG} strokeWidth={2.2} />
           Excluir caixinha
         </button>
       </div>
@@ -1341,7 +1342,7 @@ function ModalDeposito({ cor, gruposEntrada = [], alocadoPorDescricao = {}, onFe
                     gap: 10,
                     padding: "10px 12px",
                     borderRadius: 12,
-                    border: sel ? `2px solid #1B9E6A` : "2px solid transparent",
+                    border: sel ? `2px solid ${COR_POS}` : "2px solid transparent",
                     background: "var(--card-2)",
                     cursor: semSaldo ? "default" : "pointer",
                     fontFamily: "inherit",
@@ -1354,14 +1355,14 @@ function ModalDeposito({ cor, gruposEntrada = [], alocadoPorDescricao = {}, onFe
                       width: 30,
                       height: 30,
                       borderRadius: 10,
-                      background: "#DAF5E9",
+                      background: COR_POS_FUNDO,
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
                       flexShrink: 0,
                     }}
                   >
-                    <Icon name="plus" size={14} color="#1B9E6A" strokeWidth={2.6} />
+                    <Icon name="plus" size={14} color={COR_POS} strokeWidth={2.6} />
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div
@@ -1404,7 +1405,7 @@ function ModalDeposito({ cor, gruposEntrada = [], alocadoPorDescricao = {}, onFe
             style={{
               marginTop: 8,
               fontSize: 12,
-              color: "#D63A55",
+              color: COR_NEG,
               fontWeight: 700,
               padding: "0 4px",
             }}
@@ -1582,7 +1583,7 @@ function ModalResgate({ cor, nome, disponivel, onFechar, onSalvar }) {
           style={{
             marginTop: 10,
             fontSize: 12,
-            color: "#D63A55",
+            color: COR_NEG,
             fontWeight: 700,
             padding: "0 4px",
           }}

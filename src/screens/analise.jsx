@@ -15,8 +15,7 @@ import { CatChip, Icon, iconePagamento } from "../ui/icons.jsx";
 import { Card, SeletorMes, TopBar } from "../ui/common.jsx";
 import { BarraProgresso, LineChart, PieChart } from "../ui/charts.jsx";
 
-const VERDE = "#1B9E6A";
-const VERMELHO = "#D63A55";
+import { COR_POS as VERDE, COR_NEG as VERMELHO } from "../lib/colors.js";
 
 function mesShift(yyyymm, delta) {
   const [y, m] = yyyymm.split("-").map(Number);

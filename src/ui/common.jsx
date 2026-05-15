@@ -2,6 +2,7 @@
 
 import { CATEGORIAS, MESES_CURTO, fmtBRL, fmtBRLCompacto, rotuloMes } from '../data.js';
 import { Icon, CatChip, iconePagamento } from './icons.jsx';
+import { COR_POS, COR_POS_FUNDO } from '../lib/colors.js';
 
 export function TopBar({ titulo, voltar, acao, subtitulo }) {
   return (
@@ -88,7 +89,7 @@ export function ItemTransacao({ tx, ocultar, onClick, doParceiro = false, nomePa
   const corTitulo = doParceiro ? 'var(--muted)' : 'var(--ink)';
   const corValor = doParceiro
     ? 'var(--muted)'
-    : (ehEntrada ? '#1B9E6A' : 'var(--ink)');
+    : (ehEntrada ? COR_POS : 'var(--ink)');
   return (
     <div onClick={onClick} style={{
       display: 'flex', alignItems: 'center', gap: 12, padding: '12px 4px',
@@ -99,10 +100,10 @@ export function ItemTransacao({ tx, ocultar, onClick, doParceiro = false, nomePa
         {ehEntrada ? (
           <div style={{
             width: 42, height: 42, borderRadius: 14,
-            background: doParceiro ? 'var(--surface-sunken)' : '#DAF5E9',
+            background: doParceiro ? 'var(--surface-sunken)' : COR_POS_FUNDO,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}>
-            <Icon name="plus" size={22} color={doParceiro ? 'var(--muted)' : '#1B9E6A'} strokeWidth={2.6} />
+            <Icon name="plus" size={22} color={doParceiro ? 'var(--muted)' : COR_POS} strokeWidth={2.6} />
           </div>
         ) : (
           <CatChip catId={tx.categoria} size={42} />
@@ -157,7 +158,7 @@ export function ItemTransacao({ tx, ocultar, onClick, doParceiro = false, nomePa
         </div>
         <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 2, display: 'flex', alignItems: 'center', gap: 6 }}>
           {ehEntrada ? (
-            <span style={{ fontWeight: 700, color: doParceiro ? 'var(--muted)' : '#1B9E6A' }}>Entrada</span>
+            <span style={{ fontWeight: 700, color: doParceiro ? 'var(--muted)' : COR_POS }}>Entrada</span>
           ) : (
             <>
               <span>{cat?.nome || 'Outros'}</span>

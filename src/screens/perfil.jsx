@@ -12,6 +12,7 @@ import { convidarPorEmail, cancelarConvite } from '../lib/partnership.js';
 import { reautenticarComSenha } from '../lib/firebase.js';
 import { excluirContaCompleta, precisaReautenticar } from '../lib/account.js';
 import { Loader } from '../ui/loader.jsx';
+import { COR_POS, COR_NEG, COR_NEG_FUNDO } from '../lib/colors.js';
 
 export function PerfilScreen({ ctx }) {
   const {
@@ -135,7 +136,7 @@ export function PerfilScreen({ ctx }) {
           }}>Remover foto</button>
         ) : null}
         {erroFoto && (
-          <div style={{ fontSize: 12, fontWeight: 700, color: '#D63A55', marginTop: 6, textAlign: 'center' }}>{erroFoto}</div>
+          <div style={{ fontSize: 12, fontWeight: 700, color: COR_NEG, marginTop: 6, textAlign: 'center' }}>{erroFoto}</div>
         )}
 
         {editandoNome ? (
@@ -239,12 +240,12 @@ export function PerfilScreen({ ctx }) {
         <div style={{ height: 18 }} />
         <button onClick={() => setConfirmarSair(true)} style={{
           width: '100%', padding: '14px', borderRadius: 16, border: 'none',
-          background: 'var(--card)', color: '#D63A55', fontSize: 14, fontWeight: 800,
+          background: 'var(--card)', color: COR_NEG, fontSize: 14, fontWeight: 800,
           cursor: 'pointer', fontFamily: 'inherit',
           boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
           display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
         }}>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#D63A55" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={COR_NEG} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" />
             <path d="M16 17l5-5-5-5M21 12H9" />
           </svg>
@@ -417,7 +418,7 @@ function BaixarDadosModal({
         {erro && (
           <div style={{
             marginTop: 10, fontSize: 12.5, fontWeight: 700,
-            color: '#D63A55', textAlign: 'center',
+            color: COR_NEG, textAlign: 'center',
           }}>{erro}</div>
         )}
 
@@ -562,11 +563,11 @@ function ExcluirContaModal({ uid, meuEmail, meuNome, partnershipId, onFechar }) 
       >
         <div style={{
           width: 56, height: 56, borderRadius: 28,
-          background: '#FFE5EA',
+          background: COR_NEG_FUNDO,
           margin: '0 auto 14px',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
         }}>
-          <Icon name="trash" size={26} color="#D63A55" strokeWidth={2.2} />
+          <Icon name="trash" size={26} color={COR_NEG} strokeWidth={2.2} />
         </div>
 
         <div style={{
@@ -589,7 +590,7 @@ function ExcluirContaModal({ uid, meuEmail, meuNome, partnershipId, onFechar }) 
             {partnershipId && (
               <div style={{
                 marginTop: 10, padding: '10px 12px', borderRadius: 12,
-                background: 'color-mix(in oklab, #D63A55 8%, transparent)',
+                background: `color-mix(in oklab, ${COR_NEG} 8%, transparent)`,
                 fontSize: 12, color: 'var(--muted)', fontWeight: 600,
                 lineHeight: 1.4,
               }}>
@@ -600,7 +601,7 @@ function ExcluirContaModal({ uid, meuEmail, meuNome, partnershipId, onFechar }) 
             {erro && (
               <div style={{
                 marginTop: 10, fontSize: 12.5, fontWeight: 700,
-                color: '#D63A55', textAlign: 'center',
+                color: COR_NEG, textAlign: 'center',
               }}>{erro}</div>
             )}
             <div style={{ display: 'flex', gap: 10, marginTop: 18 }}>
@@ -620,7 +621,7 @@ function ExcluirContaModal({ uid, meuEmail, meuNome, partnershipId, onFechar }) 
                 onClick={tentarExcluir}
                 style={{
                   flex: 1, padding: 12, borderRadius: 14, border: 'none',
-                  background: '#D63A55', color: '#fff',
+                  background: COR_NEG, color: '#fff',
                   fontSize: 14, fontWeight: 800, fontFamily: 'inherit',
                   cursor: 'pointer',
                   boxShadow: '0 4px 14px rgba(214,58,85,0.32)',
@@ -661,7 +662,7 @@ function ExcluirContaModal({ uid, meuEmail, meuNome, partnershipId, onFechar }) 
             {erro && (
               <div style={{
                 marginTop: 10, fontSize: 12.5, fontWeight: 700,
-                color: '#D63A55', textAlign: 'center',
+                color: COR_NEG, textAlign: 'center',
               }}>{erro}</div>
             )}
             <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
@@ -680,7 +681,7 @@ function ExcluirContaModal({ uid, meuEmail, meuNome, partnershipId, onFechar }) 
                 type="submit"
                 style={{
                   flex: 1, padding: 12, borderRadius: 14, border: 'none',
-                  background: '#D63A55', color: '#fff',
+                  background: COR_NEG, color: '#fff',
                   fontSize: 14, fontWeight: 800, fontFamily: 'inherit',
                   cursor: 'pointer',
                   boxShadow: '0 4px 14px rgba(214,58,85,0.32)',
@@ -748,12 +749,12 @@ function ContaCompartilhadaCard({
             style={{
               marginTop: 14,
               padding: '9px 14px', borderRadius: 12, border: '1.5px solid var(--linha)',
-              background: 'var(--card)', color: '#D63A55',
+              background: 'var(--card)', color: COR_NEG,
               fontSize: 13, fontWeight: 800, fontFamily: 'inherit', cursor: 'pointer',
               display: 'inline-flex', alignItems: 'center', gap: 6,
             }}
           >
-            <Icon name="close" size={14} color="#D63A55" strokeWidth={2.4} />
+            <Icon name="close" size={14} color={COR_NEG} strokeWidth={2.4} />
             Desfazer parceria
           </button>
         </div>
@@ -769,7 +770,7 @@ function ContaCompartilhadaCard({
             onClick={() => onCancelarConvite(convitePendente.id)}
             style={{
               padding: '8px 14px', borderRadius: 12, border: '1.5px solid var(--linha)',
-              background: 'var(--card)', color: '#D63A55',
+              background: 'var(--card)', color: COR_NEG,
               fontSize: 13, fontWeight: 800, fontFamily: 'inherit', cursor: 'pointer',
             }}
           >Cancelar convite</button>
@@ -958,11 +959,11 @@ function ConvidarParceiroModal({ meuUid, meuNome, meuEmail, onFechar }) {
         ) : sucesso ? (
           <div style={{
             padding: '20px 16px', textAlign: 'center',
-            background: 'color-mix(in oklab, #1B9E6A 10%, transparent)',
-            border: '1px solid color-mix(in oklab, #1B9E6A 25%, transparent)',
+            background: `color-mix(in oklab, ${COR_POS} 10%, transparent)`,
+            border: `1px solid color-mix(in oklab, ${COR_POS} 25%, transparent)`,
             borderRadius: 14,
           }}>
-            <div style={{ fontSize: 14, fontWeight: 800, color: '#1B9E6A' }}>
+            <div style={{ fontSize: 14, fontWeight: 800, color: COR_POS }}>
               Convite enviado!
             </div>
             <div style={{ fontSize: 12, color: 'var(--muted)', fontWeight: 600, marginTop: 4 }}>
@@ -996,7 +997,7 @@ function ConvidarParceiroModal({ meuUid, meuNome, meuEmail, onFechar }) {
             {erro && (
               <div style={{
                 marginTop: 10, fontSize: 12.5, fontWeight: 700,
-                color: '#D63A55',
+                color: COR_NEG,
               }}>{erro}</div>
             )}
 

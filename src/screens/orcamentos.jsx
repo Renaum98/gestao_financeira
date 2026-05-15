@@ -5,6 +5,7 @@ import { CATEGORIAS, ORDEM_CATS, fmtBRL, fmtBRLCompacto, totalEntradas, totalGer
 import { CatChip, Icon } from '../ui/icons.jsx';
 import { Card, TopBar } from '../ui/common.jsx';
 import { BarraProgresso } from '../ui/charts.jsx';
+import { COR_POS, COR_NEG, COR_AVISO } from '../lib/colors.js';
 
 export function OrcamentosScreen({ ctx }) {
   const { txs, mes, ocultar, voltar, orcamentos, setOrcamentos, preferences, setPreferences, ehDesktop, caixinhas, usuario } = ctx;
@@ -158,7 +159,7 @@ export function OrcamentosScreen({ ctx }) {
             const gasto = porCat[c] || 0;
             const orc = orcamentos[c] || 0;
             const pct = orc > 0 ? (gasto / orc) * 100 : 0;
-            const cor = pct > 100 ? '#D63A55' : pct > 80 ? '#E08A00' : '#1B9E6A';
+            const cor = pct > 100 ? COR_NEG : pct > 80 ? COR_AVISO : COR_POS;
             return (
               <div key={c} style={{
                 padding: '14px 0',
@@ -208,7 +209,7 @@ export function OrcamentosScreen({ ctx }) {
                 </div>
                 <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 10 }}>
                   <div style={{ flex: 1 }}>
-                    <BarraProgresso valor={Math.min(gasto, orc)} max={orc || 1} cor={pct > 100 ? '#D63A55' : cat.cor} altura={8} />
+                    <BarraProgresso valor={Math.min(gasto, orc)} max={orc || 1} cor={pct > 100 ? COR_NEG : cat.cor} altura={8} />
                   </div>
                   <div style={{ fontSize: 12, fontWeight: 800, color: cor, minWidth: 38, textAlign: 'right' }}>
                     {pct.toFixed(0)}%

@@ -4,6 +4,7 @@
 
 import React from 'react';
 import { Icon } from './icons.jsx';
+import { ModalOverlay } from './modal-base.jsx';
 import { vibrar } from '../lib/haptics.js';
 
 const DISMISS_KEY = 'finca.installPrompt.dismissedAt';
@@ -110,30 +111,13 @@ export function InstallPromptModal({ temAtalho, plataformaIOS, onInstalar, onDis
   };
 
   return (
-    <div
-      onClick={onDispensar}
-      style={{
-        position: 'fixed', inset: 0, height: '100dvh', zIndex: 9999,
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        padding: '20px',
-        background: 'rgba(20, 16, 24, 0.45)',
-        backdropFilter: 'blur(12px) saturate(140%)',
-        WebkitBackdropFilter: 'blur(12px) saturate(140%)',
-        animation: 'fadeIn .28s ease-out',
-      }}
-    >
-      <div
-        onClick={(e) => e.stopPropagation()}
-        role="dialog"
-        aria-modal="true"
-        style={{
-          width: '100%', maxWidth: 380,
-          background: 'var(--bg)', borderRadius: 26,
-          padding: '26px 22px 20px',
-          boxShadow: '0 24px 60px rgba(0,0,0,0.28), 0 4px 12px rgba(0,0,0,0.08)',
-          animation: 'scaleIn .34s cubic-bezier(0.22, 1, 0.36, 1)',
-          textAlign: 'center',
-        }}
+    <ModalOverlay
+      onClose={onDispensar}
+      maxWidth={380}
+      padding="26px 22px 20px"
+      borderRadius={26}
+      scrollable={false}
+      center
       >
         <div style={{
           width: 72, height: 72, borderRadius: 24,
@@ -254,7 +238,6 @@ export function InstallPromptModal({ temAtalho, plataformaIOS, onInstalar, onDis
             }}>Entendi</button>
           </>
         )}
-      </div>
-    </div>
+    </ModalOverlay>
   );
 }
