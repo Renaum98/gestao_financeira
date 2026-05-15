@@ -597,6 +597,47 @@ export function DashboardScreen({ ctx }) {
     return () => clearInterval(id);
   }, [insights.length]);
   const insightAtual = insights[insightIdx] || null;
+
+  // Swipe manual no card de insights — não interfere no auto-rotate.
+  const swipeInsightRef = React.useRef({ x: 0, y: 0, ativo: false });
+  const irInsight = React.useCallback(
+    (dir) => {
+      if (insights.length <= 1) return;
+      setInsightIdx((i) => (i + dir + insights.length) % insights.length);
+    },
+    [insights.length]
+  );
+  const onInsightTouchStart = (e) => {
+    const t = e.touches?.[0];
+    if (!t) return;
+    swipeInsightRef.current = { x: t.clientX, y: t.clientY, ativo: true };
+  };
+  const onInsightTouchEnd = (e) => {
+    const s = swipeInsightRef.current;
+    if (!s.ativo) return;
+    swipeInsightRef.current.ativo = false;
+    const t = e.changedTouches?.[0];
+    if (!t) return;
+    const dx = t.clientX - s.x;
+    const dy = t.clientY - s.y;
+    if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) {
+      irInsight(dx < 0 ? 1 : -1);
+    }
+  };
+  const onInsightPointerDown = (e) => {
+    if (e.pointerType === "touch") return; // touch já é tratado
+    swipeInsightRef.current = { x: e.clientX, y: e.clientY, ativo: true };
+  };
+  const onInsightPointerUp = (e) => {
+    const s = swipeInsightRef.current;
+    if (!s.ativo || e.pointerType === "touch") return;
+    swipeInsightRef.current.ativo = false;
+    const dx = e.clientX - s.x;
+    const dy = e.clientY - s.y;
+    if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) {
+      irInsight(dx < 0 ? 1 : -1);
+    }
+  };
   const temEntrada = entradas > 0;
   const hojeHora = new Date().getHours();
   const saudacao =
@@ -1018,7 +1059,13 @@ export function DashboardScreen({ ctx }) {
       {/* Insights — uma análise por vez, rotaciona com crossfade a cada 10s */}
       {insightAtual && (
         <div className={ehDesktop ? "col-span-all" : undefined} style={{ padding: "16px 20px 0" }}>
-          <Card style={{ padding: "14px 16px" }}>
+          <Card
+            style={{ padding: "14px 16px", touchAction: "pan-y", userSelect: "none" }}
+            onTouchStart={onInsightTouchStart}
+            onTouchEnd={onInsightTouchEnd}
+            onPointerDown={onInsightPointerDown}
+            onPointerUp={onInsightPointerUp}
+          >
             <div
               style={{
                 display: "flex",

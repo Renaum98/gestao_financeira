@@ -63,9 +63,9 @@ export function SeletorMes({ mes, setMes, todosMeses }) {
   );
 }
 
-export function Card({ children, style = {}, onClick }) {
+export function Card({ children, style = {}, onClick, ...rest }) {
   return (
-    <div onClick={onClick} style={{
+    <div onClick={onClick} {...rest} style={{
       background: 'var(--card)', borderRadius: 22, padding: 18,
       boxShadow: '0 1px 2px rgba(20,16,24,0.04), 0 4px 12px rgba(20,16,24,0.03)',
       cursor: onClick ? 'pointer' : 'default',
