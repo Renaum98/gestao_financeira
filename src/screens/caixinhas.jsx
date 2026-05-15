@@ -194,6 +194,7 @@ export function CaixinhaScreen({ ctx, params }) {
     txs,
     voltar,
     depositarCaixinha,
+    resgatarCaixinha,
     excluirCaixinha,
     salvarCaixinha,
     ocultar,
@@ -236,6 +237,7 @@ export function CaixinhaScreen({ ctx, params }) {
   }, [caixinhas, entradas]);
   const cx = caixinhas.find((c) => c.id === params.id);
   const [modalDeposito, setModalDeposito] = React.useState(false);
+  const [modalResgate, setModalResgate] = React.useState(false);
   const [modalEditar, setModalEditar] = React.useState(false);
   const [confirmarExclusao, setConfirmarExclusao] = React.useState(false);
 
@@ -539,31 +541,61 @@ export function CaixinhaScreen({ ctx, params }) {
           </Card>
         )}
 
-        {/* CTA depositar */}
-        <button
-          onClick={() => setModalDeposito(true)}
-          style={{
-            width: "100%",
-            marginTop: 14,
-            padding: "14px",
-            borderRadius: 16,
-            border: "none",
-            cursor: "pointer",
-            background: `linear-gradient(135deg, ${cx.cor}, ${cx.cor}CC)`,
-            color: "#fff",
-            fontSize: 14,
-            fontWeight: 800,
-            fontFamily: "inherit",
-            boxShadow: `0 6px 16px ${cx.cor}55`,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: 6,
-          }}
-        >
-          <Icon name="plus" size={18} color="#fff" strokeWidth={2.6} />
-          Adicionar valor
-        </button>
+        {/* CTA depositar / resgatar */}
+        <div style={{ display: "flex", gap: 10, marginTop: 14 }}>
+          <button
+            onClick={() => setModalDeposito(true)}
+            style={{
+              flex: 1,
+              padding: "14px",
+              borderRadius: 16,
+              border: "none",
+              cursor: "pointer",
+              background: `linear-gradient(135deg, ${cx.cor}, ${cx.cor}CC)`,
+              color: "#fff",
+              fontSize: 14,
+              fontWeight: 800,
+              fontFamily: "inherit",
+              boxShadow: `0 6px 16px ${cx.cor}55`,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 6,
+            }}
+          >
+            <Icon name="plus" size={18} color="#fff" strokeWidth={2.6} />
+            Adicionar
+          </button>
+          <button
+            onClick={() => atual > 0 && setModalResgate(true)}
+            disabled={atual <= 0}
+            style={{
+              flex: 1,
+              padding: "14px",
+              borderRadius: 16,
+              border: `1.5px solid ${atual > 0 ? cx.cor : "var(--linha)"}`,
+              cursor: atual > 0 ? "pointer" : "default",
+              background: "var(--card)",
+              color: atual > 0 ? cx.cor : "var(--muted)",
+              fontSize: 14,
+              fontWeight: 800,
+              fontFamily: "inherit",
+              opacity: atual > 0 ? 1 : 0.6,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 6,
+            }}
+          >
+            <Icon
+              name="minus"
+              size={18}
+              color={atual > 0 ? cx.cor : "var(--muted)"}
+              strokeWidth={2.6}
+            />
+            Resgatar
+          </button>
+        </div>
 
         {/* Histórico */}
         <div
@@ -583,8 +615,11 @@ export function CaixinhaScreen({ ctx, params }) {
         {depositos.length > 0 && (
           <Card style={{ padding: "4px 16px" }}>
             {depositos.map((d, i) => {
+              const ehSaque = d.tipo === "saque" || d.valor < 0;
               let labelOrigem = "Do orçamento";
-              if (d.origem?.tipo === "entrada") {
+              if (ehSaque) {
+                labelOrigem = "Resgatado para entradas";
+              } else if (d.origem?.tipo === "entrada") {
                 let desc = d.origem.descricao;
                 if (!desc && d.origem.entradaId) {
                   desc = entradas.find((t) => t.id === d.origem.entradaId)?.descricao;
@@ -616,16 +651,16 @@ export function CaixinhaScreen({ ctx, params }) {
                         width: 36,
                         height: 36,
                         borderRadius: 12,
-                        background: `${cx.cor}22`,
+                        background: ehSaque ? "#FFE5EA" : `${cx.cor}22`,
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
                       }}
                     >
                       <Icon
-                        name="plus"
+                        name={ehSaque ? "minus" : "plus"}
                         size={16}
-                        color={cx.cor}
+                        color={ehSaque ? "#D63A55" : cx.cor}
                         strokeWidth={2.4}
                       />
                     </div>
@@ -660,10 +695,11 @@ export function CaixinhaScreen({ ctx, params }) {
                       style={{
                         fontSize: 14,
                         fontWeight: 700,
-                        color: "var(--ink)",
+                        color: ehSaque ? "#D63A55" : "var(--ink)",
                       }}
                     >
-                      {fmtBRL(d.valor, ocultar)}
+                      {ehSaque ? "− " : ""}
+                      {fmtBRL(Math.abs(d.valor), ocultar)}
                     </div>
                     <div
                       style={{
@@ -728,6 +764,18 @@ export function CaixinhaScreen({ ctx, params }) {
           onSalvar={(dep) => {
             depositarCaixinha(cx.id, dep);
             setModalDeposito(false);
+          }}
+        />
+      )}
+      {modalResgate && (
+        <ModalResgate
+          cor={cx.cor}
+          nome={cx.nome}
+          disponivel={atual}
+          onFechar={() => setModalResgate(false)}
+          onSalvar={(valor) => {
+            resgatarCaixinha(cx.id, valor);
+            setModalResgate(false);
           }}
         />
       )}
@@ -1365,6 +1413,199 @@ function ModalDeposito({ cor, gruposEntrada = [], alocadoPorDescricao = {}, onFe
           </div>
         )}
       </Campo>
+    </ModalShell>
+  );
+}
+
+// ─────────── Modal: resgatar valor da caixinha ───────────
+function ModalResgate({ cor, nome, disponivel, onFechar, onSalvar }) {
+  const [valor, setValor] = React.useState("0,00");
+
+  const aoDigitar = (texto) => {
+    let v = texto.replace(/\D/g, "");
+    if (v.length > 10) v = v.slice(0, 10);
+    if (!v) {
+      setValor("0,00");
+      return;
+    }
+    v = v.padStart(3, "0");
+    const reais = v.slice(0, -2);
+    const cent = v.slice(-2);
+    setValor(`${parseInt(reais, 10)},${cent}`);
+  };
+
+  const valorNum = parseFloat(valor.replace(",", ".")) || 0;
+  const excede = valorNum > disponivel + 0.001;
+  const podeSalvar = valorNum > 0 && !excede;
+
+  const aplicarTudo = () => {
+    const fixo = disponivel.toFixed(2);
+    const [r, c] = fixo.split(".");
+    setValor(`${parseInt(r, 10)},${c}`);
+  };
+
+  const salvar = () => {
+    if (!podeSalvar) return;
+    onSalvar(valorNum);
+  };
+
+  return (
+    <ModalShell
+      titulo={`Resgatar de "${nome}"`}
+      onFechar={onFechar}
+      onSalvar={salvar}
+      salvarAtivo={podeSalvar}
+      corAcento={cor}
+    >
+      <label
+        style={{
+          display: "block",
+          textAlign: "center",
+          padding: "14px 0 6px",
+          position: "relative",
+          cursor: "text",
+        }}
+      >
+        <div
+          style={{
+            fontSize: 12,
+            fontWeight: 700,
+            color: "var(--muted)",
+            textTransform: "uppercase",
+            letterSpacing: 0.6,
+          }}
+        >
+          Valor a resgatar
+        </div>
+        <div
+          style={{
+            fontSize: 42,
+            fontWeight: 800,
+            color: "var(--ink)",
+            letterSpacing: "-0.03em",
+            marginTop: 4,
+            fontVariantNumeric: "tabular-nums",
+          }}
+        >
+          <span
+            style={{
+              fontSize: 20,
+              color: "var(--muted)",
+              marginRight: 6,
+              verticalAlign: "top",
+            }}
+          >
+            R$
+          </span>
+          {valor}
+        </div>
+        <input
+          autoFocus
+          type="text"
+          inputMode="numeric"
+          pattern="[0-9]*"
+          value={valor.replace(",", "")}
+          onChange={(e) => aoDigitar(e.target.value)}
+          aria-label="Valor a resgatar"
+          style={{
+            position: "absolute",
+            inset: 0,
+            opacity: 0,
+            border: "none",
+            background: "transparent",
+            outline: "none",
+            fontSize: 16,
+            cursor: "text",
+          }}
+        />
+      </label>
+
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: 10,
+          padding: "12px 14px",
+          marginTop: 4,
+          borderRadius: 12,
+          background: "var(--card-2)",
+          boxShadow: "0 1px 2px rgba(0,0,0,0.06)",
+        }}
+      >
+        <div style={{ minWidth: 0 }}>
+          <div
+            style={{
+              fontSize: 11,
+              fontWeight: 700,
+              color: "var(--muted)",
+              textTransform: "uppercase",
+              letterSpacing: 0.4,
+            }}
+          >
+            Disponível na caixinha
+          </div>
+          <div
+            style={{
+              fontSize: 16,
+              fontWeight: 800,
+              color: "var(--ink)",
+              marginTop: 2,
+              letterSpacing: "-0.01em",
+            }}
+          >
+            {fmtBRL(disponivel)}
+          </div>
+        </div>
+        <button
+          onClick={aplicarTudo}
+          disabled={disponivel <= 0}
+          style={{
+            padding: "8px 12px",
+            borderRadius: 999,
+            border: "none",
+            background: cor,
+            color: "#fff",
+            fontSize: 12,
+            fontWeight: 800,
+            cursor: disponivel > 0 ? "pointer" : "default",
+            opacity: disponivel > 0 ? 1 : 0.5,
+            fontFamily: "inherit",
+          }}
+        >
+          Tudo
+        </button>
+      </div>
+
+      {excede && (
+        <div
+          style={{
+            marginTop: 10,
+            fontSize: 12,
+            color: "#D63A55",
+            fontWeight: 700,
+            padding: "0 4px",
+          }}
+        >
+          Valor maior que o disponível na caixinha.
+        </div>
+      )}
+
+      <div
+        style={{
+          marginTop: 14,
+          padding: "12px 14px",
+          borderRadius: 12,
+          background: "color-mix(in oklab, var(--primary) 8%, transparent)",
+          fontSize: 12,
+          color: "var(--muted)",
+          fontWeight: 500,
+          lineHeight: 1.45,
+        }}
+      >
+        O valor volta como uma <strong style={{ color: "var(--ink)" }}>entrada
+        do mês atual</strong> e fica disponível no orçamento.
+      </div>
     </ModalShell>
   );
 }

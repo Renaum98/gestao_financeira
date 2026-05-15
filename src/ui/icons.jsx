@@ -40,6 +40,8 @@ export function Icon({ name, size = 22, color = 'currentColor', strokeWidth = 2 
       return (<svg style={s} viewBox="0 0 24 24" {...props}><circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4-6 8-6s7 2 8 6"/></svg>);
     case 'plus':
       return (<svg style={s} viewBox="0 0 24 24" {...props}><path d="M12 5v14M5 12h14"/></svg>);
+    case 'minus':
+      return (<svg style={s} viewBox="0 0 24 24" {...props}><path d="M5 12h14"/></svg>);
     case 'arrow-left':
       return (<svg style={s} viewBox="0 0 24 24" {...props}><path d="M15 5l-7 7 7 7"/></svg>);
     case 'arrow-right':

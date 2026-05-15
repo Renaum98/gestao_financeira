@@ -416,15 +416,15 @@ export function App() {
   // Mescla categorias personalizadas em CATEGORIAS/ORDEM_CATS antes de renderizar as telas.
   // Quando há parceria, mescla também as do parceiro pra que as txs dele rendam
   // a categoria certa (sem cair em "Outros").
-  React.useMemo(
-    () => aplicarCategoriasCustom(cloud.categoriasCustom),
-    [cloud.categoriasCustom],
-  );
-  React.useMemo(() => {
-    if (partner.categoriasCustom?.length) {
-      aplicarCategoriasCustom(partner.categoriasCustom);
-    }
-  }, [partner.categoriasCustom]);
+  // Roda DURANTE o render (não em useEffect) porque os filhos leem CATEGORIAS
+  // direto — se isso virasse efeito, o primeiro frame após uma categoria nova
+  // do parceiro mostraria "Outros" antes de re-renderizar.
+  if (cloud.categoriasCustom?.length) {
+    aplicarCategoriasCustom(cloud.categoriasCustom);
+  }
+  if (partner.categoriasCustom?.length) {
+    aplicarCategoriasCustom(partner.categoriasCustom);
+  }
 
   const adicionarCategoria = React.useCallback(
     (nome, cor) => {
@@ -736,6 +736,58 @@ export function App() {
     );
   };
 
+  // Resgata um valor da caixinha: registra um "saque" na caixinha (valor
+  // negativo, pra `valorAtual` continuar somando tudo) e cria uma entrada
+  // do tipo "entrada" no mês atual, devolvendo o dinheiro pro orçamento.
+  const resgatarCaixinha = (id, valor) => {
+    const v = Number(valor);
+    if (!v || v <= 0) return;
+    const lista = caixinhasAtivas || [];
+    const cx = lista.find((c) => c.id === id);
+    if (!cx) return;
+    const hoje = new Date();
+    const yyyymmdd = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, "0")}-${String(hoje.getDate()).padStart(2, "0")}`;
+    const txId = `tx-${Date.now()}`;
+    const saque = {
+      id: `dp-${Date.now()}`,
+      valor: -v,
+      data: yyyymmdd,
+      tipo: "saque",
+      txEntradaId: txId,
+    };
+
+    if (ehCompartilhado) {
+      shared.depositarCaixinha(id, saque);
+    } else {
+      cloud.setCaixinhas((atual) =>
+        atual.map((c) =>
+          c.id === id
+            ? { ...c, depositos: [...(c.depositos || []), saque] }
+            : c,
+        ),
+      );
+    }
+
+    vibrar(14);
+    cloud.setTxs((atual) => {
+      const yyyymm = yyyymmdd.slice(0, 7);
+      if (yyyymm !== mes) setMes(yyyymm);
+      return [
+        {
+          id: txId,
+          tipo: "entrada",
+          descricao: `Resgate: ${cx.nome}`,
+          categoria: "outros",
+          pagamento: "Pix",
+          valor: v,
+          data: yyyymmdd,
+          caixinhaId: id,
+        },
+        ...atual,
+      ].sort((a, b) => b.data.localeCompare(a.data));
+    });
+  };
+
   // Desfazer parceria — quem clica leva as caixinhas (combinado na Etapa 1).
   const desfazerParceria = async () => {
     if (!cloud.partnershipId) return;
@@ -789,6 +841,7 @@ export function App() {
     salvarCaixinha,
     excluirCaixinha,
     depositarCaixinha,
+    resgatarCaixinha,
     recorrentes: cloud.recorrentes,
     cancelarRecorrente,
     categoriasCustom: cloud.categoriasCustom,
@@ -800,10 +853,12 @@ export function App() {
     partnerUid: cloud.partnerUid,
     partnerNome: cloud.partnerNome || partner.nome || '',
     partnerEmail: partner.email,
+    partnerFotoUrl: partner.fotoUrl,
     partnershipId: cloud.partnershipId,
     partnerTxs,
     partnerOrcamentos: partner.orcamentos,
     partnerOrcamentoMensal: partner.orcamentoMensal,
+    partnerRecorrentes: partner.recorrentes,
     partnerReady: partner.ready,
     convitesRecebidos,
     convitesEnviados,

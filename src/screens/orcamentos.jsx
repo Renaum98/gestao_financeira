@@ -7,15 +7,32 @@ import { Card, TopBar } from '../ui/common.jsx';
 import { BarraProgresso } from '../ui/charts.jsx';
 
 export function OrcamentosScreen({ ctx }) {
-  const { txs, mes, ocultar, voltar, orcamentos, setOrcamentos, preferences, setPreferences, ehDesktop } = ctx;
+  const { txs, mes, ocultar, voltar, orcamentos, setOrcamentos, preferences, setPreferences, ehDesktop, caixinhas, usuario } = ctx;
 
   const txMes = txDoMes(txs, mes);
   const porCat = totalPorCategoria(txMes);
   const entradas = totalEntradas(txMes);
   const somaCats = Object.values(orcamentos).reduce((s, v) => s + v, 0);
   const orcBase = preferences.orcamentoMensal > 0 ? preferences.orcamentoMensal : somaCats;
-  // Entradas do mês somam ao orçamento disponível
-  const orcMensal = orcBase + entradas;
+  // Depósitos em caixinhas no mês — dinheiro guardado, não disponível.
+  // Saques (valor < 0) ficam de fora: o resgate já volta como entrada do mês.
+  // Em conta compartilhada, conto só os depósitos QUE EU FIZ — depósito do
+  // parceiro abate o saldo dele, não o meu.
+  const meuUid = usuario?.uid;
+  const guardadoEmCaixinhas = (caixinhas || []).reduce(
+    (s, c) =>
+      s +
+      (c.depositos || []).reduce((s2, d) => {
+        if (!d.data || !d.data.startsWith(mes)) return s2;
+        if (!(d.valor > 0)) return s2;
+        const dono = d.feitoPor || meuUid;
+        if (meuUid && dono !== meuUid) return s2;
+        return s2 + d.valor;
+      }, 0),
+    0,
+  );
+  // Entradas do mês somam ao orçamento; caixinhas guardadas abatem.
+  const orcMensal = orcBase + entradas - guardadoEmCaixinhas;
   const totalGasto = totalGeral(txMes);
   const pctGeral = orcMensal > 0 ? (totalGasto / orcMensal) * 100 : 0;
 
@@ -51,7 +68,7 @@ export function OrcamentosScreen({ ctx }) {
           <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div style={{ fontSize: 12, fontWeight: 600, opacity: 0.85 }}>Orçamento mensal</div>
             {!editandoTotal && (
-              <button onClick={() => { setTempTotal(orcMensal > 0 ? String(orcMensal).replace('.', ',') : ''); setEditandoTotal(true); }} style={{
+              <button onClick={() => { setTempTotal(orcBase > 0 ? String(orcBase).replace('.', ',') : ''); setEditandoTotal(true); }} style={{
                 background: 'rgba(255,255,255,0.18)', border: 'none', cursor: 'pointer',
                 color: '#fff', padding: '6px 10px', borderRadius: 999,
                 display: 'inline-flex', alignItems: 'center', gap: 5,

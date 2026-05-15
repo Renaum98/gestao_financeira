@@ -410,28 +410,40 @@ export function useConvitesEnviados(uid) {
 // Lê o doc do parceiro (read-only). Funciona porque, com a parceria firmada,
 // as Security Rules permitem leitura cruzada: `souParceiroDe(uid)` libera
 // se o doc do parceiro aponta `partnerUid` de volta pra mim.
+//
+// Tudo aqui é real-time via onSnapshot — qualquer alteração que o parceiro
+// faça no próprio doc (txs, orcamentos, recorrentes, categorias, foto, nome)
+// chega ao meu app na mesma hora, sem polling.
+const PARTNER_VAZIO = {
+  txs: [],
+  recorrentes: [],
+  categoriasCustom: [],
+  orcamentos: {},
+  orcamentoMensal: 0,
+  nome: "",
+  fotoUrl: "",
+  email: null,
+  ready: false,
+};
 export function usePartnerData(partnerUid) {
-  const VAZIO = {
-    txs: [],
-    recorrentes: [],
-    categoriasCustom: [],
-    orcamentos: {},
-    orcamentoMensal: 0,
-    nome: "",
-    email: null,
-    ready: false,
-  };
-  const [data, setData] = useState(VAZIO);
+  const [data, setData] = useState(PARTNER_VAZIO);
   useEffect(() => {
     if (!partnerUid) {
-      setData(VAZIO);
+      setData(PARTNER_VAZIO);
       return;
     }
+    // Reseta antes de assinar o novo doc — evita mostrar dados do parceiro
+    // antigo enquanto o snapshot novo ainda não chegou.
+    setData({ ...PARTNER_VAZIO });
     const ref = doc(db, USERS, partnerUid);
     const unsub = onSnapshot(
       ref,
       (snap) => {
-        if (!snap.exists()) return;
+        if (!snap.exists()) {
+          // Parceiro apagou a conta: limpa pra não mostrar dado fantasma.
+          setData({ ...PARTNER_VAZIO, ready: true });
+          return;
+        }
         const d = snap.data();
         setData({
           txs: d.txs ?? [],
@@ -440,6 +452,7 @@ export function usePartnerData(partnerUid) {
           orcamentos: d.orcamentos ?? {},
           orcamentoMensal: d.preferences?.orcamentoMensal || 0,
           nome: d.preferences?.nome || "",
+          fotoUrl: d.preferences?.fotoUrl || "",
           email: d.email || null,
           ready: true,
         });
@@ -447,7 +460,6 @@ export function usePartnerData(partnerUid) {
       (err) => console.error("[partnerData]", err),
     );
     return unsub;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [partnerUid]);
   return data;
 }

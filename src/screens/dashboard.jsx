@@ -73,8 +73,31 @@ export function DashboardScreen({ ctx }) {
   const somaOrcCats = Object.values(orcamentos).reduce((s, v) => s + v, 0);
   const orcBase =
     preferences.orcamentoMensal > 0 ? preferences.orcamentoMensal : somaOrcCats;
-  // Entradas do mês somam ao orçamento disponível
-  const orcTotal = orcBase + entradas;
+  // Depósitos em caixinhas no mês exibido — dinheiro guardado, não disponível.
+  // Vale tanto pra origem "orcamento" quanto "entrada": em ambos os casos o
+  // valor saiu do que pode ser usado e foi pra reserva.
+  // Saques (valor < 0) são ignorados aqui: eles já voltam como entrada do mês,
+  // que é contada na soma de `entradas` — somar de novo daria duplicidade.
+  // Em conta compartilhada, cada lado é abatido só pelos depósitos que ele
+  // mesmo fez (`feitoPor === uid`) — depósito do parceiro é descontado do
+  // saldo dele, não do meu. Conta solo: tudo é "meu" (sem feitoPor).
+  const meuUid = usuario?.uid;
+  const guardadoPorUid = React.useMemo(() => {
+    const m = {};
+    for (const c of caixinhas || []) {
+      for (const d of c.depositos || []) {
+        if (!d.data || !d.data.startsWith(mes)) continue;
+        if (!(d.valor > 0)) continue;
+        const dono = d.feitoPor || meuUid || "_anon";
+        m[dono] = (m[dono] || 0) + d.valor;
+      }
+    }
+    return m;
+  }, [caixinhas, mes, meuUid]);
+  const guardadoEmCaixinhas = guardadoPorUid[meuUid || "_anon"] || 0;
+  const guardadoParceiro = partnerUid ? guardadoPorUid[partnerUid] || 0 : 0;
+  // Entradas do mês somam ao orçamento; caixinhas guardadas abatem.
+  const orcTotal = orcBase + entradas - guardadoEmCaixinhas;
   const restante = orcTotal - total;
 
   // No Dashboard, "Últimos gastos" mostra somente OS MEUS — txs do parceiro
@@ -90,7 +113,7 @@ export function DashboardScreen({ ctx }) {
   const entradasParceiro = totalEntradas(parceiroDoMes);
   const somaOrcCatsParceiro = Object.values(partnerOrcamentos).reduce((s, v) => s + v, 0);
   const orcBaseParceiro = partnerOrcamentoMensal > 0 ? partnerOrcamentoMensal : somaOrcCatsParceiro;
-  const orcTotalParceiro = orcBaseParceiro + entradasParceiro;
+  const orcTotalParceiro = orcBaseParceiro + entradasParceiro - guardadoParceiro;
   const restanteParceiro = orcTotalParceiro - totalParceiro;
   const disponivelConjunto = restante + restanteParceiro;
   const ehCompartilhado = !!partnerUid;
