@@ -49,7 +49,7 @@ const DEFAULT_STATE = {
   categoriasCustom: [],
   preferences: {
     paleta: "#6E4FF6",
-    modo: "claro",
+    modo: "sistema",
     nome: "",
     fotoUrl: "",
     orcamentoMensal: 0,

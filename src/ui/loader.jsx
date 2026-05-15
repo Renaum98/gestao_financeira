@@ -1,8 +1,8 @@
 // loader.jsx — loader oficial do app.
 //
-// Forma orgânica que respira (border-radius animado) e, no meio do ciclo,
-// se "concretiza" numa silhueta quase quadrada onde a letra F aparece em
-// fade+scale. Depois volta a se dissolver no blob. Loop suave em ~3.4s.
+// Forma orgânica viva que respira: o border-radius e a escala oscilam num
+// loop suave (~3.4s), sem nenhum estado "fixo". As bordas usam tons mais
+// escuros pra dar profundidade.
 //
 // Estilos vivem em `styles.css` (procure por `.finca-loader`) pra que o CSS
 // não seja re-injetado a cada render do componente.
@@ -20,15 +20,9 @@ export function Loader({ size = 56, label = 'Carregando' }) {
       className="finca-loader"
       role="status"
       aria-label={label}
-      style={{
-        width: size,
-        height: size,
-        fontSize: Math.round(size * 0.6),
-      }}
+      style={{ width: size, height: size }}
     >
-      <div className="finca-loader__blob">
-        <span className="finca-loader__letter">F</span>
-      </div>
+      <div className="finca-loader__blob" />
     </div>
   );
 }

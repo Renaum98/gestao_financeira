@@ -331,10 +331,19 @@ function useEhDesktop() {
   return ehDesktop;
 }
 
+function sistemaPrefereDark() {
+  return (
+    typeof window !== "undefined" &&
+    window.matchMedia &&
+    window.matchMedia("(prefers-color-scheme: dark)").matches
+  );
+}
+
 function aplicarTema(paleta, modo) {
   const root = document.documentElement;
   const pal = PALETAS.find((p) => p.primary === paleta) || PALETAS[0];
-  const ehEscuro = modo === "escuro";
+  const ehEscuro =
+    modo === "escuro" || (modo === "sistema" && sistemaPrefereDark());
   // Paletas podem ter variantes dark (ex: "Preto" usa grafite claro pra
   // continuar visível contra o --bg escuro). Se não houver, usa a clara.
   const primary = ehEscuro && pal.primaryDark ? pal.primaryDark : pal.primary;
@@ -472,9 +481,16 @@ export function App() {
     [cloud.setCategoriasCustom, cloud.setTxs, cloud.setOrcamentos],
   );
 
-  // Tema reativo às preferências
+  // Tema reativo às preferências. Quando modo === 'sistema', também escuta
+  // mudanças do prefers-color-scheme do SO pra trocar light/dark on the fly.
   React.useEffect(() => {
     aplicarTema(cloud.preferences.paleta, cloud.preferences.modo);
+    if (cloud.preferences.modo !== "sistema") return;
+    const mq = window.matchMedia("(prefers-color-scheme: dark)");
+    const handler = () =>
+      aplicarTema(cloud.preferences.paleta, cloud.preferences.modo);
+    mq.addEventListener("change", handler);
+    return () => mq.removeEventListener("change", handler);
   }, [cloud.preferences.paleta, cloud.preferences.modo]);
 
   // Gerador de recorrentes: roda 1× quando o storage está pronto.

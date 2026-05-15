@@ -14,7 +14,7 @@
 import { deleteField } from "./firebase.js";
 
 const PALETA_PADRAO = "#6E4FF6";
-const MODO_PADRAO = "claro";
+const MODO_PADRAO = "sistema";
 
 function ehObjetoVazio(o) {
   return !o || Object.keys(o).length === 0;
