@@ -106,7 +106,7 @@ function Logo({ size = 100 }) {
         willChange: 'transform',
       }}>
         <img
-          src="/logo.png"
+          src={`${import.meta.env.BASE_URL}logo.png`}
           alt="Finça"
           style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }}
         />

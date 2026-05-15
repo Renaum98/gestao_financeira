@@ -117,7 +117,10 @@ function TabBar({ tela, irPara, abrirAdd }) {
           return (
             <button
               key={it.id}
-              onClick={() => irPara(it.id)}
+              onClick={() => {
+                if (it.id !== tela) vibrar();
+                irPara(it.id);
+              }}
               style={{
                 flex: 1,
                 background: "transparent",
@@ -236,7 +239,10 @@ function Sidebar({ tela, irPara, abrirAdd, usuario, fotoPerfil }) {
           return (
             <button
               key={it.id}
-              onClick={() => irPara(it.id)}
+              onClick={() => {
+                if (it.id !== tela) vibrar();
+                irPara(it.id);
+              }}
               style={{
                 display: "flex",
                 alignItems: "center",
