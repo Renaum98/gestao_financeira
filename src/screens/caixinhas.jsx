@@ -22,6 +22,7 @@ import {
 import { Card, TopBar } from "../ui/common.jsx";
 import { BarraProgresso } from "../ui/charts.jsx";
 import { ConfirmModal } from "../ui/confirm-modal.jsx";
+import { useSelic, calcularRendimento, taxaAnualEfetiva } from "../lib/selic.js";
 
 // Cores selecionáveis pra colorir cada caixinha. Todas calibradas pra dar
 // contraste ≥4 com texto branco (o cabeçalho do card de detalhe usa
@@ -260,9 +261,12 @@ export function CaixinhaScreen({ ctx, params }) {
     );
   }
 
-  const atual = valorAtual(cx);
+  const selic = useSelic();
+  const atual = valorAtual(cx); // principal — base p/ resgate e contabilidade
+  const rendimento = calcularRendimento(cx, selic);
+  const comRendimento = atual + rendimento;
   const lembranca = calcularLembranca(cx);
-  const pct = cx.meta > 0 ? Math.min(100, (atual / cx.meta) * 100) : 0;
+  const pct = cx.meta > 0 ? Math.min(100, (comRendimento / cx.meta) * 100) : 0;
   const depositos = [...(cx.depositos || [])].sort((a, b) =>
     b.data.localeCompare(a.data),
   );
@@ -364,8 +368,82 @@ export function CaixinhaScreen({ ctx, params }) {
                 letterSpacing: "-0.03em",
               }}
             >
-              {fmtBRL(atual, ocultar)}
+              {fmtBRL(comRendimento, ocultar)}
             </div>
+
+            {cx.rendimentoAtivo && (
+              <div
+                style={{
+                  marginTop: 12,
+                  padding: "12px 14px",
+                  borderRadius: 14,
+                  background: "rgba(255,255,255,0.16)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  gap: 10,
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <div
+                    style={{
+                      width: 30,
+                      height: 30,
+                      borderRadius: 10,
+                      background: "rgba(255,255,255,0.22)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      flexShrink: 0,
+                    }}
+                  >
+                    <Icon
+                      name="chart"
+                      size={15}
+                      color="#fff"
+                      strokeWidth={2.4}
+                    />
+                  </div>
+                  <div style={{ minWidth: 0 }}>
+                    <div
+                      style={{
+                        fontSize: 11,
+                        fontWeight: 700,
+                        opacity: 0.85,
+                        textTransform: "uppercase",
+                        letterSpacing: 0.4,
+                      }}
+                    >
+                      Já rendeu
+                    </div>
+                    <div
+                      style={{
+                        fontSize: 16,
+                        fontWeight: 800,
+                        letterSpacing: "-0.01em",
+                        marginTop: 1,
+                      }}
+                    >
+                      {fmtBRL(rendimento, ocultar)}
+                    </div>
+                  </div>
+                </div>
+                <div
+                  style={{
+                    textAlign: "right",
+                    fontSize: 10,
+                    fontWeight: 700,
+                    opacity: 0.85,
+                    lineHeight: 1.3,
+                  }}
+                >
+                  <div>{Number(cx.rendimentoCDI).toFixed(0)}% do CDI</div>
+                  <div style={{ opacity: 0.8 }}>
+                    Principal {fmtBRL(atual, ocultar)}
+                  </div>
+                </div>
+              </div>
+            )}
 
             {cx.meta > 0 && (
               <>
@@ -813,7 +891,10 @@ export function CaixinhaScreen({ ctx, params }) {
 
 // ─────────── Card de caixinha (usado na lista e no dashboard) ───────────
 export function CardCaixinha({ cx, ocultar, onClick }) {
-  const atual = valorAtual(cx);
+  const selic = useSelic();
+  const principal = valorAtual(cx);
+  const rendimento = calcularRendimento(cx, selic);
+  const atual = principal + rendimento;
   const pct = cx.meta > 0 ? Math.min(100, (atual / cx.meta) * 100) : 0;
   const lembranca = calcularLembranca(cx);
 
@@ -881,11 +962,35 @@ export function CardCaixinha({ cx, ocultar, onClick }) {
               color: "var(--muted)",
               fontWeight: 600,
               marginTop: 1,
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+              flexWrap: "wrap",
             }}
           >
-            {cx.meta > 0
-              ? `${fmtBRLCompacto(atual, ocultar)} de ${fmtBRLCompacto(cx.meta, ocultar)}`
-              : `Guardado: ${fmtBRLCompacto(atual, ocultar)}`}
+            <span>
+              {cx.meta > 0
+                ? `${fmtBRLCompacto(atual, ocultar)} de ${fmtBRLCompacto(cx.meta, ocultar)}`
+                : `Guardado: ${fmtBRLCompacto(atual, ocultar)}`}
+            </span>
+            {rendimento > 0 && (
+              <span
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 4,
+                  padding: "1px 6px",
+                  borderRadius: 999,
+                  background: COR_POS_FUNDO,
+                  color: COR_POS,
+                  fontWeight: 800,
+                  fontSize: 10,
+                }}
+                title={!ocultar ? `Rendimento: +${fmtBRLCompacto(rendimento)}` : undefined}
+              >
+                +{fmtBRLCompacto(rendimento, ocultar)}
+              </span>
+            )}
           </div>
         </div>
         <Icon
@@ -936,6 +1041,7 @@ export function CardCaixinha({ cx, ocultar, onClick }) {
 
 // ─────────── Modal: criar / editar caixinha ───────────
 function ModalCaixinha({ editando, onFechar, onSalvar }) {
+  const selic = useSelic();
   const [nome, setNome] = React.useState(editando?.nome ?? "");
   const [cor, setCor] = React.useState(editando?.cor ?? CORES_CAIXINHA[0]);
   const [temMeta, setTemMeta] = React.useState(
@@ -945,6 +1051,19 @@ function ModalCaixinha({ editando, onFechar, onSalvar }) {
     formatarValorInicial(editando?.meta || 0),
   );
   const [dataMeta, setDataMeta] = React.useState(editando?.dataMeta ?? "");
+
+  // ─── Avançado / investimento ───
+  const [avancadoAberto, setAvancadoAberto] = React.useState(
+    !!editando?.rendimentoAtivo,
+  );
+  const [rendimentoAtivo, setRendimentoAtivo] = React.useState(
+    !!editando?.rendimentoAtivo,
+  );
+  const [rendimentoCDI, setRendimentoCDI] = React.useState(
+    String(editando?.rendimentoCDI ?? 100),
+  );
+  const cdiNum = parseFloat(String(rendimentoCDI).replace(",", ".")) || 0;
+  const taxaEfetiva = taxaAnualEfetiva(cdiNum, selic);
 
   const metaNum = parseValorBR(meta);
   const valido = nome.trim().length > 0;
@@ -956,6 +1075,8 @@ function ModalCaixinha({ editando, onFechar, onSalvar }) {
       cor,
       meta: temMeta && metaNum > 0 ? metaNum : 0,
       dataMeta: temMeta && metaNum > 0 && dataMeta ? dataMeta : "",
+      rendimentoAtivo: rendimentoAtivo && cdiNum > 0,
+      rendimentoCDI: rendimentoAtivo && cdiNum > 0 ? cdiNum : 0,
     });
   };
 
@@ -1089,6 +1210,178 @@ function ModalCaixinha({ editando, onFechar, onSalvar }) {
           </>
         )}
       </Campo>
+
+      {/* ─── Avançado (investimento) ─── */}
+      <div style={{ marginTop: 18 }}>
+        <button
+          onClick={() => setAvancadoAberto((v) => !v)}
+          style={{
+            width: "100%",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: 8,
+            padding: "12px 14px",
+            borderRadius: 12,
+            border: "none",
+            background: "var(--card-2)",
+            cursor: "pointer",
+            fontFamily: "inherit",
+            boxShadow: "0 1px 2px rgba(0,0,0,0.06)",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <Icon
+              name="chart"
+              size={16}
+              color="var(--muted)"
+              strokeWidth={2.2}
+            />
+            <span
+              style={{ fontSize: 13, fontWeight: 800, color: "var(--ink)" }}
+            >
+              Avançado
+            </span>
+            <span
+              style={{
+                fontSize: 11,
+                fontWeight: 600,
+                color: "var(--muted)",
+              }}
+            >
+              Investimento
+            </span>
+          </div>
+          <span
+            style={{
+              display: "inline-flex",
+              transform: avancadoAberto ? "rotate(180deg)" : "none",
+              transition: "transform .15s",
+            }}
+          >
+            <Icon
+              name="chevron-down"
+              size={16}
+              color="var(--muted)"
+              strokeWidth={2}
+            />
+          </span>
+        </button>
+
+        {avancadoAberto && (
+          <div
+            style={{
+              marginTop: 10,
+              padding: "12px 14px",
+              borderRadius: 12,
+              background: "var(--card-2)",
+              boxShadow: "0 1px 2px rgba(0,0,0,0.06)",
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                marginBottom: rendimentoAtivo ? 12 : 0,
+              }}
+            >
+              <Toggle ativo={rendimentoAtivo} onChange={setRendimentoAtivo} />
+              <span
+                style={{
+                  fontSize: 13,
+                  color: "var(--muted)",
+                  fontWeight: 600,
+                }}
+              >
+                {rendimentoAtivo
+                  ? "Render como investimento"
+                  : "Sem rendimento — caixinha comum"}
+              </span>
+            </div>
+
+            {rendimentoAtivo && (
+              <>
+                <div
+                  style={{
+                    fontSize: 11,
+                    fontWeight: 700,
+                    color: "var(--muted)",
+                    textTransform: "uppercase",
+                    letterSpacing: 0.4,
+                    marginBottom: 6,
+                  }}
+                >
+                  Taxa de rendimento (% do CDI)
+                </div>
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                  }}
+                >
+                  <input
+                    type="text"
+                    inputMode="decimal"
+                    value={rendimentoCDI}
+                    onChange={(e) => {
+                      // aceita só dígitos, vírgula e ponto
+                      const v = e.target.value.replace(/[^\d.,]/g, "");
+                      setRendimentoCDI(v);
+                    }}
+                    placeholder="100"
+                    style={{ ...inputStyle, flex: 1 }}
+                  />
+                  <span
+                    style={{
+                      fontSize: 14,
+                      color: "var(--muted)",
+                      fontWeight: 700,
+                    }}
+                  >
+                    % CDI
+                  </span>
+                </div>
+                <div
+                  style={{
+                    marginTop: 10,
+                    fontSize: 12,
+                    color: "var(--muted)",
+                    fontWeight: 500,
+                    lineHeight: 1.45,
+                  }}
+                >
+                  Selic atual: <strong style={{ color: "var(--ink)" }}>
+                    {selic.toFixed(2).replace(".", ",")}% a.a.
+                  </strong>
+                  {cdiNum > 0 && (
+                    <>
+                      {" · "}rende ~
+                      <strong style={{ color: "var(--ink)" }}>
+                        {taxaEfetiva.toFixed(2).replace(".", ",")}% a.a.
+                      </strong>
+                    </>
+                  )}
+                </div>
+                <div
+                  style={{
+                    marginTop: 6,
+                    fontSize: 11,
+                    color: "var(--muted)",
+                    fontWeight: 500,
+                    lineHeight: 1.45,
+                    opacity: 0.85,
+                  }}
+                >
+                  100% CDI = renda igual ao CDI · Estimativa diária com base na
+                  Meta Selic do BCB. Não considera IR.
+                </div>
+              </>
+            )}
+          </div>
+        )}
+      </div>
     </ModalShell>
   );
 }
