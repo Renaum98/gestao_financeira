@@ -10,6 +10,7 @@ import {
 } from "../data.js";
 import { CatChip, Icon, iconePagamento } from "../ui/icons.jsx";
 import { vibrar } from "../lib/haptics.js";
+import { ConfirmModal } from "../ui/confirm-modal.jsx";
 
 function hojeISO() {
   const d = new Date();
@@ -22,8 +23,11 @@ const CORES_CAT = [
 ];
 
 export function AddExpenseModal({ ctx, params }) {
-  const { fechar, salvarTx, adicionarCategoria } = ctx;
+  const { fechar, salvarTx, adicionarCategoria, excluirCategoria, ehDesktop } = ctx;
   const editar = params && params.editar;
+  // Estado da confirmação de exclusão de categoria personalizada.
+  // null = fechado; objeto = abre o modal pra essa categoria.
+  const [excluirCat, setExcluirCat] = React.useState(null);
   const [tipo, setTipo] = React.useState(
     editar?.tipo === "entrada" ? "entrada" : "saida",
   );
@@ -111,7 +115,16 @@ export function AddExpenseModal({ ctx, params }) {
     fechar();
   };
 
+  const confirmarExclusaoCategoria = () => {
+    if (!excluirCat) return;
+    // Se a categoria selecionada é a que está sendo excluída, volta pra "outros".
+    if (categoria === excluirCat.id) setCategoria("outros");
+    excluirCategoria(excluirCat.id);
+    setExcluirCat(null);
+  };
+
   return (
+    <>
     <div
       onClick={fechar}
       style={{
@@ -359,37 +372,16 @@ export function AddExpenseModal({ ctx, params }) {
               const cat = CATEGORIAS[c];
               const sel = categoria === c;
               return (
-                <button
+                <CategoriaBtn
                   key={c}
-                  onClick={() => { vibrar(); setCategoria(c); }}
-                  style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "center",
-                    gap: 4,
-                    padding: "8px 10px 6px",
-                    borderRadius: 14,
-                    border: "none",
-                    background: sel ? "var(--card-2)" : "transparent",
-                    boxShadow: sel
-                      ? "0 2px 8px rgba(0,0,0,0.18), 0 0 0 1.5px " + cat.cor
-                      : "none",
-                    cursor: "pointer",
-                    minWidth: 72,
-                    flexShrink: 0,
-                  }}
-                >
-                  <CatChip catId={c} size={32} />
-                  <span
-                    style={{
-                      fontSize: 10,
-                      fontWeight: 700,
-                      color: "var(--ink)",
-                    }}
-                  >
-                    {cat.nome}
-                  </span>
-                </button>
+                  catId={c}
+                  cat={cat}
+                  selecionado={sel}
+                  ehDesktop={ehDesktop}
+                  podeExcluir={!!cat.custom && !!excluirCategoria}
+                  onSelecionar={() => { vibrar(); setCategoria(c); }}
+                  onPedirExcluir={() => setExcluirCat({ id: c, nome: cat.nome })}
+                />
               );
             })}
 
@@ -898,6 +890,18 @@ export function AddExpenseModal({ ctx, params }) {
         )}
       </div>
     </div>
+    {excluirCat && (
+      <ConfirmModal
+        titulo={`Excluir "${excluirCat.nome}"?`}
+        mensagem={
+          'A categoria será removida e as transações antigas que a usavam ' +
+          'passam a aparecer em "Outros". O orçamento associado, se houver, também é apagado.'
+        }
+        onCancelar={() => setExcluirCat(null)}
+        onConfirmar={confirmarExclusaoCategoria}
+      />
+    )}
+    </>
   );
 }
 
@@ -933,5 +937,119 @@ function ToggleSimples({ ativo, onChange }) {
         }}
       />
     </div>
+  );
+}
+
+// ─────────── Botão de categoria com long-press / double-click ───────────
+// Comportamento:
+//   • Mobile (PWA): segurar 2s na categoria personalizada → modal de exclusão.
+//   • Desktop: duplo-clique → modal de exclusão.
+//   • Categorias built-in (sem flag custom) ignoram esses gestos.
+//   • Em ambos os casos, um clique normal continua selecionando a categoria.
+const LONG_PRESS_MS = 2000;
+const MOVE_TOLERANCE = 10; // px — se o dedo arrasta mais que isso, cancela.
+
+function CategoriaBtn({
+  catId,
+  cat,
+  selecionado,
+  ehDesktop,
+  podeExcluir,
+  onSelecionar,
+  onPedirExcluir,
+}) {
+  const timerRef = React.useRef(null);
+  const longPressFiredRef = React.useRef(false);
+  const inicioRef = React.useRef({ x: 0, y: 0 });
+
+  const limpar = () => {
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+  };
+
+  const iniciarLongPress = (e) => {
+    if (!podeExcluir || ehDesktop) return;
+    longPressFiredRef.current = false;
+    inicioRef.current = { x: e.clientX || 0, y: e.clientY || 0 };
+    limpar();
+    timerRef.current = setTimeout(() => {
+      longPressFiredRef.current = true;
+      vibrar(28);
+      onPedirExcluir();
+    }, LONG_PRESS_MS);
+  };
+
+  const moverPossivelCancelar = (e) => {
+    if (!timerRef.current) return;
+    const dx = (e.clientX || 0) - inicioRef.current.x;
+    const dy = (e.clientY || 0) - inicioRef.current.y;
+    if (dx * dx + dy * dy > MOVE_TOLERANCE * MOVE_TOLERANCE) limpar();
+  };
+
+  const aoClicar = (e) => {
+    // Se o long-press já disparou, não seleciona a categoria.
+    if (longPressFiredRef.current) {
+      e.preventDefault();
+      e.stopPropagation();
+      longPressFiredRef.current = false;
+      return;
+    }
+    onSelecionar();
+  };
+
+  const aoDuploClicar = () => {
+    if (!podeExcluir || !ehDesktop) return;
+    onPedirExcluir();
+  };
+
+  // Cleanup ao desmontar.
+  React.useEffect(() => () => limpar(), []);
+
+  return (
+    <button
+      onClick={aoClicar}
+      onDoubleClick={aoDuploClicar}
+      onPointerDown={iniciarLongPress}
+      onPointerMove={moverPossivelCancelar}
+      onPointerUp={limpar}
+      onPointerCancel={limpar}
+      onPointerLeave={limpar}
+      onContextMenu={(e) => podeExcluir && e.preventDefault()}
+      title={podeExcluir ? (ehDesktop ? 'Duplo-clique para excluir' : 'Segure 2s para excluir') : undefined}
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        gap: 4,
+        padding: "8px 10px 6px",
+        borderRadius: 14,
+        border: "none",
+        background: selecionado ? "var(--card-2)" : "transparent",
+        boxShadow: selecionado
+          ? "0 2px 8px rgba(0,0,0,0.18), 0 0 0 1.5px " + cat.cor
+          : "none",
+        cursor: "pointer",
+        minWidth: 72,
+        flexShrink: 0,
+        // Sem callout/seleção no long-press — evita popup do iOS atrapalhar.
+        WebkitTouchCallout: "none",
+        WebkitUserSelect: "none",
+        userSelect: "none",
+        touchAction: "manipulation",
+      }}
+    >
+      <CatChip catId={catId} size={32} />
+      <span
+        style={{
+          fontSize: 10,
+          fontWeight: 700,
+          color: "var(--ink)",
+        }}
+      >
+        {cat.nome}
+      </span>
+    </button>
   );
 }

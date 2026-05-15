@@ -2,6 +2,8 @@
 
 import React from "react";
 import {
+  CATEGORIAS,
+  ORDEM_CATS,
   PALETAS,
   chaveMes,
   listarMeses,
@@ -439,6 +441,37 @@ export function App() {
     [cloud.setCategoriasCustom],
   );
 
+  // Exclui uma categoria personalizada. Reatribui transações que a usavam pra
+  // "outros" (pra não sumir do histórico) e remove o orçamento associado.
+  // Categorias built-in não podem ser excluídas.
+  const excluirCategoria = React.useCallback(
+    (id) => {
+      if (!id || !CATEGORIAS[id]?.custom) return;
+      // 1) Remove da lista persistida.
+      cloud.setCategoriasCustom((atual) =>
+        (atual || []).filter((c) => c.id !== id),
+      );
+      // 2) Remove do CATEGORIAS/ORDEM_CATS em memória pra não aparecer mais.
+      delete CATEGORIAS[id];
+      const idx = ORDEM_CATS.indexOf(id);
+      if (idx >= 0) ORDEM_CATS.splice(idx, 1);
+      // 3) Reatribui txs antigas pra "outros" (preserva histórico).
+      cloud.setTxs((atual) =>
+        (atual || []).map((t) =>
+          t.categoria === id ? { ...t, categoria: "outros" } : t,
+        ),
+      );
+      // 4) Limpa o orçamento associado, se houver.
+      cloud.setOrcamentos((atual) => {
+        if (!atual || !(id in atual)) return atual;
+        const novo = { ...atual };
+        delete novo[id];
+        return novo;
+      });
+    },
+    [cloud.setCategoriasCustom, cloud.setTxs, cloud.setOrcamentos],
+  );
+
   // Tema reativo às preferências
   React.useEffect(() => {
     aplicarTema(cloud.preferences.paleta, cloud.preferences.modo);
@@ -846,6 +879,7 @@ export function App() {
     cancelarRecorrente,
     categoriasCustom: cloud.categoriasCustom,
     adicionarCategoria,
+    excluirCategoria,
     preferences: cloud.preferences,
     setPreferences: cloud.setPreferences,
     // ─── Conta compartilhada ───
