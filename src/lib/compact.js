@@ -38,6 +38,10 @@ export function compactarCaixinha(cx) {
   if (cx.dataMeta) out.dataMeta = cx.dataMeta;
   if (cx.criadoEm) out.criadoEm = cx.criadoEm;
   if (cx.criadoPor) out.criadoPor = cx.criadoPor;
+  if (cx.rendimentoAtivo && cx.rendimentoCDI > 0) {
+    out.rendimentoAtivo = true;
+    out.rendimentoCDI = cx.rendimentoCDI;
+  }
   if (cx.depositos && cx.depositos.length > 0) {
     out.depositos = cx.depositos.map(compactarDeposito);
   }

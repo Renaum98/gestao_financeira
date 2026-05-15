@@ -98,15 +98,18 @@ function Logo({ size = 84 }) {
       `}</style>
       <div className="login-logo-float" style={{
         width: size, height: size, borderRadius: size * 0.34,
-        background: 'linear-gradient(135deg, var(--primary), var(--primary-2))',
+        background: '#fff',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         boxShadow: '0 16px 36px color-mix(in oklab, var(--primary) 30%, transparent)',
         position: 'relative', overflow: 'hidden', flexShrink: 0,
         animation: 'logoFloat 3.6s ease-in-out infinite',
         willChange: 'transform',
       }}>
-        <div style={{ position: 'absolute', top: -18, left: -18, width: 44, height: 44, borderRadius: '50%', background: 'rgba(255,255,255,0.18)' }} />
-        <div style={{ fontSize: size * 0.6, fontWeight: 800, color: '#fff', letterSpacing: '-0.05em', lineHeight: 1, position: 'relative' }}>F</div>
+        <img
+          src="/logo.png"
+          alt="Finça"
+          style={{ width: '88%', height: '88%', objectFit: 'contain' }}
+        />
       </div>
     </>
   );
