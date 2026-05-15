@@ -14,6 +14,7 @@ import { ModalOverlay } from "../ui/modal-base.jsx";
 import { vibrar } from "../lib/haptics.js";
 import { ConfirmModal } from "../ui/confirm-modal.jsx";
 import { COR_POS } from "../lib/colors.js";
+import { formatarValorDigitado, parseValorBR } from "../lib/money-input.js";
 
 function hojeISO() {
   const d = new Date();
@@ -84,22 +85,11 @@ export function AddExpenseModal({ ctx, params }) {
     setCriandoCat(false);
   };
 
-  // Mantém o estilo "calculadora" (cada dígito vira centavo, vai empurrando para reais)
-  // mas usando o teclado numérico nativo do sistema via input invisível.
-  const aoDigitar = (texto) => {
-    let v = texto.replace(/\D/g, ""); // só dígitos
-    if (v.length > 10) v = v.slice(0, 10);
-    if (!v) {
-      setValor("0,00");
-      return;
-    }
-    v = v.padStart(3, "0");
-    const reais = v.slice(0, -2);
-    const cent = v.slice(-2);
-    setValor(`${parseInt(reais, 10)},${cent}`);
-  };
+  // Estilo "calculadora": cada dígito vira centavo, vai empurrando para reais.
+  // Lógica em lib/money-input.js (compartilhada com simular-gasto, caixinhas etc).
+  const aoDigitar = (texto) => setValor(formatarValorDigitado(texto));
 
-  const valorNum = parseFloat(valor.replace(",", ".")) || 0;
+  const valorNum = parseValorBR(valor);
   const ehCredito = !ehEntrada && pagamento === "Cartão de crédito";
   const numParcelas = ehCredito ? parcelas : 1;
   const valorParcela = numParcelas > 0 ? valorNum / numParcelas : valorNum;

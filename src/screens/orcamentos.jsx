@@ -6,6 +6,11 @@ import { CatChip, Icon } from '../ui/icons.jsx';
 import { Card, TopBar } from '../ui/common.jsx';
 import { BarraProgresso } from '../ui/charts.jsx';
 import { COR_POS, COR_NEG, COR_AVISO } from '../lib/colors.js';
+import {
+  formatarValorDigitado,
+  formatarValorInicial,
+  parseValorBR,
+} from '../lib/money-input.js';
 
 export function OrcamentosScreen({ ctx }) {
   const { txs, mes, ocultar, voltar, orcamentos, setOrcamentos, preferences, setPreferences, ehDesktop, caixinhas, usuario } = ctx;
@@ -38,20 +43,18 @@ export function OrcamentosScreen({ ctx }) {
   const pctGeral = orcMensal > 0 ? (totalGasto / orcMensal) * 100 : 0;
 
   const [editandoTotal, setEditandoTotal] = React.useState(false);
-  const [tempTotal, setTempTotal] = React.useState('');
+  const [tempTotal, setTempTotal] = React.useState('0,00');
 
   const [editandoCat, setEditandoCat] = React.useState(null);
-  const [tempCat, setTempCat] = React.useState('');
+  const [tempCat, setTempCat] = React.useState('0,00');
 
   const salvarTotal = () => {
-    const v = parseFloat(tempTotal.replace(/\./g, '').replace(',', '.')) || 0;
-    setPreferences({ orcamentoMensal: Math.max(0, v) });
+    setPreferences({ orcamentoMensal: Math.max(0, parseValorBR(tempTotal)) });
     setEditandoTotal(false);
   };
 
   const salvarCat = (catId) => {
-    const v = parseFloat(tempCat.replace(/\./g, '').replace(',', '.')) || 0;
-    setOrcamentos({ ...orcamentos, [catId]: Math.max(0, v) });
+    setOrcamentos({ ...orcamentos, [catId]: Math.max(0, parseValorBR(tempCat)) });
     setEditandoCat(null);
   };
 
@@ -69,7 +72,7 @@ export function OrcamentosScreen({ ctx }) {
           <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div style={{ fontSize: 12, fontWeight: 600, opacity: 0.85 }}>Orçamento mensal</div>
             {!editandoTotal && (
-              <button onClick={() => { setTempTotal(orcBase > 0 ? String(orcBase).replace('.', ',') : ''); setEditandoTotal(true); }} style={{
+              <button onClick={() => { setTempTotal(formatarValorInicial(orcBase)); setEditandoTotal(true); }} style={{
                 background: 'rgba(255,255,255,0.18)', border: 'none', cursor: 'pointer',
                 color: '#fff', padding: '6px 10px', borderRadius: 999,
                 display: 'inline-flex', alignItems: 'center', gap: 5,
@@ -86,11 +89,11 @@ export function OrcamentosScreen({ ctx }) {
               <input
                 autoFocus
                 type="text"
-                inputMode="decimal"
+                inputMode="numeric"
+                pattern="[0-9]*"
                 value={tempTotal}
-                onChange={(e) => setTempTotal(e.target.value)}
+                onChange={(e) => setTempTotal(formatarValorDigitado(e.target.value))}
                 onKeyDown={(e) => { if (e.key === 'Enter') salvarTotal(); if (e.key === 'Escape') setEditandoTotal(false); }}
-                placeholder="0,00"
                 style={{
                   flex: 1, padding: '6px 10px', borderRadius: 10,
                   border: 'none', background: 'rgba(255,255,255,0.18)',
@@ -110,7 +113,7 @@ export function OrcamentosScreen({ ctx }) {
           ) : (
             <div style={{ fontSize: 28, fontWeight: 800, marginTop: 4, letterSpacing: '-0.02em', position: 'relative' }}>
               {orcMensal > 0 ? fmtBRL(orcMensal, ocultar) : (
-                <button onClick={() => { setTempTotal(''); setEditandoTotal(true); }} style={{
+                <button onClick={() => { setTempTotal(formatarValorInicial(orcMensal)); setEditandoTotal(true); }} style={{
                   background: 'transparent', border: '1.5px dashed rgba(255,255,255,0.6)',
                   color: '#fff', padding: '8px 14px', borderRadius: 12,
                   fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
@@ -178,13 +181,13 @@ export function OrcamentosScreen({ ctx }) {
                       <input
                         autoFocus
                         type="text"
-                        inputMode="decimal"
+                        inputMode="numeric"
+                        pattern="[0-9]*"
                         value={tempCat}
-                        placeholder="0,00"
-                        onChange={(e) => setTempCat(e.target.value)}
+                        onChange={(e) => setTempCat(formatarValorDigitado(e.target.value))}
                         onKeyDown={(e) => { if (e.key === 'Enter') salvarCat(c); if (e.key === 'Escape') setEditandoCat(null); }}
                         style={{
-                          width: 80, padding: '6px 10px', borderRadius: 10,
+                          width: 90, padding: '6px 10px', borderRadius: 10,
                           border: '1.5px solid var(--primary)', background: 'var(--card)',
                           fontSize: 13, fontWeight: 700, color: 'var(--ink)', outline: 'none',
                           fontFamily: 'inherit', textAlign: 'right',
@@ -199,7 +202,7 @@ export function OrcamentosScreen({ ctx }) {
                       </button>
                     </div>
                   ) : (
-                    <button onClick={() => { setEditandoCat(c); setTempCat(orc > 0 ? String(orc) : ''); }} style={{
+                    <button onClick={() => { setEditandoCat(c); setTempCat(formatarValorInicial(orc)); }} style={{
                       background: 'transparent', border: 'none', cursor: 'pointer', padding: 4,
                       color: 'var(--muted)',
                     }}>

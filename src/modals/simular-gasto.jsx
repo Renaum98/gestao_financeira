@@ -9,6 +9,7 @@ import { Icon } from "../ui/icons.jsx";
 import { ModalOverlay } from "../ui/modal-base.jsx";
 import { vibrar } from "../lib/haptics.js";
 import { COR_POS, COR_NEG, COR_AVISO } from "../lib/colors.js";
+import { formatarValorDigitado, parseValorBR } from "../lib/money-input.js";
 
 export function SimularGastoModal({
   restante = 0,
@@ -20,21 +21,8 @@ export function SimularGastoModal({
   const [valor, setValor] = React.useState("0,00");
   const [parcelas, setParcelas] = React.useState(1);
 
-  // Mesmo estilo "calculadora" do add-expense — cada dígito vira centavo.
-  const aoDigitar = (texto) => {
-    let v = texto.replace(/\D/g, "");
-    if (v.length > 10) v = v.slice(0, 10);
-    if (!v) {
-      setValor("0,00");
-      return;
-    }
-    v = v.padStart(3, "0");
-    const reais = v.slice(0, -2);
-    const cent = v.slice(-2);
-    setValor(`${parseInt(reais, 10)},${cent}`);
-  };
-
-  const valorNum = parseFloat(valor.replace(",", ".")) || 0;
+  const aoDigitar = (texto) => setValor(formatarValorDigitado(texto));
+  const valorNum = parseValorBR(valor);
   const n = Math.max(1, Math.min(48, parcelas));
   const valorParcela = valorNum / n;
 

@@ -14,6 +14,11 @@ import React from "react";
 import { fmtBRL, fmtBRLCompacto, MESES_CURTO } from "../data.js";
 import { Icon } from "../ui/icons.jsx";
 import { COR_POS, COR_NEG, COR_POS_FUNDO, COR_NEG_FUNDO } from "../lib/colors.js";
+import {
+  formatarValorDigitado,
+  formatarValorInicial,
+  parseValorBR,
+} from "../lib/money-input.js";
 import { Card, TopBar } from "../ui/common.jsx";
 import { BarraProgresso } from "../ui/charts.jsx";
 import { ConfirmModal } from "../ui/confirm-modal.jsx";
@@ -937,11 +942,11 @@ function ModalCaixinha({ editando, onFechar, onSalvar }) {
     editando ? !!editando.meta : false,
   );
   const [meta, setMeta] = React.useState(
-    editando?.meta ? String(editando.meta).replace(".", ",") : "",
+    formatarValorInicial(editando?.meta || 0),
   );
   const [dataMeta, setDataMeta] = React.useState(editando?.dataMeta ?? "");
 
-  const metaNum = parseFloat(meta.replace(/\./g, "").replace(",", ".")) || 0;
+  const metaNum = parseValorBR(meta);
   const valido = nome.trim().length > 0;
 
   const salvar = () => {
@@ -1029,10 +1034,10 @@ function ModalCaixinha({ editando, onFechar, onSalvar }) {
               </span>
               <input
                 type="text"
-                inputMode="decimal"
+                inputMode="numeric"
+                pattern="[0-9]*"
                 value={meta}
-                onChange={(e) => setMeta(e.target.value)}
-                placeholder="0,00"
+                onChange={(e) => setMeta(formatarValorDigitado(e.target.value))}
                 style={inputStyle}
               />
             </div>
@@ -1107,20 +1112,8 @@ function ModalDeposito({ cor, gruposEntrada = [], alocadoPorDescricao = {}, onFe
 
   const temEntradas = gruposComSaldo.length > 0;
 
-  const aoDigitar = (texto) => {
-    let v = texto.replace(/\D/g, "");
-    if (v.length > 10) v = v.slice(0, 10);
-    if (!v) {
-      setValor("0,00");
-      return;
-    }
-    v = v.padStart(3, "0");
-    const reais = v.slice(0, -2);
-    const cent = v.slice(-2);
-    setValor(`${parseInt(reais, 10)},${cent}`);
-  };
-
-  const valorNum = parseFloat(valor.replace(",", ".")) || 0;
+  const aoDigitar = (texto) => setValor(formatarValorDigitado(texto));
+  const valorNum = parseValorBR(valor);
   const grupoEscolhido = gruposComSaldo.find((g) => g.descricao === entradaDesc);
   const excedeEntrada =
     origemTipo === "entrada" && grupoEscolhido && valorNum > grupoEscolhido.disponivel + 0.001;
@@ -1422,28 +1415,12 @@ function ModalDeposito({ cor, gruposEntrada = [], alocadoPorDescricao = {}, onFe
 function ModalResgate({ cor, nome, disponivel, onFechar, onSalvar }) {
   const [valor, setValor] = React.useState("0,00");
 
-  const aoDigitar = (texto) => {
-    let v = texto.replace(/\D/g, "");
-    if (v.length > 10) v = v.slice(0, 10);
-    if (!v) {
-      setValor("0,00");
-      return;
-    }
-    v = v.padStart(3, "0");
-    const reais = v.slice(0, -2);
-    const cent = v.slice(-2);
-    setValor(`${parseInt(reais, 10)},${cent}`);
-  };
-
-  const valorNum = parseFloat(valor.replace(",", ".")) || 0;
+  const aoDigitar = (texto) => setValor(formatarValorDigitado(texto));
+  const valorNum = parseValorBR(valor);
   const excede = valorNum > disponivel + 0.001;
   const podeSalvar = valorNum > 0 && !excede;
 
-  const aplicarTudo = () => {
-    const fixo = disponivel.toFixed(2);
-    const [r, c] = fixo.split(".");
-    setValor(`${parseInt(r, 10)},${c}`);
-  };
+  const aplicarTudo = () => setValor(formatarValorInicial(disponivel));
 
   const salvar = () => {
     if (!podeSalvar) return;

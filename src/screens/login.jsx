@@ -46,6 +46,44 @@ function Campo({ label, ...props }) {
   );
 }
 
+// Campo de senha com botão olho pra mostrar/esconder o que está sendo digitado.
+// Reaproveita o `inputStyle` base e adiciona padding extra à direita pra não
+// sobrepor o ícone.
+function CampoSenha({ label, value, onChange, ...props }) {
+  const [mostrar, setMostrar] = React.useState(false);
+  return (
+    <label style={{ display: 'block' }}>
+      <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--muted)', marginBottom: 6, paddingLeft: 2 }}>{label}</div>
+      <div style={{ position: 'relative' }}>
+        <input
+          {...props}
+          type={mostrar ? 'text' : 'password'}
+          value={value}
+          onChange={onChange}
+          style={{ ...inputStyle, paddingRight: 44 }}
+        />
+        <button
+          type="button"
+          onClick={() => setMostrar((v) => !v)}
+          aria-label={mostrar ? 'Esconder senha' : 'Mostrar senha'}
+          aria-pressed={mostrar}
+          tabIndex={-1}
+          style={{
+            position: 'absolute',
+            right: 6, top: '50%', transform: 'translateY(-50%)',
+            width: 36, height: 36, borderRadius: 10,
+            background: 'transparent', border: 'none', cursor: 'pointer',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            color: 'var(--muted)',
+          }}
+        >
+          <Icon name={mostrar ? 'eye-off' : 'eye'} size={18} strokeWidth={2} />
+        </button>
+      </div>
+    </label>
+  );
+}
+
 function Logo({ size = 84 }) {
   return (
     <>
@@ -176,7 +214,7 @@ export function LoginScreen() {
         <Campo label="E-mail" type="email" autoComplete="email" inputMode="email" placeholder="voce@email.com"
           value={email} onChange={(e) => setEmail(e.target.value)} />
         {modo !== 'recuperar' && (
-          <Campo label="Senha" type="password"
+          <CampoSenha label="Senha"
             autoComplete={modo === 'cadastrar' ? 'new-password' : 'current-password'}
             placeholder={modo === 'cadastrar' ? 'Mín. 8 caracteres, letras e números' : 'Sua senha'}
             value={senha} onChange={(e) => setSenha(e.target.value)} />
