@@ -32,6 +32,23 @@ html, body {
   -ms-touch-action: pan-x pan-y;
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
+  /* Desabilita seleção/cópia de texto em toda a UI. Inputs/textarea liberam
+     abaixo (precisam pra digitar). */
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  /* iOS: bloqueia o "callout" (menu de copiar/compartilhar ao segurar). */
+  -webkit-touch-callout: none;
+}
+
+/* Inputs e textareas precisam permitir seleção pra o usuário editar. */
+input, textarea, [contenteditable="true"] {
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+  user-select: text;
+  -webkit-touch-callout: default;
 }
 
 body {
