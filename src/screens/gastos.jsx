@@ -4,11 +4,12 @@ import React from "react";
 import {
   CATEGORIAS,
   ORDEM_CATS,
+  PAGAMENTOS,
   fmtBRL,
   totalGeral,
   txDoMes,
 } from "../data.js";
-import { Icon } from "../ui/icons.jsx";
+import { Icon, iconePagamento } from "../ui/icons.jsx";
 import { Card, ItemTransacao, SeletorMes, TopBar } from "../ui/common.jsx";
 import { ConfirmModal } from "../ui/confirm-modal.jsx";
 import { COR_NEG, COR_NEG_FUNDO } from "../lib/colors.js";
@@ -16,6 +17,7 @@ import { COR_NEG, COR_NEG_FUNDO } from "../lib/colors.js";
 export function GastosScreen({ ctx }) {
   const { txs, mes, setMes, todosMeses, ocultar, irPara, excluirTx } = ctx;
   const [filtro, setFiltro] = React.useState("todas");
+  const [filtroPag, setFiltroPag] = React.useState("todos");
   const [busca, setBusca] = React.useState("");
   const [acaoAberta, setAcaoAberta] = React.useState(null);
   const [confirmarExclusao, setConfirmarExclusao] = React.useState(null); // tx pendente de confirmação
@@ -31,13 +33,27 @@ export function GastosScreen({ ctx }) {
     return set;
   }, [txMesBruto]);
 
+  // Pagamentos que aparecem no mês (apenas saídas têm pagamento).
+  const pagsComTx = React.useMemo(() => {
+    const set = new Set();
+    for (const t of txMesBruto) {
+      if (t.tipo !== "entrada" && t.pagamento) set.add(t.pagamento);
+    }
+    return set;
+  }, [txMesBruto]);
+
   // Se o filtro atual não existe mais (mudou de mês), volta pra "todas".
   React.useEffect(() => {
     if (filtro !== "todas" && !catsComTx.has(filtro)) setFiltro("todas");
   }, [filtro, catsComTx]);
+  React.useEffect(() => {
+    if (filtroPag !== "todos" && !pagsComTx.has(filtroPag)) setFiltroPag("todos");
+  }, [filtroPag, pagsComTx]);
 
   let txMes = txMesBruto;
   if (filtro !== "todas") txMes = txMes.filter((t) => t.categoria === filtro);
+  if (filtroPag !== "todos")
+    txMes = txMes.filter((t) => t.pagamento === filtroPag);
   if (busca)
     txMes = txMes.filter((t) =>
       t.descricao.toLowerCase().includes(busca.toLowerCase()),
@@ -53,6 +69,10 @@ export function GastosScreen({ ctx }) {
   );
 
   const cats = ["todas", ...ORDEM_CATS.filter((c) => catsComTx.has(c))];
+  const pags = ["todos", ...PAGAMENTOS.filter((p) => pagsComTx.has(p))];
+
+  const rotuloPag = (p) =>
+    p === "todos" ? "Todas" : p.replace("Cartão de ", "");
 
   return (
     <div style={{ paddingBottom: "var(--pad-bottom)" }}>
@@ -166,14 +186,14 @@ export function GastosScreen({ ctx }) {
       </div>
 
       {/* Filtros de categoria */}
-      <div style={{ padding: "12px 0 0" }}>
+      <div style={{ padding: "10px 0 0" }}>
         <div
           className="carrossel"
           style={{
             display: "flex",
-            gap: 8,
+            gap: 6,
             overflowX: "auto",
-            padding: "4px 20px 6px",
+            padding: "2px 20px 4px",
             scrollbarWidth: "none",
           }}
         >
@@ -185,12 +205,12 @@ export function GastosScreen({ ctx }) {
                 key={c}
                 onClick={() => setFiltro(c)}
                 style={{
-                  padding: "8px 14px",
+                  padding: "6px 14px",
                   borderRadius: 999,
                   border: "none",
                   background: sel ? "var(--ink)" : "var(--card)",
                   color: sel ? "var(--bg)" : "var(--ink)",
-                  fontSize: 13,
+                  fontSize: 12,
                   fontWeight: 700,
                   whiteSpace: "nowrap",
                   cursor: "pointer",
@@ -217,6 +237,58 @@ export function GastosScreen({ ctx }) {
           })}
         </div>
       </div>
+
+      {/* Filtros de tipo de pagamento */}
+      {pags.length > 1 && (
+        <div style={{ padding: "6px 0 0" }}>
+          <div
+            className="carrossel"
+            style={{
+              display: "flex",
+              gap: 6,
+              overflowX: "auto",
+              padding: "2px 20px 4px",
+              scrollbarWidth: "none",
+            }}
+          >
+            {pags.map((p) => {
+              const sel = filtroPag === p;
+              return (
+                <button
+                  key={p}
+                  onClick={() => setFiltroPag(p)}
+                  style={{
+                    padding: "6px 14px",
+                    borderRadius: 999,
+                    border: "none",
+                    background: sel ? "var(--ink)" : "var(--card)",
+                    color: sel ? "var(--bg)" : "var(--ink)",
+                    fontSize: 12,
+                    fontWeight: 700,
+                    whiteSpace: "nowrap",
+                    cursor: "pointer",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 6,
+                    flexShrink: 0,
+                    boxShadow: sel ? "none" : "0 1px 2px rgba(0,0,0,0.04)",
+                  }}
+                >
+                  {p !== "todos" && (
+                    <Icon
+                      name={iconePagamento(p)}
+                      size={13}
+                      color={sel ? "var(--bg)" : "var(--ink)"}
+                      strokeWidth={2}
+                    />
+                  )}
+                  {rotuloPag(p)}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Lista única do mês — sem agrupamento por dia. A data de cada
           transação aparece no próprio ItemTransacao (canto direito). */}

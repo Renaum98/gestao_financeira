@@ -565,6 +565,17 @@ export function App() {
   const [tela, setTela] = React.useState("inicio");
   const [params, setParams] = React.useState({});
   const [stack, setStack] = React.useState([]);
+
+  // Ao logar (uid passa a ser válido), volta sempre para a tela "inicio".
+  // Sem isto, quem desloga em "gastos"/"analise" volta para a mesma aba
+  // ao logar novamente, porque o componente App nunca desmonta.
+  React.useEffect(() => {
+    if (uid) {
+      setTela("inicio");
+      setStack([]);
+      setParams({});
+    }
+  }, [uid]);
   const [ocultar, setOcultar] = React.useState(false);
   const [addModal, setAddModal] = React.useState(null);
   const [onboarding, setOnboarding] = React.useState(
