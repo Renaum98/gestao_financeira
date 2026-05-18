@@ -4,10 +4,8 @@ import { VitePWA } from 'vite-plugin-pwa';
 import { readFileSync } from 'node:fs';
 import { execSync } from 'node:child_process';
 
-// Em GitHub Actions, GITHUB_REPOSITORY = "usuario/repo".
-// Em dev local, base = '/'.
-const ghRepo = process.env.GITHUB_REPOSITORY?.split('/')[1];
-const base = process.env.GITHUB_ACTIONS && ghRepo ? `/${ghRepo}/` : '/';
+// App servido a partir da raiz do domínio (Vercel) — base sempre '/'.
+const base = '/';
 
 // Versão única por build: package.json + hash curto do git (fallback: timestamp).
 // Cada build gera um manifest/service-worker diferente, forçando o PWA a atualizar.
