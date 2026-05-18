@@ -1,4 +1,7 @@
-// onboarding.jsx — Tour animado com as principais features.
+// onboarding.jsx — Tour animado com as principais funcionalidades.
+//
+// Estrutura enxuta: abertura + 3 pilares (lançar, analisar, planejar) + fim.
+// Animações mantidas no mesmo nível visual do tour anterior.
 
 import React from 'react';
 import { Icon } from '../ui/icons.jsx';
@@ -11,49 +14,35 @@ export function Onboarding({ onFim }) {
       id: 'welcome',
       cor1: '#D6C5FF', cor2: '#9B7BFF',
       titulo: 'Suas finanças,\nfinalmente claras',
-      subtitulo: 'Em poucos minutos por mês, você passa a saber exatamente para onde seu dinheiro vai.',
+      subtitulo: 'Tenha controle completo em poucos minutos por mês.',
       Ilustracao: IlustracaoBoasVindas,
     },
     {
-      id: 'add',
+      id: 'lancar',
       cor1: '#FFD7B5', cor2: '#FF9B6E',
-      titulo: 'Adicione gastos\ne entradas em segundos',
-      subtitulo: 'Marque se é saída ou entrada, escolha a categoria, parcele em até 24× — tudo na mesma tela.',
+      titulo: 'Lance gastos\ne entradas',
+      subtitulo: 'Categorize, parcele ou marque como recorrente — tudo em segundos.',
       Ilustracao: IlustracaoAdd,
     },
     {
-      id: 'categorias',
+      id: 'analisar',
       cor1: '#C8F0DC', cor2: '#3FCB9A',
       titulo: 'Veja para onde\nseu dinheiro vai',
-      subtitulo: 'Gráficos por categoria, comparação com o mês anterior e tendência diária do quanto você gasta.',
-      Ilustracao: IlustracaoCategorias,
+      subtitulo: 'Gráficos, evolução mensal e comparações automáticas.',
+      Ilustracao: IlustracaoAnalise,
     },
     {
-      id: 'orcamento',
-      cor1: '#FFD3DD', cor2: '#FF7AA8',
-      titulo: 'Defina limites\nque fazem sentido',
-      subtitulo: 'Crie um orçamento total ou por categoria.',
-      Ilustracao: IlustracaoOrcamento,
-    },
-    {
-      id: 'caixinhas',
+      id: 'planejar',
       cor1: '#FCE7A8', cor2: COR_AVISO,
-      titulo: 'Guarde dinheiro\ncom propósito',
-      subtitulo: 'Crie caixinhas para metas.',
-      Ilustracao: IlustracaoCaixinhas,
-    },
-    {
-      id: 'recorrentes',
-      cor1: '#D0E4FF', cor2: '#5DA8FF',
-      titulo: 'Recorrências\nautomáticas',
-      subtitulo: 'Marque uma cobrança como recorrente e ela aparece nos próximos 12 meses, sem você precixar lembrar.',
-      Ilustracao: IlustracaoRecorrentes,
+      titulo: 'Planeje e guarde\npara suas metas',
+      subtitulo: 'Defina orçamentos e crie caixinhas pra alcançar seus objetivos.',
+      Ilustracao: IlustracaoPlanejar,
     },
     {
       id: 'done',
       cor1: '#E2D8FF', cor2: '#6E4FF6',
       titulo: 'Tudo pronto.\nVamos começar?',
-      subtitulo: 'Você pode rever este tour a qualquer momento em Perfil → Refazer tour.',
+      subtitulo: 'Você pode rever este tour em Perfil → Refazer tour.',
       Ilustracao: IlustracaoPronto,
     },
   ];
@@ -184,14 +173,6 @@ const KEYFRAMES = `
   50%, 95%  { transform: translateX(calc(100% + 4px)); }
   100%      { transform: translateX(0); }
 }
-@keyframes preencherFatia {
-  from { stroke-dashoffset: var(--len, 251); }
-  to   { stroke-dashoffset: var(--off, 0); }
-}
-@keyframes barraSobe {
-  from { transform: scaleY(0); }
-  to   { transform: scaleY(1); }
-}
 @keyframes moedaCai {
   0%   { transform: translateY(-80px) rotate(-20deg); opacity: 0; }
   20%  { opacity: 1; }
@@ -211,10 +192,6 @@ const KEYFRAMES = `
   0%   { transform: translate(0, 0) scale(0); opacity: 0; }
   20%  { opacity: 1; transform: translate(var(--x), var(--y)) scale(1); }
   100% { transform: translate(var(--xf), var(--yf)) scale(0.6); opacity: 0; }
-}
-@keyframes calendarioDestaca {
-  0%, 100% { transform: scale(1);    box-shadow: 0 0 0 0 rgba(110,79,246,0.0); }
-  50%      { transform: scale(1.12); box-shadow: 0 0 0 8px rgba(110,79,246,0.18); }
 }
 `;
 
@@ -321,8 +298,8 @@ function IlustracaoAdd({ cor }) {
   );
 }
 
-function IlustracaoCategorias({ cor }) {
-  // Pizza animada com 4 fatias preenchendo em sequência
+function IlustracaoAnalise({ cor }) {
+  // Pizza animada com 4 fatias preenchendo em sequência.
   const fatias = [
     { cor: '#FF9B6E', pct: 35, off: 0 },
     { cor: '#5DA8FF', pct: 25, off: 35 },
@@ -330,7 +307,7 @@ function IlustracaoCategorias({ cor }) {
     { cor: cor, pct: 18, off: 82 },
   ];
   const R = 38;
-  const C = 2 * Math.PI * R; // ≈ 238.7
+  const C = 2 * Math.PI * R;
 
   return (
     <div style={{ position: 'relative', width: 140, height: 140 }}>
@@ -364,69 +341,20 @@ function IlustracaoCategorias({ cor }) {
   );
 }
 
-function IlustracaoOrcamento({ cor }) {
+function IlustracaoPlanejar({ cor }) {
+  // Combina o cofrinho (caixinhas) com uma barra de progresso (orçamento) —
+  // representa visualmente as duas funcionalidades de planejamento.
   return (
-    <div style={{
-      width: 220, background: 'var(--card)', borderRadius: 18,
-      padding: 16, boxShadow: '0 10px 28px rgba(0,0,0,0.12)',
-    }}>
-      <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: 0.5 }}>
-        Orçamento mensal
-      </div>
-      <div style={{ fontSize: 22, fontWeight: 800, color: 'var(--ink)', marginTop: 2, letterSpacing: '-0.02em' }}>
-        R$ 4.500,00
-      </div>
-      {/* Barra principal preenchendo */}
-      <div style={{
-        marginTop: 12, height: 10, background: 'var(--card-2)',
-        borderRadius: 10, overflow: 'hidden',
-      }}>
-        <div style={{
-          height: '100%', background: `linear-gradient(90deg, ${cor}, ${cor}AA)`,
-          borderRadius: 10, width: '0%',
-          animation: 'barraEnche 1.2s .2s forwards cubic-bezier(0.22, 1, 0.36, 1)',
-          ['--pct']: '68%',
-        }} />
-      </div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 6, fontSize: 10, fontWeight: 700, color: 'var(--muted)' }}>
-        <span>Gasto R$ 3,1k</span><span>68%</span>
-      </div>
-
-      {/* Sub-barras por categoria */}
-      <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
-        {[
-          { c: '#FF9B6E', pct: '80%', nome: 'Alimentação' },
-          { c: '#9B7BFF', pct: '55%', nome: 'Lazer' },
-          { c: '#5DA8FF', pct: '40%', nome: 'Transporte' },
-        ].map((row, i) => (
-          <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 6, animation: `subir .4s ${0.4 + i * 0.1}s both` }}>
-            <div style={{ width: 6, height: 6, borderRadius: 3, background: row.c }} />
-            <div style={{ flex: 1, height: 5, background: 'var(--card-2)', borderRadius: 4, overflow: 'hidden' }}>
-              <div style={{
-                height: '100%', background: row.c, borderRadius: 4,
-                width: '0%', animation: `barraEnche 1s ${0.5 + i * 0.15}s forwards cubic-bezier(0.22, 1, 0.36, 1)`,
-                ['--pct']: row.pct,
-              }} />
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function IlustracaoCaixinhas({ cor }) {
-  return (
-    <div style={{ position: 'relative', width: 160, height: 140 }}>
+    <div style={{ position: 'relative', width: 180, height: 160 }}>
       {/* Moedas caindo (looping) */}
       {[0, 0.7, 1.4].map((delay, i) => (
         <div key={i} style={{
-          position: 'absolute', top: 0, left: 64, width: 24, height: 24,
+          position: 'absolute', top: 0, left: 78, width: 22, height: 22,
           borderRadius: '50%',
           background: `linear-gradient(135deg, #FFE9A8, ${COR_AVISO})`,
           boxShadow: '0 4px 10px rgba(224,138,0,0.4), inset 0 -2px 0 rgba(0,0,0,0.12)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontWeight: 800, fontSize: 12, color: '#7a4a00',
+          fontWeight: 800, fontSize: 11, color: '#7a4a00',
           animation: `moedaCai 2.2s ${delay}s infinite ease-in`,
         }}>
           $
@@ -435,80 +363,49 @@ function IlustracaoCaixinhas({ cor }) {
 
       {/* Cofre */}
       <div style={{
-        position: 'absolute', bottom: 0, left: '50%', transform: 'translateX(-50%)',
-        width: 130, height: 90, borderRadius: '50% 50% 30% 30% / 45% 45% 35% 35%',
+        position: 'absolute', top: 36, left: '50%', transform: 'translateX(-50%)',
+        width: 120, height: 80, borderRadius: '50% 50% 30% 30% / 45% 45% 35% 35%',
         background: 'var(--card)', boxShadow: '0 12px 28px rgba(0,0,0,0.16)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
       }}>
-        <Icon name="piggy" size={56} color={cor} strokeWidth={2.2} />
+        <Icon name="piggy" size={50} color={cor} strokeWidth={2.2} />
         {/* Slot */}
         <div style={{
           position: 'absolute', top: 6, left: '50%', transform: 'translateX(-50%)',
-          width: 28, height: 5, borderRadius: 3, background: 'var(--linha)',
+          width: 26, height: 5, borderRadius: 3, background: 'var(--linha)',
         }} />
       </div>
 
-      {/* Barra de progresso meta */}
+      {/* Barra de progresso do orçamento — embaixo do cofre */}
       <div style={{
-        position: 'absolute', bottom: -14, left: 12, right: 12, height: 6,
-        background: 'var(--card-2)', borderRadius: 6, overflow: 'hidden',
+        position: 'absolute', bottom: 6, left: 4, right: 4,
+        background: 'var(--card)', borderRadius: 12, padding: '8px 12px',
+        boxShadow: '0 6px 18px rgba(0,0,0,0.08)',
       }}>
         <div style={{
-          height: '100%', background: cor, borderRadius: 6, width: '0%',
-          animation: 'barraEnche 1.6s .3s forwards cubic-bezier(0.22, 1, 0.36, 1)',
-          ['--pct']: '62%',
-        }} />
-      </div>
-    </div>
-  );
-}
-
-function IlustracaoRecorrentes({ cor }) {
-  // Mini-calendário com dias destacados em cada mês
-  return (
-    <div style={{
-      width: 180, background: 'var(--card)', borderRadius: 16,
-      padding: 14, boxShadow: '0 10px 28px rgba(0,0,0,0.12)',
-    }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-        <Icon name="history" size={18} color={cor} strokeWidth={2.4} />
-        <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--ink)' }}>Netflix · R$ 39,90</div>
-      </div>
-
-      {/* 3 mini-calendários representando meses */}
-      <div style={{ display: 'flex', gap: 6 }}>
-        {['Mai', 'Jun', 'Jul'].map((mes, mi) => (
-          <div key={mi} style={{
-            flex: 1, background: 'var(--card-2)', borderRadius: 10, padding: '6px 4px',
-            animation: `subir .4s ${0.15 * mi}s both`,
-          }}>
-            <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--muted)', textAlign: 'center', marginBottom: 4 }}>
-              {mes}
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 2 }}>
-              {Array.from({ length: 15 }, (_, i) => i).map((d) => {
-                const destacado = d === 7;
-                return (
-                  <div key={d} style={{
-                    width: '100%', aspectRatio: '1',
-                    borderRadius: 3,
-                    background: destacado ? cor : 'transparent',
-                    animation: destacado
-                      ? `calendarioDestaca 2.4s ${0.6 + mi * 0.3}s infinite`
-                      : 'none',
-                  }} />
-                );
-              })}
-            </div>
-          </div>
-        ))}
+          display: 'flex', justifyContent: 'space-between',
+          fontSize: 9, fontWeight: 700, color: 'var(--muted)', marginBottom: 4,
+        }}>
+          <span>Meta</span>
+          <span>70%</span>
+        </div>
+        <div style={{
+          height: 6, background: 'var(--card-2)', borderRadius: 4, overflow: 'hidden',
+        }}>
+          <div style={{
+            height: '100%', background: `linear-gradient(90deg, ${cor}, ${cor}AA)`,
+            borderRadius: 4, width: '0%',
+            animation: 'barraEnche 1.4s .3s forwards cubic-bezier(0.22, 1, 0.36, 1)',
+            ['--pct']: '70%',
+          }} />
+        </div>
       </div>
     </div>
   );
 }
 
 function IlustracaoPronto({ cor }) {
-  // Checkmark sendo desenhado + confetes
+  // Checkmark sendo desenhado + confetes.
   return (
     <div style={{ position: 'relative', width: 140, height: 140 }}>
       {/* Confetes */}

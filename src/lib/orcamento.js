@@ -15,18 +15,18 @@
 //   3. Mês atual / futuro sempre usa o orçamento atual (snapshot só é útil
 //      pra meses passados — o presente ainda está acontecendo).
 
-// Orçamento base "agora" — preferência manual se > 0, senão soma das
-// categorias. É o mesmo cálculo que o Dashboard sempre fez.
-export function calcOrcBaseAtual(preferences, orcamentos) {
-  if (preferences?.orcamentoMensal > 0) return preferences.orcamentoMensal;
-  return Object.values(orcamentos || {}).reduce((s, v) => s + (v || 0), 0);
+// Orçamento base "agora" — só o mensal manual. Limites por categoria
+// NÃO compõem o orçamento base: eles são sub-limites opcionais dentro do
+// mensal, não substitutos dele. Sem mensal definido = sem orçamento base.
+export function calcOrcBaseAtual(preferences) {
+  return preferences?.orcamentoMensal > 0 ? preferences.orcamentoMensal : 0;
 }
 
 // Orçamento base do mês `mes` (yyyy-mm). Pra mês passado, retorna o
 // snapshot salvo (se existir) ou o orçamento atual como fallback.
 // Pra mês atual ou futuro, sempre retorna o orçamento atual.
-export function obterOrcBaseDoMes(mes, preferences, orcamentos, mesAtual) {
-  const atual = calcOrcBaseAtual(preferences, orcamentos);
+export function obterOrcBaseDoMes(mes, preferences, mesAtual) {
+  const atual = calcOrcBaseAtual(preferences);
   if (mes >= mesAtual) return atual;
   const snap = preferences?.orcBaseAt?.[mes];
   return typeof snap === "number" ? snap : atual;

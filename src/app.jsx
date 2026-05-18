@@ -611,7 +611,7 @@ export function App() {
     if (!cloud.ready) return;
     if (!cloud.preferences) return;
     if (!todosMeses?.length) return;
-    const orcAtual = calcOrcBaseAtual(cloud.preferences, cloud.orcamentos);
+    const orcAtual = calcOrcBaseAtual(cloud.preferences);
     if (orcAtual <= 0) return; // sem orçamento ainda — tenta de novo quando definir
     const mesAtual = mesCorrente();
     const snaps = cloud.preferences.orcBaseAt || {};

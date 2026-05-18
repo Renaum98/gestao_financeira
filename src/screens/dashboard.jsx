@@ -79,7 +79,7 @@ export function DashboardScreen({ ctx }) {
   // Mês passado: usa o snapshot de orçamento congelado (preferences.orcBaseAt).
   // Mês atual: usa o orçamento atual normalmente. Isso garante que alterações
   // de orçamento hoje não retroajam ao "Restante" de meses anteriores.
-  const orcBase = obterOrcBaseDoMes(mes, preferences, orcamentos, mesCorrente());
+  const orcBase = obterOrcBaseDoMes(mes, preferences, mesCorrente());
   // Depósitos em caixinhas no mês exibido — dinheiro guardado, não disponível.
   // Vale tanto pra origem "orcamento" quanto "entrada": em ambos os casos o
   // valor saiu do que pode ser usado e foi pra reserva.

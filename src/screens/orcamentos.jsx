@@ -18,8 +18,10 @@ export function OrcamentosScreen({ ctx }) {
   const txMes = txDoMes(txs, mes);
   const porCat = totalPorCategoria(txMes);
   const entradas = totalEntradas(txMes);
-  const somaCats = Object.values(orcamentos).reduce((s, v) => s + v, 0);
-  const orcBase = preferences.orcamentoMensal > 0 ? preferences.orcamentoMensal : somaCats;
+  // Orçamento mensal é o teto OPCIONAL definido pelo usuário. Limites por
+  // categoria são sub-limites OPCIONAIS dentro do mensal — não compõem o
+  // mensal nem precisam somar igual a ele. Sem mensal definido = sem teto.
+  const orcBase = preferences.orcamentoMensal > 0 ? preferences.orcamentoMensal : 0;
   // Depósitos em caixinhas no mês — dinheiro guardado, não disponível.
   // Saques (valor < 0) ficam de fora: o resgate já volta como entrada do mês.
   // Em conta compartilhada, conto só os depósitos QUE EU FIZ — depósito do
@@ -38,7 +40,9 @@ export function OrcamentosScreen({ ctx }) {
     0,
   );
   // Entradas do mês somam ao orçamento; caixinhas guardadas abatem.
-  const orcMensal = orcBase + entradas - guardadoEmCaixinhas;
+  // Só faz sentido mostrar "orcMensal" quando há um teto definido.
+  const temOrcamento = orcBase > 0;
+  const orcMensal = temOrcamento ? orcBase + entradas - guardadoEmCaixinhas : 0;
   const totalGasto = totalGeral(txMes);
   const pctGeral = orcMensal > 0 ? (totalGasto / orcMensal) * 100 : 0;
 
@@ -112,8 +116,8 @@ export function OrcamentosScreen({ ctx }) {
             </div>
           ) : (
             <div style={{ fontSize: 28, fontWeight: 800, marginTop: 4, letterSpacing: '-0.02em', position: 'relative' }}>
-              {orcMensal > 0 ? fmtBRL(orcMensal, ocultar) : (
-                <button onClick={() => { setTempTotal(formatarValorInicial(orcMensal)); setEditandoTotal(true); }} style={{
+              {temOrcamento ? fmtBRL(orcMensal, ocultar) : (
+                <button onClick={() => { setTempTotal(formatarValorInicial(0)); setEditandoTotal(true); }} style={{
                   background: 'transparent', border: '1.5px dashed rgba(255,255,255,0.6)',
                   color: '#fff', padding: '8px 14px', borderRadius: 12,
                   fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
@@ -122,7 +126,7 @@ export function OrcamentosScreen({ ctx }) {
             </div>
           )}
 
-          {orcMensal > 0 && (
+          {temOrcamento && (
             <div style={{ marginTop: 14, position: 'relative' }}>
               <div style={{ height: 8, background: 'rgba(255,255,255,0.2)', borderRadius: 8, overflow: 'hidden' }}>
                 <div style={{
@@ -135,17 +139,6 @@ export function OrcamentosScreen({ ctx }) {
                 <span>Gasto: {fmtBRLCompacto(totalGasto, ocultar)}</span>
                 <span style={{ opacity: 0.85 }}>{pctGeral.toFixed(0)}% utilizado</span>
               </div>
-            </div>
-          )}
-
-          {preferences.orcamentoMensal > 0 && somaCats > 0 && Math.abs(preferences.orcamentoMensal - somaCats) > 1 && (
-            <div style={{
-              marginTop: 10, padding: '8px 10px', borderRadius: 10,
-              background: 'rgba(255,255,255,0.14)',
-              fontSize: 11, fontWeight: 600, opacity: 0.92,
-              position: 'relative',
-            }}>
-              Soma das categorias: {fmtBRLCompacto(somaCats)} (difere do total mensal).
             </div>
           )}
         </div>

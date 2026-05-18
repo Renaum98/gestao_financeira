@@ -87,7 +87,7 @@ export function AnaliseScreen({ ctx }) {
   // Pra mês passado, `obterOrcBaseDoMes` lê o snapshot de orçamento
   // congelado em preferences.orcBaseAt[mes] — assim alterar o orçamento
   // hoje NÃO muda o "sobrou" de meses anteriores.
-  const orcBase = obterOrcBaseDoMes(mes, preferences, orcamentos, mesAtual);
+  const orcBase = obterOrcBaseDoMes(mes, preferences, mesAtual);
   const meuUid = usuario?.uid;
   const guardadoEmCaixinhas = React.useMemo(() => {
     let acc = 0;
