@@ -21,6 +21,7 @@ import { SimularGastoModal } from "../modals/simular-gasto.jsx";
 import { vibrar } from "../lib/haptics.js";
 import { COR_POS, COR_NEG, COR_AVISO } from "../lib/colors.js";
 import { computeInsights } from "../lib/insights.jsx";
+import { obterOrcBaseDoMes, mesCorrente } from "../lib/orcamento.js";
 
 export function DashboardScreen({ ctx }) {
   const {
@@ -75,9 +76,10 @@ export function DashboardScreen({ ctx }) {
   const totalAnt = totalGeral(txMesAnt);
   const entradas = totalEntradas(txMes);
   const delta = totalAnt > 0 ? ((total - totalAnt) / totalAnt) * 100 : 0;
-  const somaOrcCats = Object.values(orcamentos).reduce((s, v) => s + v, 0);
-  const orcBase =
-    preferences.orcamentoMensal > 0 ? preferences.orcamentoMensal : somaOrcCats;
+  // Mês passado: usa o snapshot de orçamento congelado (preferences.orcBaseAt).
+  // Mês atual: usa o orçamento atual normalmente. Isso garante que alterações
+  // de orçamento hoje não retroajam ao "Restante" de meses anteriores.
+  const orcBase = obterOrcBaseDoMes(mes, preferences, orcamentos, mesCorrente());
   // Depósitos em caixinhas no mês exibido — dinheiro guardado, não disponível.
   // Vale tanto pra origem "orcamento" quanto "entrada": em ambos os casos o
   // valor saiu do que pode ser usado e foi pra reserva.

@@ -25,6 +25,7 @@ import {
 import { vibrar } from "./lib/haptics.js";
 import { useInstallPrompt, InstallPromptModal } from "./ui/install-prompt.jsx";
 import { LoaderTela } from "./ui/loader.jsx";
+import { calcOrcBaseAtual, mesCorrente } from "./lib/orcamento.js";
 
 // LoginScreen fica no bundle principal (primeira tela para deslogados).
 // As demais telas e o modal são carregados sob demanda (code-splitting).
@@ -598,6 +599,28 @@ export function App() {
     const i = todosMeses.indexOf(mes);
     return i >= 0 && i < todosMeses.length - 1 ? todosMeses[i + 1] : null;
   }, [todosMeses, mes]);
+
+  // ─── Snapshot do orçamento por mês ───
+  // Pra que o "Sobrou" / "Restante" de meses passados não mude quando o
+  // usuário altera o orçamento no futuro, guardamos o orçamento base de
+  // cada mês passado em preferences.orcBaseAt. Aqui fazemos o backfill:
+  // a cada abertura do app, qualquer mês passado com txs que ainda não
+  // tem snapshot recebe o valor do orçamento atual (best-effort — é o
+  // melhor que dá pra fazer pra meses antigos sem histórico de orçamento).
+  React.useEffect(() => {
+    if (!cloud.ready) return;
+    if (!cloud.preferences) return;
+    if (!todosMeses?.length) return;
+    const orcAtual = calcOrcBaseAtual(cloud.preferences, cloud.orcamentos);
+    if (orcAtual <= 0) return; // sem orçamento ainda — tenta de novo quando definir
+    const mesAtual = mesCorrente();
+    const snaps = cloud.preferences.orcBaseAt || {};
+    const faltam = todosMeses.filter((m) => m < mesAtual && !(m in snaps));
+    if (faltam.length === 0) return;
+    const novosSnaps = { ...snaps };
+    for (const m of faltam) novosSnaps[m] = orcAtual;
+    cloud.setPreferences({ orcBaseAt: novosSnaps });
+  }, [cloud.ready, cloud.preferences, cloud.orcamentos, todosMeses]);
 
   const TABS = ["inicio", "gastos", "analise", "perfil"];
   const irPara = (t, p = {}) => {

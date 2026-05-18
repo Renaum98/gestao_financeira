@@ -7,6 +7,7 @@ import {
   fmtBRL,
   fmtBRLCompacto,
   rotuloMesCurto,
+  totalEntradas,
   totalGeral,
   totalPorCategoria,
   txDoMes,
@@ -16,6 +17,7 @@ import { Card, SeletorMes, TopBar } from "../ui/common.jsx";
 import { BarraProgresso, LineChart, PieChart } from "../ui/charts.jsx";
 
 import { COR_POS as VERDE, COR_NEG as VERMELHO } from "../lib/colors.js";
+import { obterOrcBaseDoMes } from "../lib/orcamento.js";
 
 function mesShift(yyyymm, delta) {
   const [y, m] = yyyymm.split("-").map(Number);
@@ -47,6 +49,7 @@ export function AnaliseScreen({ ctx }) {
   const {
     txs, mes, setMes, todosMeses, mesAnterior, ocultar, irPara, ehDesktop,
     partnerTxs = [], partnerNome = '', partnerUid,
+    preferences = {}, orcamentos = {}, caixinhas = [], usuario,
   } = ctx;
   const ehCompartilhado = !!partnerUid;
   const spanAll = ehDesktop ? "col-span-all" : undefined;
@@ -77,10 +80,31 @@ export function AnaliseScreen({ ctx }) {
   const diasDecorridos =
     mes === mesAtual ? hoje.getDate() : diasNoMes(mes);
   const mediaDia = diasDecorridos > 0 ? total / diasDecorridos : 0;
-  const maiorTx = txMes.reduce(
-    (a, t) => (t.tipo === "entrada" ? a : !a || t.valor > a.valor ? t : a),
-    null,
-  );
+  const entradasMes = totalEntradas(txMes);
+
+  // "Sobrou" no mês — mesma fórmula do card de saldo do Dashboard:
+  //   restante = (orçamento base + entradas) − guardado em caixinhas − gastos
+  // Pra mês passado, `obterOrcBaseDoMes` lê o snapshot de orçamento
+  // congelado em preferences.orcBaseAt[mes] — assim alterar o orçamento
+  // hoje NÃO muda o "sobrou" de meses anteriores.
+  const orcBase = obterOrcBaseDoMes(mes, preferences, orcamentos, mesAtual);
+  const meuUid = usuario?.uid;
+  const guardadoEmCaixinhas = React.useMemo(() => {
+    let acc = 0;
+    for (const c of caixinhas || []) {
+      for (const d of c.depositos || []) {
+        if (!d.data || !d.data.startsWith(mes)) continue;
+        if (!(d.valor > 0)) continue;
+        const dono = d.feitoPor || meuUid || "_anon";
+        if (dono === (meuUid || "_anon")) acc += d.valor;
+      }
+    }
+    return acc;
+  }, [caixinhas, mes, meuUid]);
+  const orcTotal = orcBase + entradasMes - guardadoEmCaixinhas;
+  const restante = orcTotal - total;
+  const pctRestante = orcTotal > 0 ? (restante / orcTotal) * 100 : null;
+
   const diffTotal =
     totalAnt > 0 ? ((total - totalAnt) / totalAnt) * 100 : null;
 
@@ -215,9 +239,17 @@ export function AnaliseScreen({ ctx }) {
                 extra={`${dados.length} categoria${dados.length > 1 ? "s" : ""}`}
               />
               <StatCard
-                rotulo="Maior gasto"
-                valor={maiorTx ? fmtBRLCompacto(maiorTx.valor, ocultar) : "—"}
-                extra={maiorTx ? maiorTx.descricao : null}
+                rotulo="Sobrou"
+                valor={fmtBRLCompacto(restante, ocultar)}
+                valorCor={restante >= 0 ? VERDE : VERMELHO}
+                extra={
+                  orcTotal <= 0
+                    ? "sem orçamento definido"
+                    : restante >= 0
+                      ? `${pctRestante.toFixed(0)}% do orçamento`
+                      : "acima do orçamento"
+                }
+                extraCor={restante >= 0 ? VERDE : VERMELHO}
               />
             </div>
           </div>
@@ -793,7 +825,7 @@ export function AnaliseScreen({ ctx }) {
   );
 }
 
-function StatCard({ rotulo, valor, extra, extraCor }) {
+function StatCard({ rotulo, valor, valorCor, extra, extraCor }) {
   return (
     <Card style={{ padding: "14px 16px" }}>
       <div
@@ -811,7 +843,7 @@ function StatCard({ rotulo, valor, extra, extraCor }) {
         style={{
           fontSize: 19,
           fontWeight: 800,
-          color: "var(--ink)",
+          color: valorCor || "var(--ink)",
           marginTop: 4,
           letterSpacing: "-0.02em",
         }}
