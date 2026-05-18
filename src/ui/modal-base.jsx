@@ -3,8 +3,15 @@
 // Centraliza: backdrop com blur, animação fadeIn/scaleIn, fechar ao clicar
 // fora, role="dialog"/aria-modal. Cada modal só se preocupa com o conteúdo
 // interno e passa props pra ajustar tamanho/padding/scroll.
+//
+// IMPORTANTE: o overlay é portalizado em `document.body`. Sem portal, o
+// `position: fixed` do overlay ficaria contido por ancestrais que usam
+// `transform`/`will-change: transform` (ex.: `.page-transition`), o que
+// faz o modal abrir centralizado em relação ao wrapper longo da página
+// (não à viewport) e obrigaria o usuário a rolar pra cima.
 
 import React from 'react';
+import { createPortal } from 'react-dom';
 
 export function ModalOverlay({
   onClose,
@@ -21,7 +28,15 @@ export function ModalOverlay({
   // Estilos extras (mesclados ao final).
   dialogStyle,
 }) {
-  return (
+  // Trava o scroll do body enquanto o modal está aberto, pra não cair no
+  // caso de a página por baixo continuar rolando ao abrir o modal.
+  React.useEffect(() => {
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = prev; };
+  }, []);
+
+  const overlay = (
     <div
       onClick={onClose}
       style={{
@@ -58,4 +73,8 @@ export function ModalOverlay({
       </div>
     </div>
   );
+
+  // Em SSR/ambientes sem document, devolve inline (não deve acontecer aqui).
+  if (typeof document === 'undefined') return overlay;
+  return createPortal(overlay, document.body);
 }
