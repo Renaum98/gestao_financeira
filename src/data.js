@@ -18,6 +18,13 @@ export const ORDEM_CATS = ['alimentacao','transporte','moradia','lazer','saude',
 // O usuário pode criar categorias com nome + cor; o "logo" é a primeira letra do nome.
 // Ficam guardadas no Firestore e, no boot, são mescladas em CATEGORIAS / ORDEM_CATS
 // via aplicarCategoriasCustom() — assim todo o app (CatChip, telas, análises) funciona sem mudanças.
+//
+// Em contas com parceria, mesclamos também as categorias do parceiro pra
+// conseguir RENDERIZAR as txs dele com o nome/cor certos. Mas o usuário
+// não deve ver as categorias do parceiro como opção para criar uma tx
+// nova, filtrar, ou definir um orçamento. Para isso, marcamos as
+// categorias do parceiro com `doParceiro: true` durante o merge — quem
+// quer listar "só as minhas" usa `catsMinhas()`.
 
 export function novaCategoriaCustom(nome, cor) {
   const limpo = String(nome || '').trim() || 'Categoria';
@@ -30,15 +37,21 @@ export function novaCategoriaCustom(nome, cor) {
   };
 }
 
-export function aplicarCategoriasCustom(lista) {
+export function aplicarCategoriasCustom(lista, opts = {}) {
+  const doParceiro = !!opts.doParceiro;
   for (const c of lista || []) {
     if (!c || !c.id) continue;
+    // Em colisão de id, a entrada do usuário sempre vence: se já existe
+    // uma entrada não-do-parceiro com este id, não sobrescrevemos.
+    const existente = CATEGORIAS[c.id];
+    if (doParceiro && existente && !existente.doParceiro) continue;
     CATEGORIAS[c.id] = {
       id: c.id,
       nome: c.nome,
       cor: c.cor,
       corFundo: c.corFundo || (c.cor + '22'),
       custom: true,
+      ...(doParceiro && { doParceiro: true }),
     };
     if (!ORDEM_CATS.includes(c.id)) {
       // Insere antes de "outros" para manter "outros" como último.
@@ -47,6 +60,13 @@ export function aplicarCategoriasCustom(lista) {
       else ORDEM_CATS.push(c.id);
     }
   }
+}
+
+// Retorna a ordem de categorias visíveis ao usuário corrente, omitindo
+// as que vieram do parceiro. Usado em todas as superfícies de criação
+// e descoberta (picker de tx, filtros, orçamentos, gráfico de análise).
+export function catsMinhas() {
+  return ORDEM_CATS.filter((c) => !CATEGORIAS[c]?.doParceiro);
 }
 
 export const PAGAMENTOS = ['Cartão de crédito','Cartão de débito','Pix','Dinheiro'];

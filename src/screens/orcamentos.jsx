@@ -1,7 +1,7 @@
 // orcamentos.jsx — Tela Orçamentos (total mensal + limites por categoria).
 
 import React from 'react';
-import { CATEGORIAS, ORDEM_CATS, fmtBRL, fmtBRLCompacto, totalEntradas, totalGeral, totalPorCategoria, txDoMes } from '../data.js';
+import { CATEGORIAS, catsMinhas, fmtBRL, fmtBRLCompacto, totalEntradas, totalGeral, totalPorCategoria, txDoMes } from '../data.js';
 import { CatChip, Icon } from '../ui/icons.jsx';
 import { Card, TopBar } from '../ui/common.jsx';
 import { BarraProgresso } from '../ui/charts.jsx';
@@ -157,7 +157,7 @@ export function OrcamentosScreen({ ctx }) {
           Por categoria
         </div>
         <Card style={{ padding: '4px 16px' }}>
-          {ORDEM_CATS.map((c, i) => {
+          {catsMinhas().map((c, i) => {
             const cat = CATEGORIAS[c];
             const gasto = porCat[c] || 0;
             const orc = orcamentos[c] || 0;

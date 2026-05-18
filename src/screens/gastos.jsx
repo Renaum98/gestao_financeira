@@ -3,7 +3,7 @@
 import React from "react";
 import {
   CATEGORIAS,
-  ORDEM_CATS,
+  catsMinhas,
   PAGAMENTOS,
   fmtBRL,
   totalGeral,
@@ -68,7 +68,7 @@ export function GastosScreen({ ctx }) {
     [txMes],
   );
 
-  const cats = ["todas", ...ORDEM_CATS.filter((c) => catsComTx.has(c))];
+  const cats = ["todas", ...catsMinhas().filter((c) => catsComTx.has(c))];
   const pags = ["todos", ...PAGAMENTOS.filter((p) => pagsComTx.has(p))];
 
   const rotuloPag = (p) =>

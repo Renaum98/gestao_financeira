@@ -440,7 +440,11 @@ export function App() {
     aplicarCategoriasCustom(cloud.categoriasCustom);
   }
   if (partner.categoriasCustom?.length) {
-    aplicarCategoriasCustom(partner.categoriasCustom);
+    // `doParceiro: true` mantém o id no CATEGORIAS (para renderizar as txs
+    // do parceiro com nome/cor certos), mas marca a entrada para que pickers,
+    // filtros e orçamentos a omitam — categorias customizadas são pessoais
+    // por conta. Ver `catsMinhas()` em data.js.
+    aplicarCategoriasCustom(partner.categoriasCustom, { doParceiro: true });
   }
 
   const adicionarCategoria = React.useCallback(
@@ -462,6 +466,8 @@ export function App() {
   const excluirCategoria = React.useCallback(
     (id) => {
       if (!id || !CATEGORIAS[id]?.custom) return;
+      // Defesa: nunca deletar categoria do parceiro do meu lado.
+      if (CATEGORIAS[id]?.doParceiro) return;
       // 1) Remove da lista persistida.
       cloud.setCategoriasCustom((atual) =>
         (atual || []).filter((c) => c.id !== id),

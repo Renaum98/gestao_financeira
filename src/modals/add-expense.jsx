@@ -3,7 +3,7 @@
 import React from "react";
 import {
   CATEGORIAS,
-  ORDEM_CATS,
+  catsMinhas,
   PAGAMENTOS,
   MESES,
   fmtBRL,
@@ -355,7 +355,7 @@ export function AddExpenseModal({ ctx, params }) {
               scrollbarWidth: "none",
             }}
           >
-            {ORDEM_CATS.map((c) => {
+            {catsMinhas().map((c) => {
               const cat = CATEGORIAS[c];
               const sel = categoria === c;
               return (

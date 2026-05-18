@@ -3,7 +3,7 @@
 import React from "react";
 import {
   CATEGORIAS,
-  ORDEM_CATS,
+  catsMinhas,
   fmtBRL,
   fmtBRLCompacto,
   rotuloMesCurto,
@@ -62,7 +62,7 @@ export function AnaliseScreen({ ctx }) {
   const total = totalGeral(txMes);
   const totalAnt = totalGeral(txMesAnt);
 
-  const dados = ORDEM_CATS.filter((c) => (porCat[c] || 0) > 0)
+  const dados = catsMinhas().filter((c) => (porCat[c] || 0) > 0)
     .map((c) => ({
       id: c,
       valor: porCat[c],
