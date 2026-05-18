@@ -34,14 +34,18 @@ export default defineConfig({
         'sw-notifications.js',
       ],
       manifest: {
-        id: `${base}?v=${buildId}`,
+        // `id` deve ser estável entre deploys — é a identidade única do PWA pro
+        // navegador. Se mudar a cada build, o Chrome desktop trata como app novo
+        // e isso atrapalha o ícone de instalar e a atualização do app instalado.
+        id: '/',
         name: 'Financeiro',
         short_name: 'Financeiro',
         description: 'Gestão financeira pessoal',
-        version: buildId,
+        lang: 'pt-BR',
         theme_color: '#6E4FF6',
         background_color: '#FBF7F2',
         display: 'standalone',
+        display_override: ['standalone', 'minimal-ui'],
         orientation: 'portrait',
         start_url: base,
         scope: base,
