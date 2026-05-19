@@ -94,16 +94,20 @@ function TabBar({ tela, irPara, abrirAdd }) {
               <button
                 key={it.id}
                 onClick={abrirAdd}
-                className="btn-add-glass"
                 style={{
                   width: 52,
                   height: 52,
                   borderRadius: 26,
+                  border: "none",
+                  background:
+                    "linear-gradient(135deg, var(--primary), var(--primary-2))",
                   color: "#fff",
                   cursor: "pointer",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
+                  boxShadow:
+                    "0 6px 16px color-mix(in oklab, var(--primary) 35%, transparent)",
                   transform: "translateY(-8px)",
                 }}
               >
@@ -206,7 +210,6 @@ function Sidebar({ tela, irPara, abrirAdd, usuario, fotoPerfil }) {
 
       <button
         onClick={abrirAdd}
-        className="btn-add-glass"
         style={{
           display: "flex",
           alignItems: "center",
@@ -215,11 +218,16 @@ function Sidebar({ tela, irPara, abrirAdd, usuario, fotoPerfil }) {
           margin: "0 6px 14px",
           padding: "11px 12px",
           borderRadius: 14,
+          border: "none",
+          background:
+            "linear-gradient(135deg, var(--primary), var(--primary-2))",
           color: "#fff",
           fontSize: 14,
           fontWeight: 800,
           cursor: "pointer",
           fontFamily: "inherit",
+          boxShadow:
+            "0 6px 16px color-mix(in oklab, var(--primary) 30%, transparent)",
         }}
       >
         <Icon name="plus" size={18} color="#fff" strokeWidth={2.6} />
