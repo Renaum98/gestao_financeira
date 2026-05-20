@@ -629,6 +629,11 @@ export function App() {
   const irPara = (t, p = {}) => {
     vibrar();
     if (TABS.includes(t)) {
+      // Início e Transações sempre abrem no mês atual, salvo quando um mês
+      // específico é passado (ex.: clicar num mês no Histórico).
+      if (t === "inicio" || t === "gastos") {
+        setMes(p.mes || chaveMes(new Date()));
+      }
       setStack([]);
       setTela(t);
       setParams({});

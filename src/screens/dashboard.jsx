@@ -839,7 +839,7 @@ export function DashboardScreen({ ctx }) {
             gap: 8,
             padding: "10px 14px",
             borderRadius: 14,
-            border: "1px dashed color-mix(in oklab, var(--primary) 35%, transparent)",
+            border: "1px solid color-mix(in oklab, var(--primary) 35%, transparent)",
             background: "color-mix(in oklab, var(--primary) 6%, transparent)",
             color: "var(--primary)",
             fontSize: 13,
@@ -1213,7 +1213,7 @@ function ContaProximaModal({ tx, ocultar, onFechar, onMarcarPago }) {
 // volta no tempo, swipe pra esquerda avança. Quando `mes` muda por fora
 // (ex: SeletorMes dentro do card), o carrossel rola para o slide certo.
 //
-// Os slides laterais ficam progressivamente desfocados/diminuídos conforme
+// Os slides laterais ficam progressivamente diminuídos/esmaecidos conforme
 // a distância do centro do viewport, dando sensação de profundidade. O
 // efeito é dirigido pelo scroll em tempo real via rAF — sem transição CSS,
 // pra acompanhar o gesto sem lag.
@@ -1238,10 +1238,8 @@ function CarrosselSaldoMes({ todosMeses, mes, setMes, renderCard }) {
       const sc = s.offsetLeft + s.clientWidth / 2;
       // distância normalizada: 0 = centralizado, 1 = totalmente deslocado
       const d = Math.min(1, Math.abs(sc - centro) / s.clientWidth);
-      const blur = d * 6;          // até 6px
       const op = 1 - d * 0.45;     // até 0.55 de opacidade nos extremos
       const scale = 1 - d * 0.14;  // scale-down até 14% nos slides laterais
-      s.style.filter = blur > 0.1 ? `blur(${blur.toFixed(2)}px)` : "";
       s.style.opacity = op.toFixed(3);
       s.style.transform = `scale(${scale.toFixed(3)})`;
     }
@@ -1308,6 +1306,7 @@ function CarrosselSaldoMes({ todosMeses, mes, setMes, renderCard }) {
       className="carrossel-saldo"
       style={{
         display: "flex",
+        justifyContent: "safe center",
         overflowX: "auto",
         overflowY: "hidden",
         scrollSnapType: "x mandatory",

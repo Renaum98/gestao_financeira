@@ -6,8 +6,6 @@ import {
   catsMinhas,
   PAGAMENTOS,
   MESES,
-  fmtBRL,
-  fmtBRLCompacto,
 } from "../data.js";
 import { CatChip, Icon, iconePagamento } from "../ui/icons.jsx";
 import { ModalOverlay } from "../ui/modal-base.jsx";
@@ -54,9 +52,6 @@ export function AddExpenseModal({ ctx, params }) {
     editar?.pagamento || "Cartão de crédito",
   );
   const [data, setData] = React.useState(editar ? editar.data : hojeISO());
-  const [parcelas, setParcelas] = React.useState(
-    editar && editar.parcelas ? editar.parcelas.total : 1,
-  );
   const [ehRecorrente, setEhRecorrente] = React.useState(false);
   // Campos extras quando recorrente: dia de vencimento + até qual mês/ano.
   const _hoje = React.useMemo(() => new Date(), []);
@@ -72,7 +67,6 @@ export function AddExpenseModal({ ctx, params }) {
   const [criandoCat, setCriandoCat] = React.useState(false);
   const [novoNomeCat, setNovoNomeCat] = React.useState("");
   const [novaCorCat, setNovaCorCat] = React.useState(CORES_CAT[0]);
-  const [parcelasAberto, setParcelasAberto] = React.useState(false);
 
   const confirmarNovaCat = () => {
     const nome = novoNomeCat.trim();
@@ -90,15 +84,12 @@ export function AddExpenseModal({ ctx, params }) {
   const aoDigitar = (texto) => setValor(formatarValorDigitado(texto));
 
   const valorNum = parseValorBR(valor);
-  const ehCredito = !ehEntrada && pagamento === "Cartão de crédito";
-  const numParcelas = ehCredito ? parcelas : 1;
-  const valorParcela = numParcelas > 0 ? valorNum / numParcelas : valorNum;
 
   const salvar = () => {
     if (valorNum <= 0) return;
     const descFinal = descricao.trim()
       || (ehEntrada ? "Entrada" : CATEGORIAS[categoria].nome);
-    const vaiCriarRec = ehRecorrente && numParcelas === 1 && !editar;
+    const vaiCriarRec = ehRecorrente && !editar;
     // Data efetiva: quando recorrente, usa mês atual + dia de vencimento informado.
     let dataFinal = data;
     if (vaiCriarRec) {
@@ -116,11 +107,11 @@ export function AddExpenseModal({ ctx, params }) {
       descricao: descFinal,
       pagamento: ehEntrada ? null : pagamento,
       data: dataFinal,
+      // Parcelamento não é mais criável; ao editar uma tx parcelada antiga,
+      // preservamos o parcelamento existente (atualizando o valor total).
       parcelas:
-        !ehEntrada && numParcelas > 1
-          ? { total: numParcelas, valorTotal: valorNum }
-          : null,
-      // Marca para o app.jsx criar a recorrência (só faz sentido quando não é parcelado e não está editando)
+        editar?.parcelas ? { ...editar.parcelas, valorTotal: valorNum } : null,
+      // Marca para o app.jsx criar a recorrência (só faz sentido quando não está editando)
       ehRecorrente: vaiCriarRec,
       // Dia de vencimento e mês/ano final (yyyy-mm) — só usados se recorrente.
       recDia: vaiCriarRec ? diaVenc : null,
@@ -262,18 +253,6 @@ export function AddExpenseModal({ ctx, params }) {
               cursor: "text",
             }}
           />
-          {numParcelas > 1 && valorNum > 0 && (
-            <div
-              style={{
-                fontSize: 12,
-                fontWeight: 700,
-                color: "var(--primary)",
-                marginTop: 2,
-              }}
-            >
-              {numParcelas}× de {fmtBRL(valorParcela)}
-            </div>
-          )}
         </label>
 
         {/* Tipo: Saída / Entrada */}
@@ -594,7 +573,7 @@ export function AddExpenseModal({ ctx, params }) {
         </div>
 
         {/* Data — escondida quando vai criar recorrência (usa dia + fim abaixo) */}
-        {!(ehRecorrente && numParcelas === 1 && !editar) && (
+        {!(ehRecorrente && !editar) && (
         <div style={{ marginTop: 10 }}>
           <label
             style={{
@@ -681,153 +660,8 @@ export function AddExpenseModal({ ctx, params }) {
         </div>
         )}
 
-        {/* Parcelas (só crédito) — dropdown 1 a 24x */}
-        {ehCredito && (
-          <div style={{ marginTop: 10, position: "relative" }}>
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                padding: "0 4px 6px",
-              }}
-            >
-              <div
-                style={{
-                  fontSize: 11,
-                  fontWeight: 700,
-                  color: "var(--muted)",
-                  textTransform: "uppercase",
-                  letterSpacing: 0.4,
-                }}
-              >
-                Parcelar em
-              </div>
-              {parcelas > 1 && (
-                <div
-                  style={{
-                    fontSize: 11,
-                    fontWeight: 700,
-                    color: "var(--primary)",
-                  }}
-                >
-                  Total: {fmtBRL(valorNum)}
-                </div>
-              )}
-            </div>
-
-            <button
-              onClick={() => { vibrar(); setParcelasAberto((v) => !v); }}
-              style={{
-                width: "100%",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                padding: "12px 14px",
-                borderRadius: 12,
-                border: "none",
-                background: "var(--card-2)",
-                color: "var(--ink)",
-                fontSize: 14,
-                fontWeight: 700,
-                fontFamily: "inherit",
-                cursor: "pointer",
-                boxShadow: "0 1px 2px rgba(0,0,0,0.06)",
-              }}
-            >
-              <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <span style={{ fontWeight: 800, letterSpacing: "-0.02em" }}>
-                  {parcelas}×
-                </span>
-                <span style={{ color: "var(--muted)", fontWeight: 600, fontSize: 13 }}>
-                  {parcelas === 1
-                    ? "à vista"
-                    : valorNum > 0
-                      ? `de ${fmtBRL(valorNum / parcelas)}`
-                      : ""}
-                </span>
-              </span>
-              <Icon
-                name="chevron-down"
-                size={16}
-                color="var(--muted)"
-                strokeWidth={2.4}
-              />
-            </button>
-
-            {parcelasAberto && (
-              <div
-                style={{
-                  position: "absolute",
-                  top: "100%",
-                  left: 0,
-                  right: 0,
-                  marginTop: 4,
-                  zIndex: 10,
-                  maxHeight: 260,
-                  overflowY: "auto",
-                  background: "var(--card)",
-                  borderRadius: 12,
-                  boxShadow:
-                    "0 12px 32px rgba(0,0,0,0.18), 0 2px 6px rgba(0,0,0,0.08)",
-                  padding: 4,
-                }}
-              >
-                {Array.from({ length: 24 }, (_, i) => i + 1).map((n) => {
-                  const sel = parcelas === n;
-                  return (
-                    <button
-                      key={n}
-                      onClick={() => {
-                        vibrar();
-                        setParcelas(n);
-                        setParcelasAberto(false);
-                      }}
-                      style={{
-                        width: "100%",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                        padding: "10px 12px",
-                        borderRadius: 10,
-                        border: "none",
-                        background: sel
-                          ? "color-mix(in oklab, var(--primary) 12%, transparent)"
-                          : "transparent",
-                        color: sel ? "var(--primary)" : "var(--ink)",
-                        fontSize: 14,
-                        fontWeight: sel ? 800 : 600,
-                        fontFamily: "inherit",
-                        cursor: "pointer",
-                        textAlign: "left",
-                      }}
-                    >
-                      <span style={{ letterSpacing: "-0.02em" }}>{n}×</span>
-                      <span
-                        style={{
-                          fontSize: 13,
-                          fontWeight: 700,
-                          color: sel ? "var(--primary)" : "var(--muted)",
-                        }}
-                      >
-                        {n === 1
-                          ? valorNum > 0
-                            ? `${fmtBRL(valorNum)} à vista`
-                            : "à vista"
-                          : valorNum > 0
-                            ? fmtBRL(valorNum / n)
-                            : "—"}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Recorrente (só faz sentido em compra à vista) */}
-        {numParcelas === 1 && !editar && (
+        {/* Recorrente */}
+        {!editar && (
           <label
             style={{
               marginTop: 10,
@@ -886,7 +720,7 @@ export function AddExpenseModal({ ctx, params }) {
         )}
 
         {/* Campos extras de recorrência: dia de vencimento + mês/ano final */}
-        {ehRecorrente && numParcelas === 1 && !editar && (
+        {ehRecorrente && !editar && (
           <div style={{ marginTop: 10, display: "flex", flexDirection: "column", gap: 10 }}>
             {/* Vence todo dia */}
             <label

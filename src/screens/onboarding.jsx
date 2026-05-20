@@ -21,7 +21,7 @@ export function Onboarding({ onFim }) {
       id: 'lancar',
       cor1: '#FFD7B5', cor2: '#FF9B6E',
       titulo: 'Lance gastos\ne entradas',
-      subtitulo: 'Categorize, parcele ou marque como recorrente — tudo em segundos.',
+      subtitulo: 'Categorize ou marque como recorrente — tudo em segundos.',
       Ilustracao: IlustracaoAdd,
     },
     {
