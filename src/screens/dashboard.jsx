@@ -14,6 +14,7 @@ import {
 } from "../data.js";
 import { Icon } from "../ui/icons.jsx";
 import { Card, ItemTransacao, SeletorMes } from "../ui/common.jsx";
+import { ModalOverlay } from "../ui/modal-base.jsx";
 import { CardCaixinha } from "./caixinhas.jsx";
 import { calcularNotificacoes } from "./notificacoes.jsx";
 import { dispararPendentes } from "../lib/notifications.js";
@@ -262,6 +263,291 @@ export function DashboardScreen({ ctx }) {
   const saudacao =
     hojeHora < 12 ? "Bom dia" : hojeHora < 18 ? "Boa tarde" : "Boa noite";
 
+  // Renderiza o card de saldo para um mês qualquer. Usado uma vez no desktop
+  // e várias vezes no carrossel mobile (uma por mês em `todosMeses`).
+  // Recalcula os valores agregados para `mesCard` em vez de reutilizar os do
+  // mês ativo — o custo é baixo (soma sobre as txs do mês) e simplifica a
+  // lógica: cada slide é auto-contido.
+  const renderCardSaldo = (mesCard) => {
+    const idxC = todosMeses.indexOf(mesCard);
+    const mesAntC = idxC >= 0 && idxC < todosMeses.length - 1 ? todosMeses[idxC + 1] : null;
+    const txMesC = txDoMes(txs, mesCard);
+    const txMesAntC = mesAntC ? txDoMes(txs, mesAntC) : [];
+    const totalC = totalGeral(txMesC);
+    const totalAntC = totalGeral(txMesAntC);
+    const entradasC = totalEntradas(txMesC);
+    const deltaC = totalAntC > 0 ? ((totalC - totalAntC) / totalAntC) * 100 : 0;
+    const orcBaseC = obterOrcBaseDoMes(mesCard, preferences, mesCorrente());
+
+    let gMeu = 0;
+    let gPar = 0;
+    for (const c of caixinhas || []) {
+      for (const d of c.depositos || []) {
+        if (!d.data || !d.data.startsWith(mesCard)) continue;
+        if (!(d.valor > 0)) continue;
+        const dono = d.feitoPor || meuUid || "_anon";
+        if (dono === (meuUid || "_anon")) gMeu += d.valor;
+        else if (partnerUid && dono === partnerUid) gPar += d.valor;
+      }
+    }
+    const orcTotalC = orcBaseC + entradasC - gMeu;
+    const restanteC = orcTotalC - totalC;
+
+    const parceiroDoMesC = txDoMes(partnerTxs, mesCard);
+    const totalParceiroC = totalGeral(parceiroDoMesC);
+    const entradasParC = totalEntradas(parceiroDoMesC);
+    const orcTotalParceiroC = orcBaseParceiro + entradasParC - gPar;
+    const restanteParceiroC = orcTotalParceiroC - totalParceiroC;
+    const disponivelConjuntoC = restanteC + restanteParceiroC;
+    const temEntradaC = entradasC > 0;
+
+    return (
+      <div
+        className="card-saldo"
+        style={{
+          background:
+            "linear-gradient(135deg, var(--primary) 0%, var(--primary-2) 50%, var(--primary) 100%)",
+          backgroundSize: "200% 200%",
+          color: "#fff",
+          borderRadius: 28,
+          padding: 22,
+          position: "relative",
+          overflow: "hidden",
+          boxShadow: "0 4px 12px color-mix(in oklab, var(--primary) 10%, transparent)",
+        }}
+      >
+        <div
+          aria-hidden="true"
+          className="card-saldo__brilho"
+          style={{
+            position: "absolute",
+            top: 0,
+            left: "-40%",
+            width: "60%",
+            height: "100%",
+            background:
+              "linear-gradient(115deg, transparent 35%, rgba(255,255,255,0.10) 50%, transparent 65%)",
+            pointerEvents: "none",
+          }}
+        />
+        <div
+          aria-hidden="true"
+          className="card-saldo__bolha card-saldo__bolha--a"
+          style={{
+            position: "absolute",
+            right: -40,
+            top: -40,
+            width: 160,
+            height: 160,
+            borderRadius: "50%",
+            background: "rgba(255,255,255,0.08)",
+          }}
+        />
+        <div
+          aria-hidden="true"
+          className="card-saldo__bolha card-saldo__bolha--b"
+          style={{
+            position: "absolute",
+            right: 30,
+            bottom: -60,
+            width: 110,
+            height: 110,
+            borderRadius: "50%",
+            background: "rgba(255,255,255,0.05)",
+          }}
+        />
+
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            position: "relative",
+          }}
+        >
+          <div style={{ fontSize: 13, fontWeight: 600, opacity: 0.85 }}>
+            Gasto em {rotuloMes(mesCard)}
+          </div>
+          <SeletorMes mes={mesCard} setMes={setMes} todosMeses={todosMeses} />
+        </div>
+
+        <div
+          style={{
+            marginTop: 10,
+            fontSize: 36,
+            fontWeight: 800,
+            letterSpacing: "-0.03em",
+            position: "relative",
+          }}
+        >
+          {fmtBRL(totalC, ocultar)}
+        </div>
+
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+            marginTop: 6,
+            position: "relative",
+          }}
+        >
+          {totalAntC > 0 && (
+            <div
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 4,
+                padding: "4px 10px",
+                borderRadius: 999,
+                background: "rgba(255,255,255,0.18)",
+                fontSize: 12,
+                fontWeight: 700,
+              }}
+            >
+              <span>{deltaC >= 0 ? "▲" : "▼"}</span>
+              <span>{Math.abs(deltaC).toFixed(1)}%</span>
+              <span style={{ opacity: 0.8, fontWeight: 600 }}>
+                vs. mês anterior
+              </span>
+            </div>
+          )}
+        </div>
+
+        <div
+          style={{
+            marginTop: 18,
+            paddingTop: 14,
+            borderTop: "1px solid rgba(255,255,255,0.18)",
+            display: "flex",
+            justifyContent: "space-between",
+            position: "relative",
+          }}
+        >
+          <div>
+            <div style={{ fontSize: 11, opacity: 0.8, fontWeight: 600 }}>
+              Orçamento
+            </div>
+            <div style={{ fontSize: 15, fontWeight: 700, marginTop: 2 }}>
+              {fmtBRL(orcTotalC, ocultar)}
+            </div>
+            {temEntradaC && (
+              <div
+                style={{
+                  fontSize: 10,
+                  fontWeight: 700,
+                  opacity: 0.85,
+                  marginTop: 2,
+                }}
+              >
+                +{fmtBRL(entradasC, ocultar)} entradas
+              </div>
+            )}
+          </div>
+          <div style={{ textAlign: "right" }}>
+            <div style={{ fontSize: 11, opacity: 0.8, fontWeight: 600 }}>
+              {restanteC >= 0 ? "Restante" : "Acima do orçamento"}
+            </div>
+            <div
+              style={{
+                fontSize: 15,
+                fontWeight: 700,
+                marginTop: 2,
+                color: restanteC >= 0 ? "#D9F5C8" : "#FFD0D9",
+              }}
+            >
+              {fmtBRL(Math.abs(restanteC), ocultar)}
+            </div>
+          </div>
+        </div>
+
+        {ehCompartilhado && (
+          <div
+            style={{
+              marginTop: 14,
+              paddingTop: 12,
+              borderTop: "1px dashed rgba(255,255,255,0.22)",
+              position: "relative",
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                fontSize: 10,
+                fontWeight: 700,
+                opacity: 0.78,
+                letterSpacing: 0.4,
+                textTransform: "uppercase",
+              }}
+            >
+              <span>{partnerNome || "Parceiro"}</span>
+              <span style={{ opacity: 0.85 }}>
+                {fmtBRLCompacto(totalParceiroC, ocultar)} gasto
+              </span>
+            </div>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                marginTop: 6,
+                fontSize: 11,
+                fontWeight: 600,
+                opacity: 0.85,
+              }}
+            >
+              <span>Orçamento {fmtBRLCompacto(orcTotalParceiroC, ocultar)}</span>
+              <span
+                style={{
+                  color: restanteParceiroC >= 0 ? "#D9F5C8" : "#FFD0D9",
+                  fontWeight: 700,
+                }}
+              >
+                {restanteParceiroC >= 0 ? "Resta " : "Acima "}
+                {fmtBRLCompacto(Math.abs(restanteParceiroC), ocultar)}
+              </span>
+            </div>
+
+            <div
+              style={{
+                marginTop: 10,
+                padding: "8px 12px",
+                borderRadius: 12,
+                background: "rgba(255,255,255,0.12)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+              }}
+            >
+              <span
+                style={{
+                  fontSize: 11,
+                  fontWeight: 700,
+                  opacity: 0.9,
+                  letterSpacing: 0.3,
+                  textTransform: "uppercase",
+                }}
+              >
+                Disponível juntos
+              </span>
+              <span
+                style={{
+                  fontSize: 14,
+                  fontWeight: 800,
+                  color: disponivelConjuntoC >= 0 ? "#D9F5C8" : "#FFD0D9",
+                  letterSpacing: "-0.01em",
+                }}
+              >
+                {fmtBRL(Math.abs(disponivelConjuntoC), ocultar)}
+              </span>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
+
   return (
     <div className={ehDesktop ? "cols-desktop" : undefined} style={{ paddingBottom: "var(--pad-bottom)" }}>
       {/* Cabeçalho — mesma métrica vertical do TopBar para padronizar todas as abas */}
@@ -422,260 +708,21 @@ export function DashboardScreen({ ctx }) {
         </div>
       </div>
 
-      {/* Card principal — saldo do mês */}
-      <div className={ehDesktop ? "col-span-all" : undefined} style={{ padding: "4px 20px 0" }}>
-        <div
-          className="card-saldo"
-          style={{
-            background:
-              "linear-gradient(135deg, var(--primary) 0%, var(--primary-2) 50%, var(--primary) 100%)",
-            backgroundSize: "200% 200%",
-            color: "#fff",
-            borderRadius: 28,
-            padding: 22,
-            position: "relative",
-            overflow: "hidden",
-            boxShadow: "0 8px 24px color-mix(in oklab, var(--primary) 22%, transparent)",
-          }}
-        >
-          {/* brilho diagonal que atravessa o card */}
-          <div
-            aria-hidden="true"
-            className="card-saldo__brilho"
-            style={{
-              position: "absolute",
-              top: 0,
-              left: "-40%",
-              width: "60%",
-              height: "100%",
-              background:
-                "linear-gradient(115deg, transparent 35%, rgba(255,255,255,0.10) 50%, transparent 65%)",
-              pointerEvents: "none",
-            }}
-          />
-          {/* círculos decorativos (com flutuação suave) */}
-          <div
-            aria-hidden="true"
-            className="card-saldo__bolha card-saldo__bolha--a"
-            style={{
-              position: "absolute",
-              right: -40,
-              top: -40,
-              width: 160,
-              height: 160,
-              borderRadius: "50%",
-              background: "rgba(255,255,255,0.08)",
-            }}
-          />
-          <div
-            aria-hidden="true"
-            className="card-saldo__bolha card-saldo__bolha--b"
-            style={{
-              position: "absolute",
-              right: 30,
-              bottom: -60,
-              width: 110,
-              height: 110,
-              borderRadius: "50%",
-              background: "rgba(255,255,255,0.05)",
-            }}
-          />
-
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              position: "relative",
-            }}
-          >
-            <div style={{ fontSize: 13, fontWeight: 600, opacity: 0.85 }}>
-              Gasto em {rotuloMes(mes)}
-            </div>
-            <SeletorMes mes={mes} setMes={setMes} todosMeses={todosMeses} />
-          </div>
-
-          <div
-            style={{
-              marginTop: 10,
-              fontSize: 36,
-              fontWeight: 800,
-              letterSpacing: "-0.03em",
-              position: "relative",
-            }}
-          >
-            {fmtBRL(total, ocultar)}
-          </div>
-
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 8,
-              marginTop: 6,
-              position: "relative",
-            }}
-          >
-            {totalAnt > 0 && (
-              <div
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: 4,
-                  padding: "4px 10px",
-                  borderRadius: 999,
-                  background: "rgba(255,255,255,0.18)",
-                  fontSize: 12,
-                  fontWeight: 700,
-                }}
-              >
-                <span>{delta >= 0 ? "▲" : "▼"}</span>
-                <span>{Math.abs(delta).toFixed(1)}%</span>
-                <span style={{ opacity: 0.8, fontWeight: 600 }}>
-                  vs. mês anterior
-                </span>
-              </div>
-            )}
-          </div>
-
-          <div
-            style={{
-              marginTop: 18,
-              paddingTop: 14,
-              borderTop: "1px solid rgba(255,255,255,0.18)",
-              display: "flex",
-              justifyContent: "space-between",
-              position: "relative",
-            }}
-          >
-            <div>
-              <div style={{ fontSize: 11, opacity: 0.8, fontWeight: 600 }}>
-                Orçamento
-              </div>
-              <div style={{ fontSize: 15, fontWeight: 700, marginTop: 2 }}>
-                {fmtBRL(orcTotal, ocultar)}
-              </div>
-              {temEntrada && (
-                <div
-                  style={{
-                    fontSize: 10,
-                    fontWeight: 700,
-                    opacity: 0.85,
-                    marginTop: 2,
-                  }}
-                >
-                  +{fmtBRL(entradas, ocultar)} entradas
-                </div>
-              )}
-            </div>
-            <div style={{ textAlign: "right" }}>
-              <div style={{ fontSize: 11, opacity: 0.8, fontWeight: 600 }}>
-                {restante >= 0 ? "Restante" : "Acima do orçamento"}
-              </div>
-              <div
-                style={{
-                  fontSize: 15,
-                  fontWeight: 700,
-                  marginTop: 2,
-                  color: restante >= 0 ? "#D9F5C8" : "#FFD0D9",
-                }}
-              >
-                {fmtBRL(Math.abs(restante), ocultar)}
-              </div>
-            </div>
-          </div>
-
-          {/* Resumo do parceiro — só aparece em conta compartilhada */}
-          {ehCompartilhado && (
-            <div
-              style={{
-                marginTop: 14,
-                paddingTop: 12,
-                borderTop: "1px dashed rgba(255,255,255,0.22)",
-                position: "relative",
-              }}
-            >
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  fontSize: 10,
-                  fontWeight: 700,
-                  opacity: 0.78,
-                  letterSpacing: 0.4,
-                  textTransform: "uppercase",
-                }}
-              >
-                <span>
-                  {partnerNome || "Parceiro"}
-                </span>
-                <span style={{ opacity: 0.85 }}>
-                  {fmtBRLCompacto(totalParceiro, ocultar)} gasto
-                </span>
-              </div>
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  marginTop: 6,
-                  fontSize: 11,
-                  fontWeight: 600,
-                  opacity: 0.85,
-                }}
-              >
-                <span>
-                  Orçamento {fmtBRLCompacto(orcTotalParceiro, ocultar)}
-                </span>
-                <span
-                  style={{
-                    color: restanteParceiro >= 0 ? "#D9F5C8" : "#FFD0D9",
-                    fontWeight: 700,
-                  }}
-                >
-                  {restanteParceiro >= 0 ? "Resta " : "Acima "}
-                  {fmtBRLCompacto(Math.abs(restanteParceiro), ocultar)}
-                </span>
-              </div>
-
-              {/* Disponível conjunto dos dois */}
-              <div
-                style={{
-                  marginTop: 10,
-                  padding: "8px 12px",
-                  borderRadius: 12,
-                  background: "rgba(255,255,255,0.12)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                }}
-              >
-                <span
-                  style={{
-                    fontSize: 11,
-                    fontWeight: 700,
-                    opacity: 0.9,
-                    letterSpacing: 0.3,
-                    textTransform: "uppercase",
-                  }}
-                >
-                  Disponível juntos
-                </span>
-                <span
-                  style={{
-                    fontSize: 14,
-                    fontWeight: 800,
-                    color: disponivelConjunto >= 0 ? "#D9F5C8" : "#FFD0D9",
-                    letterSpacing: "-0.01em",
-                  }}
-                >
-                  {fmtBRL(Math.abs(disponivelConjunto), ocultar)}
-                </span>
-              </div>
-            </div>
-          )}
+      {/* Card principal — saldo do mês.
+          Mobile: carrossel horizontal com um slide por mês, swipe troca o mês ativo.
+          Desktop: card único do mês selecionado. */}
+      {ehDesktop ? (
+        <div className="col-span-all" style={{ padding: "4px 20px 0" }}>
+          {renderCardSaldo(mes)}
         </div>
-      </div>
+      ) : (
+        <CarrosselSaldoMes
+          todosMeses={todosMeses}
+          mes={mes}
+          setMes={setMes}
+          renderCard={renderCardSaldo}
+        />
+      )}
 
       {/* Insights — uma análise por vez, rotaciona com crossfade a cada 10s */}
       {insightAtual && (
@@ -1091,89 +1138,213 @@ function ContaProximaModal({ tx, ocultar, onFechar, onMarcarPago }) {
     : `Vence em ${diasAte} dias`;
 
   return (
-    <div
-      onClick={onFechar}
-      style={{
-        position: "fixed", inset: 0, zIndex: 9999,
-        display: "flex", alignItems: "center", justifyContent: "center",
-        padding: 20,
-        background: "rgba(20,16,24,0.45)",
-        backdropFilter: "blur(12px) saturate(140%)",
-        WebkitBackdropFilter: "blur(12px) saturate(140%)",
-        animation: "fadeIn .28s ease-out",
-      }}
+    <ModalOverlay
+      onClose={onFechar}
+      maxWidth={380}
+      scrollable={false}
+      center
+      borderRadius={24}
+      padding="22px 22px 18px"
     >
-      <div
-        onClick={(e) => e.stopPropagation()}
-        role="dialog"
-        aria-modal="true"
-        style={{
-          width: "100%", maxWidth: 380,
-          background: "var(--bg)", borderRadius: 24,
-          padding: "22px 22px 18px",
-          boxShadow: "0 24px 60px rgba(0,0,0,0.28), 0 4px 12px rgba(0,0,0,0.08)",
-          animation: "scaleIn .34s cubic-bezier(0.22, 1, 0.36, 1)",
-          textAlign: "center",
-        }}
-      >
-        <div style={{
-          width: 56, height: 56, borderRadius: 28,
-          background: "color-mix(in oklab, var(--primary) 14%, transparent)",
-          margin: "0 auto 14px",
-          display: "flex", alignItems: "center", justifyContent: "center",
-        }}>
-          <Icon name="calendar" size={26} color="var(--primary)" strokeWidth={2.2} />
-        </div>
+      <div style={{
+        width: 56, height: 56, borderRadius: 28,
+        background: "color-mix(in oklab, var(--primary) 14%, transparent)",
+        margin: "0 auto 14px",
+        display: "flex", alignItems: "center", justifyContent: "center",
+      }}>
+        <Icon name="calendar" size={26} color="var(--primary)" strokeWidth={2.2} />
+      </div>
 
-        <div style={{ fontSize: 17, fontWeight: 800, color: "var(--ink)", letterSpacing: "-0.02em" }}>
-          {tx.descricao}
-        </div>
-        <div style={{ fontSize: 13, color: "var(--muted)", fontWeight: 600, marginTop: 4 }}>
-          {dd}/{String(mm).padStart(2, "0")} · {cat.nome}
-        </div>
+      <div style={{ fontSize: 17, fontWeight: 800, color: "var(--ink)", letterSpacing: "-0.02em" }}>
+        {tx.descricao}
+      </div>
+      <div style={{ fontSize: 13, color: "var(--muted)", fontWeight: 600, marginTop: 4 }}>
+        {dd}/{String(mm).padStart(2, "0")} · {cat.nome}
+      </div>
 
-        <div style={{
-          marginTop: 14, padding: "12px 14px", borderRadius: 14,
-          background: "var(--card-2)",
-          display: "flex", justifyContent: "space-between", alignItems: "center",
-        }}>
-          <div style={{ textAlign: "left" }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: 0.4 }}>
-              Valor
-            </div>
-            <div style={{ fontSize: 18, fontWeight: 800, color: "var(--ink)", marginTop: 2 }}>
-              {fmtBRL(tx.valor, ocultar)}
-            </div>
+      <div style={{
+        marginTop: 14, padding: "12px 14px", borderRadius: 14,
+        background: "var(--card-2)",
+        display: "flex", justifyContent: "space-between", alignItems: "center",
+      }}>
+        <div style={{ textAlign: "left" }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: 0.4 }}>
+            Valor
           </div>
-          <div style={{ textAlign: "right" }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: 0.4 }}>
-              Prazo
-            </div>
-            <div style={{ fontSize: 13, fontWeight: 700, color: "var(--ink)", marginTop: 2 }}>
-              {rotuloPrazo}
-            </div>
+          <div style={{ fontSize: 18, fontWeight: 800, color: "var(--ink)", marginTop: 2 }}>
+            {fmtBRL(tx.valor, ocultar)}
           </div>
         </div>
-
-        <div style={{ display: "flex", gap: 10, marginTop: 18 }}>
-          <button onClick={onFechar} style={{
-            flex: 1, padding: "12px", borderRadius: 14, border: "none",
-            background: "var(--card-2)", color: "var(--ink)",
-            fontSize: 14, fontWeight: 800, fontFamily: "inherit", cursor: "pointer",
-            boxShadow: "0 1px 2px rgba(0,0,0,0.06)",
-          }}>Fechar</button>
-          <button onClick={onMarcarPago} style={{
-            flex: 1, padding: "12px", borderRadius: 14, border: "none",
-            background: COR_POS, color: "#fff",
-            fontSize: 14, fontWeight: 800, fontFamily: "inherit", cursor: "pointer",
-            boxShadow: "0 4px 14px color-mix(in oklab, " + COR_POS + " 32%, transparent)",
-            display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
-          }}>
-            <Icon name="check" size={16} color="#fff" strokeWidth={2.6} />
-            Marcar como pago
-          </button>
+        <div style={{ textAlign: "right" }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: 0.4 }}>
+            Prazo
+          </div>
+          <div style={{ fontSize: 13, fontWeight: 700, color: "var(--ink)", marginTop: 2 }}>
+            {rotuloPrazo}
+          </div>
         </div>
       </div>
+
+      <div style={{ display: "flex", gap: 10, marginTop: 18 }}>
+        <button onClick={onFechar} style={{
+          flex: 1, padding: "12px", borderRadius: 14, border: "none",
+          background: "var(--card-2)", color: "var(--ink)",
+          fontSize: 14, fontWeight: 800, fontFamily: "inherit", cursor: "pointer",
+          boxShadow: "0 1px 2px rgba(0,0,0,0.06)",
+        }}>Fechar</button>
+        <button onClick={onMarcarPago} style={{
+          flex: 1, padding: "12px", borderRadius: 14, border: "none",
+          background: COR_POS, color: "#fff",
+          fontSize: 14, fontWeight: 800, fontFamily: "inherit", cursor: "pointer",
+          boxShadow: "0 4px 14px color-mix(in oklab, " + COR_POS + " 32%, transparent)",
+          display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+        }}>
+          <Icon name="check" size={16} color="#fff" strokeWidth={2.6} />
+          Marcar como pago
+        </button>
+      </div>
+    </ModalOverlay>
+  );
+}
+
+// Carrossel horizontal do card principal no mobile. Cada slide é o card
+// renderizado para um mês diferente; swipe lateral troca o mês ativo via
+// `setMes`. Ordem ascendente (mais antigo à esquerda) — swipe pra direita
+// volta no tempo, swipe pra esquerda avança. Quando `mes` muda por fora
+// (ex: SeletorMes dentro do card), o carrossel rola para o slide certo.
+//
+// Os slides laterais ficam progressivamente desfocados/diminuídos conforme
+// a distância do centro do viewport, dando sensação de profundidade. O
+// efeito é dirigido pelo scroll em tempo real via rAF — sem transição CSS,
+// pra acompanhar o gesto sem lag.
+function CarrosselSaldoMes({ todosMeses, mes, setMes, renderCard }) {
+  const ref = React.useRef(null);
+  const slideRefs = React.useRef([]);
+  const mesesAsc = React.useMemo(() => [...todosMeses].reverse(), [todosMeses]);
+  const idxAtivo = Math.max(0, mesesAsc.indexOf(mes));
+  // Evita feedback loop: enquanto o scroll programático está rolando, não
+  // chamamos setMes a partir do onScroll.
+  const rolandoProgRef = React.useRef(false);
+  const ultimoMesEnviado = React.useRef(mes);
+  const primeiraVezRef = React.useRef(true);
+  const rafRef = React.useRef(0);
+
+  const aplicarEfeitos = React.useCallback(() => {
+    const el = ref.current;
+    if (!el) return;
+    const centro = el.scrollLeft + el.clientWidth / 2;
+    for (const s of slideRefs.current) {
+      if (!s) continue;
+      const sc = s.offsetLeft + s.clientWidth / 2;
+      // distância normalizada: 0 = centralizado, 1 = totalmente deslocado
+      const d = Math.min(1, Math.abs(sc - centro) / s.clientWidth);
+      const blur = d * 6;          // até 6px
+      const op = 1 - d * 0.45;     // até 0.55 de opacidade nos extremos
+      const scale = 1 - d * 0.14;  // scale-down até 14% nos slides laterais
+      s.style.filter = blur > 0.1 ? `blur(${blur.toFixed(2)}px)` : "";
+      s.style.opacity = op.toFixed(3);
+      s.style.transform = `scale(${scale.toFixed(3)})`;
+    }
+  }, []);
+
+  // Centraliza o slide ativo. Em primeiro render usa "auto" pra evitar flash;
+  // depois usa "smooth" pra acompanhar mudanças via SeletorMes.
+  React.useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const slide = slideRefs.current[idxAtivo];
+    if (!slide) return;
+    const alvo = slide.offsetLeft - (el.clientWidth - slide.clientWidth) / 2;
+    if (Math.abs(el.scrollLeft - alvo) >= 2) {
+      rolandoProgRef.current = true;
+      el.scrollTo({ left: alvo, behavior: primeiraVezRef.current ? "auto" : "smooth" });
+      primeiraVezRef.current = false;
+      const t = setTimeout(() => {
+        rolandoProgRef.current = false;
+        aplicarEfeitos();
+      }, 500);
+      aplicarEfeitos();
+      return () => clearTimeout(t);
+    }
+    primeiraVezRef.current = false;
+    aplicarEfeitos();
+  }, [idxAtivo, aplicarEfeitos]);
+
+  const onScroll = React.useCallback(() => {
+    if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    rafRef.current = requestAnimationFrame(() => {
+      aplicarEfeitos();
+      if (rolandoProgRef.current) return;
+      const el = ref.current;
+      if (!el) return;
+      const centro = el.scrollLeft + el.clientWidth / 2;
+      let maisPerto = idxAtivo;
+      let menorDist = Infinity;
+      slideRefs.current.forEach((c, i) => {
+        if (!c) return;
+        const cc = c.offsetLeft + c.clientWidth / 2;
+        const d = Math.abs(cc - centro);
+        if (d < menorDist) {
+          menorDist = d;
+          maisPerto = i;
+        }
+      });
+      const novo = mesesAsc[maisPerto];
+      if (novo && novo !== ultimoMesEnviado.current) {
+        ultimoMesEnviado.current = novo;
+        setMes(novo);
+      }
+    });
+  }, [mesesAsc, setMes, idxAtivo, aplicarEfeitos]);
+
+  React.useEffect(() => () => {
+    if (rafRef.current) cancelAnimationFrame(rafRef.current);
+  }, []);
+
+  return (
+    <div
+      ref={ref}
+      onScroll={onScroll}
+      className="carrossel-saldo"
+      style={{
+        display: "flex",
+        overflowX: "auto",
+        overflowY: "hidden",
+        scrollSnapType: "x mandatory",
+        // smooth aplica-se a scrolls programáticos (scrollTo) — usado quando
+        // SeletorMes muda o mês por fora do swipe.
+        scrollBehavior: "smooth",
+        WebkitOverflowScrolling: "touch",
+        overscrollBehaviorX: "contain",
+        // padding lateral = (viewport - slide_width) / 2, sintonizado com o
+        // flex-basis abaixo (100vw - 56) → 28px de cada lado pra permitir que
+        // o primeiro/último slide consigam ser centralizados pelo snap.
+        padding: "4px 28px 0",
+        gap: 12,
+      }}
+    >
+      {mesesAsc.map((m, i) => (
+        <div
+          key={m}
+          ref={(node) => {
+            slideRefs.current[i] = node;
+          }}
+          style={{
+            flex: "0 0 calc(100vw - 56px)",
+            scrollSnapAlign: "center",
+            // sem scrollSnapStop: "always" — permite gestos rápidos
+            // atravessarem mais de um slide sem travar
+            willChange: "filter, opacity, transform",
+            transformOrigin: "center center",
+            // transição curta cobre o intervalo entre o último frame de
+            // scroll e o snap final — sem ela o último estado fica "duro"
+            transition:
+              "filter 160ms cubic-bezier(0.22, 1, 0.36, 1), opacity 160ms cubic-bezier(0.22, 1, 0.36, 1), transform 160ms cubic-bezier(0.22, 1, 0.36, 1)",
+          }}
+        >
+          {renderCard(m)}
+        </div>
+      ))}
     </div>
   );
 }

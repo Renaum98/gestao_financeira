@@ -13,6 +13,14 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
 
+// Z-index padrão de TODO modal/overlay do app. Valor altíssimo (perto do
+// máximo de 32 bits) pra garantir que um modal sempre fique acima de
+// qualquer outra camada — barras, FABs, banners, etc. Combinado com o
+// portal em document.body, isso torna o modal a prioridade absoluta quando
+// acionado. Qualquer overlay novo deve usar esta constante (ou, de
+// preferência, o próprio ModalOverlay) em vez de um número solto.
+export const Z_MODAL = 2147483000;
+
 export function ModalOverlay({
   onClose,
   children,
@@ -40,7 +48,7 @@ export function ModalOverlay({
     <div
       onClick={onClose}
       style={{
-        position: 'fixed', inset: 0, height: '100dvh', zIndex: 9999,
+        position: 'fixed', inset: 0, height: '100dvh', zIndex: Z_MODAL,
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         padding: '20px',
         background: 'rgba(20, 16, 24, 0.45)',

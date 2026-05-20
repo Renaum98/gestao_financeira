@@ -1,10 +1,12 @@
 // perfil.jsx — Tela Perfil (conta, aparência, atalhos, sair).
 
 import React from 'react';
+import { createPortal } from 'react-dom';
 import { PALETAS, rotuloMes } from '../data.js';
 import { Icon } from '../ui/icons.jsx';
 import { Card, TopBar } from '../ui/common.jsx';
 import { ConfirmModal } from '../ui/confirm-modal.jsx';
+import { Z_MODAL } from '../ui/modal-base.jsx';
 import { vibrar } from '../lib/haptics.js';
 import { lerFotoPerfil } from '../lib/imagem.js';
 import { baixarDadosXLSX } from '../lib/export.js';
@@ -374,11 +376,11 @@ function BaixarDadosModal({
   mesSelecionado, onSelecionarMes, baixando, erro, todosMeses,
   onCancelar, onConfirmar,
 }) {
-  return (
+  return createPortal(
     <div
       onClick={baixando ? undefined : onCancelar}
       style={{
-        position: 'fixed', inset: 0, height: '100dvh', zIndex: 9999,
+        position: 'fixed', inset: 0, height: '100dvh', zIndex: Z_MODAL,
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         padding: 20,
         background: 'rgba(20, 16, 24, 0.45)',
@@ -485,7 +487,8 @@ function BaixarDadosModal({
           >{baixando ? 'Gerando…' : 'Baixar'}</button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
 
@@ -570,11 +573,11 @@ function ExcluirContaModal({ uid, meuEmail, meuNome, partnershipId, onFechar }) 
 
   const apagando = etapa === 'apagando';
 
-  return (
+  return createPortal(
     <div
       onClick={apagando ? undefined : onFechar}
       style={{
-        position: 'fixed', inset: 0, height: '100dvh', zIndex: 9999,
+        position: 'fixed', inset: 0, height: '100dvh', zIndex: Z_MODAL,
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         padding: 20,
         background: 'rgba(20, 16, 24, 0.45)',
@@ -740,7 +743,8 @@ function ExcluirContaModal({ uid, meuEmail, meuNome, partnershipId, onFechar }) 
           </div>
         )}
       </form>
-    </div>
+    </div>,
+    document.body,
   );
 }
 
@@ -942,11 +946,11 @@ function ConvidarParceiroModal({ meuUid, meuNome, meuEmail, onFechar }) {
     }
   };
 
-  return (
+  return createPortal(
     <div
       onClick={enviando ? undefined : onFechar}
       style={{
-        position: 'fixed', inset: 0, height: '100dvh', zIndex: 9999,
+        position: 'fixed', inset: 0, height: '100dvh', zIndex: Z_MODAL,
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         padding: 20,
         background: 'rgba(20, 16, 24, 0.45)',
@@ -1071,7 +1075,8 @@ function ConvidarParceiroModal({ meuUid, meuNome, meuEmail, onFechar }) {
           </>
         )}
       </form>
-    </div>
+    </div>,
+    document.body,
   );
 }
 

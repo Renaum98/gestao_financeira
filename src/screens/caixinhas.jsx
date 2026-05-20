@@ -11,6 +11,7 @@
 // Valor atual = soma dos depositos.
 
 import React from "react";
+import { createPortal } from "react-dom";
 import { fmtBRL, fmtBRLCompacto, MESES_CURTO } from "../data.js";
 import { Icon } from "../ui/icons.jsx";
 import { COR_POS, COR_NEG, COR_POS_FUNDO, COR_NEG_FUNDO } from "../lib/colors.js";
@@ -22,6 +23,7 @@ import {
 import { Card, TopBar } from "../ui/common.jsx";
 import { BarraProgresso } from "../ui/charts.jsx";
 import { ConfirmModal } from "../ui/confirm-modal.jsx";
+import { Z_MODAL } from "../ui/modal-base.jsx";
 import { useSelic, calcularRendimento, taxaAnualEfetiva } from "../lib/selic.js";
 
 // Cores selecionáveis pra colorir cada caixinha. Todas calibradas pra dar
@@ -1890,14 +1892,14 @@ function ModalShell({
   corAcento,
   children,
 }) {
-  return (
+  return createPortal(
     <div
       onClick={onFechar}
       style={{
         position: "fixed",
         inset: 0,
         height: "100dvh",
-        zIndex: 9999,
+        zIndex: Z_MODAL,
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
@@ -1977,7 +1979,8 @@ function ModalShell({
         </div>
         {children}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
 
