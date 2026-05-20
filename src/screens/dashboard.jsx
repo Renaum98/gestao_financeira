@@ -290,6 +290,7 @@ export function DashboardScreen({ ctx }) {
             <button
               onClick={() => setOcultar(!ocultar)}
               className="glass-surface"
+              aria-label={ocultar ? "Mostrar valores" : "Ocultar valores"}
               style={{
                 width: 36,
                 height: 36,
@@ -357,6 +358,7 @@ export function DashboardScreen({ ctx }) {
             <button
               onClick={() => irPara("perfil")}
               className="glass-surface"
+              aria-label="Abrir perfil"
               style={{
                 width: 36,
                 height: 36,

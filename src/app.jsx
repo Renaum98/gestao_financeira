@@ -94,6 +94,7 @@ function TabBar({ tela, irPara, abrirAdd }) {
               <button
                 key={it.id}
                 onClick={abrirAdd}
+                aria-label="Nova transação"
                 style={{
                   width: 52,
                   height: 52,
@@ -122,6 +123,8 @@ function TabBar({ tela, irPara, abrirAdd }) {
                 if (it.id !== tela) vibrar();
                 irPara(it.id);
               }}
+              aria-label={it.label}
+              aria-current={ativo ? "page" : undefined}
               style={{
                 flex: 1,
                 background: "transparent",
@@ -1065,6 +1068,7 @@ export function App() {
         />
         <main
           className="desktop-shell"
+          role="main"
           style={{ flex: 1, minWidth: 0, overflowY: "auto", height: "100vh" }}
         >
           <div
@@ -1100,14 +1104,17 @@ export function App() {
         color: "var(--ink)",
       }}
     >
-      <div style={{ maxWidth: 480, margin: "0 auto", minHeight: "100vh" }}>
+      <main
+        role="main"
+        style={{ maxWidth: 480, margin: "0 auto", minHeight: "100vh" }}
+      >
         <div
           key={tela + JSON.stringify(params || {})}
           className="page-transition"
         >
           <React.Suspense fallback={<Splash />}>{conteudo}</React.Suspense>
         </div>
-      </div>
+      </main>
       <TabBar tela={tela} irPara={irPara} abrirAdd={() => { vibrar(); setAddModal({}); }} />
       {addModal && (
         <React.Suspense fallback={null}>

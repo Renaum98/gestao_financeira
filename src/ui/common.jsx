@@ -12,7 +12,7 @@ export function TopBar({ titulo, voltar, acao, subtitulo }) {
     }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', minHeight: 32 }}>
         {voltar ? (
-          <button onClick={voltar} style={{
+          <button onClick={voltar} aria-label="Voltar" style={{
             width: 36, height: 36, borderRadius: 18,
             background: 'var(--card)', border: 'none', display: 'flex',
             alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
@@ -43,7 +43,7 @@ export function SeletorMes({ mes, setMes, todosMeses }) {
       background: 'var(--card)', borderRadius: 999, padding: 4,
       boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
     }}>
-      <button onClick={() => podeAnt && setMes(todosMeses[idx + 1])} disabled={!podeAnt} style={{
+      <button onClick={() => podeAnt && setMes(todosMeses[idx + 1])} disabled={!podeAnt} aria-label="Mês anterior" style={{
         width: 30, height: 30, borderRadius: 999, border: 'none',
         background: 'transparent', cursor: podeAnt ? 'pointer' : 'default',
         opacity: podeAnt ? 1 : 0.3, display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -53,7 +53,7 @@ export function SeletorMes({ mes, setMes, todosMeses }) {
       <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--ink)', minWidth: 110, textAlign: 'center', letterSpacing: '-0.01em' }}>
         {rotuloMes(mes)}
       </div>
-      <button onClick={() => podeProx && setMes(todosMeses[idx - 1])} disabled={!podeProx} style={{
+      <button onClick={() => podeProx && setMes(todosMeses[idx - 1])} disabled={!podeProx} aria-label="Próximo mês" style={{
         width: 30, height: 30, borderRadius: 999, border: 'none',
         background: 'transparent', cursor: podeProx ? 'pointer' : 'default',
         opacity: podeProx ? 1 : 0.3, display: 'flex', alignItems: 'center', justifyContent: 'center',
