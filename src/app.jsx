@@ -776,6 +776,49 @@ export function App() {
     if (!editando) setTela("gastos");
   };
 
+  // Edita uma recorrência: atualiza o registro mestre E propaga apenas para as
+  // txs do MÊS ATUAL EM DIANTE. Lançamentos de meses passados ficam intactos no
+  // histórico (preservam o valor/categoria que estava em vigor na época). Se o
+  // dia de vencimento mudar, recalcula a data das txs afetadas mantendo o
+  // yyyymm original (com clamping pro último dia do mês).
+  const editarRecorrente = (recId, dados) => {
+    vibrar(14);
+    const hoje = new Date();
+    const yyyymmHoje = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, "0")}`;
+    cloud.setRecorrentes((atual) =>
+      atual.map((r) => (r.id === recId ? { ...r, ...dados } : r)),
+    );
+    cloud.setTxs((atual) => {
+      const novos = atual.map((t) => {
+        if (t.recorrenteId !== recId) return t;
+        if (t.data.slice(0, 7) < yyyymmHoje) return t; // passado: não mexe
+        const nova = { ...t };
+        if (dados.descricao !== undefined) nova.descricao = dados.descricao;
+        if (dados.categoria !== undefined) nova.categoria = dados.categoria;
+        if (dados.pagamento !== undefined) nova.pagamento = dados.pagamento;
+        if (dados.valor !== undefined) nova.valor = dados.valor;
+        if (dados.dia !== undefined) {
+          const [y, m] = t.data.split("-").map(Number);
+          const ultDia = new Date(y, m, 0).getDate();
+          const diaReal = Math.min(dados.dia, ultDia);
+          nova.data = `${t.data.slice(0, 7)}-${String(diaReal).padStart(2, "0")}`;
+        }
+        return nova;
+      });
+      return novos.sort((a, b) => b.data.localeCompare(a.data));
+    });
+  };
+
+  // Marca uma tx como paga (some das "Próximas a vencer", continua no histórico).
+  const marcarTxPago = (id) => {
+    vibrar(14);
+    const hoje = new Date();
+    const yyyymmdd = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, "0")}-${String(hoje.getDate()).padStart(2, "0")}`;
+    cloud.setTxs((atual) =>
+      atual.map((t) => (t.id === id ? { ...t, pago: true, pagoEm: yyyymmdd } : t)),
+    );
+  };
+
   // Cancela a recorrência: remove apenas as txs futuras (do mês atual em diante).
   // Os lançamentos de meses passados ficam preservados no histórico.
   const cancelarRecorrente = (recId) => {
@@ -954,6 +997,8 @@ export function App() {
     resgatarCaixinha,
     recorrentes: cloud.recorrentes,
     cancelarRecorrente,
+    editarRecorrente,
+    marcarTxPago,
     categoriasCustom: cloud.categoriasCustom,
     adicionarCategoria,
     excluirCategoria,

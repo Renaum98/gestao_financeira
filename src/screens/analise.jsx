@@ -14,7 +14,7 @@ import {
 } from "../data.js";
 import { CatChip, Icon, iconePagamento } from "../ui/icons.jsx";
 import { Card, SeletorMes, TopBar } from "../ui/common.jsx";
-import { BarraProgresso, LineChart, PieChart } from "../ui/charts.jsx";
+import { BarraProgresso, PieChart } from "../ui/charts.jsx";
 
 import { COR_POS as VERDE, COR_NEG as VERMELHO } from "../lib/colors.js";
 import { obterOrcBaseDoMes } from "../lib/orcamento.js";
@@ -154,28 +154,6 @@ export function AnaliseScreen({ ctx }) {
     }
     return Object.entries(m).sort((a, b) => b[1] - a[1]);
   }, [txMes]);
-
-  // ─── Gasto acumulado (só saídas) ───
-  const acumular = (lista) => {
-    const porDia = {};
-    for (const t of lista) {
-      if (t.tipo === "entrada") continue;
-      const d = Number(t.data.slice(8, 10));
-      porDia[d] = (porDia[d] || 0) + t.valor;
-    }
-    let acc = 0;
-    const pts = [{ dia: 0, valor: 0 }];
-    for (let d = 1; d <= 31; d++) {
-      if (porDia[d]) acc += porDia[d];
-      pts.push({ dia: d, valor: acc });
-    }
-    return pts;
-  };
-  const acumulado = React.useMemo(() => acumular(txMes), [txMes]);
-  const acumuladoAnt = React.useMemo(
-    () => (txMesAnt.length ? acumular(txMesAnt) : null),
-    [txMesAnt],
-  );
 
   // ─── Maiores gastos (só saídas) ───
   const maioresGastos = React.useMemo(
@@ -530,40 +508,6 @@ export function AnaliseScreen({ ctx }) {
               </Card>
             </div>
           )}
-
-          {/* Gasto acumulado */}
-          <div style={{ padding: "16px 20px 0" }}>
-            <SecaoTitulo>Gasto acumulado no mês</SecaoTitulo>
-            <Card>
-              <LineChart
-                pontos={acumulado}
-                pontosComp={acumuladoAnt}
-                largura={340}
-                altura={150}
-                ocultar={ocultar}
-              />
-              {acumuladoAnt && (
-                <div
-                  style={{
-                    display: "flex",
-                    gap: 16,
-                    justifyContent: "center",
-                    fontSize: 11,
-                    fontWeight: 700,
-                    color: "var(--muted)",
-                    marginTop: 4,
-                  }}
-                >
-                  <span>
-                    <span style={{ color: "var(--primary)" }}>—</span> Este mês
-                  </span>
-                  <span>
-                    <span style={{ color: "var(--linha)" }}>┄</span> Mês anterior
-                  </span>
-                </div>
-              )}
-            </Card>
-          </div>
 
           {/* Por forma de pagamento */}
           <div style={{ padding: "16px 20px 0" }}>

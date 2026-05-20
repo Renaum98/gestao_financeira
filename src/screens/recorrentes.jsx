@@ -1,11 +1,14 @@
-// recorrentes.jsx — Tela para visualizar e cancelar gastos recorrentes.
+// recorrentes.jsx — Tela para visualizar, editar e cancelar gastos recorrentes.
 
 import React from 'react';
-import { CATEGORIAS, fmtBRL, MESES_CURTO } from '../data.js';
-import { CatChip, Icon } from '../ui/icons.jsx';
+import { CATEGORIAS, catsMinhas, PAGAMENTOS, fmtBRL, MESES_CURTO } from '../data.js';
+import { CatChip, Icon, iconePagamento } from '../ui/icons.jsx';
 import { Card, TopBar } from '../ui/common.jsx';
 import { ConfirmModal } from '../ui/confirm-modal.jsx';
+import { ModalOverlay } from '../ui/modal-base.jsx';
 import { COR_NEG } from '../lib/colors.js';
+import { vibrar } from '../lib/haptics.js';
+import { formatarValorDigitado, parseValorBR } from '../lib/money-input.js';
 
 function rotuloDataDeRec(yyyymm) {
   const [a, m] = yyyymm.split('-');
@@ -13,15 +16,16 @@ function rotuloDataDeRec(yyyymm) {
 }
 
 export function RecorrentesScreen({ ctx }) {
-  const { recorrentes, cancelarRecorrente, voltar, ocultar, ehDesktop } = ctx;
+  const { recorrentes, cancelarRecorrente, editarRecorrente, voltar, ocultar, ehDesktop } = ctx;
   const [confirmar, setConfirmar] = React.useState(null);
+  const [editando, setEditando] = React.useState(null);
 
   return (
     <div style={{ paddingBottom: "var(--pad-bottom)" }}>
       <TopBar voltar={ehDesktop ? undefined : voltar} titulo="Recorrentes" />
 
       <div style={{ padding: '0 20px 12px', fontSize: 13, color: 'var(--muted)', fontWeight: 500, lineHeight: 1.45 }}>
-        Esses gastos são adicionados automaticamente todo mês. Cancele se a cobrança parar.
+        Esses gastos são adicionados automaticamente todo mês. Edite para atualizar do mês atual em diante ou cancele se a cobrança parar.
       </div>
 
       <div style={{ padding: '4px 20px 0' }}>
@@ -64,11 +68,18 @@ export function RecorrentesScreen({ ctx }) {
                     <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--ink)' }}>
                       {fmtBRL(r.valor, ocultar)}
                     </div>
-                    <button onClick={() => setConfirmar(r)} style={{
-                      background: 'transparent', border: 'none', cursor: 'pointer',
-                      padding: '4px 0 0', color: COR_NEG, fontSize: 11, fontWeight: 700,
-                      fontFamily: 'inherit',
-                    }}>Cancelar</button>
+                    <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 4 }}>
+                      <button onClick={() => { vibrar(); setEditando(r); }} style={{
+                        background: 'transparent', border: 'none', cursor: 'pointer',
+                        padding: 0, color: 'var(--primary)', fontSize: 11, fontWeight: 700,
+                        fontFamily: 'inherit',
+                      }}>Editar</button>
+                      <button onClick={() => setConfirmar(r)} style={{
+                        background: 'transparent', border: 'none', cursor: 'pointer',
+                        padding: 0, color: COR_NEG, fontSize: 11, fontWeight: 700,
+                        fontFamily: 'inherit',
+                      }}>Cancelar</button>
+                    </div>
                   </div>
                 </div>
               );
@@ -87,6 +98,227 @@ export function RecorrentesScreen({ ctx }) {
           onConfirmar={() => { cancelarRecorrente(confirmar.id); setConfirmar(null); }}
         />
       )}
+
+      {editando && (
+        <EditarRecorrenteModal
+          rec={editando}
+          onFechar={() => setEditando(null)}
+          onSalvar={(dados) => {
+            editarRecorrente(editando.id, dados);
+            setEditando(null);
+          }}
+        />
+      )}
     </div>
+  );
+}
+
+function EditarRecorrenteModal({ rec, onFechar, onSalvar }) {
+  const ehEntrada = rec.tipo === 'entrada';
+  const [descricao, setDescricao] = React.useState(rec.descricao || '');
+  const [valor, setValor] = React.useState(
+    String((rec.valor || 0).toFixed(2)).replace('.', ','),
+  );
+  const [categoria, setCategoria] = React.useState(rec.categoria || 'outros');
+  const [pagamento, setPagamento] = React.useState(rec.pagamento || 'Pix');
+  const [dia, setDia] = React.useState(rec.dia || 1);
+
+  const valorNum = parseValorBR(valor);
+  const aoDigitar = (texto) => setValor(formatarValorDigitado(texto));
+
+  const podeSalvar = valorNum > 0 && descricao.trim().length > 0;
+
+  const salvar = () => {
+    if (!podeSalvar) return;
+    const dados = {
+      descricao: descricao.trim(),
+      valor: valorNum,
+      dia: Number(dia),
+    };
+    if (!ehEntrada) {
+      dados.categoria = categoria;
+      dados.pagamento = pagamento;
+    }
+    onSalvar(dados);
+  };
+
+  return (
+    <ModalOverlay onClose={onFechar} maxWidth={440} padding="16px 20px 24px">
+      <div style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        marginBottom: 16,
+      }}>
+        <button onClick={onFechar} style={{
+          background: 'transparent', border: 'none', color: 'var(--muted)',
+          fontWeight: 700, fontSize: 14, cursor: 'pointer',
+        }}>Cancelar</button>
+        <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--ink)', letterSpacing: '-0.01em' }}>
+          Editar recorrente
+        </div>
+        <button onClick={salvar} disabled={!podeSalvar} style={{
+          background: podeSalvar ? 'var(--primary)' : 'var(--linha)',
+          color: podeSalvar ? '#fff' : 'var(--muted)',
+          border: 'none', padding: '6px 14px', borderRadius: 999,
+          fontWeight: 800, fontSize: 13, cursor: podeSalvar ? 'pointer' : 'default',
+          fontFamily: 'inherit',
+        }}>Salvar</button>
+      </div>
+
+      <div style={{
+        fontSize: 11, color: 'var(--muted)', fontWeight: 600, lineHeight: 1.45,
+        background: 'var(--card-2)', padding: '10px 12px', borderRadius: 10,
+        marginBottom: 14,
+      }}>
+        As mudanças valem do mês atual em diante.
+      </div>
+
+      {/* Valor */}
+      <label style={{
+        display: 'block', textAlign: 'center', padding: '8px 0 4px',
+        cursor: 'text', position: 'relative',
+      }}>
+        <div style={{
+          fontSize: 12, fontWeight: 700, color: 'var(--muted)',
+          textTransform: 'uppercase', letterSpacing: 0.6,
+        }}>
+          Valor
+        </div>
+        <div style={{
+          fontSize: 44, fontWeight: 800, color: 'var(--ink)',
+          letterSpacing: '-0.04em', marginTop: 4, fontVariantNumeric: 'tabular-nums',
+        }}>
+          <span style={{
+            fontSize: 22, color: 'var(--muted)', marginRight: 6, verticalAlign: 'top',
+          }}>R$</span>
+          {valor}
+        </div>
+        <input
+          type="text"
+          inputMode="numeric"
+          pattern="[0-9]*"
+          value={valor.replace(',', '')}
+          onChange={(e) => aoDigitar(e.target.value)}
+          aria-label="Valor"
+          style={{
+            position: 'absolute', inset: 0, opacity: 0, border: 'none',
+            background: 'transparent', outline: 'none', fontSize: 16, cursor: 'text',
+          }}
+        />
+      </label>
+
+      {/* Descrição */}
+      <div style={{ marginTop: 12 }}>
+        <input
+          value={descricao}
+          onChange={(e) => setDescricao(e.target.value)}
+          placeholder="Descrição"
+          style={{
+            width: '100%', padding: '14px 16px', borderRadius: 14, border: 'none',
+            background: 'var(--card-2)', outline: 'none', fontSize: 14, fontWeight: 600,
+            color: 'var(--ink)', fontFamily: 'inherit',
+            boxShadow: '0 1px 2px rgba(0,0,0,0.06)', boxSizing: 'border-box',
+          }}
+        />
+      </div>
+
+      {/* Categoria */}
+      {!ehEntrada && (
+        <div style={{ marginTop: 14 }}>
+          <div style={{
+            fontSize: 11, fontWeight: 700, color: 'var(--muted)',
+            textTransform: 'uppercase', letterSpacing: 0.4, padding: '0 4px 8px',
+          }}>
+            Categoria
+          </div>
+          <div
+            className="carrossel"
+            style={{
+              display: 'flex', gap: 8, overflowX: 'auto',
+              padding: '6px 4px 10px', scrollbarWidth: 'none',
+            }}
+          >
+            {catsMinhas().map((c) => {
+              const cat = CATEGORIAS[c];
+              const sel = categoria === c;
+              return (
+                <button
+                  key={c}
+                  onClick={() => { vibrar(); setCategoria(c); }}
+                  style={{
+                    display: 'flex', flexDirection: 'column', alignItems: 'center',
+                    gap: 6, padding: '8px 10px 6px', borderRadius: 14, border: 'none',
+                    background: sel ? 'var(--card-2)' : 'transparent',
+                    boxShadow: sel ? '0 2px 8px rgba(0,0,0,0.18), 0 0 0 1.5px ' + cat.cor : 'none',
+                    cursor: 'pointer', minWidth: 72, flexShrink: 0,
+                    WebkitUserSelect: 'none', userSelect: 'none',
+                  }}
+                >
+                  <CatChip catId={c} size={32} raised />
+                  <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--ink)' }}>
+                    {cat.nome}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Pagamento */}
+      {!ehEntrada && (
+        <div style={{ marginTop: 10, display: 'flex', gap: 8 }}>
+          {PAGAMENTOS.map((p) => {
+            const sel = pagamento === p;
+            return (
+              <button
+                key={p}
+                onClick={() => { vibrar(); setPagamento(p); }}
+                style={{
+                  flex: 1, padding: '10px 4px', borderRadius: 12, border: 'none',
+                  background: sel ? 'var(--ink)' : 'var(--card-2)',
+                  color: sel ? 'var(--bg)' : 'var(--ink)',
+                  fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
+                  display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
+                  boxShadow: sel ? 'none' : '0 1px 2px rgba(0,0,0,0.06)',
+                }}
+              >
+                <Icon
+                  name={iconePagamento(p)}
+                  size={18}
+                  color={sel ? 'var(--bg)' : 'var(--ink)'}
+                  strokeWidth={2}
+                />
+                {p.replace('Cartão de ', '')}
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Dia de vencimento */}
+      <label style={{
+        marginTop: 10, display: 'flex', alignItems: 'center', gap: 10,
+        padding: '12px 16px', borderRadius: 14, background: 'var(--card-2)',
+        boxShadow: '0 1px 2px rgba(0,0,0,0.06)',
+      }}>
+        <Icon name="calendar" size={18} color="var(--muted)" strokeWidth={2} />
+        <span style={{ flex: 1, fontSize: 13, fontWeight: 700, color: 'var(--muted)' }}>
+          Vence todo dia
+        </span>
+        <select
+          value={dia}
+          onChange={(e) => setDia(parseInt(e.target.value, 10))}
+          style={{
+            border: 'none', background: 'transparent', outline: 'none',
+            fontSize: 14, fontWeight: 700, color: 'var(--ink)', fontFamily: 'inherit',
+            cursor: 'pointer',
+          }}
+        >
+          {Array.from({ length: 31 }, (_, i) => i + 1).map((d) => (
+            <option key={d} value={d}>{d}</option>
+          ))}
+        </select>
+      </label>
+    </ModalOverlay>
   );
 }
