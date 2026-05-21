@@ -1228,6 +1228,10 @@ function CarrosselSaldoMes({ todosMeses, mes, setMes, renderCard }) {
   const ultimoMesEnviado = React.useRef(mes);
   const primeiraVezRef = React.useRef(true);
   const rafRef = React.useRef(0);
+  // Marca que a próxima mudança de idxAtivo veio do próprio swipe do usuário —
+  // nesse caso o scroll-snap nativo já está centralizando, então o layoutEffect
+  // NÃO deve disparar um scrollTo programático (que brigaria com o dedo).
+  const mudouPorSwipeRef = React.useRef(false);
 
   const aplicarEfeitos = React.useCallback(() => {
     const el = ref.current;
@@ -1250,6 +1254,14 @@ function CarrosselSaldoMes({ todosMeses, mes, setMes, renderCard }) {
   React.useLayoutEffect(() => {
     const el = ref.current;
     if (!el) return;
+    // Mudança disparada pelo swipe do usuário: o snap nativo já centraliza.
+    // Só atualizamos os efeitos e saímos, sem scrollTo programático.
+    if (mudouPorSwipeRef.current) {
+      mudouPorSwipeRef.current = false;
+      primeiraVezRef.current = false;
+      aplicarEfeitos();
+      return;
+    }
     const slide = slideRefs.current[idxAtivo];
     if (!slide) return;
     const alvo = slide.offsetLeft - (el.clientWidth - slide.clientWidth) / 2;
@@ -1290,6 +1302,7 @@ function CarrosselSaldoMes({ todosMeses, mes, setMes, renderCard }) {
       const novo = mesesAsc[maisPerto];
       if (novo && novo !== ultimoMesEnviado.current) {
         ultimoMesEnviado.current = novo;
+        mudouPorSwipeRef.current = true;
         setMes(novo);
       }
     });
@@ -1333,12 +1346,14 @@ function CarrosselSaldoMes({ todosMeses, mes, setMes, renderCard }) {
             scrollSnapAlign: "center",
             // sem scrollSnapStop: "always" — permite gestos rápidos
             // atravessarem mais de um slide sem travar
-            willChange: "filter, opacity, transform",
+            willChange: "opacity, transform",
             transformOrigin: "center center",
-            // transição curta cobre o intervalo entre o último frame de
-            // scroll e o snap final — sem ela o último estado fica "duro"
-            transition:
-              "filter 160ms cubic-bezier(0.22, 1, 0.36, 1), opacity 160ms cubic-bezier(0.22, 1, 0.36, 1), transform 160ms cubic-bezier(0.22, 1, 0.36, 1)",
+            // Sem transition: opacity/transform são reescritos a cada frame de
+            // scroll por aplicarEfeitos (via rAF), então o efeito acompanha o
+            // dedo 1:1. Uma transition aqui só adicionaria lag perseguindo o
+            // gesto. O snap nativo continua emitindo scroll até assentar, então
+            // o estado final também fica suave sem transição.
+            backfaceVisibility: "hidden",
           }}
         >
           {renderCard(m)}
