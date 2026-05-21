@@ -88,67 +88,6 @@ export function PieChart({ dados, total, tamanho = 200, ativo, onHover, ocultar 
   );
 }
 
-// Gráfico de linha — gastos acumulados ao longo do mês
-export function LineChart({ pontos, pontosComp, largura = 340, altura = 140, ocultar }) {
-  // pontos: [{ dia, valor }] acumulado por dia
-  if (!pontos || pontos.length === 0) return null;
-  const padL = 6, padR = 6, padT = 14, padB = 22;
-  const w = largura - padL - padR;
-  const h = altura - padT - padB;
-
-  const maxDia = Math.max(...pontos.map(p => p.dia), ...(pontosComp || []).map(p => p.dia), 30);
-  const maxVal = Math.max(
-    ...pontos.map(p => p.valor),
-    ...(pontosComp || []).map(p => p.valor),
-    100,
-  );
-  const x = d => padL + (d / maxDia) * w;
-  const y = v => padT + h - (v / maxVal) * h;
-
-  const buildPath = arr => arr.map((p, i) => `${i === 0 ? 'M' : 'L'} ${x(p.dia).toFixed(1)} ${y(p.valor).toFixed(1)}`).join(' ');
-  const path = buildPath(pontos);
-  const pathComp = pontosComp ? buildPath(pontosComp) : null;
-
-  // gradiente sob curva
-  const areaPath = `${path} L ${x(pontos[pontos.length - 1].dia).toFixed(1)} ${padT + h} L ${x(pontos[0].dia).toFixed(1)} ${padT + h} Z`;
-
-  const ticks = [5, 10, 15, 20, 25];
-
-  return (
-    <svg
-      width="100%"
-      height={altura}
-      viewBox={`0 0 ${largura} ${altura}`}
-      preserveAspectRatio="none"
-      style={{ display: 'block', maxWidth: '100%' }}
-    >
-      <defs>
-        <linearGradient id="lineGrad" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="var(--primary)" stopOpacity="0.22" />
-          <stop offset="100%" stopColor="var(--primary)" stopOpacity="0" />
-        </linearGradient>
-      </defs>
-      {/* gridlines horizontais */}
-      {[0.25, 0.5, 0.75].map((p, i) => (
-        <line key={i} x1={padL} x2={padL + w} y1={padT + h * p} y2={padT + h * p} style={{ stroke: 'var(--surface-sunken)' }} strokeDasharray="3 4" />
-      ))}
-      {/* linha mês anterior (pontilhada) */}
-      {pathComp && (
-        <path d={pathComp} fill="none" stroke="var(--linha)" strokeWidth="2" strokeDasharray="3 4" strokeLinecap="round" />
-      )}
-      <path d={areaPath} fill="url(#lineGrad)" />
-      <path d={path} fill="none" stroke="var(--primary)" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
-      {/* ponto final */}
-      <circle cx={x(pontos[pontos.length - 1].dia)} cy={y(pontos[pontos.length - 1].valor)} r="4.5" fill="var(--primary)" />
-      <circle cx={x(pontos[pontos.length - 1].dia)} cy={y(pontos[pontos.length - 1].valor)} r="9" fill="var(--primary)" opacity="0.18" />
-      {/* eixo dias */}
-      {ticks.map(t => (
-        <text key={t} x={x(t)} y={altura - 6} fontFamily="Plus Jakarta Sans" fontSize="10" fill="var(--muted)" textAnchor="middle">{t}</text>
-      ))}
-    </svg>
-  );
-}
-
 // Mini gráfico de barras horizontais para "top categorias"
 export function BarraProgresso({ valor, max, cor, altura = 8, fundo = 'var(--surface-sunken)' }) {
   const pct = max > 0 ? Math.min(100, (valor / max) * 100) : 0;

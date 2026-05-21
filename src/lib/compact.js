@@ -22,7 +22,7 @@ function ehObjetoVazio(o) {
 
 // ─── Caixinha / Depósito ───────────────────────────────────────────────────
 
-export function compactarDeposito(d) {
+function compactarDeposito(d) {
   const out = { id: d.id, valor: d.valor, data: d.data };
   // Origem "orcamento" é o padrão — só salva se for entrada (com descricao).
   if (d.origem && d.origem.tipo && d.origem.tipo !== "orcamento") {

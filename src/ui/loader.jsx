@@ -21,7 +21,7 @@ import React from 'react';
 
 // Bloco primitivo. width/height aceitam número (px) ou string (CSS).
 // radius padrão segue o "card" do app.
-export function Skeleton({
+function Skeleton({
   w = '100%',
   h = 16,
   r = 8,

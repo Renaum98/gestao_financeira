@@ -79,7 +79,7 @@ async function apagarUserIndex(email) {
 
 // Apaga os dados do Firestore (passos 1-4 acima). NÃO deleta o usuário do Auth.
 // Útil quando precisamos retry com reautenticação no passo 5.
-export async function apagarDadosDaConta({
+async function apagarDadosDaConta({
   uid,
   meuEmail,
   meuNome,

@@ -2,7 +2,7 @@
 // A biblioteca `xlsx` é carregada sob demanda (dynamic import) para não
 // pesar o bundle inicial — só quem clica em "Baixar dados" paga o custo.
 
-import { CATEGORIAS, rotuloMes, txDoMes } from '../data.js';
+import { CATEGORIAS, txDoMes } from '../data.js';
 
 function nomeCategoria(catId) {
   return CATEGORIAS[catId]?.nome || catId || '—';
@@ -181,9 +181,4 @@ export async function baixarDadosXLSX({
   const rotulo = mes ? mes : 'todos';
   const fileName = `${slugUsuario}-${rotulo}.xlsx`;
   XLSX.writeFile(wb, fileName);
-}
-
-// Lista de meses para o seletor: combina os meses com txs + mês atual.
-export function rotuloMesParaExport(yyyymm) {
-  return rotuloMes(yyyymm);
 }

@@ -14,7 +14,7 @@ import { Card, ItemTransacao, TopBar } from "../ui/common.jsx";
 import { BarraProgresso } from "../ui/charts.jsx";
 
 export function CategoriaScreen({ ctx, params }) {
-  const { txs, mes, ocultar, irPara, voltar, orcamentos } = ctx;
+  const { txs, mes, ocultar, voltar, orcamentos } = ctx;
   const cat = CATEGORIAS[params.catId];
   const txMes = txDoMes(txs, mes).filter((t) => t.categoria === params.catId);
   const total = totalGeral(txMes);

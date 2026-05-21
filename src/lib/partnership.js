@@ -235,7 +235,7 @@ export async function cancelarConvite(inviteId) {
 // Chamado automaticamente quando um convite que EU enviei vira 'aceito'.
 // Marca o meu user com o parceiro, migra minhas caixinhas pra partnership
 // (somando às que o outro lado já tinha colocado) e deleta o invite.
-export async function finalizarPareamento({ invite, meuUid }) {
+async function finalizarPareamento({ invite, meuUid }) {
   const partnershipRef = doc(db, PARTNERSHIPS, invite.partnershipId);
   const pDoc = await getDoc(partnershipRef);
 

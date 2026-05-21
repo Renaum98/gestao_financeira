@@ -32,7 +32,7 @@ function escreverCache(valor) {
   } catch {}
 }
 
-export async function buscarSelic() {
+async function buscarSelic() {
   const cache = lerCache();
   if (cache && Date.now() - cache.savedAt < TTL_MS) return cache.valor;
 
