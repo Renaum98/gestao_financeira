@@ -9,6 +9,7 @@ import {
   listarMeses,
   aplicarCategoriasCustom,
   novaCategoriaCustom,
+  valorRecNoMes,
 } from "./data.js";
 import { Icon } from "./ui/icons.jsx";
 import { escutarAuth, sair as sairFirebase } from "./lib/firebase.js";
@@ -544,7 +545,7 @@ export function App() {
           descricao: r.descricao,
           categoria: r.categoria,
           pagamento: r.pagamento,
-          valor: r.valor,
+          valor: valorRecNoMes(r, yyyymm),
           data,
           recorrenteId: r.id,
         });
@@ -662,9 +663,11 @@ export function App() {
     const ehRec = tx.ehRecorrente;
     const recDia = tx.recDia;
     const recFim = tx.recFim;
+    const recCresc = tx.recCresc; // reajuste composto por parcela (decimal) ou null
     delete tx.ehRecorrente; // flag de UI, não persistir
     delete tx.recDia;
     delete tx.recFim;
+    delete tx.recCresc;
 
     const expandir = (base) => {
       if (!base.parcelas) {
@@ -709,6 +712,14 @@ export function App() {
         return Math.max(1, diff);
       })();
       tx = { ...tx, recorrenteId: recId };
+      const cresc = recCresc || 0; // reajuste composto por parcela (decimal)
+      // Recorrência "molde" usada por valorRecNoMes pra calcular cada parcela.
+      const recMolde = {
+        valor: tx.valor,
+        valorBase: tx.valor,
+        crescimento: cresc,
+        inicio: inicioYYMM,
+      };
 
       const txsRec = [];
       for (let i = 0; i < totalMeses; i++) {
@@ -719,6 +730,7 @@ export function App() {
         const ultDia = new Date(ny, nm0 + 1, 0).getDate();
         const diaReal = Math.min(diaCfg, ultDia);
         const data = `${yyyymm}-${String(diaReal).padStart(2, "0")}`;
+        const valorMes = valorRecNoMes(recMolde, yyyymm);
         txsRec.push(
           i === 0
             ? { ...tx, data }
@@ -728,7 +740,7 @@ export function App() {
                 descricao: tx.descricao,
                 categoria: tx.categoria,
                 pagamento: tx.pagamento,
-                valor: tx.valor,
+                valor: valorMes,
                 data,
                 recorrenteId: recId,
               },
@@ -749,6 +761,12 @@ export function App() {
           inicio: inicioYYMM,
           fim: recFim || null,
           ultimoMesGerado: ultimoMes,
+          // Reajuste composto (financiamento): base + % por parcela.
+          ...(cresc > 0 && {
+            crescimento: cresc,
+            valorBase: tx.valor,
+            mesBase: inicioYYMM,
+          }),
         },
       ]);
 
@@ -793,8 +811,18 @@ export function App() {
     vibrar(14);
     const hoje = new Date();
     const yyyymmHoje = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, "0")}`;
+    const recAntiga = cloud.recorrentes.find((r) => r.id === recId);
+    // Financiamento com reajuste: ao mudar o valor, o novo valor passa a ser a
+    // base ancorada no mês atual; as parcelas futuras seguem crescendo a partir
+    // dela. Sem isso, editar o valor achataria o reajuste.
+    const reancorar =
+      recAntiga && recAntiga.crescimento && dados.valor !== undefined;
+    const dadosFinais = reancorar
+      ? { ...dados, valorBase: dados.valor, mesBase: yyyymmHoje }
+      : dados;
+    const recNova = recAntiga ? { ...recAntiga, ...dadosFinais } : null;
     cloud.setRecorrentes((atual) =>
-      atual.map((r) => (r.id === recId ? { ...r, ...dados } : r)),
+      atual.map((r) => (r.id === recId ? { ...r, ...dadosFinais } : r)),
     );
     cloud.setTxs((atual) => {
       const novos = atual.map((t) => {
@@ -804,7 +832,12 @@ export function App() {
         if (dados.descricao !== undefined) nova.descricao = dados.descricao;
         if (dados.categoria !== undefined) nova.categoria = dados.categoria;
         if (dados.pagamento !== undefined) nova.pagamento = dados.pagamento;
-        if (dados.valor !== undefined) nova.valor = dados.valor;
+        if (dados.valor !== undefined) {
+          nova.valor =
+            recNova && recNova.crescimento
+              ? valorRecNoMes(recNova, t.data.slice(0, 7))
+              : dados.valor;
+        }
         if (dados.dia !== undefined) {
           const [y, m] = t.data.split("-").map(Number);
           const ultDia = new Date(y, m, 0).getDate();

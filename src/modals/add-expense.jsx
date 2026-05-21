@@ -6,6 +6,8 @@ import {
   catsMinhas,
   PAGAMENTOS,
   MESES,
+  CAT_FINANCIAMENTO,
+  fmtBRL,
 } from "../data.js";
 import { CatChip, Icon, iconePagamento } from "../ui/icons.jsx";
 import { ModalOverlay } from "../ui/modal-base.jsx";
@@ -62,8 +64,16 @@ export function AddExpenseModal({ ctx, params }) {
   const [diaVenc, setDiaVenc] = React.useState(_hoje.getDate());
   const [fimMes, setFimMes] = React.useState(_fimDefault.getMonth() + 1);
   const [fimAno, setFimAno] = React.useState(_fimDefault.getFullYear());
+  // % de reajuste por parcela do financiamento (string digitada, ex.: "1,5").
+  const [reajuste, setReajuste] = React.useState("");
 
   const ehEntrada = tipo === "entrada";
+  // Financiamento: habilita o campo de reajuste e força "repetir todo mês".
+  const ehFinanciamento = !ehEntrada && categoria === CAT_FINANCIAMENTO && !editar;
+  React.useEffect(() => {
+    if (ehFinanciamento) setEhRecorrente(true);
+  }, [ehFinanciamento]);
+  const reajustePct = parseFloat(reajuste.replace(",", ".")) || 0;
   const [criandoCat, setCriandoCat] = React.useState(false);
   const [novoNomeCat, setNovoNomeCat] = React.useState("");
   const [novaCorCat, setNovaCorCat] = React.useState(CORES_CAT[0]);
@@ -116,6 +126,10 @@ export function AddExpenseModal({ ctx, params }) {
       // Dia de vencimento e mês/ano final (yyyy-mm) — só usados se recorrente.
       recDia: vaiCriarRec ? diaVenc : null,
       recFim: vaiCriarRec ? `${fimAno}-${String(fimMes).padStart(2, "0")}` : null,
+      // Reajuste composto por parcela (decimal) — só financiamento recorrente.
+      recCresc: vaiCriarRec && ehFinanciamento && reajustePct > 0
+        ? reajustePct / 100
+        : null,
     };
     salvarTx(tx, !!editar);
     fechar();
@@ -722,6 +736,61 @@ export function AddExpenseModal({ ctx, params }) {
         {/* Campos extras de recorrência: dia de vencimento + mês/ano final */}
         {ehRecorrente && !editar && (
           <div style={{ marginTop: 10, display: "flex", flexDirection: "column", gap: 10 }}>
+            {/* Reajuste por parcela (só financiamento) */}
+            {ehFinanciamento && (
+              <div
+                style={{
+                  padding: "12px 16px",
+                  borderRadius: 14,
+                  background: "var(--card-2)",
+                  boxShadow: "0 1px 2px rgba(0,0,0,0.06)",
+                }}
+              >
+                <label style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <Icon name="chart" size={18} color="var(--muted)" strokeWidth={2} />
+                  <span style={{ flex: 1, fontSize: 13, fontWeight: 700, color: "var(--muted)" }}>
+                    Reajuste por parcela
+                  </span>
+                  <input
+                    type="text"
+                    inputMode="decimal"
+                    value={reajuste}
+                    onChange={(e) =>
+                      setReajuste(e.target.value.replace(/[^0-9.,]/g, ""))
+                    }
+                    placeholder="0"
+                    aria-label="Porcentagem de reajuste por parcela"
+                    style={{
+                      width: 64,
+                      textAlign: "right",
+                      border: "none",
+                      background: "transparent",
+                      outline: "none",
+                      fontSize: 16,
+                      fontWeight: 800,
+                      color: "var(--ink)",
+                      fontFamily: "inherit",
+                    }}
+                  />
+                  <span style={{ fontSize: 14, fontWeight: 800, color: "var(--ink)" }}>%</span>
+                </label>
+                {reajustePct > 0 && valorNum > 0 && (
+                  <div
+                    style={{
+                      marginTop: 8,
+                      fontSize: 11,
+                      fontWeight: 600,
+                      color: "var(--muted)",
+                      lineHeight: 1.5,
+                    }}
+                  >
+                    1ª parcela {fmtBRL(valorNum)} · 2ª {fmtBRL(valorNum * (1 + reajustePct / 100))}
+                    {" · "}3ª {fmtBRL(valorNum * Math.pow(1 + reajustePct / 100, 2))}
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* Vence todo dia */}
             <label
               style={{

@@ -62,6 +62,7 @@ export function RecorrentesScreen({ ctx }) {
                     <div style={{ fontSize: 11, color: 'var(--muted)', fontWeight: 600, marginTop: 2 }}>
                       {cat.nome} · todo dia {r.dia} · desde {rotuloDataDeRec(r.inicio)}
                       {r.fim ? ` · até ${rotuloDataDeRec(r.fim)}` : ''}
+                      {r.crescimento ? ` · reajuste ${(r.crescimento * 100).toLocaleString('pt-BR', { maximumFractionDigits: 2 })}% por parcela` : ''}
                     </div>
                   </div>
                   <div style={{ textAlign: 'right' }}>

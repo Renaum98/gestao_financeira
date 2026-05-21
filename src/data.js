@@ -9,10 +9,15 @@ export const CATEGORIAS = {
   compras:     { id: 'compras',     nome: 'Compras',     cor: '#F0C13B', corFundo: '#FBF1CF', emoji: 'C' },
   educacao:    { id: 'educacao',    nome: 'Educação',    cor: '#6FB8D9', corFundo: '#DDEEF5', emoji: 'E' },
   assinaturas: { id: 'assinaturas', nome: 'Assinaturas', cor: '#C58BFF', corFundo: '#F0E0FF', emoji: 'A' },
+  financiamento: { id: 'financiamento', nome: 'Financiamento', cor: '#5B6CFF', corFundo: '#E2E6FF', emoji: 'F' },
   outros:      { id: 'outros',      nome: 'Outros',      cor: '#B3AAB8', corFundo: '#EBE7EE', emoji: 'O' },
 };
 
-export const ORDEM_CATS = ['alimentacao','transporte','moradia','lazer','saude','compras','educacao','assinaturas','outros'];
+// Id da categoria de financiamento — ao usá-la, o modal de gasto habilita o
+// reajuste composto por parcela (ver valorRecNoMes) e liga "repetir todo mês".
+export const CAT_FINANCIAMENTO = 'financiamento';
+
+export const ORDEM_CATS = ['alimentacao','transporte','financiamento','moradia','lazer','saude','compras','educacao','assinaturas','outros'];
 
 // ─── Categorias personalizadas ───
 // O usuário pode criar categorias com nome + cor; o "logo" é a primeira letra do nome.
@@ -120,6 +125,25 @@ export function fmtBRLCompacto(v, ocultar = false) {
     return `R$ ${(v / 1000).toFixed(1).replace('.', ',')}k`;
   }
   return fmtBRL(v);
+}
+
+// Valor de uma recorrência num mês específico. Para recorrências comuns é
+// sempre o mesmo valor. Para financiamentos com reajuste (campo `crescimento`,
+// ex.: 0.015 = 1,5% por parcela), aplica juros compostos sobre a parcela base:
+//   parcela_i = base × (1 + crescimento)^i
+// onde i é o nº de meses desde `mesBase` (âncora — início, ou o mês de uma
+// edição). A 1ª parcela (i=0) é exatamente a base digitada.
+export function valorRecNoMes(r, yyyymm) {
+  if (!r) return 0;
+  const base = r.valorBase != null ? r.valorBase : r.valor;
+  if (!r.crescimento) return base;
+  const ref = r.mesBase || r.inicio;
+  if (!ref) return base;
+  const [iy, im] = ref.split('-').map(Number);
+  const [ty, tm] = yyyymm.split('-').map(Number);
+  const offset = (ty - iy) * 12 + (tm - im);
+  if (offset <= 0) return Math.round(base * 100) / 100;
+  return Math.round(base * Math.pow(1 + r.crescimento, offset) * 100) / 100;
 }
 
 export function txDoMes(txs, yyyymm) {
