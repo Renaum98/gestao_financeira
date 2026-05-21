@@ -888,7 +888,7 @@ export function DashboardScreen({ ctx }) {
               const [, mm, dd] = tx.data.split("-").map(Number);
               const diasAte = Math.ceil(
                 (new Date(tx.data + "T12:00:00") - new Date()) /
-                  (1000 * 60 * 60 * 24),
+                (1000 * 60 * 60 * 24),
               );
               const urgente = diasAte <= 3;
               const rotuloPrazo =
@@ -1134,8 +1134,8 @@ function ContaProximaModal({ tx, ocultar, onFechar, onMarcarPago }) {
   );
   const rotuloPrazo =
     diasAte <= 0 ? "Vence hoje"
-    : diasAte === 1 ? "Vence amanhã"
-    : `Vence em ${diasAte} dias`;
+      : diasAte === 1 ? "Vence amanhã"
+        : `Vence em ${diasAte} dias`;
 
   return (
     <ModalOverlay

@@ -61,9 +61,11 @@ body {
 
 button, input, select, textarea { font-family: inherit; }
 
-/* iOS faz zoom automático ao focar inputs com fonte < 16px. Forçamos o mínimo. */
+/* iOS faz zoom automático ao focar inputs com fonte < 16px. Forçamos o mínimo
+   com !important porque vários inputs definem fontSize inline (14/15px), e o
+   estilo inline venceria a regra normal — reintroduzindo o zoom no mobile. */
 input, select, textarea {
-  font-size: 16px;
+  font-size: 16px !important;
 }
 
 input[type="date"]::-webkit-calendar-picker-indicator { cursor: pointer; opacity: 0.6; }
