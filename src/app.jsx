@@ -208,7 +208,7 @@ function Sidebar({ tela, irPara, abrirAdd, usuario, fotoPerfil }) {
             letterSpacing: "-0.02em",
           }}
         >
-          Financeiro
+          MyCounts
         </span>
       </div>
 

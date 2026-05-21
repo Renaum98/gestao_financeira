@@ -157,7 +157,7 @@ export function PerfilScreen({ ctx }) {
         </button>
 
         <div style={{ padding: "24px 0", textAlign: "center" }}>
-          <div style={{ fontSize: 11, color: "var(--muted)", fontWeight: 600 }}>Financeiro · v1.0</div>
+          <div style={{ fontSize: 11, color: "var(--muted)", fontWeight: 600 }}>MyCounts · v1.0</div>
         </div>
       </div>
 

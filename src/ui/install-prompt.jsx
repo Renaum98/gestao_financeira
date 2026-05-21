@@ -142,7 +142,7 @@ export function InstallPromptModal({ temAtalho, plataformaIOS, onInstalar, onDis
             <div style={{
               fontSize: 19, fontWeight: 800, color: 'var(--ink)',
               letterSpacing: '-0.02em',
-            }}>Instale o Financeiro</div>
+            }}>Instale o MyCounts</div>
 
             <div style={{
               fontSize: 13.5, color: 'var(--muted)', fontWeight: 500,

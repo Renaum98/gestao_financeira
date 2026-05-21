@@ -172,12 +172,12 @@ export async function baixarDadosXLSX({
     }
   }
 
-  const slugUsuario = (nomeUsuario || 'financeiro')
+  const slugUsuario = (nomeUsuario || 'mycounts')
     .toLowerCase()
     .normalize('NFD')
     .replace(/[̀-ͯ]/g, '')
     .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '') || 'financeiro';
+    .replace(/^-+|-+$/g, '') || 'mycounts';
   const rotulo = mes ? mes : 'todos';
   const fileName = `${slugUsuario}-${rotulo}.xlsx`;
   XLSX.writeFile(wb, fileName);

@@ -38,8 +38,8 @@ export default defineConfig({
         // navegador. Se mudar a cada build, o Chrome desktop trata como app novo
         // e isso atrapalha o ícone de instalar e a atualização do app instalado.
         id: '/',
-        name: 'Financeiro',
-        short_name: 'Financeiro',
+        name: 'MyCounts',
+        short_name: 'MyCounts',
         description: 'Gestão financeira pessoal',
         lang: 'pt-BR',
         theme_color: '#6E4FF6',
