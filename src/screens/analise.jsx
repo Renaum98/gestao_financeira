@@ -1,59 +1,37 @@
-// analise.jsx — Tela Análise (pizza, resumo, evolução, formas de pagamento, ranking)
+// analise.jsx — Tela Análise (pizza, resumo, evolução, formas de pagamento,
+// ranking). Orquestra os blocos; cada um vive em ./analise/*.
 
 import React from "react";
 import {
   CATEGORIAS,
   catsMinhas,
-  fmtBRL,
-  fmtBRLCompacto,
-  rotuloMesCurto,
   totalEntradas,
   totalGeral,
   totalPorCategoria,
   txDoMes,
+  rotuloMesCurto,
 } from "../data.js";
-import { CatChip, Icon, iconePagamento } from "../ui/icons.jsx";
 import { Card, SeletorMes, TopBar } from "../ui/common.jsx";
-import { BarraProgresso, PieChart } from "../ui/charts.jsx";
-
-import { COR_POS as VERDE, COR_NEG as VERMELHO } from "../lib/colors.js";
 import { obterOrcBaseDoMes } from "../lib/orcamento.js";
-
-function mesShift(yyyymm, delta) {
-  const [y, m] = yyyymm.split("-").map(Number);
-  const d = new Date(y, m - 1 + delta, 1);
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
-}
-
-function diasNoMes(yyyymm) {
-  const [y, m] = yyyymm.split("-").map(Number);
-  return new Date(y, m, 0).getDate();
-}
-
-function SecaoTitulo({ children }) {
-  return (
-    <div
-      style={{
-        fontSize: 15,
-        fontWeight: 700,
-        color: "var(--ink)",
-        padding: "0 4px 8px",
-      }}
-    >
-      {children}
-    </div>
-  );
-}
+import { guardadoNoMes } from "../lib/saldo-mes.js";
+import { mesShift, diasNoMes } from "./analise/utils.js";
+import { ResumoMes } from "./analise/ResumoMes.jsx";
+import { PizzaCategorias } from "./analise/PizzaCategorias.jsx";
+import { EvolucaoMeses } from "./analise/EvolucaoMeses.jsx";
+import { EvolucaoConjunta } from "./analise/EvolucaoConjunta.jsx";
+import { PorPagamento } from "./analise/PorPagamento.jsx";
+import { TopCategorias } from "./analise/TopCategorias.jsx";
+import { MaioresGastos } from "./analise/MaioresGastos.jsx";
+import { AtalhoOrcamentos } from "./analise/AtalhoOrcamentos.jsx";
 
 export function AnaliseScreen({ ctx }) {
   const {
     txs, mes, setMes, todosMeses, mesAnterior, ocultar, irPara, ehDesktop,
-    partnerTxs = [], partnerNome = '', partnerUid,
+    partnerTxs = [], partnerNome = "", partnerUid,
     preferences = {}, orcamentos = {}, caixinhas = [], usuario,
   } = ctx;
   const ehCompartilhado = !!partnerUid;
   const spanAll = ehDesktop ? "col-span-all" : undefined;
-  const [ativa, setAtiva] = React.useState(null);
 
   const txMes = React.useMemo(() => txDoMes(txs, mes), [txs, mes]);
   const txMesAnt = React.useMemo(
@@ -65,7 +43,8 @@ export function AnaliseScreen({ ctx }) {
   const total = totalGeral(txMes);
   const totalAnt = totalGeral(txMesAnt);
 
-  const dados = catsMinhas().filter((c) => (porCat[c] || 0) > 0)
+  const dados = catsMinhas()
+    .filter((c) => (porCat[c] || 0) > 0)
     .map((c) => ({
       id: c,
       valor: porCat[c],
@@ -77,36 +56,26 @@ export function AnaliseScreen({ ctx }) {
   // ─── Resumo ───
   const hoje = new Date();
   const mesAtual = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, "0")}`;
-  const diasDecorridos =
-    mes === mesAtual ? hoje.getDate() : diasNoMes(mes);
+  const diasDecorridos = mes === mesAtual ? hoje.getDate() : diasNoMes(mes);
   const mediaDia = diasDecorridos > 0 ? total / diasDecorridos : 0;
   const entradasMes = totalEntradas(txMes);
 
   // "Sobrou" no mês — mesma fórmula do card de saldo do Dashboard:
   //   restante = (orçamento base + entradas) − guardado em caixinhas − gastos
-  // Pra mês passado, `obterOrcBaseDoMes` lê o snapshot de orçamento
-  // congelado em preferences.orcBaseAt[mes] — assim alterar o orçamento
-  // hoje NÃO muda o "sobrou" de meses anteriores.
+  // Pra mês passado, `obterOrcBaseDoMes` lê o snapshot de orçamento congelado em
+  // preferences.orcBaseAt[mes] — assim alterar o orçamento hoje NÃO muda o
+  // "sobrou" de meses anteriores.
   const orcBase = obterOrcBaseDoMes(mes, preferences, mesAtual);
   const meuUid = usuario?.uid;
-  const guardadoEmCaixinhas = React.useMemo(() => {
-    let acc = 0;
-    for (const c of caixinhas || []) {
-      for (const d of c.depositos || []) {
-        if (!d.data || !d.data.startsWith(mes)) continue;
-        if (!(d.valor > 0)) continue;
-        const dono = d.feitoPor || meuUid || "_anon";
-        if (dono === (meuUid || "_anon")) acc += d.valor;
-      }
-    }
-    return acc;
-  }, [caixinhas, mes, meuUid]);
+  const guardadoEmCaixinhas = React.useMemo(
+    () => guardadoNoMes(caixinhas, mes, meuUid, partnerUid).meu,
+    [caixinhas, mes, meuUid, partnerUid],
+  );
   const orcTotal = orcBase + entradasMes - guardadoEmCaixinhas;
   const restante = orcTotal - total;
   const pctRestante = orcTotal > 0 ? (restante / orcTotal) * 100 : null;
 
-  const diffTotal =
-    totalAnt > 0 ? ((total - totalAnt) / totalAnt) * 100 : null;
+  const diffTotal = totalAnt > 0 ? ((total - totalAnt) / totalAnt) * 100 : null;
 
   // ─── Evolução (6 meses) ───
   const evolucao = React.useMemo(() => {
@@ -122,8 +91,7 @@ export function AnaliseScreen({ ctx }) {
     return out;
   }, [txs, mes]);
   const maxEvol = Math.max(...evolucao.map((e) => e.total), 1);
-  const mediaEvol =
-    evolucao.reduce((s, e) => s + e.total, 0) / evolucao.length;
+  const mediaEvol = evolucao.reduce((s, e) => s + e.total, 0) / evolucao.length;
 
   // Evolução conjunta (eu + parceiro), 6 meses, barras lado a lado por mês.
   const evolucaoConjunta = React.useMemo(() => {
@@ -161,6 +129,8 @@ export function AnaliseScreen({ ctx }) {
     [txMes],
   );
 
+  const vazio = total === 0 && (!ehCompartilhado || totalGeral(txDoMes(partnerTxs, mes)) === 0);
+
   return (
     <div className={ehDesktop ? "cols-desktop" : undefined} style={{ paddingBottom: "var(--pad-bottom)" }}>
       <div className={spanAll}>
@@ -168,16 +138,12 @@ export function AnaliseScreen({ ctx }) {
       </div>
       <div
         className={spanAll}
-        style={{
-          padding: "0 20px 12px",
-          display: "flex",
-          justifyContent: "flex-end",
-        }}
+        style={{ padding: "0 20px 12px", display: "flex", justifyContent: "flex-end" }}
       >
         <SeletorMes mes={mes} setMes={setMes} todosMeses={todosMeses} />
       </div>
 
-      {total === 0 && (!ehCompartilhado || totalGeral(txDoMes(partnerTxs, mes)) === 0) ? (
+      {vazio ? (
         <div className={spanAll} style={{ padding: "0 20px" }}>
           <Card style={{ textAlign: "center", padding: "40px 20px" }}>
             <div style={{ fontSize: 14, color: "var(--muted)", fontWeight: 600 }}>
@@ -187,628 +153,49 @@ export function AnaliseScreen({ ctx }) {
         </div>
       ) : (
         <>
-          {/* Resumo do mês */}
-          <div className={spanAll} style={{ padding: "0 20px" }}>
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "1fr 1fr",
-                gap: 10,
-              }}
-            >
-              <StatCard
-                rotulo="Total gasto"
-                valor={fmtBRL(total, ocultar)}
-                extra={
-                  diffTotal !== null
-                    ? `${diffTotal >= 0 ? "▲" : "▼"} ${Math.abs(diffTotal).toFixed(0)}% vs mês anterior`
-                    : null
-                }
-                extraCor={diffTotal >= 0 ? VERMELHO : VERDE}
-              />
-              <StatCard
-                rotulo="Média por dia"
-                valor={fmtBRL(mediaDia, ocultar)}
-                extra={`${diasDecorridos} dia${diasDecorridos > 1 ? "s" : ""}`}
-              />
-              <StatCard
-                rotulo="Transações"
-                valor={String(txMes.length)}
-                extra={`${dados.length} categoria${dados.length > 1 ? "s" : ""}`}
-              />
-              <StatCard
-                rotulo="Sobrou"
-                valor={fmtBRLCompacto(restante, ocultar)}
-                valorCor={restante >= 0 ? VERDE : VERMELHO}
-                extra={
-                  orcTotal <= 0
-                    ? "sem orçamento definido"
-                    : restante >= 0
-                      ? `${pctRestante.toFixed(0)}% do orçamento`
-                      : "acima do orçamento"
-                }
-                extraCor={restante >= 0 ? VERDE : VERMELHO}
-              />
-            </div>
-          </div>
+          <ResumoMes
+            total={total}
+            ocultar={ocultar}
+            diffTotal={diffTotal}
+            mediaDia={mediaDia}
+            diasDecorridos={diasDecorridos}
+            txCount={txMes.length}
+            catCount={dados.length}
+            restante={restante}
+            orcTotal={orcTotal}
+            pctRestante={pctRestante}
+            spanAll={spanAll}
+          />
 
-          {/* Pizza grande */}
-          <div style={{ padding: "16px 20px 0" }}>
-            <Card>
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "center",
-                  padding: "10px 0",
-                }}
-              >
-                <PieChart
-                  dados={dados}
-                  total={total}
-                  tamanho={230}
-                  ativo={ativa}
-                  onHover={setAtiva}
-                  ocultar={ocultar}
-                />
-              </div>
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "1fr 1fr",
-                  gap: 10,
-                  marginTop: 6,
-                  paddingTop: 14,
-                  borderTop: "1px solid var(--linha)",
-                }}
-              >
-                {dados.map((d) => (
-                  <div
-                    key={d.id}
-                    onClick={() => setAtiva(ativa === d.id ? null : d.id)}
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 8,
-                      cursor: "pointer",
-                      opacity: ativa && ativa !== d.id ? 0.4 : 1,
-                      padding: "4px 0",
-                    }}
-                  >
-                    <div
-                      style={{
-                        width: 10,
-                        height: 10,
-                        borderRadius: 5,
-                        background: d.cor,
-                      }}
-                    />
-                    <div style={{ minWidth: 0, flex: 1 }}>
-                      <div
-                        style={{
-                          fontSize: 12,
-                          color: "var(--ink)",
-                          fontWeight: 700,
-                          whiteSpace: "nowrap",
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                        }}
-                      >
-                        {d.nome}
-                      </div>
-                      <div
-                        style={{
-                          fontSize: 11,
-                          color: "var(--muted)",
-                          fontWeight: 600,
-                        }}
-                      >
-                        {fmtBRLCompacto(d.valor, ocultar)} ·{" "}
-                        {((d.valor / total) * 100).toFixed(0)}%
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </Card>
-          </div>
+          <PizzaCategorias dados={dados} total={total} ocultar={ocultar} />
 
-          {/* Evolução 6 meses */}
-          <div style={{ padding: "16px 20px 0" }}>
-            <SecaoTitulo>Evolução (6 meses)</SecaoTitulo>
-            <Card>
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "flex-end",
-                  justifyContent: "space-between",
-                  gap: 8,
-                  height: 130,
-                  position: "relative",
-                }}
-              >
-                {evolucao.map((e) => {
-                  const h = Math.max((e.total / maxEvol) * 100, 2);
-                  const atual = e.key === mes;
-                  return (
-                    <div
-                      key={e.key}
-                      onClick={() => setMes(e.key)}
-                      style={{
-                        flex: 1,
-                        display: "flex",
-                        flexDirection: "column",
-                        alignItems: "center",
-                        gap: 6,
-                        cursor: "pointer",
-                        height: "100%",
-                        justifyContent: "flex-end",
-                      }}
-                    >
-                      <div
-                        style={{
-                          fontSize: 9,
-                          fontWeight: 700,
-                          color: "var(--muted)",
-                        }}
-                      >
-                        {e.total > 0 ? fmtBRLCompacto(e.total, ocultar) : ""}
-                      </div>
-                      <div
-                        style={{
-                          width: "100%",
-                          maxWidth: 34,
-                          height: `${h}%`,
-                          borderRadius: 8,
-                          background: atual
-                            ? "linear-gradient(180deg, var(--primary), var(--primary-2))"
-                            : "var(--surface-sunken)",
-                          transition: "height .2s",
-                        }}
-                      />
-                      <div
-                        style={{
-                          fontSize: 10,
-                          fontWeight: 700,
-                          color: atual ? "var(--primary)" : "var(--muted)",
-                        }}
-                      >
-                        {e.label}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-              <div
-                style={{
-                  marginTop: 12,
-                  paddingTop: 12,
-                  borderTop: "1px solid var(--linha)",
-                  fontSize: 12,
-                  fontWeight: 600,
-                  color: "var(--muted)",
-                  textAlign: "center",
-                }}
-              >
-                Média mensal: {fmtBRL(mediaEvol, ocultar)}
-              </div>
-            </Card>
-          </div>
+          <EvolucaoMeses
+            evolucao={evolucao}
+            maxEvol={maxEvol}
+            mediaEvol={mediaEvol}
+            mes={mes}
+            setMes={setMes}
+            ocultar={ocultar}
+          />
 
-          {/* Evolução conjunta (você + parceiro) */}
-          {evolucaoConjunta && (
-            <div style={{ padding: "16px 20px 0" }}>
-              <SecaoTitulo>Você vs. {partnerNome || "parceiro"}</SecaoTitulo>
-              <Card>
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "flex-end",
-                    justifyContent: "space-between",
-                    gap: 8,
-                    height: 150,
-                  }}
-                >
-                  {evolucaoConjunta.map((e) => {
-                    const hMeu = Math.max((e.meu / maxEvolConjunta) * 100, e.meu > 0 ? 4 : 0);
-                    const hParc = Math.max((e.parceiro / maxEvolConjunta) * 100, e.parceiro > 0 ? 4 : 0);
-                    const atual = e.key === mes;
-                    return (
-                      <div
-                        key={e.key}
-                        onClick={() => setMes(e.key)}
-                        style={{
-                          flex: 1,
-                          display: "flex",
-                          flexDirection: "column",
-                          alignItems: "center",
-                          gap: 4,
-                          cursor: "pointer",
-                          height: "100%",
-                          justifyContent: "flex-end",
-                        }}
-                      >
-                        <div
-                          style={{
-                            display: "flex",
-                            alignItems: "flex-end",
-                            gap: 3,
-                            height: "100%",
-                            width: "100%",
-                            justifyContent: "center",
-                          }}
-                        >
-                          <div
-                            title={`Você: ${fmtBRL(e.meu, ocultar)}`}
-                            style={{
-                              flex: 1,
-                              maxWidth: 16,
-                              height: `${hMeu}%`,
-                              borderRadius: 6,
-                              background: "linear-gradient(180deg, var(--primary), var(--primary-2))",
-                              transition: "height .2s",
-                              minHeight: e.meu > 0 ? 4 : 0,
-                            }}
-                          />
-                          <div
-                            title={`${partnerNome || "Parceiro"}: ${fmtBRL(e.parceiro, ocultar)}`}
-                            style={{
-                              flex: 1,
-                              maxWidth: 16,
-                              height: `${hParc}%`,
-                              borderRadius: 6,
-                              background: "var(--surface-sunken)",
-                              border: "1px solid var(--linha)",
-                              transition: "height .2s",
-                              minHeight: e.parceiro > 0 ? 4 : 0,
-                            }}
-                          />
-                        </div>
-                        <div
-                          style={{
-                            fontSize: 10,
-                            fontWeight: 700,
-                            color: atual ? "var(--primary)" : "var(--muted)",
-                          }}
-                        >
-                          {e.label}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
+          <EvolucaoConjunta
+            evolucaoConjunta={evolucaoConjunta}
+            maxEvolConjunta={maxEvolConjunta}
+            mes={mes}
+            setMes={setMes}
+            ocultar={ocultar}
+            partnerNome={partnerNome}
+          />
 
-                <div
-                  style={{
-                    marginTop: 12,
-                    paddingTop: 12,
-                    borderTop: "1px solid var(--linha)",
-                    display: "flex",
-                    justifyContent: "center",
-                    gap: 18,
-                    fontSize: 11,
-                    fontWeight: 700,
-                  }}
-                >
-                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                    <div style={{
-                      width: 12, height: 12, borderRadius: 4,
-                      background: "linear-gradient(180deg, var(--primary), var(--primary-2))",
-                    }} />
-                    <span style={{ color: "var(--ink)" }}>Você</span>
-                  </div>
-                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                    <div style={{
-                      width: 12, height: 12, borderRadius: 4,
-                      background: "var(--surface-sunken)",
-                      border: "1px solid var(--linha)",
-                    }} />
-                    <span style={{ color: "var(--muted)" }}>{partnerNome || "Parceiro"}</span>
-                  </div>
-                </div>
-              </Card>
-            </div>
-          )}
+          <PorPagamento porPagamento={porPagamento} total={total} ocultar={ocultar} />
 
-          {/* Por forma de pagamento */}
-          <div style={{ padding: "16px 20px 0" }}>
-            <SecaoTitulo>Por forma de pagamento</SecaoTitulo>
-            <Card style={{ padding: "4px 16px" }}>
-              {porPagamento.map(([nome, valor], i) => (
-                <div
-                  key={nome}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 12,
-                    padding: "12px 0",
-                    borderTop: i === 0 ? "none" : "1px solid var(--linha)",
-                  }}
-                >
-                  <div
-                    style={{
-                      width: 36,
-                      height: 36,
-                      borderRadius: 12,
-                      background: "var(--surface-sunken)",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      flexShrink: 0,
-                    }}
-                  >
-                    <Icon
-                      name={iconePagamento(nome)}
-                      size={18}
-                      color="var(--ink)"
-                      strokeWidth={2}
-                    />
-                  </div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div
-                      style={{
-                        fontSize: 13,
-                        fontWeight: 700,
-                        color: "var(--ink)",
-                      }}
-                    >
-                      {nome}
-                    </div>
-                    <div style={{ marginTop: 6 }}>
-                      <BarraProgresso
-                        valor={valor}
-                        max={porPagamento[0][1]}
-                        cor="var(--primary)"
-                        altura={6}
-                      />
-                    </div>
-                  </div>
-                  <div style={{ textAlign: "right" }}>
-                    <div
-                      style={{
-                        fontSize: 14,
-                        fontWeight: 800,
-                        color: "var(--ink)",
-                      }}
-                    >
-                      {fmtBRLCompacto(valor, ocultar)}
-                    </div>
-                    <div
-                      style={{
-                        fontSize: 10,
-                        fontWeight: 700,
-                        color: "var(--muted)",
-                        marginTop: 2,
-                      }}
-                    >
-                      {((valor / total) * 100).toFixed(0)}%
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </Card>
-          </div>
+          <TopCategorias dados={dados} porCatAnt={porCatAnt} irPara={irPara} ocultar={ocultar} />
 
-          {/* Ranking de categorias */}
-          <div style={{ padding: "16px 20px 0" }}>
-            <SecaoTitulo>Top categorias</SecaoTitulo>
-            <Card style={{ padding: "4px 16px" }}>
-              {dados.map((d, i) => {
-                const ant = porCatAnt[d.id] || 0;
-                const diff = ant > 0 ? ((d.valor - ant) / ant) * 100 : null;
-                return (
-                  <div
-                    key={d.id}
-                    onClick={() => irPara("categoria", { catId: d.id })}
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 12,
-                      padding: "12px 0",
-                      borderTop: i === 0 ? "none" : "1px solid var(--linha)",
-                      cursor: "pointer",
-                    }}
-                  >
-                    <CatChip catId={d.id} size={40} />
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div
-                        style={{
-                          fontSize: 14,
-                          fontWeight: 700,
-                          color: "var(--ink)",
-                        }}
-                      >
-                        {d.nome}
-                      </div>
-                      <div style={{ marginTop: 6 }}>
-                        <BarraProgresso
-                          valor={d.valor}
-                          max={dados[0].valor}
-                          cor={d.cor}
-                          altura={6}
-                        />
-                      </div>
-                    </div>
-                    <div style={{ textAlign: "right" }}>
-                      <div
-                        style={{
-                          fontSize: 14,
-                          fontWeight: 800,
-                          color: "var(--ink)",
-                        }}
-                      >
-                        {fmtBRLCompacto(d.valor, ocultar)}
-                      </div>
-                      {diff !== null && (
-                        <div
-                          style={{
-                            fontSize: 10,
-                            fontWeight: 700,
-                            marginTop: 2,
-                            color: diff >= 0 ? VERMELHO : VERDE,
-                          }}
-                        >
-                          {diff >= 0 ? "▲" : "▼"} {Math.abs(diff).toFixed(0)}%
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </Card>
-          </div>
-
-          {/* Maiores gastos do mês */}
-          <div style={{ padding: "16px 20px 0" }}>
-            <SecaoTitulo>Maiores gastos do mês</SecaoTitulo>
-            <Card style={{ padding: "4px 16px" }}>
-              {maioresGastos.map((t, i) => (
-                <div
-                  key={t.id}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 12,
-                    padding: "12px 0",
-                    borderTop: i === 0 ? "none" : "1px solid var(--linha)",
-                  }}
-                >
-                  <CatChip catId={t.categoria} size={36} />
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div
-                      style={{
-                        fontSize: 13,
-                        fontWeight: 700,
-                        color: "var(--ink)",
-                        whiteSpace: "nowrap",
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                      }}
-                    >
-                      {t.descricao}
-                    </div>
-                    <div
-                      style={{
-                        fontSize: 11,
-                        color: "var(--muted)",
-                        fontWeight: 600,
-                      }}
-                    >
-                      {t.data.slice(8, 10)}/{t.data.slice(5, 7)} ·{" "}
-                      {CATEGORIAS[t.categoria]?.nome}
-                    </div>
-                  </div>
-                  <div
-                    style={{
-                      fontSize: 14,
-                      fontWeight: 800,
-                      color: "var(--ink)",
-                    }}
-                  >
-                    {fmtBRL(t.valor, ocultar)}
-                  </div>
-                </div>
-              ))}
-            </Card>
-          </div>
+          <MaioresGastos maioresGastos={maioresGastos} ocultar={ocultar} />
         </>
       )}
 
-      {/* Atalho para orçamentos */}
-      <div className={spanAll} style={{ padding: "16px 20px 0" }}>
-        <Card
-          onClick={() => irPara("orcamentos")}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 14,
-            background: "linear-gradient(135deg, #FFF3E2, #FFE0EC)",
-          }}
-        >
-          <div
-            style={{
-              width: 44,
-              height: 44,
-              borderRadius: 22,
-              background: "#fff",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <Icon
-              name="target"
-              size={22}
-              color="var(--primary)"
-              strokeWidth={2.2}
-            />
-          </div>
-          <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 14, fontWeight: 800, color: "#1A1416" }}>
-              Acompanhar orçamentos
-            </div>
-            <div
-              style={{
-                fontSize: 12,
-                color: "#6B5560",
-                fontWeight: 600,
-                marginTop: 2,
-              }}
-            >
-              Veja onde está perto do limite
-            </div>
-          </div>
-          <Icon
-            name="chevron-right"
-            size={18}
-            color="#1A1416"
-            strokeWidth={2.4}
-          />
-        </Card>
-      </div>
+      <AtalhoOrcamentos irPara={irPara} spanAll={spanAll} />
     </div>
-  );
-}
-
-function StatCard({ rotulo, valor, valorCor, extra, extraCor }) {
-  return (
-    <Card style={{ padding: "14px 16px" }}>
-      <div
-        style={{
-          fontSize: 11,
-          fontWeight: 700,
-          color: "var(--muted)",
-          textTransform: "uppercase",
-          letterSpacing: 0.4,
-        }}
-      >
-        {rotulo}
-      </div>
-      <div
-        style={{
-          fontSize: 19,
-          fontWeight: 800,
-          color: valorCor || "var(--ink)",
-          marginTop: 4,
-          letterSpacing: "-0.02em",
-        }}
-      >
-        {valor}
-      </div>
-      {extra && (
-        <div
-          style={{
-            fontSize: 11,
-            fontWeight: 600,
-            color: extraCor || "var(--muted)",
-            marginTop: 3,
-            whiteSpace: "nowrap",
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-          }}
-        >
-          {extra}
-        </div>
-      )}
-    </Card>
   );
 }

@@ -1,0 +1,82 @@
+/* base.css — tokens de cor/espaçamento, reset e tipografia. */
+
+:root {
+  --bg: #FBF7F2;
+  --card: #FFFFFF;
+  --card-2: #FFFFFF;
+  --surface-sunken: #F3EEE8;
+  --ink: #1A1416;
+  --muted: #8A7F84;
+  --linha: rgba(20, 16, 24, 0.06);
+  --primary: #6E4FF6;
+  --primary-2: #A085FF;
+  /* Espaçamentos padrão (mobile): topo reserva o notch; base reserva a tab bar flutuante */
+  --pad-top: 38px;
+  --pad-bottom: 110px;
+  color-scheme: light;
+}
+
+/* No desktop a sidebar substitui a tab bar e não há notch — reduzimos os reservados. */
+.desktop-shell {
+  --pad-top: 28px;
+  --pad-bottom: 32px;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior-y: none;
+  /* Bloqueia double-tap zoom e gestos de pinch em toda a UI. */
+  touch-action: pan-x pan-y;
+  -ms-touch-action: pan-x pan-y;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  /* Desabilita seleção/cópia de texto em toda a UI. Inputs/textarea liberam
+     abaixo (precisam pra digitar). */
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  /* iOS: bloqueia o "callout" (menu de copiar/compartilhar ao segurar). */
+  -webkit-touch-callout: none;
+}
+
+/* Inputs e textareas precisam permitir seleção pra o usuário editar. */
+input, textarea, [contenteditable="true"] {
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+  user-select: text;
+  -webkit-touch-callout: default;
+}
+
+body {
+  font-family: 'Plus Jakarta Sans', -apple-system, system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+}
+
+button, input, select, textarea { font-family: inherit; }
+
+/* iOS faz zoom automático ao focar inputs com fonte < 16px. Forçamos o mínimo
+   com !important porque vários inputs definem fontSize inline (14/15px), e o
+   estilo inline venceria a regra normal — reintroduzindo o zoom no mobile. */
+input, select, textarea {
+  font-size: 16px !important;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator { cursor: pointer; opacity: 0.6; }
+
+/* Esconde scrollbar em todo o app */
+* {
+  scrollbar-width: none;        /* Firefox */
+  -ms-overflow-style: none;     /* IE / Edge legado */
+}
+*::-webkit-scrollbar { display: none; width: 0; height: 0; background: transparent; }
+html, body { scrollbar-width: none; -ms-overflow-style: none; }
+html::-webkit-scrollbar, body::-webkit-scrollbar { display: none; width: 0; height: 0; }

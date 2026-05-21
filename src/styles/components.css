@@ -1,0 +1,59 @@
+/* components.css — superfícies e controles reutilizados: "liquid glass",
+   itens de configuração e o swatch de cor de destaque. */
+
+/* "Liquid glass" — superfície translúcida com blur, hairline e brilho no topo.
+   Funciona em claro e escuro porque parte de var(--card)/var(--ink). */
+.glass-surface {
+  background: color-mix(in srgb, var(--card) 70%, transparent);
+  -webkit-backdrop-filter: blur(22px) saturate(180%);
+  backdrop-filter: blur(22px) saturate(180%);
+  border: 1px solid color-mix(in srgb, var(--ink) 10%, transparent);
+}
+/* Quando o navegador não suporta backdrop-filter, volta ao sólido */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .glass-surface { background: var(--card); }
+}
+
+/* Primeira opção de cada card de configuração não tem linha em cima */
+.config-item:first-child { border-top: none !important; }
+
+/* Botão "swatch" de cor de destaque — efeito de alto relevo (convexo) */
+.swatch-raised {
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  transition: transform .08s ease, box-shadow .12s ease;
+  box-shadow:
+    0 5px 10px rgba(0,0,0,0.20),
+    0 2px 3px rgba(0,0,0,0.14),
+    inset 0 2px 3px rgba(255,255,255,0.55),
+    inset 0 -4px 6px rgba(0,0,0,0.25);
+}
+.swatch-raised:hover {
+  transform: translateY(-1px);
+  box-shadow:
+    0 7px 14px rgba(0,0,0,0.24),
+    0 2px 3px rgba(0,0,0,0.14),
+    inset 0 2px 3px rgba(255,255,255,0.55),
+    inset 0 -4px 6px rgba(0,0,0,0.25);
+}
+.swatch-raised:active {
+  transform: translateY(1px);
+  box-shadow:
+    0 1px 2px rgba(0,0,0,0.22),
+    inset 0 3px 7px rgba(0,0,0,0.32),
+    inset 0 -1px 2px rgba(255,255,255,0.28);
+}
+.swatch-raised.is-selected {
+  transform: translateY(1px);
+  box-shadow:
+    0 1px 2px rgba(0,0,0,0.22),
+    inset 0 3px 7px rgba(0,0,0,0.30),
+    inset 0 -1px 2px rgba(255,255,255,0.28),
+    0 0 0 3px var(--card),
+    0 0 0 5px currentColor;
+}
+@media (prefers-reduced-motion: reduce) {
+  .swatch-raised { transition: none; }
+  .swatch-raised:hover, .swatch-raised:active { transform: none; }
+}

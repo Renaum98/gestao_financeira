@@ -1,0 +1,47 @@
+/* animations.css — keyframes genéricos e as classes de transição que os usam
+   (crossfade de insights e transição de página). */
+
+@keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }
+@keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+@keyframes scaleIn {
+  from { transform: scale(0.94); opacity: 0; }
+  to   { transform: scale(1);    opacity: 1; }
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Card de saldo do mês — sem animações orgânicas (causavam reflow do texto
+   ao atualizar valores). Mantemos só o visual estático: gradiente, bolhas
+   decorativas e o brilho diagonal ficam parados. */
+
+/* Crossfade dos insights rotativos no card "Insights do mês".
+   Cada insight novo entra com fade + leve subida, criando uma transição
+   suave a cada 10s sem deslocar o layout (o container tem minHeight). */
+@keyframes insightFade {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.insight-fade {
+  animation: insightFade .55s cubic-bezier(0.22, 1, 0.36, 1);
+}
+@media (prefers-reduced-motion: reduce) {
+  .insight-fade { animation: none; }
+}
+
+/* Transição de página ao trocar de aba */
+@keyframes pageIn {
+  from { opacity: 0; transform: translateY(8px) scale(0.992); }
+  to   { opacity: 1; transform: translateY(0)   scale(1); }
+}
+.page-transition {
+  animation: pageIn .26s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: opacity, transform;
+}
+@media (prefers-reduced-motion: reduce) {
+  .page-transition { animation: none; }
+}

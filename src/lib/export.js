@@ -8,7 +8,34 @@ function nomeCategoria(catId) {
   return CATEGORIAS[catId]?.nome || catId || '—';
 }
 
-function linhaTx(tx) {
+// Nº de meses entre dois "YYYY-MM" (alvo - início).
+function mesesEntre(inicioYYMM, alvoYYMM) {
+  const [iy, im] = inicioYYMM.split('-').map(Number);
+  const [ay, am] = alvoYYMM.split('-').map(Number);
+  return (ay - iy) * 12 + (am - im);
+}
+
+// Total de parcelas de uma recorrência: meses de início a fim (inclusive).
+// Sem fim definido, a recorrência é indefinida → retorna null.
+function totalParcelasRec(rec) {
+  if (!rec?.inicio || !rec?.fim) return null;
+  const [iy, im] = rec.inicio.split('-').map(Number);
+  const [fy, fm] = rec.fim.split('-').map(Number);
+  return Math.max(1, (fy - iy) * 12 + (fm - im) + 1);
+}
+
+// "Parcela" de uma tx recorrente: qual ocorrência ela é (atual/total). Com
+// recorrência indefinida (sem fim), mostra só o número da ocorrência.
+function parcelaRec(tx, recMap) {
+  if (!tx.recorrenteId) return '';
+  const rec = recMap[tx.recorrenteId];
+  if (!rec?.inicio) return '';
+  const atual = mesesEntre(rec.inicio, tx.data.slice(0, 7)) + 1;
+  const total = totalParcelasRec(rec);
+  return total ? `${atual}/${total}` : String(atual);
+}
+
+function linhaTx(tx, recMap) {
   const ehEntrada = tx.tipo === 'entrada';
   return {
     Data: tx.data,
@@ -17,16 +44,17 @@ function linhaTx(tx) {
     Categoria: ehEntrada ? '' : nomeCategoria(tx.categoria),
     'Forma de pagamento': ehEntrada ? '' : tx.pagamento || '',
     Valor: Number(tx.valor) || 0,
-    Parcela: tx.parcelas ? `${tx.parcelas.atual}/${tx.parcelas.total}` : '',
-    'Valor total parcelado': tx.parcelas ? Number(tx.parcelas.valorTotal) || 0 : '',
+    Parcela: parcelaRec(tx, recMap),
     'É recorrência': tx.recorrenteId ? 'Sim' : '',
   };
 }
 
-function abaTransacoes(XLSX, txs) {
+function abaTransacoes(XLSX, txs, recorrentes = []) {
+  const recMap = {};
+  for (const r of recorrentes) recMap[r.id] = r;
   const dados = [...txs]
     .sort((a, b) => a.data.localeCompare(b.data))
-    .map(linhaTx);
+    .map((tx) => linhaTx(tx, recMap));
   const ws = XLSX.utils.json_to_sheet(dados);
   // Larguras aproximadas para leitura.
   ws['!cols'] = [
@@ -37,7 +65,6 @@ function abaTransacoes(XLSX, txs) {
     { wch: 20 }, // Pagamento
     { wch: 12 }, // Valor
     { wch: 10 }, // Parcela
-    { wch: 18 }, // Valor total
     { wch: 14 }, // Recorrência
   ];
   return ws;
@@ -119,9 +146,9 @@ export async function baixarDadosXLSX({
 
   if (mes) {
     const filtradas = txDoMes(txs, mes);
-    XLSX.utils.book_append_sheet(wb, abaTransacoes(XLSX, filtradas), 'Transações');
+    XLSX.utils.book_append_sheet(wb, abaTransacoes(XLSX, filtradas, recorrentes), 'Transações');
   } else {
-    XLSX.utils.book_append_sheet(wb, abaTransacoes(XLSX, txs), 'Transações');
+    XLSX.utils.book_append_sheet(wb, abaTransacoes(XLSX, txs, recorrentes), 'Transações');
     if (caixinhas.length) {
       XLSX.utils.book_append_sheet(wb, abaCaixinhas(XLSX, caixinhas), 'Caixinhas');
       const totalDepositos = caixinhas.reduce(

@@ -1,0 +1,22 @@
+/* layout.css — carrossel horizontal e o grid de colunas do desktop. */
+
+/* Carrossel horizontal — snap suave, momentum no iOS, scroll programático suave */
+.carrossel {
+  scroll-behavior: smooth;
+  scroll-snap-type: x proximity;
+  scroll-padding-left: 4px;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+}
+.carrossel > * {
+  scroll-snap-align: start;
+}
+
+/* Layout em colunas (desktop) — telas que aderem ficam mais amplas */
+.cols-desktop {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px 28px;
+  align-items: start;
+}
+.cols-desktop > .col-span-all { grid-column: 1 / -1; }
