@@ -8,12 +8,14 @@ import {
   MESES,
   CAT_FINANCIAMENTO,
   fmtBRL,
+  txDoMes,
+  totalPorCategoria,
 } from "../data.js";
 import { CatChip, Icon, iconePagamento } from "../ui/icons.jsx";
 import { ModalOverlay } from "../ui/modal-base.jsx";
 import { vibrar } from "../lib/haptics.js";
 import { ConfirmModal } from "../ui/confirm-modal.jsx";
-import { COR_POS } from "../lib/colors.js";
+import { COR_POS, COR_AVISO, COR_NEG } from "../lib/colors.js";
 import { formatarValorDigitado, parseValorBR } from "../lib/money-input.js";
 
 function hojeISO() {
@@ -27,7 +29,7 @@ const CORES_CAT = [
 ];
 
 export function AddExpenseModal({ ctx, params }) {
-  const { fechar, salvarTx, adicionarCategoria, excluirCategoria, ehDesktop } = ctx;
+  const { fechar, salvarTx, adicionarCategoria, excluirCategoria, ehDesktop, txs, mes, orcamentos, preferences } = ctx;
   const editar = params && params.editar;
   // Estado da confirmação de exclusão de categoria personalizada.
   // null = fechado; objeto = abre o modal pra essa categoria.
@@ -94,6 +96,46 @@ export function AddExpenseModal({ ctx, params }) {
   const aoDigitar = (texto) => setValor(formatarValorDigitado(texto));
 
   const valorNum = parseValorBR(valor);
+
+  // Aviso de orçamento da categoria: projeta o gasto do mês + o valor digitado
+  // contra o limite definido em Orçamentos. Amarelo a partir de 80%, vermelho
+  // quando estoura. Só vale para saída com limite configurado na categoria.
+  const avisoOrc = React.useMemo(() => {
+    if (ehEntrada) return null;
+    const limite = orcamentos?.[categoria] || 0;
+    if (limite <= 0) return null;
+    const porCat = totalPorCategoria(txDoMes(txs || [], mes));
+    let jaGasto = porCat[categoria] || 0;
+    // Ao editar, o valor original dessa tx já está somado no mês — desconta
+    // para não contar em dobro na projeção.
+    if (editar && editar.categoria === categoria) {
+      jaGasto -= (editar.parcelas ? editar.parcelas.valorTotal : editar.valor) || 0;
+    }
+    const projetado = jaGasto + valorNum;
+    const pct = (projetado / limite) * 100;
+    if (pct < 80) return null;
+    return { pct, excedeu: projetado > limite, limite, projetado };
+  }, [ehEntrada, orcamentos, categoria, txs, mes, valorNum, editar]);
+
+  // Aviso do limite do cartão de crédito — mesma lógica do orçamento por
+  // categoria, mas projetando o gasto do mês no cartão + o valor digitado.
+  const avisoCartao = React.useMemo(() => {
+    if (ehEntrada || pagamento !== "Cartão de crédito") return null;
+    const limite = preferences?.orcamentoCartaoCredito || 0;
+    if (limite <= 0) return null;
+    let jaGasto = (txDoMes(txs || [], mes)).reduce(
+      (s, t) => (t.tipo !== "entrada" && t.pagamento === "Cartão de crédito" ? s + t.valor : s),
+      0,
+    );
+    // Ao editar, desconta o valor original se ela já era no cartão.
+    if (editar && editar.pagamento === "Cartão de crédito") {
+      jaGasto -= (editar.parcelas ? editar.parcelas.valorTotal : editar.valor) || 0;
+    }
+    const projetado = jaGasto + valorNum;
+    const pct = (projetado / limite) * 100;
+    if (pct < 80) return null;
+    return { pct, excedeu: projetado > limite, limite, projetado };
+  }, [ehEntrada, pagamento, preferences, txs, mes, valorNum, editar]);
 
   const salvar = () => {
     if (valorNum <= 0) return;
@@ -563,6 +605,41 @@ export function AddExpenseModal({ ctx, params }) {
         </div>
         )}
 
+        {/* Aviso de orçamento da categoria */}
+        {avisoOrc && (
+          <div
+            style={{
+              marginTop: 12,
+              padding: "10px 14px",
+              borderRadius: 12,
+              background: (avisoOrc.excedeu ? COR_NEG : COR_AVISO) + "1A",
+              border: `1px solid ${(avisoOrc.excedeu ? COR_NEG : COR_AVISO)}55`,
+              display: "flex",
+              alignItems: "center",
+              gap: 10,
+            }}
+          >
+            <Icon
+              name="target"
+              size={18}
+              color={avisoOrc.excedeu ? COR_NEG : COR_AVISO}
+              strokeWidth={2.4}
+            />
+            <div
+              style={{
+                fontSize: 12,
+                fontWeight: 700,
+                color: avisoOrc.excedeu ? COR_NEG : COR_AVISO,
+                lineHeight: 1.4,
+              }}
+            >
+              {avisoOrc.excedeu
+                ? `Você excedeu o orçamento de ${CATEGORIAS[categoria].nome}: ${fmtBRL(avisoOrc.projetado)} de ${fmtBRL(avisoOrc.limite)}.`
+                : `Atenção: ${avisoOrc.pct.toFixed(0)}% do orçamento de ${CATEGORIAS[categoria].nome} (${fmtBRL(avisoOrc.projetado)} de ${fmtBRL(avisoOrc.limite)}).`}
+            </div>
+          </div>
+        )}
+
         {/* Descrição */}
         <div style={{ marginTop: 12 }}>
           <input
@@ -672,6 +749,41 @@ export function AddExpenseModal({ ctx, params }) {
             );
           })}
         </div>
+        )}
+
+        {/* Aviso de limite do cartão de crédito */}
+        {avisoCartao && (
+          <div
+            style={{
+              marginTop: 10,
+              padding: "10px 14px",
+              borderRadius: 12,
+              background: (avisoCartao.excedeu ? COR_NEG : COR_AVISO) + "1A",
+              border: `1px solid ${(avisoCartao.excedeu ? COR_NEG : COR_AVISO)}55`,
+              display: "flex",
+              alignItems: "center",
+              gap: 10,
+            }}
+          >
+            <Icon
+              name="card"
+              size={18}
+              color={avisoCartao.excedeu ? COR_NEG : COR_AVISO}
+              strokeWidth={2.4}
+            />
+            <div
+              style={{
+                fontSize: 12,
+                fontWeight: 700,
+                color: avisoCartao.excedeu ? COR_NEG : COR_AVISO,
+                lineHeight: 1.4,
+              }}
+            >
+              {avisoCartao.excedeu
+                ? `Você excedeu o limite do cartão de crédito: ${fmtBRL(avisoCartao.projetado)} de ${fmtBRL(avisoCartao.limite)}.`
+                : `Atenção: ${avisoCartao.pct.toFixed(0)}% do limite do cartão de crédito (${fmtBRL(avisoCartao.projetado)} de ${fmtBRL(avisoCartao.limite)}).`}
+            </div>
+          </div>
         )}
 
         {/* Recorrente */}

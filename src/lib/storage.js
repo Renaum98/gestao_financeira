@@ -53,6 +53,7 @@ const DEFAULT_STATE = {
     nome: "",
     fotoUrl: "",
     orcamentoMensal: 0,
+    orcamentoCartaoCredito: 0,
     notifLidas: [],
   },
   // ─── Conta compartilhada (Etapa 1: campos existem mas ficam null) ───

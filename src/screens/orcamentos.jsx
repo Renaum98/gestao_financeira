@@ -52,9 +52,27 @@ export function OrcamentosScreen({ ctx }) {
   const [editandoCat, setEditandoCat] = React.useState(null);
   const [tempCat, setTempCat] = React.useState('0,00');
 
+  const [editandoCartao, setEditandoCartao] = React.useState(false);
+  const [tempCartao, setTempCartao] = React.useState('0,00');
+
+  // Limite só para o cartão de crédito — não faz sentido limitar Pix/dinheiro.
+  const gastoCartao = txMes.reduce(
+    (s, t) => (t.tipo !== 'entrada' && t.pagamento === 'Cartão de crédito' ? s + t.valor : s),
+    0,
+  );
+  const orcCartao = preferences.orcamentoCartaoCredito > 0 ? preferences.orcamentoCartaoCredito : 0;
+  const temCartao = orcCartao > 0;
+  const pctCartao = orcCartao > 0 ? (gastoCartao / orcCartao) * 100 : 0;
+  const corCartao = pctCartao > 100 ? COR_NEG : pctCartao > 80 ? COR_AVISO : COR_POS;
+
   const salvarTotal = () => {
     setPreferences({ orcamentoMensal: Math.max(0, parseValorBR(tempTotal)) });
     setEditandoTotal(false);
+  };
+
+  const salvarCartao = () => {
+    setPreferences({ orcamentoCartaoCredito: Math.max(0, parseValorBR(tempCartao)) });
+    setEditandoCartao(false);
   };
 
   const salvarCat = (catId) => {
@@ -142,6 +160,73 @@ export function OrcamentosScreen({ ctx }) {
             </div>
           )}
         </div>
+      </div>
+
+      {/* Limite do cartão de crédito */}
+      <div style={{ padding: '20px 20px 0' }}>
+        <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: 0.4, padding: '0 4px 10px' }}>
+          Por forma de pagamento
+        </div>
+        <Card style={{ padding: '14px 16px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div style={{
+              width: 36, height: 36, borderRadius: 12, background: 'var(--surface-sunken)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+            }}>
+              <Icon name="card" size={18} color="var(--ink)" strokeWidth={2} />
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--ink)' }}>Cartão de crédito</div>
+              <div style={{ fontSize: 11, color: 'var(--muted)', fontWeight: 600, marginTop: 1 }}>
+                {temCartao
+                  ? `${fmtBRLCompacto(gastoCartao, ocultar)} de ${fmtBRLCompacto(orcCartao, ocultar)}`
+                  : 'Sem limite definido'}
+              </div>
+            </div>
+            {editandoCartao ? (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <input
+                  autoFocus
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  value={tempCartao}
+                  onChange={(e) => setTempCartao(formatarValorDigitado(e.target.value))}
+                  onKeyDown={(e) => { if (e.key === 'Enter') salvarCartao(); if (e.key === 'Escape') setEditandoCartao(false); }}
+                  style={{
+                    width: 90, padding: '6px 10px', borderRadius: 10,
+                    border: '1.5px solid var(--primary)', background: 'var(--card)',
+                    fontSize: 13, fontWeight: 700, color: 'var(--ink)', outline: 'none',
+                    fontFamily: 'inherit', textAlign: 'right',
+                  }}
+                />
+                <button onClick={salvarCartao} style={{
+                  width: 30, height: 30, borderRadius: 15, border: 'none',
+                  background: 'var(--primary)', color: '#fff', cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}>
+                  <Icon name="check" size={14} strokeWidth={2.6} />
+                </button>
+              </div>
+            ) : (
+              <button onClick={() => { setEditandoCartao(true); setTempCartao(formatarValorInicial(orcCartao)); }} style={{
+                background: 'transparent', border: 'none', cursor: 'pointer', padding: 4, color: 'var(--muted)',
+              }}>
+                <Icon name="edit" size={16} strokeWidth={2} />
+              </button>
+            )}
+          </div>
+          {temCartao && (
+            <div style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 10 }}>
+              <div style={{ flex: 1 }}>
+                <BarraProgresso valor={Math.min(gastoCartao, orcCartao)} max={orcCartao || 1} cor={pctCartao > 100 ? COR_NEG : 'var(--primary)'} altura={8} />
+              </div>
+              <div style={{ fontSize: 12, fontWeight: 800, color: corCartao, minWidth: 38, textAlign: 'right' }}>
+                {pctCartao.toFixed(0)}%
+              </div>
+            </div>
+          )}
+        </Card>
       </div>
 
       {/* Categorias */}
