@@ -12,7 +12,8 @@
       "Bash(node -e ' *)",
       "Bash(ls -la \"C:/Users/renan/OneDrive/Área de Trabalho/gestao-financeira-pied.vercel.app-20260519T212428.json\")",
       "Bash(node -e \"const r = require\\('C:/Users/renan/OneDrive/Área de Trabalho/gestao-financeira-pied.vercel.app-20260519T212428.json'\\); console.log\\('Categories:'\\); for \\(const k of Object.keys\\(r.categories\\)\\) { const c = r.categories[k]; console.log\\('  ' + c.title + ': ' + Math.round\\(\\(c.score||0\\)*100\\)\\); } console.log\\(\\); console.log\\('Top audits failing \\(score < 1\\):'\\); const audits = r.audits; const cat = r.categories.performance; const refs = cat.auditRefs; const metrics = refs.filter\\(x => x.group === 'metrics'\\); console.log\\('--- Metrics ---'\\); for \\(const m of metrics\\) { const a = audits[m.id]; console.log\\('  ' + \\(a.title\\) + ': ' + \\(a.displayValue||'-'\\) + ' \\(score=' + \\(a.score===null?'n/a':a.score\\) + '\\)'\\); }\")",
-      "Bash(node _deadcheck.mjs)"
+      "Bash(node _deadcheck.mjs)",
+      "Bash(git grep *)"
     ]
   }
 }
