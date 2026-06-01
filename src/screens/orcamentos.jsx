@@ -11,10 +11,15 @@ import {
   formatarValorInicial,
   parseValorBR,
 } from '../lib/money-input.js';
+import { mesCorrente } from '../lib/orcamento.js';
 
 export function OrcamentosScreen({ ctx }) {
-  const { txs, mes, ocultar, voltar, orcamentos, setOrcamentos, preferences, setPreferences, ehDesktop, caixinhas, usuario } = ctx;
+  const { txs, ocultar, voltar, orcamentos, setOrcamentos, preferences, setPreferences, ehDesktop, caixinhas, usuario } = ctx;
 
+  // Orçamento é sempre do mês corrente — não do mês navegável do dashboard.
+  // Assim, na virada do mês os gastos (geral, por categoria e por forma de
+  // pagamento) zeram automaticamente, refletindo só o que foi gasto no mês atual.
+  const mes = mesCorrente();
   const txMes = txDoMes(txs, mes);
   const porCat = totalPorCategoria(txMes);
   const entradas = totalEntradas(txMes);

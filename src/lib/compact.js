@@ -70,6 +70,7 @@ function compactarPreferences(p) {
   if (p.nome) out.nome = p.nome;
   if (p.fotoUrl) out.fotoUrl = p.fotoUrl;
   if (p.orcamentoMensal > 0) out.orcamentoMensal = p.orcamentoMensal;
+  if (p.orcamentoCartaoCredito > 0) out.orcamentoCartaoCredito = p.orcamentoCartaoCredito;
   if (p.notifLidas && p.notifLidas.length > 0) out.notifLidas = p.notifLidas;
   return ehObjetoVazio(out) ? deleteField() : out;
 }

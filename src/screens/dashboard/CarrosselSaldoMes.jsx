@@ -21,6 +21,10 @@ export function CarrosselSaldoMes({ todosMeses, mes, setMes, renderCard }) {
   const rolandoProgRef = React.useRef(false);
   const ultimoMesEnviado = React.useRef(mes);
   const primeiraVezRef = React.useRef(true);
+  // Conjunto de meses do último posicionamento. Se ele muda (txs carregaram da
+  // cache, ou o mês virou e entrou um slide novo), a recentralização é
+  // estrutural — não um gesto do usuário — então posicionamos sem animação.
+  const mesesKeyRef = React.useRef("");
   const rafRef = React.useRef(0);
   // Marca que a próxima mudança de idxAtivo veio do próprio swipe do usuário —
   // nesse caso o scroll-snap nativo já está centralizando, então o layoutEffect
@@ -48,6 +52,12 @@ export function CarrosselSaldoMes({ todosMeses, mes, setMes, renderCard }) {
   React.useLayoutEffect(() => {
     const el = ref.current;
     if (!el) return;
+    // O conjunto de meses mudou desde o último posicionamento? (txs carregaram,
+    // mês virou). Nesse caso a recentralização não é um gesto do usuário —
+    // posicionamos instantaneamente, sem o scroll animado atravessando meses.
+    const mesesKey = mesesAsc.join(",");
+    const conjuntoMudou = mesesKey !== mesesKeyRef.current;
+    mesesKeyRef.current = mesesKey;
     // Mudança disparada pelo swipe do usuário: o snap nativo já centraliza.
     // Só atualizamos os efeitos e saímos, sem scrollTo programático.
     if (mudouPorSwipeRef.current) {
@@ -61,7 +71,14 @@ export function CarrosselSaldoMes({ todosMeses, mes, setMes, renderCard }) {
     const alvo = slide.offsetLeft - (el.clientWidth - slide.clientWidth) / 2;
     if (Math.abs(el.scrollLeft - alvo) >= 2) {
       rolandoProgRef.current = true;
-      el.scrollTo({ left: alvo, behavior: primeiraVezRef.current ? "auto" : "smooth" });
+      // "smooth" só quando o usuário troca de mês pelo SeletorMes (mesmo
+      // conjunto de slides). Primeiro posicionamento ou mudança de conjunto
+      // (carga/virada de mês) vão de "instant".
+      // IMPORTANTE: "instant" (não "auto"). O container tem scroll-behavior:
+      // smooth no CSS, e behavior "auto" no scrollTo respeita o CSS — ou seja,
+      // animaria mesmo assim. "instant" ignora o CSS e salta de fato.
+      const semAnimacao = primeiraVezRef.current || conjuntoMudou;
+      el.scrollTo({ left: alvo, behavior: semAnimacao ? "instant" : "smooth" });
       primeiraVezRef.current = false;
       const t = setTimeout(() => {
         rolandoProgRef.current = false;
@@ -72,7 +89,7 @@ export function CarrosselSaldoMes({ todosMeses, mes, setMes, renderCard }) {
     }
     primeiraVezRef.current = false;
     aplicarEfeitos();
-  }, [idxAtivo, aplicarEfeitos]);
+  }, [idxAtivo, aplicarEfeitos, mesesAsc]);
 
   const onScroll = React.useCallback(() => {
     if (rafRef.current) cancelAnimationFrame(rafRef.current);
