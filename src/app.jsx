@@ -26,7 +26,7 @@ import {
 import { vibrar } from "./lib/haptics.js";
 import { useInstallPrompt, InstallPromptModal } from "./ui/install-prompt.jsx";
 import { LoaderTela } from "./ui/loader.jsx";
-import { calcOrcBaseAtual, mesCorrente } from "./lib/orcamento.js";
+import { calcOrcBaseAtual, mesCorrente, mesAnteriorDe } from "./lib/orcamento.js";
 
 // LoginScreen fica no bundle principal (primeira tela para deslogados).
 // As demais telas e o modal são carregados sob demanda (code-splitting).
@@ -605,21 +605,23 @@ export function App() {
   }, [todosMeses, mes]);
 
   // ─── Snapshot do orçamento por mês ───
-  // Pra que o "Sobrou" / "Restante" de meses passados não mude quando o
-  // usuário altera o orçamento no futuro, guardamos o orçamento base de
-  // cada mês passado em preferences.orcBaseAt. Aqui fazemos o backfill:
-  // a cada abertura do app, qualquer mês passado com txs que ainda não
-  // tem snapshot recebe o valor do orçamento atual (best-effort — é o
-  // melhor que dá pra fazer pra meses antigos sem histórico de orçamento).
+  // Pra que o "Sobrou" / "Restante" de meses ANTIGOS não mude quando o
+  // usuário altera o orçamento, guardamos o orçamento base de cada mês
+  // antigo em preferences.orcBaseAt. O mês anterior ao atual NÃO é
+  // congelado: ele fica na janela "ao vivo" junto com o mês atual (ver
+  // obterOrcBaseDoMes), então só congelamos meses mais velhos que ele.
+  // Backfill best-effort: a cada abertura, qualquer mês antigo com txs sem
+  // snapshot recebe o valor do orçamento atual — capturado quando o mês sai
+  // da janela "ao vivo", a melhor aproximação sem histórico de orçamento.
   React.useEffect(() => {
     if (!cloud.ready) return;
     if (!cloud.preferences) return;
     if (!todosMeses?.length) return;
     const orcAtual = calcOrcBaseAtual(cloud.preferences);
     if (orcAtual <= 0) return; // sem orçamento ainda — tenta de novo quando definir
-    const mesAtual = mesCorrente();
+    const mesAnt = mesAnteriorDe(mesCorrente());
     const snaps = cloud.preferences.orcBaseAt || {};
-    const faltam = todosMeses.filter((m) => m < mesAtual && !(m in snaps));
+    const faltam = todosMeses.filter((m) => m < mesAnt && !(m in snaps));
     if (faltam.length === 0) return;
     const novosSnaps = { ...snaps };
     for (const m of faltam) novosSnaps[m] = orcAtual;

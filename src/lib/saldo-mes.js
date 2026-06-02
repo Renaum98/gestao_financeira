@@ -37,8 +37,9 @@ export function calcularSaldoMes(
   const totalAnt = totalGeral(txMesAnt);
   const entradas = totalEntradas(txMes);
   const delta = totalAnt > 0 ? ((total - totalAnt) / totalAnt) * 100 : 0;
-  // Mês passado usa snapshot congelado (preferences.orcBaseAt); mês atual usa o
-  // orçamento corrente. Evita que alterações de hoje retroajam ao "Restante".
+  // Mês atual, futuro e o anterior ao atual usam o orçamento corrente; meses
+  // mais antigos usam o snapshot congelado (preferences.orcBaseAt). Evita que
+  // alterações de hoje retroajam ao "Restante" de meses antigos.
   const orcBase = obterOrcBaseDoMes(mesCard, preferences, mesCorrente());
   const { meu: guardado, parceiro: guardadoParceiro } = guardadoNoMes(
     caixinhas,
