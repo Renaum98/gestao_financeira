@@ -38,6 +38,58 @@ export function Toggle({ ativo, onChange }) {
   );
 }
 
+// Select padronizado da tela de Perfil (idioma, moeda). Native <select> com
+// aparência custom + chevron, pra ficar consistente entre os cards.
+export function SelectPerfil({ value, onChange, options, ariaLabel }) {
+  return (
+    <div style={{ position: "relative" }}>
+      <select
+        value={value}
+        aria-label={ariaLabel}
+        onChange={(e) => {
+          vibrar();
+          onChange(e.target.value);
+        }}
+        style={{
+          width: "100%",
+          appearance: "none",
+          WebkitAppearance: "none",
+          MozAppearance: "none",
+          padding: "12px 40px 12px 14px",
+          borderRadius: 12,
+          border: "none",
+          background: "var(--card-2)",
+          color: "var(--ink)",
+          fontSize: 14,
+          fontWeight: 700,
+          fontFamily: "inherit",
+          cursor: "pointer",
+          outline: "none",
+          boxShadow: "0 1px 2px rgba(0,0,0,0.06)",
+        }}
+      >
+        {options.map((o) => (
+          <option key={o.value} value={o.value}>
+            {o.label}
+          </option>
+        ))}
+      </select>
+      <div
+        style={{
+          position: "absolute",
+          right: 14,
+          top: "50%",
+          transform: "translateY(-50%)",
+          pointerEvents: "none",
+          display: "flex",
+        }}
+      >
+        <Icon name="chevron-down" size={16} color="var(--muted)" strokeWidth={2.2} />
+      </div>
+    </div>
+  );
+}
+
 export function ConfigItem({ icon, label, onClick, toggleAtivo, onToggle }) {
   return (
     <div
