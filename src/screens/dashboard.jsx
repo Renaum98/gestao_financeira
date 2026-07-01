@@ -71,8 +71,9 @@ export function DashboardScreen({ ctx }) {
       orcProximos: notifInfo.orcProximos,
       lidas: preferences?.notifLidas || [],
       idsAtivos: notifInfo.idsAtivos,
+      t,
     });
-  }, [notifInfo, preferences?.notifLidas]);
+  }, [notifInfo, preferences?.notifLidas, t]);
 
   const primeiroNome = (preferences.nome?.trim() || usuario?.displayName || "")
     .trim()

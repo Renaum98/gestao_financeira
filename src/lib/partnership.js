@@ -564,12 +564,16 @@ export function useSharedCaixinhas({ partnershipId, uid, partnerNome }) {
           if (depsNovos.length === 1) {
             const { cx, dep } = depsNovos[0];
             if (dep.feitoPor && dep.feitoPor !== uid) {
+              // Resgates entram em `depositos` como valor negativo (ou
+              // tipo "saque"). Notificamos como saque e guardamos o valor
+              // absoluto pra não exibir "depositou -100".
+              const ehSaque = dep.tipo === "saque" || dep.valor < 0;
               adicionarNotifParceria(uid, {
                 id: `np-dep-${dep.id}`,
-                tipo: "caixinha-deposito",
+                tipo: ehSaque ? "caixinha-saque" : "caixinha-deposito",
                 por: nome,
                 caixinhaNome: cx.nome,
-                valor: dep.valor,
+                valor: Math.abs(dep.valor),
                 em: new Date().toISOString(),
               });
             }

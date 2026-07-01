@@ -552,6 +552,7 @@ export const EN = {
   "Conta compartilhada ativada.": "Shared account activated.",
   " criou uma caixinha": " created a savings jar",
   " depositou {x}": " deposited {x}",
+  " retirou {x}": " withdrew {x}",
   "Na caixinha \"{nome}\"": "In savings \"{nome}\"",
   " desfez a conta compartilhada": " undid the shared account",
   "Dom": "Sun", "Seg": "Mon", "Ter": "Tue", "Qua": "Wed",
@@ -571,6 +572,12 @@ export const EN = {
     "Charges not generated for next month. Cancel or keep them.",
   "Gerenciar →": "Manage →",
   "{cat} · última cobrança em {ultimo}": "{cat} · last charge in {ultimo}",
+  // Notificações nativas (lib/notifications.js)
+  "Parcelamento terminando": "Installment ending",
+  " — última parcela próxima ({atual}/{total})": " — last installment coming up ({atual}/{total})",
+  "{gasto} de {orc} ({pct}%).": "{gasto} of {orc} ({pct}%).",
+  "Você já usou {pct}% do orçamento ({gasto} de {orc}).":
+    "You've already used {pct}% of the budget ({gasto} of {orc}).",
 
   // ─── Insights do mês (lib/insights.jsx) ───
   "No mês passado você gastou mais em ": "Last month you spent the most on ",

@@ -30,12 +30,29 @@ function configNotif(notif, t) {
         ),
         subtitulo: notif.caixinhaNome ? `"${notif.caixinhaNome}"` : null,
       };
-    case "caixinha-deposito":
+    case "caixinha-deposito": {
+      // Defensivo: notificações antigas guardavam o valor cru; um valor
+      // negativo aqui é na verdade um resgate.
+      const ehSaque = (notif.valor || 0) < 0;
       return {
-        cor: COR_POS,
+        cor: ehSaque ? COR_NEG : COR_POS,
         titulo: (
           <>
-            <strong>{notif.por}</strong>{t(' depositou {x}', { x: fmtBRL(notif.valor || 0) })}
+            <strong>{notif.por}</strong>
+            {ehSaque
+              ? t(' retirou {x}', { x: fmtBRL(Math.abs(notif.valor || 0)) })
+              : t(' depositou {x}', { x: fmtBRL(notif.valor || 0) })}
+          </>
+        ),
+        subtitulo: notif.caixinhaNome ? t('Na caixinha "{nome}"', { nome: notif.caixinhaNome }) : null,
+      };
+    }
+    case "caixinha-saque":
+      return {
+        cor: COR_NEG,
+        titulo: (
+          <>
+            <strong>{notif.por}</strong>{t(' retirou {x}', { x: fmtBRL(Math.abs(notif.valor || 0)) })}
           </>
         ),
         subtitulo: notif.caixinhaNome ? t('Na caixinha "{nome}"', { nome: notif.caixinhaNome }) : null,

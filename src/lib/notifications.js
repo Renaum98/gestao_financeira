@@ -76,6 +76,7 @@ export async function dispararPendentes({
   lidas = [],
   idsAtivos = [],
   diasJanela = 7,
+  t = (s) => s, // função de tradução (de useT); identidade se não passada
 }) {
   if (!notificacoesSuportadas()) return 0;
   if (Notification.permission !== 'granted') return 0;
@@ -90,7 +91,7 @@ export async function dispararPendentes({
     return Math.ceil((new Date(y, m - 1, d) - hoje) / (1000 * 60 * 60 * 24));
   };
   const rotulo = (n) =>
-    n <= 0 ? 'Vence hoje' : n === 1 ? 'Vence amanhã' : `Vence em ${n} dias`;
+    n <= 0 ? t('Vence hoje') : n === 1 ? t('Vence amanhã') : t('Vence em {n} dias', { n });
 
   let disparadas = 0;
 
@@ -98,7 +99,7 @@ export async function dispararPendentes({
     if (enviadas.has(tx.id) || lidasSet.has(tx.id)) continue;
     const n = diasAte(tx.data);
     if (n > diasJanela) continue;
-    const ok = await mostrarNotificacao(`💸 ${tx.descricao}`, {
+    const ok = await mostrarNotificacao(tx.descricao, {
       body: `${rotulo(n)} · ${fmtBRL(tx.valor)}`,
       icon: '/icon-192.png',
       badge: '/icon-192.png',
@@ -114,8 +115,8 @@ export async function dispararPendentes({
 
   for (const tx of terminando) {
     if (enviadas.has(tx.id) || lidasSet.has(tx.id)) continue;
-    const ok = await mostrarNotificacao(`✅ Parcelamento terminando`, {
-      body: `${tx.descricao} — última parcela próxima (${tx.parcelas.atual}/${tx.parcelas.total})`,
+    const ok = await mostrarNotificacao(t('Parcelamento terminando'), {
+      body: `${tx.descricao}${t(' — última parcela próxima ({atual}/{total})', { atual: tx.parcelas.atual, total: tx.parcelas.total })}`,
       icon: '/icon-192.png',
       badge: '/icon-192.png',
       tag: `parcela-fim-${tx.id}`,
@@ -130,9 +131,9 @@ export async function dispararPendentes({
   // Orçamento de categoria estourado (>100%) — vermelho.
   for (const a of orcEstourados) {
     if (enviadas.has(a.id) || lidasSet.has(a.id)) continue;
-    const nome = CATEGORIAS[a.catId]?.nome || 'Categoria';
-    const ok = await mostrarNotificacao(`⚠️ ${nome} estourou o orçamento`, {
-      body: `${fmtBRL(a.gasto)} de ${fmtBRL(a.orc)} (${Math.round(a.pct)}%).`,
+    const nome = t(CATEGORIAS[a.catId]?.nome || 'Categoria');
+    const ok = await mostrarNotificacao(t('{cat} estourou o orçamento', { cat: nome }), {
+      body: t('{gasto} de {orc} ({pct}%).', { gasto: fmtBRL(a.gasto), orc: fmtBRL(a.orc), pct: Math.round(a.pct) }),
       icon: '/icon-192.png',
       badge: '/icon-192.png',
       tag: a.id,
@@ -147,9 +148,9 @@ export async function dispararPendentes({
   // Orçamento de categoria perto do limite (≥90% e ≤100%) — aviso.
   for (const a of orcProximos) {
     if (enviadas.has(a.id) || lidasSet.has(a.id)) continue;
-    const nome = CATEGORIAS[a.catId]?.nome || 'Categoria';
-    const ok = await mostrarNotificacao(`🔔 ${nome} chegando ao limite`, {
-      body: `Você já usou ${Math.round(a.pct)}% do orçamento (${fmtBRL(a.gasto)} de ${fmtBRL(a.orc)}).`,
+    const nome = t(CATEGORIAS[a.catId]?.nome || 'Categoria');
+    const ok = await mostrarNotificacao(t('{cat} chegando ao limite', { cat: nome }), {
+      body: t('Você já usou {pct}% do orçamento ({gasto} de {orc}).', { pct: Math.round(a.pct), gasto: fmtBRL(a.gasto), orc: fmtBRL(a.orc) }),
       icon: '/icon-192.png',
       badge: '/icon-192.png',
       tag: a.id,

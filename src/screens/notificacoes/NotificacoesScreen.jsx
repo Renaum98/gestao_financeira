@@ -60,15 +60,15 @@ export function NotificacoesScreen({ ctx }) {
   // Sempre que entra na tela, dispara o que estiver pendente (se já tem permissão).
   React.useEffect(() => {
     if (permissao === 'granted') {
-      dispararPendentes({ proximas, terminando, orcEstourados, orcProximos, lidas, idsAtivos });
+      dispararPendentes({ proximas, terminando, orcEstourados, orcProximos, lidas, idsAtivos, t });
     }
-  }, [permissao, proximas, terminando, orcEstourados, orcProximos, lidas, idsAtivos]);
+  }, [permissao, proximas, terminando, orcEstourados, orcProximos, lidas, idsAtivos, t]);
 
   const ativarNotificacoes = async () => {
     const r = await pedirPermissaoNotificacoes();
     setPermissao(r);
     if (r === 'granted') {
-      dispararPendentes({ proximas, terminando, orcEstourados, orcProximos, lidas, idsAtivos });
+      dispararPendentes({ proximas, terminando, orcEstourados, orcProximos, lidas, idsAtivos, t });
     }
   };
 
