@@ -1082,6 +1082,7 @@ export function App() {
     excluirCategoria,
     preferences: cloud.preferences,
     setPreferences: cloud.setPreferences,
+    pronto: cloud.ready,
     // ─── Conta compartilhada ───
     email: cloud.email,
     partnerUid: cloud.partnerUid,

@@ -83,6 +83,10 @@ export function Card({ children, style = {}, onClick, ...rest }) {
 export function ItemTransacao({ tx, ocultar, onClick, doParceiro = false, nomeParceiro = '' }) {
   const t = useT();
   const ehEntrada = tx.tipo === 'entrada';
+  // Resgate de caixinha: é uma "entrada" técnica (o dinheiro volta pro mês),
+  // mas não é renda nova — rotulamos como "Resgatado" pra não se confundir
+  // com um salário/recebimento de verdade. Marcado por `caixinhaId`.
+  const ehResgate = ehEntrada && !!tx.caixinhaId;
   const cat = ehEntrada ? null : CATEGORIAS[tx.categoria];
   const d = new Date(tx.data + 'T12:00:00');
   const dia = d.getDate(), mesC = t(MESES_CURTO[d.getMonth()]);
@@ -162,7 +166,7 @@ export function ItemTransacao({ tx, ocultar, onClick, doParceiro = false, nomePa
         </div>
         <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 2, display: 'flex', alignItems: 'center', gap: 6 }}>
           {ehEntrada ? (
-            <span style={{ fontWeight: 700, color: doParceiro ? 'var(--muted)' : COR_POS }}>{t('Entrada')}</span>
+            <span style={{ fontWeight: 700, color: doParceiro ? 'var(--muted)' : COR_POS }}>{ehResgate ? t('Resgatado') : t('Entrada')}</span>
           ) : (
             <>
               <span>{t(cat?.nome || 'Outros')}</span>

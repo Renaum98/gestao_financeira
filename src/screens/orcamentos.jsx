@@ -115,6 +115,7 @@ export function OrcamentosScreen({ ctx }) {
           </div>
 
           {editandoTotal ? (
+            <>
             <div style={{ position: 'relative', marginTop: 4, display: 'flex', alignItems: 'center', gap: 8 }}>
               <span style={{ fontSize: 22, fontWeight: 700, opacity: 0.85 }}>{simboloMoeda()}</span>
               <input
@@ -141,6 +142,13 @@ export function OrcamentosScreen({ ctx }) {
                 <Icon name="check" size={16} color="var(--primary)" strokeWidth={2.6} />
               </button>
             </div>
+            <div style={{
+              marginTop: 10, fontSize: 11, fontWeight: 600, lineHeight: 1.4,
+              opacity: 0.85, position: 'relative',
+            }}>
+              {t("Use um valor fixo que você recebe todo mês, como salário ou mesada. Recebimentos extras devem ser lançados como Entrada em Transações.")}
+            </div>
+            </>
           ) : (
             <div style={{ fontSize: 28, fontWeight: 800, marginTop: 4, letterSpacing: '-0.02em', position: 'relative' }}>
               {temOrcamento ? fmtBRL(orcMensal, ocultar) : (

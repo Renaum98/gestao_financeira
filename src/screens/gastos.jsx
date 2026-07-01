@@ -7,12 +7,13 @@ import {
   PAGAMENTOS,
   fmtBRL,
   totalGeral,
+  totalEntradas,
   txDoMes,
 } from "../data.js";
 import { Icon, iconePagamento } from "../ui/icons.jsx";
 import { Card, ItemTransacao, SeletorMes, TopBar } from "../ui/common.jsx";
 import { ConfirmModal } from "../ui/confirm-modal.jsx";
-import { COR_NEG, COR_NEG_FUNDO } from "../lib/colors.js";
+import { COR_NEG, COR_NEG_FUNDO, COR_POS } from "../lib/colors.js";
 import { useT } from "../lib/i18n.jsx";
 
 export function GastosScreen({ ctx }) {
@@ -44,24 +45,44 @@ export function GastosScreen({ ctx }) {
     return set;
   }, [txMesBruto]);
 
+  // Há entradas no mês? Habilita o chip de filtro "Entradas" (inclui resgates
+  // de caixinha, que também são valores que entraram na conta).
+  const temEntradas = React.useMemo(
+    () => txMesBruto.some((t) => t.tipo === "entrada"),
+    [txMesBruto],
+  );
+
+  const ehFiltroEntradas = filtro === "entradas";
+
   // Se o filtro atual não existe mais (mudou de mês), volta pra "todas".
   React.useEffect(() => {
-    if (filtro !== "todas" && !catsComTx.has(filtro)) setFiltro("todas");
-  }, [filtro, catsComTx]);
+    if (ehFiltroEntradas) {
+      if (!temEntradas) setFiltro("todas");
+    } else if (filtro !== "todas" && !catsComTx.has(filtro)) {
+      setFiltro("todas");
+    }
+  }, [filtro, ehFiltroEntradas, catsComTx, temEntradas]);
   React.useEffect(() => {
     if (filtroPag !== "todos" && !pagsComTx.has(filtroPag)) setFiltroPag("todos");
   }, [filtroPag, pagsComTx]);
 
   let txMes = txMesBruto;
-  if (filtro !== "todas") txMes = txMes.filter((t) => t.categoria === filtro);
-  if (filtroPag !== "todos")
-    txMes = txMes.filter((t) => t.pagamento === filtroPag);
+  if (ehFiltroEntradas) {
+    // Só entradas — categoria/pagamento não se aplicam a elas.
+    txMes = txMes.filter((t) => t.tipo === "entrada");
+  } else {
+    if (filtro !== "todas") txMes = txMes.filter((t) => t.categoria === filtro);
+    if (filtroPag !== "todos")
+      txMes = txMes.filter((t) => t.pagamento === filtroPag);
+  }
   if (busca)
     txMes = txMes.filter((t) =>
       t.descricao.toLowerCase().includes(busca.toLowerCase()),
     );
 
-  const total = totalGeral(txMes);
+  // No filtro de entradas, o "Total" soma o que entrou (totalGeral ignora
+  // entradas e daria zero).
+  const total = ehFiltroEntradas ? totalEntradas(txMes) : totalGeral(txMes);
 
   // Lista única do mês, ordenada da mais recente para a mais antiga.
   // O dia/mês continua visível por transação no próprio ItemTransacao.
@@ -70,7 +91,11 @@ export function GastosScreen({ ctx }) {
     [txMes],
   );
 
-  const cats = ["todas", ...catsMinhas().filter((c) => catsComTx.has(c))];
+  const cats = [
+    "todas",
+    ...(temEntradas ? ["entradas"] : []),
+    ...catsMinhas().filter((c) => catsComTx.has(c)),
+  ];
   const pags = ["todos", ...PAGAMENTOS.filter((p) => pagsComTx.has(p))];
 
   const rotuloPag = (p) =>
@@ -201,7 +226,12 @@ export function GastosScreen({ ctx }) {
         >
           {cats.map((c) => {
             const sel = filtro === c;
-            const cat = c === "todas" ? null : CATEGORIAS[c];
+            const ehEntradas = c === "entradas";
+            const cat = c === "todas" || ehEntradas ? null : CATEGORIAS[c];
+            // Chip "Entradas" ganha destaque verde (selecionado) pra sinalizar
+            // que é dinheiro que entrou, não gasto.
+            const bgSel = ehEntradas ? COR_POS : "var(--ink)";
+            const pontoCor = ehEntradas ? COR_POS : cat?.cor;
             return (
               <button
                 key={c}
@@ -210,8 +240,8 @@ export function GastosScreen({ ctx }) {
                   padding: "6px 14px",
                   borderRadius: 999,
                   border: "none",
-                  background: sel ? "var(--ink)" : "var(--card)",
-                  color: sel ? "var(--bg)" : "var(--ink)",
+                  background: sel ? bgSel : "var(--card)",
+                  color: sel ? (ehEntradas ? "#fff" : "var(--bg)") : "var(--ink)",
                   fontSize: 12,
                   fontWeight: 700,
                   whiteSpace: "nowrap",
@@ -223,25 +253,29 @@ export function GastosScreen({ ctx }) {
                   boxShadow: sel ? "none" : "0 1px 2px rgba(0,0,0,0.04)",
                 }}
               >
-                {cat && (
+                {pontoCor && (
                   <div
                     style={{
                       width: 8,
                       height: 8,
                       borderRadius: 4,
-                      background: cat.cor,
+                      background: sel && ehEntradas ? "#fff" : pontoCor,
                     }}
                   />
                 )}
-                {c === "todas" ? t("Todas") : t(cat.nome)}
+                {c === "todas"
+                  ? t("Todas")
+                  : ehEntradas
+                    ? t("Entradas")
+                    : t(cat.nome)}
               </button>
             );
           })}
         </div>
       </div>
 
-      {/* Filtros de tipo de pagamento */}
-      {pags.length > 1 && (
+      {/* Filtros de tipo de pagamento — não se aplicam a entradas */}
+      {pags.length > 1 && !ehFiltroEntradas && (
         <div style={{ padding: "6px 0 0" }}>
           <div
             className="carrossel"
@@ -317,7 +351,7 @@ export function GastosScreen({ ctx }) {
               />
             </div>
             <div style={{ fontSize: 15, fontWeight: 700, color: "var(--ink)" }}>
-              {t("Nenhum gasto")}
+              {ehFiltroEntradas ? t("Nenhuma entrada") : t("Nenhum gasto")}
             </div>
             <div style={{ fontSize: 13, color: "var(--muted)", marginTop: 4 }}>
               {t("Tente outro filtro ou adicione um novo.")}

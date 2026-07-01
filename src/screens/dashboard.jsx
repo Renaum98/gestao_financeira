@@ -2,7 +2,7 @@
 // Orquestra os blocos da tela; cada bloco vive em ./dashboard/*.
 
 import React from "react";
-import { CATEGORIAS, totalPorCategoria } from "../data.js";
+import { CATEGORIAS, MESES, chaveMes, totalPorCategoria } from "../data.js";
 import { Icon } from "../ui/icons.jsx";
 import { calcularNotificacoes } from "./notificacoes.jsx";
 import { dispararPendentes } from "../lib/notifications.js";
@@ -11,6 +11,8 @@ import { vibrar } from "../lib/haptics.js";
 import { useT } from "../lib/i18n.jsx";
 import { computeInsights } from "../lib/insights.jsx";
 import { calcularSaldoMes } from "../lib/saldo-mes.js";
+import { mesAnteriorDe } from "../lib/orcamento.js";
+import { DiferencaMesModal } from "./dashboard/DiferencaMesModal.jsx";
 import { CabecalhoDashboard } from "./dashboard/CabecalhoDashboard.jsx";
 import { CardSaldo } from "./dashboard/CardSaldo.jsx";
 import { CarrosselSaldoMes } from "./dashboard/CarrosselSaldoMes.jsx";
@@ -43,6 +45,8 @@ export function DashboardScreen({ ctx }) {
     partnerOrcamentos = {},
     partnerOrcamentoMensal = 0,
     partnerUid,
+    setPreferences,
+    pronto,
   } = ctx;
   const t = useT();
 
@@ -103,6 +107,49 @@ export function DashboardScreen({ ctx }) {
     [mes, txs, partnerTxs, todosMeses, preferences, caixinhas, meuUid, partnerUid, orcBaseParceiro],
   );
   const { txMes, txMesAnt, total, totalAnt, entradas, delta, orcTotal, restante } = saldo;
+
+  // ─── Modal de virada de mês (diferença do mês anterior) ───
+  // No primeiro acesso de um mês novo, oferece trazer o que sobrou/faltou no
+  // mês anterior pro mês atual. A resposta (valor ou 0) fica gravada em
+  // preferences.carryover[mesAtual] — a presença da chave marca "já perguntei".
+  const mesReal = React.useMemo(() => chaveMes(new Date()), []);
+  const mesRealAnt = React.useMemo(() => mesAnteriorDe(mesReal), [mesReal]);
+  const saldoMesAnt = React.useMemo(
+    () =>
+      calcularSaldoMes(mesRealAnt, {
+        txs,
+        partnerTxs,
+        todosMeses,
+        preferences,
+        caixinhas,
+        meuUid,
+        partnerUid,
+        orcBaseParceiro,
+      }),
+    [mesRealAnt, txs, partnerTxs, todosMeses, preferences, caixinhas, meuUid, partnerUid, orcBaseParceiro],
+  );
+  const [diferencaModal, setDiferencaModal] = React.useState(null);
+  React.useEffect(() => {
+    if (!pronto || !preferences) return;
+    // Já respondido pra este mês? (chave presente, mesmo que 0).
+    if (preferences.carryover && mesReal in preferences.carryover) return;
+    // Só oferece se o mês anterior teve uso real e uma diferença relevante.
+    if (saldoMesAnt.txMes.length === 0) return;
+    if (Math.abs(saldoMesAnt.restante) < 0.01) return;
+    setDiferencaModal({ mes: mesRealAnt, valor: saldoMesAnt.restante });
+  }, [pronto, preferences, mesReal, mesRealAnt, saldoMesAnt]);
+
+  const responderDiferenca = (trazer) => {
+    if (!diferencaModal) return;
+    const valor = trazer ? diferencaModal.valor : 0;
+    setPreferences({
+      carryover: { ...(preferences?.carryover || {}), [mesReal]: valor },
+    });
+    setDiferencaModal(null);
+  };
+  const nomeMesAntModal = diferencaModal
+    ? t(MESES[Number(diferencaModal.mes.split("-")[1]) - 1])
+    : "";
 
   // No Dashboard, "Últimos gastos" mostra somente OS MEUS — txs do parceiro
   // ficam na aba de Transações (por opção de UX: o resumo aqui é pessoal).
@@ -261,6 +308,16 @@ export function DashboardScreen({ ctx }) {
           mes={mes}
           ocultar={ocultar}
           fechar={() => setSimularAberto(false)}
+        />
+      )}
+
+      {diferencaModal && (
+        <DiferencaMesModal
+          nomeMesAnt={nomeMesAntModal}
+          valor={diferencaModal.valor}
+          ocultar={ocultar}
+          onTrazer={() => responderDiferenca(true)}
+          onIgnorar={() => responderDiferenca(false)}
         />
       )}
 

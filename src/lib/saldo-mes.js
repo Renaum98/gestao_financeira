@@ -47,7 +47,12 @@ export function calcularSaldoMes(
     meuUid,
     partnerUid,
   );
-  const orcTotal = orcBase + entradas - guardado;
+  // Diferença trazida do mês anterior: o "sobrou/faltou" que o usuário optou
+  // por carregar (ver modal de virada de mês). Positivo = sobra que soma ao
+  // orçamento; negativo = dívida que o reduz. Guardado por mês em
+  // preferences.carryover[yyyy-mm]. Zero/ausente = mês não recebeu diferença.
+  const carryover = preferences?.carryover?.[mesCard] || 0;
+  const orcTotal = orcBase + entradas - guardado + carryover;
   const restante = orcTotal - total;
 
   const parceiroDoMes = txDoMes(partnerTxs, mesCard);
@@ -67,6 +72,7 @@ export function calcularSaldoMes(
     orcBase,
     guardado,
     guardadoParceiro,
+    carryover,
     orcTotal,
     restante,
     totalParceiro,

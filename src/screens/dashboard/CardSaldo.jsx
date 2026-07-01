@@ -3,9 +3,10 @@
 // reaproveitar os do mês ativo, simplificando o uso no carrossel.
 
 import React from "react";
-import { fmtBRL, fmtBRLCompacto, rotuloMesT } from "../../data.js";
+import { fmtBRL, fmtBRLCompacto, rotuloMesT, MESES } from "../../data.js";
 import { SeletorMes } from "../../ui/common.jsx";
 import { calcularSaldoMes } from "../../lib/saldo-mes.js";
+import { mesAnteriorDe } from "../../lib/orcamento.js";
 import { useT } from "../../lib/i18n.jsx";
 
 export function CardSaldo({
@@ -31,6 +32,7 @@ export function CardSaldo({
     delta,
     orcTotal,
     restante,
+    carryover,
     totalParceiro,
     orcTotalParceiro,
     restanteParceiro,
@@ -46,6 +48,9 @@ export function CardSaldo({
     partnerUid,
     orcBaseParceiro,
   });
+
+  // Nome do mês de onde veio a diferença (mês anterior a este card).
+  const nomeMesAnt = t(MESES[Number(mesAnteriorDe(mesCard).split("-")[1]) - 1]);
 
   return (
     <div
@@ -176,6 +181,13 @@ export function CardSaldo({
           {temEntrada && (
             <div style={{ fontSize: 10, fontWeight: 700, opacity: 0.85, marginTop: 2 }}>
               +{fmtBRL(entradas, ocultar)} {t("entradas")}
+            </div>
+          )}
+          {carryover !== 0 && (
+            <div style={{ fontSize: 10, fontWeight: 600, opacity: 0.7, marginTop: 2 }}>
+              {t("Diferença de {mes}", { mes: nomeMesAnt })}:{" "}
+              {carryover > 0 ? "+" : "−"}
+              {fmtBRL(Math.abs(carryover), ocultar)}
             </div>
           )}
         </div>
