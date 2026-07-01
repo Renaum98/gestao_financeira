@@ -6,8 +6,8 @@ import { vibrar } from "../../lib/haptics.js";
 import { useT } from "../../lib/i18n.jsx";
 
 const IDIOMAS = [
-  { id: "pt", label: "Português", flag: "🇧🇷" },
-  { id: "en", label: "English", flag: "🇺🇸" },
+  { id: "pt", label: "Português" },
+  { id: "en", label: "English" },
 ];
 
 export function IdiomaCard({ preferences, setPreferences }) {
@@ -59,13 +59,8 @@ export function IdiomaCard({ preferences, setPreferences }) {
                 fontFamily: "inherit",
                 boxShadow: sel ? "0 1px 2px rgba(0,0,0,0.08)" : "none",
                 transition: "background .15s",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: 6,
               }}
             >
-              <span style={{ fontSize: 15 }}>{opt.flag}</span>
               {opt.label}
             </button>
           );

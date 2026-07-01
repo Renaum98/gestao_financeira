@@ -65,12 +65,6 @@ export function PerfilScreen({ ctx }) {
       <CabecalhoPerfil preferences={preferences} setPreferences={setPreferences} usuario={usuario} />
 
       <div style={{ padding: "24px 20px 0" }}>
-        <IdiomaCard preferences={preferences} setPreferences={setPreferences} />
-
-        <div style={{ height: 14 }} />
-        <MoedaCard preferences={preferences} setPreferences={setPreferences} />
-
-        <div style={{ height: 14 }} />
         <AparenciaCard preferences={preferences} setPreferences={setPreferences} />
 
         <div style={{ height: 14 }} />
@@ -113,6 +107,12 @@ export function PerfilScreen({ ctx }) {
           <ConfigItem icon="sparkle" label={t("Refazer tour")} onClick={() => setOnboarding(true)} />
           <ConfigItem icon="list" label={t("Baixar dados (.xlsx)")} onClick={abrirBaixar} />
         </Card>
+
+        <div style={{ height: 14 }} />
+        <IdiomaCard preferences={preferences} setPreferences={setPreferences} />
+
+        <div style={{ height: 14 }} />
+        <MoedaCard preferences={preferences} setPreferences={setPreferences} />
 
         <div style={{ height: 18 }} />
         <button

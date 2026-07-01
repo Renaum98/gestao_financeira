@@ -52,7 +52,6 @@ export function MoedaCard({ preferences, setPreferences }) {
                 transition: "background .15s, border-color .15s",
               }}
             >
-              <span style={{ fontSize: 18 }}>{m.flag}</span>
               <div style={{ minWidth: 0 }}>
                 <div style={{ fontSize: 13, fontWeight: 800, color: sel ? "var(--primary)" : "var(--ink)" }}>
                   {m.codigo} <span style={{ fontWeight: 600 }}>{m.simbolo}</span>

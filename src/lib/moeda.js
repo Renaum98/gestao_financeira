@@ -13,10 +13,10 @@
 const STORAGE_KEY = "moeda";
 
 export const MOEDAS = {
-  BRL: { codigo: "BRL", locale: "pt-BR", simbolo: "R$", nome: "Real", flag: "🇧🇷" },
-  USD: { codigo: "USD", locale: "en-US", simbolo: "$", nome: "US Dollar", flag: "🇺🇸" },
-  EUR: { codigo: "EUR", locale: "de-DE", simbolo: "€", nome: "Euro", flag: "🇪🇺" },
-  GBP: { codigo: "GBP", locale: "en-GB", simbolo: "£", nome: "British Pound", flag: "🇬🇧" },
+  BRL: { codigo: "BRL", locale: "pt-BR", simbolo: "R$", nome: "Real" },
+  USD: { codigo: "USD", locale: "en-US", simbolo: "$", nome: "US Dollar" },
+  EUR: { codigo: "EUR", locale: "de-DE", simbolo: "€", nome: "Euro" },
+  GBP: { codigo: "GBP", locale: "en-GB", simbolo: "£", nome: "British Pound" },
 };
 
 export const MOEDAS_SUPORTADAS = Object.keys(MOEDAS);
