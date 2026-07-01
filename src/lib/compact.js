@@ -72,6 +72,13 @@ function compactarPreferences(p) {
   if (p.orcamentoMensal > 0) out.orcamentoMensal = p.orcamentoMensal;
   if (p.orcamentoCartaoCredito > 0) out.orcamentoCartaoCredito = p.orcamentoCartaoCredito;
   if (p.notifLidas && p.notifLidas.length > 0) out.notifLidas = p.notifLidas;
+  // Snapshots de orçamento por mês (mapa yyyy-mm → número). Sem compactar os
+  // valores: cada entrada é um mês congelado que precisa sobreviver.
+  if (p.orcBaseAt && !ehObjetoVazio(p.orcBaseAt)) out.orcBaseAt = p.orcBaseAt;
+  // Diferença de mês trazida (carryover, mapa yyyy-mm → número). NÃO filtrar
+  // zeros: o valor 0 é o marcador de "já perguntei neste mês" (usuário recusou),
+  // e é o que impede o modal de virada de mês de reaparecer a cada abertura.
+  if (p.carryover && !ehObjetoVazio(p.carryover)) out.carryover = p.carryover;
   return ehObjetoVazio(out) ? deleteField() : out;
 }
 
