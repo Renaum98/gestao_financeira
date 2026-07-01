@@ -2,8 +2,10 @@
 
 import React from 'react';
 import { Icon } from '../../ui/icons.jsx';
+import { useT } from '../../lib/i18n.jsx';
 
 export function BannerPermissao({ permissao, onAtivar }) {
+  const t = useT();
   return (
     <div style={{ padding: '4px 20px 0' }}>
       <div
@@ -36,12 +38,12 @@ export function BannerPermissao({ permissao, onAtivar }) {
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--ink)' }}>
-            {permissao === 'denied' ? 'Notificações bloqueadas' : 'Receba lembretes no celular'}
+            {permissao === 'denied' ? t('Notificações bloqueadas') : t('Receba lembretes no celular')}
           </div>
           <div style={{ fontSize: 12, color: 'var(--muted)', fontWeight: 500, marginTop: 2, lineHeight: 1.4 }}>
             {permissao === 'denied'
-              ? 'Habilite nas configurações do navegador/sistema para receber lembretes.'
-              : 'Avisamos quando uma conta estiver perto de vencer, mesmo com o app fechado.'}
+              ? t('Habilite nas configurações do navegador/sistema para receber lembretes.')
+              : t('Avisamos quando uma conta estiver perto de vencer, mesmo com o app fechado.')}
           </div>
         </div>
         {permissao !== 'denied' && (
@@ -61,7 +63,7 @@ export function BannerPermissao({ permissao, onAtivar }) {
               boxShadow: '0 4px 12px color-mix(in oklab, var(--primary) 28%, transparent)',
             }}
           >
-            Ativar
+            {t('Ativar')}
           </button>
         )}
       </div>

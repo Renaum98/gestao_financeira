@@ -12,6 +12,7 @@ import {
   rotuloMesCurto,
 } from "../data.js";
 import { Card, SeletorMes, TopBar } from "../ui/common.jsx";
+import { useT } from "../lib/i18n.jsx";
 import { obterOrcBaseDoMes } from "../lib/orcamento.js";
 import { guardadoNoMes } from "../lib/saldo-mes.js";
 import { mesShift, diasNoMes } from "./analise/utils.js";
@@ -30,6 +31,7 @@ export function AnaliseScreen({ ctx }) {
     partnerTxs = [], partnerNome = "", partnerUid,
     preferences = {}, orcamentos = {}, caixinhas = [], usuario,
   } = ctx;
+  const tr = useT();
   const ehCompartilhado = !!partnerUid;
   const spanAll = ehDesktop ? "col-span-all" : undefined;
 
@@ -85,7 +87,7 @@ export function AnaliseScreen({ ctx }) {
       const k = mesShift(mes, -i);
       out.push({
         key: k,
-        label: rotuloMesCurto(k).replace(/ \d+$/, ""),
+        label: tr(rotuloMesCurto(k).replace(/ \d+$/, "")),
         total: totalGeral(txDoMes(txs, k)),
       });
     }
@@ -102,7 +104,7 @@ export function AnaliseScreen({ ctx }) {
       const k = mesShift(mes, -i);
       out.push({
         key: k,
-        label: rotuloMesCurto(k).replace(/ \d+$/, ""),
+        label: tr(rotuloMesCurto(k).replace(/ \d+$/, "")),
         meu: totalGeral(txDoMes(txs, k)),
         parceiro: totalGeral(txDoMes(partnerTxs, k)),
       });
@@ -135,7 +137,7 @@ export function AnaliseScreen({ ctx }) {
   return (
     <div className={ehDesktop ? "cols-desktop" : undefined} style={{ paddingBottom: "var(--pad-bottom)" }}>
       <div className={spanAll}>
-        <TopBar titulo="Análise" />
+        <TopBar titulo={tr("Análise")} />
       </div>
       <div
         className={spanAll}
@@ -148,7 +150,7 @@ export function AnaliseScreen({ ctx }) {
         <div className={spanAll} style={{ padding: "0 20px" }}>
           <Card style={{ textAlign: "center", padding: "40px 20px" }}>
             <div style={{ fontSize: 14, color: "var(--muted)", fontWeight: 600 }}>
-              Nenhum gasto registrado neste mês.
+              {tr("Nenhum gasto registrado neste mês.")}
             </div>
           </Card>
         </div>

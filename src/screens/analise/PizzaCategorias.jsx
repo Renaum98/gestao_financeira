@@ -5,8 +5,10 @@ import React from "react";
 import { fmtBRLCompacto } from "../../data.js";
 import { Card } from "../../ui/common.jsx";
 import { PieChart } from "../../ui/charts.jsx";
+import { useT } from "../../lib/i18n.jsx";
 
 export function PizzaCategorias({ dados, total, ocultar }) {
+  const t = useT();
   const [ativa, setAtiva] = React.useState(null);
 
   return (
@@ -57,7 +59,7 @@ export function PizzaCategorias({ dados, total, ocultar }) {
                     textOverflow: "ellipsis",
                   }}
                 >
-                  {d.nome}
+                  {t(d.nome)}
                 </div>
                 <div style={{ fontSize: 11, color: "var(--muted)", fontWeight: 600 }}>
                   {fmtBRLCompacto(d.valor, ocultar)} · {((d.valor / total) * 100).toFixed(0)}%

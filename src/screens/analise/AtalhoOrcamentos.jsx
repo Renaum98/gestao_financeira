@@ -3,8 +3,10 @@
 import React from "react";
 import { Icon } from "../../ui/icons.jsx";
 import { Card } from "../../ui/common.jsx";
+import { useT } from "../../lib/i18n.jsx";
 
 export function AtalhoOrcamentos({ irPara, spanAll }) {
+  const t = useT();
   return (
     <div className={spanAll} style={{ padding: "16px 20px 0" }}>
       <Card
@@ -31,10 +33,10 @@ export function AtalhoOrcamentos({ irPara, spanAll }) {
         </div>
         <div style={{ flex: 1 }}>
           <div style={{ fontSize: 14, fontWeight: 800, color: "#1A1416" }}>
-            Acompanhar orçamentos
+            {t("Acompanhar orçamentos")}
           </div>
           <div style={{ fontSize: 12, color: "#6B5560", fontWeight: 600, marginTop: 2 }}>
-            Veja onde está perto do limite
+            {t("Veja onde está perto do limite")}
           </div>
         </div>
         <Icon name="chevron-right" size={18} color="#1A1416" strokeWidth={2.4} />

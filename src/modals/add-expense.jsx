@@ -16,7 +16,9 @@ import { ModalOverlay } from "../ui/modal-base.jsx";
 import { vibrar } from "../lib/haptics.js";
 import { ConfirmModal } from "../ui/confirm-modal.jsx";
 import { COR_POS, COR_AVISO, COR_NEG } from "../lib/colors.js";
-import { formatarValorDigitado, parseValorBR } from "../lib/money-input.js";
+import { formatarValorDigitado, formatarValorInicial, parseValorBR, valorZero } from "../lib/money-input.js";
+import { simboloMoeda } from "../lib/moeda.js";
+import { useT } from "../lib/i18n.jsx";
 
 function hojeISO() {
   const d = new Date();
@@ -30,6 +32,7 @@ const CORES_CAT = [
 
 export function AddExpenseModal({ ctx, params }) {
   const { fechar, salvarTx, adicionarCategoria, excluirCategoria, ehDesktop, txs, mes, orcamentos, preferences } = ctx;
+  const t = useT();
   const editar = params && params.editar;
   // Estado da confirmação de exclusão de categoria personalizada.
   // null = fechado; objeto = abre o modal pra essa categoria.
@@ -39,12 +42,8 @@ export function AddExpenseModal({ ctx, params }) {
   );
   const [valor, setValor] = React.useState(
     editar
-      ? String(
-          (editar.parcelas ? editar.parcelas.valorTotal : editar.valor).toFixed(
-            2,
-          ),
-        ).replace(".", ",")
-      : "0,00",
+      ? formatarValorInicial(editar.parcelas ? editar.parcelas.valorTotal : editar.valor)
+      : valorZero(),
   );
   const [categoria, setCategoria] = React.useState(
     editar ? editar.categoria : "alimentacao",
@@ -212,7 +211,7 @@ export function AddExpenseModal({ ctx, params }) {
               cursor: "pointer",
             }}
           >
-            Cancelar
+            {t("Cancelar")}
           </button>
           <div
             style={{
@@ -222,7 +221,7 @@ export function AddExpenseModal({ ctx, params }) {
               letterSpacing: "-0.01em",
             }}
           >
-            {editar ? "Editar transação" : "Nova transação"}
+            {editar ? t("Editar transação") : t("Nova transação")}
           </div>
           <button
             onClick={salvar}
@@ -241,7 +240,7 @@ export function AddExpenseModal({ ctx, params }) {
               fontFamily: "inherit",
             }}
           >
-            Salvar
+            {t("Salvar")}
           </button>
         </div>
 
@@ -264,7 +263,7 @@ export function AddExpenseModal({ ctx, params }) {
               letterSpacing: 0.6,
             }}
           >
-            Valor
+            {t("Valor")}
           </div>
           <div
             style={{
@@ -285,7 +284,7 @@ export function AddExpenseModal({ ctx, params }) {
                 opacity: ehEntrada ? 0.9 : 1,
               }}
             >
-              {ehEntrada ? "+R$" : "R$"}
+              {ehEntrada ? "+" + simboloMoeda() : simboloMoeda()}
             </span>
             {valor}
           </div>
@@ -297,7 +296,7 @@ export function AddExpenseModal({ ctx, params }) {
             pattern="[0-9]*"
             value={valor.replace(",", "")}
             onChange={(e) => aoDigitar(e.target.value)}
-            aria-label="Valor"
+            aria-label={t("Valor")}
             style={{
               position: "absolute",
               inset: 0,
@@ -324,8 +323,8 @@ export function AddExpenseModal({ ctx, params }) {
             }}
           >
             {[
-              { id: "saida", label: "Saída", icon: "arrow-right", bgSel: "var(--card)", textoSel: "var(--ink)" },
-              { id: "entrada", label: "Entrada", icon: "arrow-left", bgSel: COR_POS, textoSel: "#fff" },
+              { id: "saida", label: t("Saída"), icon: "arrow-right", bgSel: "var(--card)", textoSel: "var(--ink)" },
+              { id: "entrada", label: t("Entrada"), icon: "arrow-left", bgSel: COR_POS, textoSel: "#fff" },
             ].map((opt) => {
               const sel = tipo === opt.id;
               const txtColor = sel ? opt.textoSel : "var(--muted)";
@@ -378,7 +377,7 @@ export function AddExpenseModal({ ctx, params }) {
               padding: "0 4px 8px",
             }}
           >
-            Categoria
+            {t("Categoria")}
           </div>
           <div
             className="carrossel"
@@ -445,7 +444,7 @@ export function AddExpenseModal({ ctx, params }) {
                 <Icon name="plus" size={16} color="var(--muted)" strokeWidth={2.4} />
               </div>
               <span style={{ fontSize: 10, fontWeight: 700, color: "var(--muted)" }}>
-                Nova
+                {t("Nova")}
               </span>
             </button>
           </div>
@@ -498,7 +497,7 @@ export function AddExpenseModal({ ctx, params }) {
                   value={novoNomeCat}
                   onChange={(e) => setNovoNomeCat(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && confirmarNovaCat()}
-                  placeholder="Nome da categoria"
+                  placeholder={t("Nome da categoria")}
                   maxLength={20}
                   autoFocus
                   style={{
@@ -521,7 +520,7 @@ export function AddExpenseModal({ ctx, params }) {
                   <button
                     key={cor}
                     onClick={() => { vibrar(); setNovaCorCat(cor); }}
-                    aria-label={`Cor ${cor}`}
+                    aria-label={t("Cor {cor}", { cor })}
                     style={{
                       width: 26,
                       height: 26,
@@ -580,7 +579,7 @@ export function AddExpenseModal({ ctx, params }) {
                     fontFamily: "inherit",
                   }}
                 >
-                  Cancelar
+                  {t("Cancelar")}
                 </button>
                 <button
                   onClick={confirmarNovaCat}
@@ -597,7 +596,7 @@ export function AddExpenseModal({ ctx, params }) {
                     fontFamily: "inherit",
                   }}
                 >
-                  Criar categoria
+                  {t("Criar categoria")}
                 </button>
               </div>
             </div>
@@ -634,8 +633,8 @@ export function AddExpenseModal({ ctx, params }) {
               }}
             >
               {avisoOrc.excedeu
-                ? `Você excedeu o orçamento de ${CATEGORIAS[categoria].nome}: ${fmtBRL(avisoOrc.projetado)} de ${fmtBRL(avisoOrc.limite)}.`
-                : `Atenção: ${avisoOrc.pct.toFixed(0)}% do orçamento de ${CATEGORIAS[categoria].nome} (${fmtBRL(avisoOrc.projetado)} de ${fmtBRL(avisoOrc.limite)}).`}
+                ? t("Você excedeu o orçamento de {cat}: {proj} de {lim}.", { cat: t(CATEGORIAS[categoria].nome), proj: fmtBRL(avisoOrc.projetado), lim: fmtBRL(avisoOrc.limite) })
+                : t("Atenção: {pct}% do orçamento de {cat} ({proj} de {lim}).", { pct: avisoOrc.pct.toFixed(0), cat: t(CATEGORIAS[categoria].nome), proj: fmtBRL(avisoOrc.projetado), lim: fmtBRL(avisoOrc.limite) })}
             </div>
           </div>
         )}
@@ -645,7 +644,7 @@ export function AddExpenseModal({ ctx, params }) {
           <input
             value={descricao}
             onChange={(e) => setDescricao(e.target.value)}
-            placeholder="Descrição (ex: Mercado, Uber...)"
+            placeholder={t("Descrição (ex: Mercado, Uber...)")}
             style={{
               width: "100%",
               padding: "14px 16px",
@@ -691,7 +690,7 @@ export function AddExpenseModal({ ctx, params }) {
                 color: "var(--muted)",
               }}
             >
-              Data
+              {t("Data")}
             </span>
             <input
               type="date"
@@ -744,7 +743,7 @@ export function AddExpenseModal({ ctx, params }) {
                   color={sel ? "var(--bg)" : "var(--ink)"}
                   strokeWidth={2}
                 />
-                {p.replace("Cartão de ", "")}
+                {t(p.replace("Cartão de ", ""))}
               </button>
             );
           })}
@@ -780,8 +779,8 @@ export function AddExpenseModal({ ctx, params }) {
               }}
             >
               {avisoCartao.excedeu
-                ? `Você excedeu o limite do cartão de crédito: ${fmtBRL(avisoCartao.projetado)} de ${fmtBRL(avisoCartao.limite)}.`
-                : `Atenção: ${avisoCartao.pct.toFixed(0)}% do limite do cartão de crédito (${fmtBRL(avisoCartao.projetado)} de ${fmtBRL(avisoCartao.limite)}).`}
+                ? t("Você excedeu o limite do cartão de crédito: {proj} de {lim}.", { proj: fmtBRL(avisoCartao.projetado), lim: fmtBRL(avisoCartao.limite) })
+                : t("Atenção: {pct}% do limite do cartão de crédito ({proj} de {lim}).", { pct: avisoCartao.pct.toFixed(0), proj: fmtBRL(avisoCartao.projetado), lim: fmtBRL(avisoCartao.limite) })}
             </div>
           </div>
         )}
@@ -827,7 +826,7 @@ export function AddExpenseModal({ ctx, params }) {
               <div
                 style={{ fontSize: 13, fontWeight: 800, color: "var(--ink)" }}
               >
-                Repetir todo mês
+                {t("Repetir todo mês")}
               </div>
               <div
                 style={{
@@ -838,7 +837,7 @@ export function AddExpenseModal({ ctx, params }) {
                   lineHeight: 1.35,
                 }}
               >
-                Útil para assinaturas, aluguel e mensalidades.
+                {t("Útil para assinaturas, aluguel e mensalidades.")}
               </div>
             </div>
             <ToggleSimples ativo={ehRecorrente} onChange={setEhRecorrente} />
@@ -861,7 +860,7 @@ export function AddExpenseModal({ ctx, params }) {
                 <label style={{ display: "flex", alignItems: "center", gap: 10 }}>
                   <Icon name="chart" size={18} color="var(--muted)" strokeWidth={2} />
                   <span style={{ flex: 1, fontSize: 13, fontWeight: 700, color: "var(--muted)" }}>
-                    Reajuste por parcela
+                    {t("Reajuste por parcela")}
                   </span>
                   <input
                     type="text"
@@ -871,7 +870,7 @@ export function AddExpenseModal({ ctx, params }) {
                       setReajuste(e.target.value.replace(/[^0-9.,]/g, ""))
                     }
                     placeholder="0"
-                    aria-label="Porcentagem de reajuste por parcela"
+                    aria-label={t("Porcentagem de reajuste por parcela")}
                     style={{
                       width: 64,
                       textAlign: "right",
@@ -896,8 +895,11 @@ export function AddExpenseModal({ ctx, params }) {
                       lineHeight: 1.5,
                     }}
                   >
-                    1ª parcela {fmtBRL(valorNum)} · 2ª {fmtBRL(valorNum * (1 + reajustePct / 100))}
-                    {" · "}3ª {fmtBRL(valorNum * Math.pow(1 + reajustePct / 100, 2))}
+                    {t("1ª parcela {v1} · 2ª {v2} · 3ª {v3}", {
+                      v1: fmtBRL(valorNum),
+                      v2: fmtBRL(valorNum * (1 + reajustePct / 100)),
+                      v3: fmtBRL(valorNum * Math.pow(1 + reajustePct / 100, 2)),
+                    })}
                   </div>
                 )}
               </div>
@@ -917,7 +919,7 @@ export function AddExpenseModal({ ctx, params }) {
             >
               <Icon name="calendar" size={18} color="var(--muted)" strokeWidth={2} />
               <span style={{ flex: 1, fontSize: 13, fontWeight: 700, color: "var(--muted)" }}>
-                Vence todo dia
+                {t("Vence todo dia")}
               </span>
               <select
                 value={diaVenc}
@@ -953,7 +955,7 @@ export function AddExpenseModal({ ctx, params }) {
             >
               <Icon name="history" size={18} color="var(--muted)" strokeWidth={2} />
               <span style={{ flex: 1, fontSize: 13, fontWeight: 700, color: "var(--muted)" }}>
-                Até
+                {t("Até")}
               </span>
               <select
                 value={fimMes}
@@ -971,7 +973,7 @@ export function AddExpenseModal({ ctx, params }) {
                 }}
               >
                 {MESES.map((nome, idx) => (
-                  <option key={idx} value={idx + 1}>{nome}</option>
+                  <option key={idx} value={idx + 1}>{t(nome)}</option>
                 ))}
               </select>
               <select
@@ -998,11 +1000,10 @@ export function AddExpenseModal({ ctx, params }) {
     </ModalOverlay>
     {excluirCat && (
       <ConfirmModal
-        titulo={`Excluir "${excluirCat.nome}"?`}
-        mensagem={
-          'A categoria será removida e as transações antigas que a usavam ' +
-          'passam a aparecer em "Outros". O orçamento associado, se houver, também é apagado.'
-        }
+        titulo={t("Excluir \"{nome}\"?", { nome: excluirCat.nome })}
+        mensagem={t(
+          'A categoria será removida e as transações antigas que a usavam passam a aparecer em "Outros". O orçamento associado, se houver, também é apagado.'
+        )}
         onCancelar={() => setExcluirCat(null)}
         onConfirmar={confirmarExclusaoCategoria}
       />
@@ -1064,6 +1065,7 @@ function CategoriaBtn({
   onSelecionar,
   onPedirExcluir,
 }) {
+  const t = useT();
   const timerRef = React.useRef(null);
   const longPressFiredRef = React.useRef(false);
   const inicioRef = React.useRef({ x: 0, y: 0 });
@@ -1123,7 +1125,7 @@ function CategoriaBtn({
       onPointerCancel={limpar}
       onPointerLeave={limpar}
       onContextMenu={(e) => podeExcluir && e.preventDefault()}
-      title={podeExcluir ? (ehDesktop ? 'Duplo-clique para excluir' : 'Segure 2s para excluir') : undefined}
+      title={podeExcluir ? (ehDesktop ? t('Duplo-clique para excluir') : t('Segure 2s para excluir')) : undefined}
       style={{
         display: "flex",
         flexDirection: "column",
@@ -1153,7 +1155,7 @@ function CategoriaBtn({
           color: "var(--ink)",
         }}
       >
-        {cat.nome}
+        {t(cat.nome)}
       </span>
     </button>
   );

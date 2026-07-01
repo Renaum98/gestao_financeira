@@ -3,9 +3,10 @@
 // reaproveitar os do mês ativo, simplificando o uso no carrossel.
 
 import React from "react";
-import { fmtBRL, fmtBRLCompacto, rotuloMes } from "../../data.js";
+import { fmtBRL, fmtBRLCompacto, rotuloMesT } from "../../data.js";
 import { SeletorMes } from "../../ui/common.jsx";
 import { calcularSaldoMes } from "../../lib/saldo-mes.js";
+import { useT } from "../../lib/i18n.jsx";
 
 export function CardSaldo({
   mesCard,
@@ -22,6 +23,7 @@ export function CardSaldo({
   ehCompartilhado,
   partnerNome,
 }) {
+  const t = useT();
   const {
     total,
     totalAnt,
@@ -110,7 +112,7 @@ export function CardSaldo({
         }}
       >
         <div style={{ fontSize: 13, fontWeight: 600, opacity: 0.85 }}>
-          Gasto em {rotuloMes(mesCard)}
+          {t("Gasto em {mes}", { mes: rotuloMesT(t, mesCard) })}
         </div>
         <SeletorMes mes={mesCard} setMes={setMes} todosMeses={todosMeses} />
       </div>
@@ -151,7 +153,7 @@ export function CardSaldo({
           >
             <span>{delta >= 0 ? "▲" : "▼"}</span>
             <span>{Math.abs(delta).toFixed(1)}%</span>
-            <span style={{ opacity: 0.8, fontWeight: 600 }}>vs. mês anterior</span>
+            <span style={{ opacity: 0.8, fontWeight: 600 }}>{t("vs. mês anterior")}</span>
           </div>
         )}
       </div>
@@ -167,19 +169,19 @@ export function CardSaldo({
         }}
       >
         <div>
-          <div style={{ fontSize: 11, opacity: 0.8, fontWeight: 600 }}>Orçamento</div>
+          <div style={{ fontSize: 11, opacity: 0.8, fontWeight: 600 }}>{t("Orçamento")}</div>
           <div style={{ fontSize: 15, fontWeight: 700, marginTop: 2 }}>
             {fmtBRL(orcTotal, ocultar)}
           </div>
           {temEntrada && (
             <div style={{ fontSize: 10, fontWeight: 700, opacity: 0.85, marginTop: 2 }}>
-              +{fmtBRL(entradas, ocultar)} entradas
+              +{fmtBRL(entradas, ocultar)} {t("entradas")}
             </div>
           )}
         </div>
         <div style={{ textAlign: "right" }}>
           <div style={{ fontSize: 11, opacity: 0.8, fontWeight: 600 }}>
-            {restante >= 0 ? "Restante" : "Acima do orçamento"}
+            {restante >= 0 ? t("Restante") : t("Acima do orçamento")}
           </div>
           <div
             style={{
@@ -215,9 +217,9 @@ export function CardSaldo({
               textTransform: "uppercase",
             }}
           >
-            <span>{partnerNome || "Parceiro"}</span>
+            <span>{partnerNome || t("Parceiro")}</span>
             <span style={{ opacity: 0.85 }}>
-              {fmtBRLCompacto(totalParceiro, ocultar)} gasto
+              {fmtBRLCompacto(totalParceiro, ocultar)} {t("gasto")}
             </span>
           </div>
           <div
@@ -230,14 +232,14 @@ export function CardSaldo({
               opacity: 0.85,
             }}
           >
-            <span>Orçamento {fmtBRLCompacto(orcTotalParceiro, ocultar)}</span>
+            <span>{t("Orçamento")} {fmtBRLCompacto(orcTotalParceiro, ocultar)}</span>
             <span
               style={{
                 color: restanteParceiro >= 0 ? "#D9F5C8" : "#FFD0D9",
                 fontWeight: 700,
               }}
             >
-              {restanteParceiro >= 0 ? "Resta " : "Acima "}
+              {restanteParceiro >= 0 ? t("Resta ") : t("Acima ")}
               {fmtBRLCompacto(Math.abs(restanteParceiro), ocultar)}
             </span>
           </div>
@@ -262,7 +264,7 @@ export function CardSaldo({
                 textTransform: "uppercase",
               }}
             >
-              Disponível juntos
+              {t("Disponível juntos")}
             </span>
             <span
               style={{

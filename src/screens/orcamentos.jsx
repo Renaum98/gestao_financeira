@@ -10,11 +10,15 @@ import {
   formatarValorDigitado,
   formatarValorInicial,
   parseValorBR,
+  valorZero,
 } from '../lib/money-input.js';
+import { simboloMoeda } from '../lib/moeda.js';
 import { mesCorrente } from '../lib/orcamento.js';
+import { useT } from '../lib/i18n.jsx';
 
 export function OrcamentosScreen({ ctx }) {
   const { txs, ocultar, voltar, orcamentos, setOrcamentos, preferences, setPreferences, ehDesktop, caixinhas, usuario } = ctx;
+  const t = useT();
 
   // Orçamento é sempre do mês corrente — não do mês navegável do dashboard.
   // Assim, na virada do mês os gastos (geral, por categoria e por forma de
@@ -52,13 +56,13 @@ export function OrcamentosScreen({ ctx }) {
   const pctGeral = orcMensal > 0 ? (totalGasto / orcMensal) * 100 : 0;
 
   const [editandoTotal, setEditandoTotal] = React.useState(false);
-  const [tempTotal, setTempTotal] = React.useState('0,00');
+  const [tempTotal, setTempTotal] = React.useState(valorZero());
 
   const [editandoCat, setEditandoCat] = React.useState(null);
-  const [tempCat, setTempCat] = React.useState('0,00');
+  const [tempCat, setTempCat] = React.useState(valorZero());
 
   const [editandoCartao, setEditandoCartao] = React.useState(false);
-  const [tempCartao, setTempCartao] = React.useState('0,00');
+  const [tempCartao, setTempCartao] = React.useState(valorZero());
 
   // Limite só para o cartão de crédito — não faz sentido limitar Pix/dinheiro.
   const gastoCartao = txMes.reduce(
@@ -87,7 +91,7 @@ export function OrcamentosScreen({ ctx }) {
 
   return (
     <div style={{ paddingBottom: "var(--pad-bottom)" }}>
-      <TopBar voltar={ehDesktop ? undefined : voltar} titulo="Orçamentos" />
+      <TopBar voltar={ehDesktop ? undefined : voltar} titulo={t("Orçamentos")} />
 
       {/* Card principal — total mensal editável */}
       <div style={{ padding: '4px 20px 0' }}>
@@ -97,7 +101,7 @@ export function OrcamentosScreen({ ctx }) {
         }}>
           <div style={{ position: 'absolute', right: -30, top: -30, width: 120, height: 120, borderRadius: '50%', background: 'rgba(255,255,255,0.08)' }} />
           <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div style={{ fontSize: 12, fontWeight: 600, opacity: 0.85 }}>Orçamento mensal</div>
+            <div style={{ fontSize: 12, fontWeight: 600, opacity: 0.85 }}>{t("Orçamento mensal")}</div>
             {!editandoTotal && (
               <button onClick={() => { setTempTotal(formatarValorInicial(orcBase)); setEditandoTotal(true); }} style={{
                 background: 'rgba(255,255,255,0.18)', border: 'none', cursor: 'pointer',
@@ -105,14 +109,14 @@ export function OrcamentosScreen({ ctx }) {
                 display: 'inline-flex', alignItems: 'center', gap: 5,
                 fontSize: 11, fontWeight: 700, fontFamily: 'inherit',
               }}>
-                <Icon name="edit" size={12} color="#fff" strokeWidth={2.4} /> Editar
+                <Icon name="edit" size={12} color="#fff" strokeWidth={2.4} /> {t("Editar")}
               </button>
             )}
           </div>
 
           {editandoTotal ? (
             <div style={{ position: 'relative', marginTop: 4, display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={{ fontSize: 22, fontWeight: 700, opacity: 0.85 }}>R$</span>
+              <span style={{ fontSize: 22, fontWeight: 700, opacity: 0.85 }}>{simboloMoeda()}</span>
               <input
                 autoFocus
                 type="text"
@@ -144,7 +148,7 @@ export function OrcamentosScreen({ ctx }) {
                   background: 'transparent', border: '1.5px dashed rgba(255,255,255,0.6)',
                   color: '#fff', padding: '8px 14px', borderRadius: 12,
                   fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
-                }}>Definir orçamento</button>
+                }}>{t("Definir orçamento")}</button>
               )}
             </div>
           )}
@@ -159,8 +163,8 @@ export function OrcamentosScreen({ ctx }) {
                 }} />
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8, fontSize: 12, fontWeight: 600 }}>
-                <span>Gasto: {fmtBRLCompacto(totalGasto, ocultar)}</span>
-                <span style={{ opacity: 0.85 }}>{pctGeral.toFixed(0)}% utilizado</span>
+                <span>{t("Gasto: {x}", { x: fmtBRLCompacto(totalGasto, ocultar) })}</span>
+                <span style={{ opacity: 0.85 }}>{t("{pct}% utilizado", { pct: pctGeral.toFixed(0) })}</span>
               </div>
             </div>
           )}
@@ -170,7 +174,7 @@ export function OrcamentosScreen({ ctx }) {
       {/* Limite do cartão de crédito */}
       <div style={{ padding: '20px 20px 0' }}>
         <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: 0.4, padding: '0 4px 10px' }}>
-          Por forma de pagamento
+          {t("Por forma de pagamento")}
         </div>
         <Card style={{ padding: '14px 16px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -181,11 +185,11 @@ export function OrcamentosScreen({ ctx }) {
               <Icon name="card" size={18} color="var(--ink)" strokeWidth={2} />
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--ink)' }}>Cartão de crédito</div>
+              <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--ink)' }}>{t("Cartão de crédito")}</div>
               <div style={{ fontSize: 11, color: 'var(--muted)', fontWeight: 600, marginTop: 1 }}>
                 {temCartao
-                  ? `${fmtBRLCompacto(gastoCartao, ocultar)} de ${fmtBRLCompacto(orcCartao, ocultar)}`
-                  : 'Sem limite definido'}
+                  ? t("{gasto} de {orc}", { gasto: fmtBRLCompacto(gastoCartao, ocultar), orc: fmtBRLCompacto(orcCartao, ocultar) })
+                  : t('Sem limite definido')}
               </div>
             </div>
             {editandoCartao ? (
@@ -237,7 +241,7 @@ export function OrcamentosScreen({ ctx }) {
       {/* Categorias */}
       <div style={{ padding: '20px 20px 0' }}>
         <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: 0.4, padding: '0 4px 10px' }}>
-          Por categoria
+          {t("Por categoria")}
         </div>
         <Card style={{ padding: '4px 16px' }}>
           {catsMinhas().map((c, i) => {
@@ -254,9 +258,9 @@ export function OrcamentosScreen({ ctx }) {
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                   <CatChip catId={c} size={36} />
                   <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--ink)' }}>{cat.nome}</div>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--ink)' }}>{t(cat.nome)}</div>
                     <div style={{ fontSize: 11, color: 'var(--muted)', fontWeight: 600, marginTop: 1 }}>
-                      {fmtBRLCompacto(gasto, ocultar)} de {fmtBRLCompacto(orc, ocultar)}
+                      {t("{gasto} de {orc}", { gasto: fmtBRLCompacto(gasto, ocultar), orc: fmtBRLCompacto(orc, ocultar) })}
                     </div>
                   </div>
                   {editandoCat === c ? (

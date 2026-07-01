@@ -5,11 +5,13 @@ import { CATEGORIAS, fmtBRL } from "../../data.js";
 import { CatChip } from "../../ui/icons.jsx";
 import { Card } from "../../ui/common.jsx";
 import { SecaoTitulo } from "./SecaoTitulo.jsx";
+import { useT } from "../../lib/i18n.jsx";
 
 export function MaioresGastos({ maioresGastos, ocultar }) {
+  const tr = useT();
   return (
     <div style={{ padding: "16px 20px 0" }}>
-      <SecaoTitulo>Maiores gastos do mês</SecaoTitulo>
+      <SecaoTitulo>{tr("Maiores gastos do mês")}</SecaoTitulo>
       <Card style={{ padding: "4px 16px" }}>
         {maioresGastos.map((t, i) => (
           <div
@@ -37,7 +39,7 @@ export function MaioresGastos({ maioresGastos, ocultar }) {
                 {t.descricao}
               </div>
               <div style={{ fontSize: 11, color: "var(--muted)", fontWeight: 600 }}>
-                {t.data.slice(8, 10)}/{t.data.slice(5, 7)} · {CATEGORIAS[t.categoria]?.nome}
+                {t.data.slice(8, 10)}/{t.data.slice(5, 7)} · {tr(CATEGORIAS[t.categoria]?.nome || "Outros")}
               </div>
             </div>
             <div style={{ fontSize: 14, fontWeight: 800, color: "var(--ink)" }}>

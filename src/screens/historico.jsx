@@ -4,23 +4,25 @@ import React from "react";
 import {
   MESES_CURTO,
   fmtBRLCompacto,
-  rotuloMes,
+  rotuloMesT,
   totalGeral,
   txDoMes,
 } from "../data.js";
 import { Icon } from "../ui/icons.jsx";
 import { Card, TopBar } from "../ui/common.jsx";
+import { useT } from "../lib/i18n.jsx";
 
 export function HistoricoScreen({ ctx }) {
   const { txs, todosMeses, ocultar, voltar, irPara, mes, ehDesktop } = ctx;
+  const t = useT();
   const dadosMeses = todosMeses.map((m) => {
-    const t = totalGeral(txDoMes(txs, m));
-    return { mes: m, total: t, count: txDoMes(txs, m).length };
+    const tot = totalGeral(txDoMes(txs, m));
+    return { mes: m, total: tot, count: txDoMes(txs, m).length };
   });
 
   return (
     <div style={{ paddingBottom: "var(--pad-bottom)" }}>
-      <TopBar voltar={ehDesktop ? undefined : voltar} titulo="Histórico" />
+      <TopBar voltar={ehDesktop ? undefined : voltar} titulo={t("Histórico")} />
       <div style={{ padding: "4px 20px 0" }}>
         <div
           style={{
@@ -32,7 +34,7 @@ export function HistoricoScreen({ ctx }) {
             padding: "0 4px 10px",
           }}
         >
-          Meses
+          {t("Meses")}
         </div>
         <Card style={{ padding: "4px 16px" }}>
           {dadosMeses.map((d, i) => (
@@ -66,14 +68,14 @@ export function HistoricoScreen({ ctx }) {
                   {d.mes.split("-")[0].slice(2)}
                 </div>
                 <div style={{ fontSize: 13, letterSpacing: "-0.02em" }}>
-                  {MESES_CURTO[parseInt(d.mes.split("-")[1], 10) - 1]}
+                  {t(MESES_CURTO[parseInt(d.mes.split("-")[1], 10) - 1])}
                 </div>
               </div>
               <div style={{ flex: 1 }}>
                 <div
                   style={{ fontSize: 14, fontWeight: 700, color: "var(--ink)" }}
                 >
-                  {rotuloMes(d.mes)}
+                  {rotuloMesT(t, d.mes)}
                 </div>
                 <div
                   style={{
@@ -83,7 +85,7 @@ export function HistoricoScreen({ ctx }) {
                     marginTop: 2,
                   }}
                 >
-                  {d.count} transações
+                  {t("{count} transações", { count: d.count })}
                 </div>
               </div>
               <div style={{ textAlign: "right" }}>

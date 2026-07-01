@@ -3,8 +3,10 @@
 
 import React from "react";
 import { CardCaixinha } from "../caixinhas.jsx";
+import { useT } from "../../lib/i18n.jsx";
 
 export function CaixinhasPreview({ caixinhas, ocultar, irPara }) {
+  const t = useT();
   if (!caixinhas || caixinhas.length === 0) return null;
 
   return (
@@ -17,7 +19,7 @@ export function CaixinhasPreview({ caixinhas, ocultar, irPara }) {
           padding: "0 4px 8px",
         }}
       >
-        <div style={{ fontSize: 15, fontWeight: 700, color: "var(--ink)" }}>Caixinhas</div>
+        <div style={{ fontSize: 15, fontWeight: 700, color: "var(--ink)" }}>{t("Caixinhas")}</div>
         <button
           onClick={() => irPara("caixinhas")}
           style={{
@@ -30,7 +32,7 @@ export function CaixinhasPreview({ caixinhas, ocultar, irPara }) {
             padding: 0,
           }}
         >
-          Ver todas →
+          {t("Ver todas →")}
         </button>
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>

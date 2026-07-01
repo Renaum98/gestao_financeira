@@ -6,43 +6,45 @@
 import React from 'react';
 import { Icon } from '../ui/icons.jsx';
 import { COR_AVISO } from '../lib/colors.js';
+import { useT } from '../lib/i18n.jsx';
 
 export function Onboarding({ onFim }) {
+  const t = useT();
   const [slide, setSlide] = React.useState(0);
   const slides = [
     {
       id: 'welcome',
       cor1: '#D6C5FF', cor2: '#9B7BFF',
-      titulo: 'Suas finanças,\nfinalmente claras',
-      subtitulo: 'Tenha controle completo em poucos minutos por mês.',
+      titulo: t('Suas finanças,\nfinalmente claras'),
+      subtitulo: t('Tenha controle completo em poucos minutos por mês.'),
       Ilustracao: IlustracaoBoasVindas,
     },
     {
       id: 'lancar',
       cor1: '#FFD7B5', cor2: '#FF9B6E',
-      titulo: 'Lance gastos\ne entradas',
-      subtitulo: 'Categorize ou marque como recorrente — tudo em segundos.',
+      titulo: t('Lance gastos\ne entradas'),
+      subtitulo: t('Categorize ou marque como recorrente — tudo em segundos.'),
       Ilustracao: IlustracaoAdd,
     },
     {
       id: 'analisar',
       cor1: '#C8F0DC', cor2: '#3FCB9A',
-      titulo: 'Veja para onde\nseu dinheiro vai',
-      subtitulo: 'Gráficos, evolução mensal e comparações automáticas.',
+      titulo: t('Veja para onde\nseu dinheiro vai'),
+      subtitulo: t('Gráficos, evolução mensal e comparações automáticas.'),
       Ilustracao: IlustracaoAnalise,
     },
     {
       id: 'planejar',
       cor1: '#FCE7A8', cor2: COR_AVISO,
-      titulo: 'Planeje e guarde\npara suas metas',
-      subtitulo: 'Defina orçamentos e crie caixinhas pra alcançar seus objetivos.',
+      titulo: t('Planeje e guarde\npara suas metas'),
+      subtitulo: t('Defina orçamentos e crie caixinhas pra alcançar seus objetivos.'),
       Ilustracao: IlustracaoPlanejar,
     },
     {
       id: 'done',
       cor1: '#E2D8FF', cor2: '#6E4FF6',
-      titulo: 'Tudo pronto.\nVamos começar?',
-      subtitulo: 'Você pode rever este tour em Perfil → Refazer tour.',
+      titulo: t('Tudo pronto.\nVamos começar?'),
+      subtitulo: t('Você pode rever este tour em Perfil → Refazer tour.'),
       Ilustracao: IlustracaoPronto,
     },
   ];
@@ -62,7 +64,7 @@ export function Onboarding({ onFim }) {
           <button onClick={onFim} style={{
             background: 'transparent', border: 'none', color: 'var(--muted)',
             fontWeight: 700, fontSize: 14, cursor: 'pointer', fontFamily: 'inherit',
-          }}>Pular</button>
+          }}>{t('Pular')}</button>
         )}
       </div>
 
@@ -117,7 +119,7 @@ export function Onboarding({ onFim }) {
             <button
               key={i}
               onClick={() => setSlide(i)}
-              aria-label={`Ir para slide ${i + 1}`}
+              aria-label={t('Ir para slide {n}', { n: i + 1 })}
               style={{
                 width: i === slide ? 22 : 6, height: 6, borderRadius: 3,
                 background: i === slide ? 'var(--primary)' : 'var(--linha)',
@@ -136,7 +138,7 @@ export function Onboarding({ onFim }) {
             letterSpacing: '-0.01em', fontFamily: 'inherit',
           }}
         >
-          {ultimo ? 'Começar' : 'Continuar'}
+          {ultimo ? t('Começar') : t('Continuar')}
         </button>
       </div>
     </div>
@@ -227,6 +229,7 @@ function IlustracaoBoasVindas({ cor }) {
 }
 
 function IlustracaoAdd({ cor }) {
+  const t = useT();
   const [val, setVal] = React.useState(0);
   React.useEffect(() => {
     const alvo = 8990;
@@ -260,11 +263,11 @@ function IlustracaoAdd({ cor }) {
         <div style={{
           flex: 1, textAlign: 'center', padding: '6px 0',
           fontSize: 11, fontWeight: 800, color: 'var(--ink)', position: 'relative',
-        }}>Saída</div>
+        }}>{t('Saída')}</div>
         <div style={{
           flex: 1, textAlign: 'center', padding: '6px 0',
           fontSize: 11, fontWeight: 800, color: 'var(--ink)', position: 'relative',
-        }}>Entrada</div>
+        }}>{t('Entrada')}</div>
       </div>
 
       {/* Valor */}
@@ -272,7 +275,7 @@ function IlustracaoAdd({ cor }) {
         <div style={{
           fontSize: 10, fontWeight: 700, color: 'var(--muted)',
           textTransform: 'uppercase', letterSpacing: 0.5,
-        }}>Valor</div>
+        }}>{t('Valor')}</div>
         <div style={{
           fontSize: 30, fontWeight: 800, color: 'var(--ink)',
           letterSpacing: '-0.03em', marginTop: 2, fontVariantNumeric: 'tabular-nums',
@@ -344,6 +347,7 @@ function IlustracaoAnalise({ cor }) {
 function IlustracaoPlanejar({ cor }) {
   // Combina o cofrinho (caixinhas) com uma barra de progresso (orçamento) —
   // representa visualmente as duas funcionalidades de planejamento.
+  const t = useT();
   return (
     <div style={{ position: 'relative', width: 180, height: 160 }}>
       {/* Moedas caindo (looping) */}
@@ -386,7 +390,7 @@ function IlustracaoPlanejar({ cor }) {
           display: 'flex', justifyContent: 'space-between',
           fontSize: 9, fontWeight: 700, color: 'var(--muted)', marginBottom: 4,
         }}>
-          <span>Meta</span>
+          <span>{t('Meta')}</span>
           <span>70%</span>
         </div>
         <div style={{

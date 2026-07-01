@@ -3,8 +3,10 @@
 import React from 'react';
 import { COR_NEG } from '../../lib/colors.js';
 import { aceitarConvite, recusarConvite } from '../../lib/partnership.js';
+import { useT } from '../../lib/i18n.jsx';
 
 export function ConviteItem({ convite, meuUid, meuNome, meuEmail, primeiro }) {
+  const t = useT();
   const [acao, setAcao] = React.useState(null); // 'aceitando' | 'recusando' | null
   const [erro, setErro] = React.useState('');
   const inicial = (convite.fromNome?.trim()[0] || '?').toUpperCase();
@@ -16,7 +18,7 @@ export function ConviteItem({ convite, meuUid, meuNome, meuEmail, primeiro }) {
       await aceitarConvite({ invite: convite, meuUid, meuNome, meuEmail });
       // O onSnapshot remove o convite da lista automaticamente.
     } catch (err) {
-      setErro(err?.message || 'Não foi possível aceitar.');
+      setErro(err?.message || t('Não foi possível aceitar.'));
       setAcao(null);
     }
   };
@@ -27,7 +29,7 @@ export function ConviteItem({ convite, meuUid, meuNome, meuEmail, primeiro }) {
     try {
       await recusarConvite(convite.id);
     } catch (err) {
-      setErro('Não foi possível recusar.');
+      setErro(t('Não foi possível recusar.'));
       setAcao(null);
     }
   };
@@ -66,7 +68,7 @@ export function ConviteItem({ convite, meuUid, meuNome, meuEmail, primeiro }) {
               textOverflow: 'ellipsis',
             }}
           >
-            {convite.fromNome || 'Alguém'} te convidou
+            {t('{nome} te convidou', { nome: convite.fromNome || t('Alguém') })}
           </div>
           <div
             style={{
@@ -79,7 +81,7 @@ export function ConviteItem({ convite, meuUid, meuNome, meuEmail, primeiro }) {
               textOverflow: 'ellipsis',
             }}
           >
-            {convite.fromEmail || 'Conta compartilhada'}
+            {convite.fromEmail || t('Conta compartilhada')}
           </div>
         </div>
       </div>
@@ -104,7 +106,7 @@ export function ConviteItem({ convite, meuUid, meuNome, meuEmail, primeiro }) {
             opacity: acao === 'recusando' ? 0.6 : 1,
           }}
         >
-          {acao === 'recusando' ? 'Recusando…' : 'Recusar'}
+          {acao === 'recusando' ? t('Recusando…') : t('Recusar')}
         </button>
         <button
           onClick={aceitar}
@@ -124,7 +126,7 @@ export function ConviteItem({ convite, meuUid, meuNome, meuEmail, primeiro }) {
             opacity: acao === 'aceitando' ? 0.7 : 1,
           }}
         >
-          {acao === 'aceitando' ? 'Aceitando…' : 'Aceitar'}
+          {acao === 'aceitando' ? t('Aceitando…') : t('Aceitar')}
         </button>
       </div>
     </div>

@@ -7,8 +7,10 @@ import { Icon } from "../../ui/icons.jsx";
 import { Card } from "../../ui/common.jsx";
 import { COR_NEG } from "../../lib/colors.js";
 import { vibrar } from "../../lib/haptics.js";
+import { useT } from "../../lib/i18n.jsx";
 
 export function ProximasVencer({ proximas, ocultar, irPara, onSelecionar, ehDesktop }) {
+  const t = useT();
   if (proximas.length === 0) return null;
 
   return (
@@ -22,7 +24,7 @@ export function ProximasVencer({ proximas, ocultar, irPara, onSelecionar, ehDesk
         }}
       >
         <div style={{ fontSize: 15, fontWeight: 700, color: "var(--ink)" }}>
-          Próximas a vencer
+          {t("Próximas a vencer")}
         </div>
         <button
           onClick={() => irPara("recorrentes")}
@@ -36,7 +38,7 @@ export function ProximasVencer({ proximas, ocultar, irPara, onSelecionar, ehDesk
             padding: 0,
           }}
         >
-          Ver tudo →
+          {t("Ver tudo →")}
         </button>
       </div>
       <Card style={{ padding: "4px 16px" }}>
@@ -47,7 +49,7 @@ export function ProximasVencer({ proximas, ocultar, irPara, onSelecionar, ehDesk
           );
           const urgente = diasAte <= 3;
           const rotuloPrazo =
-            diasAte <= 0 ? "Hoje" : diasAte === 1 ? "Amanhã" : `Em ${diasAte} dias`;
+            diasAte <= 0 ? t("Hoje") : diasAte === 1 ? t("Amanhã") : t("Em {n} dias", { n: diasAte });
           return (
             <div
               key={tx.id}
@@ -99,7 +101,7 @@ export function ProximasVencer({ proximas, ocultar, irPara, onSelecionar, ehDesk
                     textTransform: "uppercase",
                   }}
                 >
-                  {MESES_CURTO[mm - 1]}
+                  {t(MESES_CURTO[mm - 1])}
                 </div>
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
@@ -130,7 +132,7 @@ export function ProximasVencer({ proximas, ocultar, irPara, onSelecionar, ehDesk
                   <span style={{ opacity: 0.5 }}>·</span>
                   {tx.parcelas ? (
                     <span>
-                      Parcela {tx.parcelas.atual}/{tx.parcelas.total}
+                      {t("Parcela {atual}/{total}", { atual: tx.parcelas.atual, total: tx.parcelas.total })}
                     </span>
                   ) : (
                     <span style={{ display: "inline-flex", alignItems: "center", gap: 3 }}>
@@ -140,7 +142,7 @@ export function ProximasVencer({ proximas, ocultar, irPara, onSelecionar, ehDesk
                         color={urgente ? COR_NEG : "var(--muted)"}
                         strokeWidth={2.4}
                       />
-                      Mensal
+                      {t("Mensal")}
                     </span>
                   )}
                 </div>

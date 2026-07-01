@@ -3,11 +3,14 @@
 import React from "react";
 import { fmtBRL } from "../../data.js";
 import { COR_NEG } from "../../lib/colors.js";
-import { formatarValorDigitado, formatarValorInicial, parseValorBR } from "../../lib/money-input.js";
+import { formatarValorDigitado, formatarValorInicial, parseValorBR, valorZero } from "../../lib/money-input.js";
+import { simboloMoeda } from "../../lib/moeda.js";
 import { ModalShell } from "./ModalShell.jsx";
+import { useT } from "../../lib/i18n.jsx";
 
 export function ModalResgate({ cor, nome, disponivel, onFechar, onSalvar }) {
-  const [valor, setValor] = React.useState("0,00");
+  const t = useT();
+  const [valor, setValor] = React.useState(valorZero());
 
   const aoDigitar = (texto) => setValor(formatarValorDigitado(texto));
   const valorNum = parseValorBR(valor);
@@ -22,7 +25,7 @@ export function ModalResgate({ cor, nome, disponivel, onFechar, onSalvar }) {
   };
 
   return (
-    <ModalShell titulo={`Resgatar de "${nome}"`} onFechar={onFechar} onSalvar={salvar} salvarAtivo={podeSalvar} corAcento={cor}>
+    <ModalShell titulo={t("Resgatar de \"{nome}\"", { nome })} onFechar={onFechar} onSalvar={salvar} salvarAtivo={podeSalvar} corAcento={cor}>
       <label
         style={{
           display: "block",
@@ -41,7 +44,7 @@ export function ModalResgate({ cor, nome, disponivel, onFechar, onSalvar }) {
             letterSpacing: 0.6,
           }}
         >
-          Valor a resgatar
+          {t("Valor a resgatar")}
         </div>
         <div
           style={{
@@ -54,7 +57,7 @@ export function ModalResgate({ cor, nome, disponivel, onFechar, onSalvar }) {
           }}
         >
           <span style={{ fontSize: 20, color: "var(--muted)", marginRight: 6, verticalAlign: "top" }}>
-            R$
+            {simboloMoeda()}
           </span>
           {valor}
         </div>
@@ -65,7 +68,7 @@ export function ModalResgate({ cor, nome, disponivel, onFechar, onSalvar }) {
           pattern="[0-9]*"
           value={valor.replace(",", "")}
           onChange={(e) => aoDigitar(e.target.value)}
-          aria-label="Valor a resgatar"
+          aria-label={t("Valor a resgatar")}
           style={{
             position: "absolute",
             inset: 0,
@@ -102,7 +105,7 @@ export function ModalResgate({ cor, nome, disponivel, onFechar, onSalvar }) {
               letterSpacing: 0.4,
             }}
           >
-            Disponível na caixinha
+            {t("Disponível na caixinha")}
           </div>
           <div
             style={{
@@ -132,13 +135,13 @@ export function ModalResgate({ cor, nome, disponivel, onFechar, onSalvar }) {
             fontFamily: "inherit",
           }}
         >
-          Tudo
+          {t("Tudo")}
         </button>
       </div>
 
       {excede && (
         <div style={{ marginTop: 10, fontSize: 12, color: COR_NEG, fontWeight: 700, padding: "0 4px" }}>
-          Valor maior que o disponível na caixinha.
+          {t("Valor maior que o disponível na caixinha.")}
         </div>
       )}
 
@@ -154,8 +157,7 @@ export function ModalResgate({ cor, nome, disponivel, onFechar, onSalvar }) {
           lineHeight: 1.45,
         }}
       >
-        O valor volta como uma <strong style={{ color: "var(--ink)" }}>entrada do mês atual</strong> e
-        fica disponível no orçamento.
+        {t("O valor volta como uma ")}<strong style={{ color: "var(--ink)" }}>{t("entrada do mês atual")}</strong>{t(" e fica disponível no orçamento.")}
       </div>
     </ModalShell>
   );

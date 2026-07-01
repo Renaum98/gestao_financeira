@@ -5,9 +5,10 @@ import React from 'react';
 import { MESES_CURTO, fmtBRL } from '../../data.js';
 import { Icon } from '../../ui/icons.jsx';
 import { COR_POS, COR_NEG } from '../../lib/colors.js';
+import { useT } from '../../lib/i18n.jsx';
 
 // Configuração visual por tipo de notificação de parceria.
-function configNotif(notif) {
+function configNotif(notif, t) {
   switch (notif.tipo) {
     case 'parceria-aceita':
       return {
@@ -15,10 +16,10 @@ function configNotif(notif) {
         icone: 'check',
         titulo: (
           <>
-            <strong>{notif.por}</strong> aceitou seu convite!
+            <strong>{notif.por}</strong>{t(' aceitou seu convite!')}
           </>
         ),
-        subtitulo: 'Conta compartilhada ativada.',
+        subtitulo: t('Conta compartilhada ativada.'),
       };
     case 'caixinha-criada':
       return {
@@ -26,7 +27,7 @@ function configNotif(notif) {
         icone: 'piggy',
         titulo: (
           <>
-            <strong>{notif.por}</strong> criou uma caixinha
+            <strong>{notif.por}</strong>{t(' criou uma caixinha')}
           </>
         ),
         subtitulo: notif.caixinhaNome ? `"${notif.caixinhaNome}"` : null,
@@ -37,10 +38,10 @@ function configNotif(notif) {
         icone: 'plus',
         titulo: (
           <>
-            <strong>{notif.por}</strong> depositou {fmtBRL(notif.valor || 0)}
+            <strong>{notif.por}</strong>{t(' depositou {x}', { x: fmtBRL(notif.valor || 0) })}
           </>
         ),
-        subtitulo: notif.caixinhaNome ? `Na caixinha "${notif.caixinhaNome}"` : null,
+        subtitulo: notif.caixinhaNome ? t('Na caixinha "{nome}"', { nome: notif.caixinhaNome }) : null,
       };
     case 'parceria-desfeita':
     default:
@@ -49,7 +50,7 @@ function configNotif(notif) {
         icone: 'close',
         titulo: (
           <>
-            <strong>{notif.por}</strong> desfez a conta compartilhada
+            <strong>{notif.por}</strong>{t(' desfez a conta compartilhada')}
           </>
         ),
         subtitulo: null,
@@ -58,12 +59,13 @@ function configNotif(notif) {
 }
 
 export function NotifParceriaItem({ notif, primeiro, onDispensar }) {
-  const cfg = configNotif(notif);
+  const t = useT();
+  const cfg = configNotif(notif, t);
   const formatarData = (iso) => {
     try {
       const d = new Date(iso);
-      const dn = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'][d.getDay()];
-      return `${dn}, ${d.getDate()} ${MESES_CURTO[d.getMonth()]} · ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+      const dn = t(['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'][d.getDay()]);
+      return `${dn}, ${d.getDate()} ${t(MESES_CURTO[d.getMonth()])} · ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
     } catch {
       return '';
     }
@@ -126,7 +128,7 @@ export function NotifParceriaItem({ notif, primeiro, onDispensar }) {
           cursor: 'pointer',
         }}
       >
-        Entendi
+        {t('Entendi')}
       </button>
     </div>
   );

@@ -4,8 +4,10 @@
 import React from "react";
 import { fmtBRL, fmtBRLCompacto } from "../../data.js";
 import { Icon } from "../../ui/icons.jsx";
+import { useT } from "../../lib/i18n.jsx";
 
 export function CabecalhoCaixinha({ cx, ocultar, atual, rendimento, comRendimento, pct }) {
+  const t = useT();
   return (
     <div
       style={{
@@ -47,7 +49,7 @@ export function CabecalhoCaixinha({ cx, ocultar, atual, rendimento, comRendiment
         </div>
 
         <div style={{ marginTop: 14, fontSize: 12, fontWeight: 600, opacity: 0.85 }}>
-          Você já juntou
+          {t("Você já juntou")}
         </div>
         <div style={{ fontSize: 36, fontWeight: 800, letterSpacing: "-0.03em" }}>
           {fmtBRL(comRendimento, ocultar)}
@@ -91,7 +93,7 @@ export function CabecalhoCaixinha({ cx, ocultar, atual, rendimento, comRendiment
                     letterSpacing: 0.4,
                   }}
                 >
-                  Já rendeu
+                  {t("Já rendeu")}
                 </div>
                 <div style={{ fontSize: 16, fontWeight: 800, letterSpacing: "-0.01em", marginTop: 1 }}>
                   {fmtBRL(rendimento, ocultar)}
@@ -99,8 +101,8 @@ export function CabecalhoCaixinha({ cx, ocultar, atual, rendimento, comRendiment
               </div>
             </div>
             <div style={{ textAlign: "right", fontSize: 10, fontWeight: 700, opacity: 0.85, lineHeight: 1.3 }}>
-              <div>{Number(cx.rendimentoCDI).toFixed(0)}% do CDI</div>
-              <div style={{ opacity: 0.8 }}>Principal {fmtBRL(atual, ocultar)}</div>
+              <div>{t("{x}% do CDI", { x: Number(cx.rendimentoCDI).toFixed(0) })}</div>
+              <div style={{ opacity: 0.8 }}>{t("Principal {x}", { x: fmtBRL(atual, ocultar) })}</div>
             </div>
           </div>
         )}
@@ -127,7 +129,7 @@ export function CabecalhoCaixinha({ cx, ocultar, atual, rendimento, comRendiment
                 fontWeight: 700,
               }}
             >
-              <span style={{ opacity: 0.9 }}>Meta {fmtBRLCompacto(cx.meta, ocultar)}</span>
+              <span style={{ opacity: 0.9 }}>{t("Meta {x}", { x: fmtBRLCompacto(cx.meta, ocultar) })}</span>
               <span>{pct.toFixed(0)}%</span>
             </div>
           </>

@@ -6,11 +6,14 @@ import { Icon } from "../ui/icons.jsx";
 import { Card, TopBar } from "../ui/common.jsx";
 import { ConfirmModal } from "../ui/confirm-modal.jsx";
 import { vibrar } from "../lib/haptics.js";
+import { useT } from "../lib/i18n.jsx";
 import { baixarDadosXLSX } from "../lib/export.js";
 import { cancelarConvite } from "../lib/partnership.js";
 import { COR_NEG } from "../lib/colors.js";
 import { ConfigItem } from "./perfil/parts.jsx";
 import { CabecalhoPerfil } from "./perfil/CabecalhoPerfil.jsx";
+import { IdiomaCard } from "./perfil/IdiomaCard.jsx";
+import { MoedaCard } from "./perfil/MoedaCard.jsx";
 import { AparenciaCard } from "./perfil/AparenciaCard.jsx";
 import { ContaCompartilhadaCard } from "./perfil/ContaCompartilhadaCard.jsx";
 import { ConvidarParceiroModal } from "./perfil/ConvidarParceiroModal.jsx";
@@ -25,6 +28,7 @@ export function PerfilScreen({ ctx }) {
     partnerUid, partnerNome, convitesEnviados, desfazerParceria,
     partnershipId,
   } = ctx;
+  const t = useT();
   const nomeConta = usuario?.displayName || "";
 
   const [confirmarSair, setConfirmarSair] = React.useState(false);
@@ -50,7 +54,7 @@ export function PerfilScreen({ ctx }) {
       vibrar(14);
       setBaixar(null);
     } catch (err) {
-      setBaixar((b) => ({ ...b, baixando: false, erro: "Não foi possível gerar o arquivo." }));
+      setBaixar((b) => ({ ...b, baixando: false, erro: t("Não foi possível gerar o arquivo.") }));
     }
   };
 
@@ -61,6 +65,12 @@ export function PerfilScreen({ ctx }) {
       <CabecalhoPerfil preferences={preferences} setPreferences={setPreferences} usuario={usuario} />
 
       <div style={{ padding: "24px 20px 0" }}>
+        <IdiomaCard preferences={preferences} setPreferences={setPreferences} />
+
+        <div style={{ height: 14 }} />
+        <MoedaCard preferences={preferences} setPreferences={setPreferences} />
+
+        <div style={{ height: 14 }} />
         <AparenciaCard preferences={preferences} setPreferences={setPreferences} />
 
         <div style={{ height: 14 }} />
@@ -86,13 +96,13 @@ export function PerfilScreen({ ctx }) {
 
         <div style={{ height: 14 }} />
         <Card style={{ padding: "4px 16px" }}>
-          <ConfigItem icon="piggy" label="Caixinhas" onClick={() => irPara("caixinhas")} />
-          <ConfigItem icon="target" label="Orçamentos" onClick={() => irPara("orcamentos")} />
-          <ConfigItem icon="history" label="Recorrentes" onClick={() => irPara("recorrentes")} />
-          <ConfigItem icon="calendar" label="Histórico" onClick={() => irPara("historico")} />
+          <ConfigItem icon="piggy" label={t("Caixinhas")} onClick={() => irPara("caixinhas")} />
+          <ConfigItem icon="target" label={t("Orçamentos")} onClick={() => irPara("orcamentos")} />
+          <ConfigItem icon="history" label={t("Recorrentes")} onClick={() => irPara("recorrentes")} />
+          <ConfigItem icon="calendar" label={t("Histórico")} onClick={() => irPara("historico")} />
           <ConfigItem
             icon={ocultar ? "eye-off" : "eye"}
-            label="Modo privacidade"
+            label={t("Modo privacidade")}
             toggleAtivo={ocultar}
             onToggle={() => setOcultar(!ocultar)}
           />
@@ -100,8 +110,8 @@ export function PerfilScreen({ ctx }) {
 
         <div style={{ height: 14 }} />
         <Card style={{ padding: "4px 16px" }}>
-          <ConfigItem icon="sparkle" label="Refazer tour" onClick={() => setOnboarding(true)} />
-          <ConfigItem icon="list" label="Baixar dados (.xlsx)" onClick={abrirBaixar} />
+          <ConfigItem icon="sparkle" label={t("Refazer tour")} onClick={() => setOnboarding(true)} />
+          <ConfigItem icon="list" label={t("Baixar dados (.xlsx)")} onClick={abrirBaixar} />
         </Card>
 
         <div style={{ height: 18 }} />
@@ -129,7 +139,7 @@ export function PerfilScreen({ ctx }) {
             <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" />
             <path d="M16 17l5-5-5-5M21 12H9" />
           </svg>
-          Sair da conta
+          {t("Sair da conta")}
         </button>
 
         <button
@@ -153,7 +163,7 @@ export function PerfilScreen({ ctx }) {
           }}
         >
           <Icon name="trash" size={13} color="var(--muted)" strokeWidth={2.2} />
-          Excluir conta permanentemente
+          {t("Excluir conta permanentemente")}
         </button>
 
         <div style={{ padding: "24px 0", textAlign: "center" }}>
@@ -163,9 +173,9 @@ export function PerfilScreen({ ctx }) {
 
       {confirmarSair && (
         <ConfirmModal
-          titulo="Sair da conta?"
-          mensagem="Você precisará entrar novamente com seu e-mail e senha. Os dados continuam salvos na nuvem."
-          textoConfirmar="Sair"
+          titulo={t("Sair da conta?")}
+          mensagem={t("Você precisará entrar novamente com seu e-mail e senha. Os dados continuam salvos na nuvem.")}
+          textoConfirmar={t("Sair")}
           icone="close"
           onCancelar={() => setConfirmarSair(false)}
           onConfirmar={() => {
@@ -177,9 +187,9 @@ export function PerfilScreen({ ctx }) {
 
       {confirmandoDesfazer && (
         <ConfirmModal
-          titulo="Desfazer conta compartilhada?"
-          mensagem={`Vocês deixarão de ver os gastos um do outro. As caixinhas ficarão com você (${partnerNome || "seu parceiro"} perde acesso).`}
-          textoConfirmar={desfazendo ? "Desfazendo…" : "Desfazer"}
+          titulo={t("Desfazer conta compartilhada?")}
+          mensagem={t("Vocês deixarão de ver os gastos um do outro. As caixinhas ficarão com você ({nome} perde acesso).", { nome: partnerNome || t("seu parceiro") })}
+          textoConfirmar={desfazendo ? t("Desfazendo…") : t("Desfazer")}
           icone="close"
           onCancelar={() => {
             if (!desfazendo) setConfirmandoDesfazer(false);

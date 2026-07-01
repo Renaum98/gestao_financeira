@@ -6,9 +6,11 @@ import { fmtBRL } from "../../data.js";
 import { Icon } from "../../ui/icons.jsx";
 import { COR_POS, COR_NEG, COR_POS_FUNDO, COR_NEG_FUNDO } from "../../lib/colors.js";
 import { Card } from "../../ui/common.jsx";
-import { rotuloDataCurto } from "./utils.js";
+import { rotuloDataCurtoT } from "./utils.js";
+import { useT } from "../../lib/i18n.jsx";
 
 export function CardLembranca({ lembranca, ocultar }) {
+  const t = useT();
   if (!lembranca) return null;
 
   return (
@@ -39,36 +41,40 @@ export function CardLembranca({ lembranca, ocultar }) {
       <div style={{ flex: 1 }}>
         {lembranca.completo ? (
           <>
-            <div style={{ fontSize: 14, fontWeight: 800, color: COR_POS }}>Meta alcançada! 🎉</div>
+            <div style={{ fontSize: 14, fontWeight: 800, color: COR_POS }}>{t("Meta alcançada! 🎉")}</div>
             <div style={{ fontSize: 12, color: "var(--muted)", fontWeight: 500, marginTop: 2 }}>
-              Você juntou tudo. Hora de aproveitar.
+              {t("Você juntou tudo. Hora de aproveitar.")}
             </div>
           </>
         ) : lembranca.vencido ? (
           <>
-            <div style={{ fontSize: 14, fontWeight: 800, color: COR_NEG }}>Prazo vencido</div>
+            <div style={{ fontSize: 14, fontWeight: 800, color: COR_NEG }}>{t("Prazo vencido")}</div>
             <div style={{ fontSize: 12, color: "var(--muted)", fontWeight: 500, marginTop: 2 }}>
-              Ainda faltam {fmtBRL(lembranca.faltam, ocultar)}. Reajuste a data ou a meta.
+              {t("Ainda faltam {x}. Reajuste a data ou a meta.", { x: fmtBRL(lembranca.faltam, ocultar) })}
             </div>
           </>
         ) : lembranca.semData ? (
           <>
             <div style={{ fontSize: 14, fontWeight: 800, color: "var(--ink)" }}>
-              Faltam {fmtBRL(lembranca.faltam, ocultar)}
+              {t("Faltam {x}", { x: fmtBRL(lembranca.faltam, ocultar) })}
             </div>
             <div style={{ fontSize: 12, color: "var(--muted)", fontWeight: 500, marginTop: 2 }}>
-              Sem prazo definido. Edite a caixinha para receber uma sugestão de quanto guardar por mês.
+              {t("Sem prazo definido. Edite a caixinha para receber uma sugestão de quanto guardar por mês.")}
             </div>
           </>
         ) : (
           <>
             <div style={{ fontSize: 14, fontWeight: 800, color: "var(--ink)" }}>
-              Guarde {fmtBRL(lembranca.valor, ocultar)} por{" "}
-              {lembranca.tipo === "mensal" ? "mês" : lembranca.tipo === "semanal" ? "semana" : "dia"}
+              {lembranca.tipo === "mensal"
+                ? t("Guarde {x} por mês", { x: fmtBRL(lembranca.valor, ocultar) })
+                : lembranca.tipo === "semanal"
+                  ? t("Guarde {x} por semana", { x: fmtBRL(lembranca.valor, ocultar) })
+                  : t("Guarde {x} por dia", { x: fmtBRL(lembranca.valor, ocultar) })}
             </div>
             <div style={{ fontSize: 12, color: "var(--muted)", fontWeight: 500, marginTop: 2 }}>
-              Para chegar em {rotuloDataCurto(lembranca.dataMeta)} ({lembranca.dias}{" "}
-              {lembranca.dias === 1 ? "dia restante" : "dias restantes"}).
+              {lembranca.dias === 1
+                ? t("Para chegar em {data} ({n} dia restante).", { data: rotuloDataCurtoT(t, lembranca.dataMeta), n: lembranca.dias })
+                : t("Para chegar em {data} ({n} dias restantes).", { data: rotuloDataCurtoT(t, lembranca.dataMeta), n: lembranca.dias })}
             </div>
           </>
         )}

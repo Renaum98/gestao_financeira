@@ -6,6 +6,7 @@ import { rotuloMes } from "../../data.js";
 import { Icon } from "../../ui/icons.jsx";
 import { Z_MODAL } from "../../ui/modal-base.jsx";
 import { COR_NEG } from "../../lib/colors.js";
+import { useT } from "../../lib/i18n.jsx";
 
 function OpcaoBaixar({ label, descricao, selecionado, onClick }) {
   return (
@@ -60,6 +61,7 @@ export function BaixarDadosModal({
   onCancelar,
   onConfirmar,
 }) {
+  const t = useT();
   return createPortal(
     <div
       onClick={baixando ? undefined : onCancelar}
@@ -112,10 +114,10 @@ export function BaixarDadosModal({
           </div>
           <div>
             <div style={{ fontSize: 17, fontWeight: 800, color: "var(--ink)", letterSpacing: "-0.02em" }}>
-              Baixar dados
+              {t("Baixar dados")}
             </div>
             <div style={{ fontSize: 12, color: "var(--muted)", fontWeight: 600, marginTop: 2 }}>
-              Arquivo .xlsx para abrir no Excel ou Google Sheets
+              {t("Arquivo .xlsx para abrir no Excel ou Google Sheets")}
             </div>
           </div>
         </div>
@@ -131,7 +133,7 @@ export function BaixarDadosModal({
             paddingLeft: 2,
           }}
         >
-          Período
+          {t("Período")}
         </div>
 
         <div
@@ -145,8 +147,8 @@ export function BaixarDadosModal({
           }}
         >
           <OpcaoBaixar
-            label="Todos os dados"
-            descricao="Transações, caixinhas, recorrentes e orçamentos"
+            label={t("Todos os dados")}
+            descricao={t("Transações, caixinhas, recorrentes e orçamentos")}
             selecionado={mesSelecionado === "todos"}
             onClick={() => onSelecionarMes("todos")}
           />
@@ -154,7 +156,7 @@ export function BaixarDadosModal({
             <OpcaoBaixar
               key={m}
               label={rotuloMes(m)}
-              descricao="Apenas transações deste mês"
+              descricao={t("Apenas transações deste mês")}
               selecionado={mesSelecionado === m}
               onClick={() => onSelecionarMes(m)}
             />
@@ -186,7 +188,7 @@ export function BaixarDadosModal({
               opacity: baixando ? 0.6 : 1,
             }}
           >
-            Cancelar
+            {t("Cancelar")}
           </button>
           <button
             onClick={onConfirmar}
@@ -206,7 +208,7 @@ export function BaixarDadosModal({
               opacity: baixando ? 0.7 : 1,
             }}
           >
-            {baixando ? "Gerando…" : "Baixar"}
+            {baixando ? t("Gerando…") : t("Baixar")}
           </button>
         </div>
       </div>

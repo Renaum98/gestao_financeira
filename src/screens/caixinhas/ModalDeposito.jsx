@@ -5,12 +5,15 @@ import React from "react";
 import { fmtBRLCompacto } from "../../data.js";
 import { Icon } from "../../ui/icons.jsx";
 import { COR_POS, COR_NEG, COR_POS_FUNDO } from "../../lib/colors.js";
-import { formatarValorDigitado, parseValorBR } from "../../lib/money-input.js";
+import { formatarValorDigitado, parseValorBR, valorZero } from "../../lib/money-input.js";
+import { simboloMoeda } from "../../lib/moeda.js";
 import { hojeISO } from "./utils.js";
 import { ModalShell, Campo } from "./ModalShell.jsx";
+import { useT } from "../../lib/i18n.jsx";
 
 export function ModalDeposito({ cor, gruposEntrada = [], alocadoPorDescricao = {}, onFechar, onSalvar }) {
-  const [valor, setValor] = React.useState("0,00");
+  const t = useT();
+  const [valor, setValor] = React.useState(valorZero());
   const [data, setData] = React.useState(hojeISO());
   const [origemTipo, setOrigemTipo] = React.useState("orcamento"); // 'orcamento' | 'entrada'
   const [entradaDesc, setEntradaDesc] = React.useState("");
@@ -45,7 +48,7 @@ export function ModalDeposito({ cor, gruposEntrada = [], alocadoPorDescricao = {
   };
 
   return (
-    <ModalShell titulo="Adicionar valor" onFechar={onFechar} onSalvar={salvar} salvarAtivo={podeSalvar} corAcento={cor}>
+    <ModalShell titulo={t("Adicionar valor")} onFechar={onFechar} onSalvar={salvar} salvarAtivo={podeSalvar} corAcento={cor}>
       <label
         style={{
           display: "block",
@@ -64,7 +67,7 @@ export function ModalDeposito({ cor, gruposEntrada = [], alocadoPorDescricao = {
             letterSpacing: 0.6,
           }}
         >
-          Valor
+          {t("Valor")}
         </div>
         <div
           style={{
@@ -77,7 +80,7 @@ export function ModalDeposito({ cor, gruposEntrada = [], alocadoPorDescricao = {
           }}
         >
           <span style={{ fontSize: 20, color: "var(--muted)", marginRight: 6, verticalAlign: "top" }}>
-            R$
+            {simboloMoeda()}
           </span>
           {valor}
         </div>
@@ -88,7 +91,7 @@ export function ModalDeposito({ cor, gruposEntrada = [], alocadoPorDescricao = {
           pattern="[0-9]*"
           value={valor.replace(",", "")}
           onChange={(e) => aoDigitar(e.target.value)}
-          aria-label="Valor do depósito"
+          aria-label={t("Valor do depósito")}
           style={{
             position: "absolute",
             inset: 0,
@@ -102,7 +105,7 @@ export function ModalDeposito({ cor, gruposEntrada = [], alocadoPorDescricao = {
         />
       </label>
 
-      <Campo label="Data">
+      <Campo label={t("Data")}>
         <label
           style={{
             display: "flex",
@@ -115,7 +118,7 @@ export function ModalDeposito({ cor, gruposEntrada = [], alocadoPorDescricao = {
           }}
         >
           <Icon name="calendar" size={16} color="var(--muted)" strokeWidth={2} />
-          <span style={{ flex: 1, fontSize: 13, fontWeight: 700, color: "var(--muted)" }}>Quando</span>
+          <span style={{ flex: 1, fontSize: 13, fontWeight: 700, color: "var(--muted)" }}>{t("Quando")}</span>
           <input
             type="date"
             value={data}
@@ -134,7 +137,7 @@ export function ModalDeposito({ cor, gruposEntrada = [], alocadoPorDescricao = {
         </label>
       </Campo>
 
-      <Campo label="Origem do valor">
+      <Campo label={t("Origem do valor")}>
         <div
           style={{
             display: "flex",
@@ -146,8 +149,8 @@ export function ModalDeposito({ cor, gruposEntrada = [], alocadoPorDescricao = {
           }}
         >
           {[
-            { id: "orcamento", label: "Orçamento" },
-            { id: "entrada", label: "Entrada", disabled: !temEntradas },
+            { id: "orcamento", label: t("Orçamento") },
+            { id: "entrada", label: t("Entrada"), disabled: !temEntradas },
           ].map((opt) => {
             const sel = origemTipo === opt.id;
             return (
@@ -193,7 +196,7 @@ export function ModalDeposito({ cor, gruposEntrada = [], alocadoPorDescricao = {
               lineHeight: 1.4,
             }}
           >
-            Será debitado do orçamento do mês.
+            {t("Será debitado do orçamento do mês.")}
           </div>
         )}
 
@@ -258,13 +261,13 @@ export function ModalDeposito({ cor, gruposEntrada = [], alocadoPorDescricao = {
                       {g.descricao}
                       {g.count > 1 && (
                         <span style={{ color: "var(--muted)", fontWeight: 600 }}>
-                          {" "}· {g.count} lançamentos
+                          {" "}· {t("{n} lançamentos", { n: g.count })}
                         </span>
                       )}
                     </div>
                     <div style={{ fontSize: 11, color: "var(--muted)", fontWeight: 600, marginTop: 1 }}>
-                      disponível {fmtBRLCompacto(g.disponivel)}
-                      {g.alocado > 0 && ` · alocado ${fmtBRLCompacto(g.alocado)}`}
+                      {t("disponível {x}", { x: fmtBRLCompacto(g.disponivel) })}
+                      {g.alocado > 0 && t(" · alocado {x}", { x: fmtBRLCompacto(g.alocado) })}
                     </div>
                   </div>
                 </button>
@@ -275,7 +278,7 @@ export function ModalDeposito({ cor, gruposEntrada = [], alocadoPorDescricao = {
 
         {origemTipo === "entrada" && excedeEntrada && (
           <div style={{ marginTop: 8, fontSize: 12, color: COR_NEG, fontWeight: 700, padding: "0 4px" }}>
-            Valor excede o disponível desta entrada.
+            {t("Valor excede o disponível desta entrada.")}
           </div>
         )}
       </Campo>

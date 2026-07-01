@@ -5,13 +5,15 @@ import React from "react";
 import { fmtBRL } from "../../data.js";
 import { Card } from "../../ui/common.jsx";
 import { SecaoTitulo } from "./SecaoTitulo.jsx";
+import { useT } from "../../lib/i18n.jsx";
 
 export function EvolucaoConjunta({ evolucaoConjunta, maxEvolConjunta, mes, setMes, ocultar, partnerNome }) {
+  const t = useT();
   if (!evolucaoConjunta) return null;
 
   return (
     <div style={{ padding: "16px 20px 0" }}>
-      <SecaoTitulo>Você vs. {partnerNome || "parceiro"}</SecaoTitulo>
+      <SecaoTitulo>{t("Você vs. {nome}", { nome: partnerNome || t("parceiro") })}</SecaoTitulo>
       <Card>
         <div
           style={{
@@ -52,7 +54,7 @@ export function EvolucaoConjunta({ evolucaoConjunta, maxEvolConjunta, mes, setMe
                   }}
                 >
                   <div
-                    title={`Você: ${fmtBRL(e.meu, ocultar)}`}
+                    title={t("Você: {x}", { x: fmtBRL(e.meu, ocultar) })}
                     style={{
                       flex: 1,
                       maxWidth: 16,
@@ -64,7 +66,7 @@ export function EvolucaoConjunta({ evolucaoConjunta, maxEvolConjunta, mes, setMe
                     }}
                   />
                   <div
-                    title={`${partnerNome || "Parceiro"}: ${fmtBRL(e.parceiro, ocultar)}`}
+                    title={t("{nome}: {x}", { nome: partnerNome || t("Parceiro"), x: fmtBRL(e.parceiro, ocultar) })}
                     style={{
                       flex: 1,
                       maxWidth: 16,
@@ -112,7 +114,7 @@ export function EvolucaoConjunta({ evolucaoConjunta, maxEvolConjunta, mes, setMe
                 background: "linear-gradient(180deg, var(--primary), var(--primary-2))",
               }}
             />
-            <span style={{ color: "var(--ink)" }}>Você</span>
+            <span style={{ color: "var(--ink)" }}>{t("Você")}</span>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
             <div
@@ -124,7 +126,7 @@ export function EvolucaoConjunta({ evolucaoConjunta, maxEvolConjunta, mes, setMe
                 border: "1px solid var(--linha)",
               }}
             />
-            <span style={{ color: "var(--muted)" }}>{partnerNome || "Parceiro"}</span>
+            <span style={{ color: "var(--muted)" }}>{partnerNome || t("Parceiro")}</span>
           </div>
         </div>
       </Card>

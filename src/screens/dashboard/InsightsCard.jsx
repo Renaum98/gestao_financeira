@@ -5,8 +5,10 @@
 import React from "react";
 import { Icon } from "../../ui/icons.jsx";
 import { Card } from "../../ui/common.jsx";
+import { useT } from "../../lib/i18n.jsx";
 
 export function InsightsCard({ insights, ehDesktop }) {
+  const t = useT();
   const [insightIdx, setInsightIdx] = React.useState(0);
 
   React.useEffect(() => {
@@ -99,7 +101,7 @@ export function InsightsCard({ insights, ehDesktop }) {
               <Icon name="sparkle" size={14} color="var(--primary)" strokeWidth={2.4} />
             </div>
             <div style={{ fontSize: 14, fontWeight: 700, color: "var(--ink)" }}>
-              Insights do mês
+              {t("Insights do mês")}
             </div>
           </div>
           {insights.length > 1 && (
@@ -108,7 +110,7 @@ export function InsightsCard({ insights, ehDesktop }) {
                 <button
                   key={i}
                   onClick={() => setInsightIdx(i)}
-                  aria-label={`Insight ${i + 1}`}
+                  aria-label={t("Insight {n}", { n: i + 1 })}
                   style={{
                     width: i === insightIdx ? 14 : 6,
                     height: 6,

@@ -5,13 +5,15 @@ import { MESES_CURTO, fmtBRL } from '../../data.js';
 import { Card } from '../../ui/common.jsx';
 import { COR_NEG } from '../../lib/colors.js';
 import { NotifItem, Secao } from './parts.jsx';
-import { diasAte, rotuloPrazo } from './utils.js';
+import { diasAte, rotuloPrazoT } from './utils.js';
+import { useT } from '../../lib/i18n.jsx';
 
 export function SecaoProximas({ proximas, ocultar, ehLida, marcarLida }) {
+  const t = useT();
   if (proximas.length === 0) return null;
 
   return (
-    <Secao titulo="Próximas a vencer" subtitulo="Cobranças nos próximos 7 dias">
+    <Secao titulo={t("Próximas a vencer")} subtitulo={t("Cobranças nos próximos 7 dias")}>
       <Card style={{ padding: '4px 16px' }}>
         {proximas.map((tx, i) => {
           const [, mm, dd] = tx.data.split('-').map(Number);
@@ -59,7 +61,7 @@ export function SecaoProximas({ proximas, ocultar, ehLida, marcarLida }) {
                       textTransform: 'uppercase',
                     }}
                   >
-                    {MESES_CURTO[mm - 1]}
+                    {t(MESES_CURTO[mm - 1])}
                   </div>
                 </div>
               }
@@ -67,9 +69,9 @@ export function SecaoProximas({ proximas, ocultar, ehLida, marcarLida }) {
               subtituloCor={urgente ? COR_NEG : undefined}
               subtitulo={
                 <>
-                  {rotuloPrazo(n)}
+                  {rotuloPrazoT(t, n)}
                   <span style={{ opacity: 0.5 }}>·</span>
-                  {tx.parcelas ? `Parcela ${tx.parcelas.atual}/${tx.parcelas.total}` : 'Mensal'}
+                  {tx.parcelas ? t('Parcela {atual}/{total}', { atual: tx.parcelas.atual, total: tx.parcelas.total }) : t('Mensal')}
                 </>
               }
               trailing={

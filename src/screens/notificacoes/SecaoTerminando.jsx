@@ -6,13 +6,15 @@ import { CatChip } from '../../ui/icons.jsx';
 import { Card } from '../../ui/common.jsx';
 import { COR_POS } from '../../lib/colors.js';
 import { NotifItem, Secao } from './parts.jsx';
-import { diasAte, rotuloPrazo } from './utils.js';
+import { diasAte, rotuloPrazoT } from './utils.js';
+import { useT } from '../../lib/i18n.jsx';
 
 export function SecaoTerminando({ terminando, ocultar, ehLida, marcarLida }) {
+  const t = useT();
   if (terminando.length === 0) return null;
 
   return (
-    <Secao titulo="Parcelamentos terminando" subtitulo="Em breve liberam espaço no seu orçamento">
+    <Secao titulo={t("Parcelamentos terminando")} subtitulo={t("Em breve liberam espaço no seu orçamento")}>
       <Card style={{ padding: '4px 16px' }}>
         {terminando.map((tx, i) => {
           const n = diasAte(tx.data);
@@ -24,12 +26,11 @@ export function SecaoTerminando({ terminando, ocultar, ehLida, marcarLida }) {
               onClick={() => marcarLida(tx.id)}
               leading={<CatChip catId={tx.categoria} size={42} />}
               titulo={tx.descricao}
-              subtitulo={
-                <>
-                  Última parcela {rotuloPrazo(n).toLowerCase()} · {tx.parcelas.total}×{' '}
-                  {fmtBRL(tx.parcelas.valorTotal, ocultar)}
-                </>
-              }
+              subtitulo={t("Última parcela {prazo} · {n}× {x}", {
+                prazo: rotuloPrazoT(t, n).toLowerCase(),
+                n: tx.parcelas.total,
+                x: fmtBRL(tx.parcelas.valorTotal, ocultar),
+              })}
               trailing={
                 <div
                   style={{

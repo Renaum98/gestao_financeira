@@ -6,9 +6,11 @@ import { fmtBRL } from "../../data.js";
 import { Icon } from "../../ui/icons.jsx";
 import { COR_NEG, COR_NEG_FUNDO } from "../../lib/colors.js";
 import { Card } from "../../ui/common.jsx";
-import { rotuloDataCurto } from "./utils.js";
+import { rotuloDataCurtoT } from "./utils.js";
+import { useT } from "../../lib/i18n.jsx";
 
 export function HistoricoDepositos({ depositos, cx, ocultar, entradas, caixinhasCompartilhadas, usuario, partnerNome }) {
+  const tr = useT();
   return (
     <>
       <div
@@ -22,22 +24,24 @@ export function HistoricoDepositos({ depositos, cx, ocultar, entradas, caixinhas
         }}
       >
         {depositos.length === 0
-          ? "Nenhum depósito ainda"
-          : `${depositos.length} depósito${depositos.length === 1 ? "" : "s"}`}
+          ? tr("Nenhum depósito ainda")
+          : (depositos.length === 1
+              ? tr("{n} depósito", { n: depositos.length })
+              : tr("{n} depósitos", { n: depositos.length }))}
       </div>
       {depositos.length > 0 && (
         <Card style={{ padding: "4px 16px" }}>
           {depositos.map((d, i) => {
             const ehSaque = d.tipo === "saque" || d.valor < 0;
-            let labelOrigem = "Do orçamento";
+            let labelOrigem = tr("Do orçamento");
             if (ehSaque) {
-              labelOrigem = "Resgatado para entradas";
+              labelOrigem = tr("Resgatado para entradas");
             } else if (d.origem?.tipo === "entrada") {
               let desc = d.origem.descricao;
               if (!desc && d.origem.entradaId) {
                 desc = entradas.find((t) => t.id === d.origem.entradaId)?.descricao;
               }
-              labelOrigem = `Da entrada: ${desc || "removida"}`;
+              labelOrigem = tr("Da entrada: {desc}", { desc: desc || tr("removida") });
             }
             // Só mostra "feito por" se for caixinha compartilhada e tiver tag.
             const feitoPorParceiro =
@@ -77,7 +81,7 @@ export function HistoricoDepositos({ depositos, cx, ocultar, entradas, caixinhas
                   </div>
                   {feitoPorParceiro && (
                     <div
-                      title={partnerNome ? `Por ${partnerNome}` : "Pelo parceiro"}
+                      title={partnerNome ? tr("Por {nome}", { nome: partnerNome }) : tr("Pelo parceiro")}
                       style={{
                         position: "absolute",
                         right: -3,
@@ -117,7 +121,7 @@ export function HistoricoDepositos({ depositos, cx, ocultar, entradas, caixinhas
                       textOverflow: "ellipsis",
                     }}
                   >
-                    {rotuloDataCurto(d.data)} · {labelOrigem}
+                    {rotuloDataCurtoT(tr, d.data)} · {labelOrigem}
                     {feitoPorParceiro && partnerNome && (
                       <>
                         {" · "}

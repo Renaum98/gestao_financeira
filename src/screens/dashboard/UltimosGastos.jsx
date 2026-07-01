@@ -3,8 +3,10 @@
 
 import React from "react";
 import { ItemTransacao, Card } from "../../ui/common.jsx";
+import { useT } from "../../lib/i18n.jsx";
 
 export function UltimosGastos({ recentes, ocultar, irPara }) {
+  const t = useT();
   return (
     <div style={{ padding: "16px 20px 0" }}>
       <div
@@ -16,7 +18,7 @@ export function UltimosGastos({ recentes, ocultar, irPara }) {
         }}
       >
         <div style={{ fontSize: 15, fontWeight: 700, color: "var(--ink)" }}>
-          Últimos gastos
+          {t("Últimos gastos")}
         </div>
         <button
           onClick={() => irPara("gastos")}
@@ -30,13 +32,13 @@ export function UltimosGastos({ recentes, ocultar, irPara }) {
             padding: 0,
           }}
         >
-          Ver todos →
+          {t("Ver todos →")}
         </button>
       </div>
       <Card style={{ padding: "6px 16px" }}>
         {recentes.length === 0 && (
           <div style={{ padding: 24, textAlign: "center", color: "var(--muted)", fontSize: 13 }}>
-            Sem gastos neste mês.
+            {t("Sem gastos neste mês.")}
           </div>
         )}
         {recentes.map((tx, i) => (

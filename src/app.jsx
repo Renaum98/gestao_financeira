@@ -27,6 +27,8 @@ import { vibrar } from "./lib/haptics.js";
 import { useInstallPrompt, InstallPromptModal } from "./ui/install-prompt.jsx";
 import { LoaderTela } from "./ui/loader.jsx";
 import { calcOrcBaseAtual, mesCorrente, mesAnteriorDe } from "./lib/orcamento.js";
+import { I18nProvider, useT, lerIdiomaSalvo, salvarIdioma } from "./lib/i18n.jsx";
+import { setMoedaAtiva, lerMoedaSalva, salvarMoeda } from "./lib/moeda.js";
 
 // LoginScreen fica no bundle principal (primeira tela para deslogados).
 // As demais telas e o modal são carregados sob demanda (code-splitting).
@@ -52,12 +54,13 @@ const AddExpenseModal   = lazyNamed(() => import("./modals/add-expense.jsx"), "A
 const ONBOARDING_KEY = "finca.onboarded";
 
 function TabBar({ tela, irPara, abrirAdd }) {
+  const t = useT();
   const itens = [
-    { id: "inicio", icon: "home", label: "Início" },
-    { id: "gastos", icon: "list", label: "Transações" },
+    { id: "inicio", icon: "home", label: t("Início") },
+    { id: "gastos", icon: "list", label: t("Transações") },
     { id: "add", icon: "plus", label: "", destaque: true },
-    { id: "analise", icon: "chart", label: "Análise" },
-    { id: "perfil", icon: "user", label: "Perfil" },
+    { id: "analise", icon: "chart", label: t("Análise") },
+    { id: "perfil", icon: "user", label: t("Perfil") },
   ];
   return (
     <div
@@ -95,7 +98,7 @@ function TabBar({ tela, irPara, abrirAdd }) {
               <button
                 key={it.id}
                 onClick={abrirAdd}
-                aria-label="Nova transação"
+                aria-label={t("Nova transação")}
                 style={{
                   width: 52,
                   height: 52,
@@ -175,6 +178,7 @@ const NAV_DESKTOP = [
 ];
 
 function Sidebar({ tela, irPara, abrirAdd, usuario, fotoPerfil }) {
+  const t = useT();
   return (
     <aside
       className="glass-surface"
@@ -235,7 +239,7 @@ function Sidebar({ tela, irPara, abrirAdd, usuario, fotoPerfil }) {
         }}
       >
         <Icon name="plus" size={18} color="#fff" strokeWidth={2.6} />
-        Nova Transação
+        {t("Nova Transação")}
       </button>
 
       <nav style={{ display: "flex", flexDirection: "column", gap: 2 }}>
@@ -272,7 +276,7 @@ function Sidebar({ tela, irPara, abrirAdd, usuario, fotoPerfil }) {
                 color={ativo ? "var(--primary)" : "var(--muted)"}
                 strokeWidth={ativo ? 2.4 : 2}
               />
-              {it.label}
+              {t(it.label)}
             </button>
           );
         })}
@@ -400,6 +404,28 @@ export function App() {
   const verificado = !!usuario?.emailVerified;
   const uid = verificado ? usuario.uid : null;
   const cloud = useCloudState(uid);
+
+  // Idioma ativo. Vem de preferences.idioma (sincronizado na nuvem); antes dos
+  // dados carregarem — login, onboarding — usamos o último valor salvo no
+  // localStorage pra abrir já no idioma certo.
+  const idioma =
+    (cloud.ready && cloud.preferences?.idioma) || lerIdiomaSalvo() || "pt";
+  React.useEffect(() => {
+    if (cloud.ready && cloud.preferences?.idioma) {
+      salvarIdioma(cloud.preferences.idioma);
+    }
+  }, [cloud.ready, cloud.preferences?.idioma]);
+
+  // Moeda de exibição (símbolo/formato, sem conversão de câmbio). Aplicada já no
+  // render — antes das telas filhas — pra que fmtBRL leia o valor certo. Quando
+  // preferences.moeda muda (estado React), o app re-renderiza e tudo atualiza.
+  const moeda = (cloud.ready && cloud.preferences?.moeda) || lerMoedaSalva() || "BRL";
+  setMoedaAtiva(moeda);
+  React.useEffect(() => {
+    if (cloud.ready && cloud.preferences?.moeda) {
+      salvarMoeda(cloud.preferences.moeda);
+    }
+  }, [cloud.ready, cloud.preferences?.moeda]);
 
   // Conta compartilhada: escuta convites e finaliza o pareamento do meu lado
   // quando o convite que eu enviei é aceito (ver partnership.js).
@@ -1004,18 +1030,27 @@ export function App() {
 
   // Estados de carga e gateamento
   if (usuario === undefined) return <Splash />; // ainda decidindo se há sessão
-  if (usuario === null) return <LoginScreen />; // deslogado
+  if (usuario === null)
+    return (
+      <I18nProvider lang={idioma}>
+        <LoginScreen />
+      </I18nProvider>
+    ); // deslogado
   if (!usuario.emailVerified)
     return (
-      <VerifyEmailScreen email={usuario.email} onAtualizar={forcarRender} />
+      <I18nProvider lang={idioma}>
+        <VerifyEmailScreen email={usuario.email} onAtualizar={forcarRender} />
+      </I18nProvider>
     );
   if (!cloud.ready) return <Splash />; // logado e verificado, carregando dados
 
   if (onboarding)
     return (
-      <React.Suspense fallback={<Splash />}>
-        <Onboarding onFim={finalizarOnboarding} />
-      </React.Suspense>
+      <I18nProvider lang={idioma}>
+        <React.Suspense fallback={<Splash />}>
+          <Onboarding onFim={finalizarOnboarding} />
+        </React.Suspense>
+      </I18nProvider>
     );
 
   const ctx = {
@@ -1091,6 +1126,7 @@ export function App() {
 
   if (ehDesktop) {
     return (
+      <I18nProvider lang={idioma}>
       <div
         style={{
           display: "flex",
@@ -1133,10 +1169,12 @@ export function App() {
           </React.Suspense>
         )}
       </div>
+      </I18nProvider>
     );
   }
 
   return (
+    <I18nProvider lang={idioma}>
     <div
       style={{
         minHeight: "100vh",
@@ -1170,6 +1208,7 @@ export function App() {
         />
       )}
     </div>
+    </I18nProvider>
   );
 }
 

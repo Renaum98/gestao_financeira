@@ -8,11 +8,13 @@ import { Card } from "../../ui/common.jsx";
 import { BarraProgresso } from "../../ui/charts.jsx";
 import { COR_POS as VERDE, COR_NEG as VERMELHO } from "../../lib/colors.js";
 import { SecaoTitulo } from "./SecaoTitulo.jsx";
+import { useT } from "../../lib/i18n.jsx";
 
 export function TopCategorias({ dados, porCatAnt, irPara, ocultar }) {
+  const t = useT();
   return (
     <div style={{ padding: "16px 20px 0" }}>
-      <SecaoTitulo>Top categorias</SecaoTitulo>
+      <SecaoTitulo>{t("Top categorias")}</SecaoTitulo>
       <Card style={{ padding: "4px 16px" }}>
         {dados.map((d, i) => {
           const ant = porCatAnt[d.id] || 0;
@@ -32,7 +34,7 @@ export function TopCategorias({ dados, porCatAnt, irPara, ocultar }) {
             >
               <CatChip catId={d.id} size={40} />
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 14, fontWeight: 700, color: "var(--ink)" }}>{d.nome}</div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: "var(--ink)" }}>{t(d.nome)}</div>
                 <div style={{ marginTop: 6 }}>
                   <BarraProgresso valor={d.valor} max={dados[0].valor} cor={d.cor} altura={6} />
                 </div>

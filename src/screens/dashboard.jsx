@@ -8,6 +8,7 @@ import { calcularNotificacoes } from "./notificacoes.jsx";
 import { dispararPendentes } from "../lib/notifications.js";
 import { SimularGastoModal } from "../modals/simular-gasto.jsx";
 import { vibrar } from "../lib/haptics.js";
+import { useT } from "../lib/i18n.jsx";
 import { computeInsights } from "../lib/insights.jsx";
 import { calcularSaldoMes } from "../lib/saldo-mes.js";
 import { CabecalhoDashboard } from "./dashboard/CabecalhoDashboard.jsx";
@@ -43,6 +44,7 @@ export function DashboardScreen({ ctx }) {
     partnerOrcamentoMensal = 0,
     partnerUid,
   } = ctx;
+  const t = useT();
 
   const notifInfo = React.useMemo(
     () =>
@@ -76,7 +78,7 @@ export function DashboardScreen({ ctx }) {
     .trim()
     .split(" ")[0];
   const hojeHora = new Date().getHours();
-  const saudacao = hojeHora < 12 ? "Bom dia" : hojeHora < 18 ? "Boa tarde" : "Boa noite";
+  const saudacao = hojeHora < 12 ? t("Bom dia") : hojeHora < 18 ? t("Boa tarde") : t("Boa noite");
 
   const meuUid = usuario?.uid;
   const ehCompartilhado = !!partnerUid;
@@ -156,8 +158,9 @@ export function DashboardScreen({ ctx }) {
         caixinhas,
         proximas,
         orcCategorias,
+        t,
       }),
-    [txMes, txMesAnt, total, totalAnt, delta, ocultar, mes, orcTotal, restante, entradas, caixinhas, proximas, orcCategorias],
+    [txMes, txMesAnt, total, totalAnt, delta, ocultar, mes, orcTotal, restante, entradas, caixinhas, proximas, orcCategorias, t],
   );
 
   const [simularAberto, setSimularAberto] = React.useState(false);
@@ -234,7 +237,7 @@ export function DashboardScreen({ ctx }) {
           }}
         >
           <Icon name="target" size={14} color="var(--primary)" strokeWidth={2.4} />
-          Simular um gasto
+          {t("Simular um gasto")}
         </button>
       </div>
 

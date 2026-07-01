@@ -6,12 +6,14 @@ import { Icon } from "../../ui/icons.jsx";
 import { vibrar } from "../../lib/haptics.js";
 import { lerFotoPerfil } from "../../lib/imagem.js";
 import { COR_NEG } from "../../lib/colors.js";
+import { useT } from "../../lib/i18n.jsx";
 
 export function CabecalhoPerfil({ preferences, setPreferences, usuario }) {
+  const t = useT();
   const nomeConta = usuario?.displayName || "";
   const email = usuario?.email || "";
   const foto = preferences.fotoUrl || usuario?.photoURL || "";
-  const nomeExibido = preferences.nome?.trim() || nomeConta || "Você";
+  const nomeExibido = preferences.nome?.trim() || nomeConta || t("Você");
   const inicial = (nomeExibido.trim()[0] || "F").toUpperCase();
 
   const [editandoNome, setEditandoNome] = React.useState(false);
@@ -40,7 +42,7 @@ export function CabecalhoPerfil({ preferences, setPreferences, usuario }) {
       setPreferences({ fotoUrl: dataUrl });
       vibrar(14);
     } catch (err) {
-      setErroFoto(err?.message || "Não foi possível usar essa imagem.");
+      setErroFoto(err?.message || t("Não foi possível usar essa imagem."));
     }
     setCarregandoFoto(false);
   };
@@ -56,7 +58,7 @@ export function CabecalhoPerfil({ preferences, setPreferences, usuario }) {
       <input ref={inputFotoRef} type="file" accept="image/*" onChange={aoSelecionarFoto} style={{ display: "none" }} />
       <button
         onClick={escolherFoto}
-        aria-label="Alterar foto de perfil"
+        aria-label={t("Alterar foto de perfil")}
         style={{
           position: "relative",
           width: 88,
@@ -129,7 +131,7 @@ export function CabecalhoPerfil({ preferences, setPreferences, usuario }) {
             fontFamily: "inherit",
           }}
         >
-          Remover foto
+          {t("Remover foto")}
         </button>
       ) : null}
       {erroFoto && (
@@ -148,7 +150,7 @@ export function CabecalhoPerfil({ preferences, setPreferences, usuario }) {
               if (e.key === "Enter") salvarNome();
               if (e.key === "Escape") setEditandoNome(false);
             }}
-            placeholder={nomeConta || "Seu nome"}
+            placeholder={nomeConta || t("Seu nome")}
             style={{
               padding: "8px 12px",
               borderRadius: 12,

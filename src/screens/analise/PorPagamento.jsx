@@ -6,11 +6,13 @@ import { Icon, iconePagamento } from "../../ui/icons.jsx";
 import { Card } from "../../ui/common.jsx";
 import { BarraProgresso } from "../../ui/charts.jsx";
 import { SecaoTitulo } from "./SecaoTitulo.jsx";
+import { useT } from "../../lib/i18n.jsx";
 
 export function PorPagamento({ porPagamento, total, ocultar }) {
+  const t = useT();
   return (
     <div style={{ padding: "16px 20px 0" }}>
-      <SecaoTitulo>Por forma de pagamento</SecaoTitulo>
+      <SecaoTitulo>{t("Por forma de pagamento")}</SecaoTitulo>
       <Card style={{ padding: "4px 16px" }}>
         {porPagamento.map(([nome, valor], i) => (
           <div
@@ -38,7 +40,7 @@ export function PorPagamento({ porPagamento, total, ocultar }) {
               <Icon name={iconePagamento(nome)} size={18} color="var(--ink)" strokeWidth={2} />
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: "var(--ink)" }}>{nome}</div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: "var(--ink)" }}>{t(nome)}</div>
               <div style={{ marginTop: 6 }}>
                 <BarraProgresso valor={valor} max={porPagamento[0][1]} cor="var(--primary)" altura={6} />
               </div>

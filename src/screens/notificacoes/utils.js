@@ -11,3 +11,8 @@ export function diasAte(yyyymmdd) {
 export function rotuloPrazo(n) {
   return n <= 0 ? 'Hoje' : n === 1 ? 'Amanhã' : `Em ${n} dias`;
 }
+
+// Versão traduzível: recebe a função `t` (de useT).
+export function rotuloPrazoT(t, n) {
+  return n <= 0 ? t('Hoje') : n === 1 ? t('Amanhã') : t('Em {n} dias', { n });
+}

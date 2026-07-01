@@ -13,9 +13,11 @@ import { Icon, iconePagamento } from "../ui/icons.jsx";
 import { Card, ItemTransacao, SeletorMes, TopBar } from "../ui/common.jsx";
 import { ConfirmModal } from "../ui/confirm-modal.jsx";
 import { COR_NEG, COR_NEG_FUNDO } from "../lib/colors.js";
+import { useT } from "../lib/i18n.jsx";
 
 export function GastosScreen({ ctx }) {
   const { txs, mes, setMes, todosMeses, ocultar, irPara, excluirTx } = ctx;
+  const t = useT();
   const [filtro, setFiltro] = React.useState("todas");
   const [filtroPag, setFiltroPag] = React.useState("todos");
   const [busca, setBusca] = React.useState("");
@@ -72,12 +74,12 @@ export function GastosScreen({ ctx }) {
   const pags = ["todos", ...PAGAMENTOS.filter((p) => pagsComTx.has(p))];
 
   const rotuloPag = (p) =>
-    p === "todos" ? "Todas" : p.replace("Cartão de ", "");
+    p === "todos" ? t("Todas") : t(p.replace("Cartão de ", ""));
 
   return (
     <div style={{ paddingBottom: "var(--pad-bottom)" }}>
       <TopBar
-        titulo="Transações"
+        titulo={t("Transações")}
         acao={
           <button
             onClick={() => irPara("historico")}
@@ -113,7 +115,7 @@ export function GastosScreen({ ctx }) {
           }}
         >
           <div style={{ fontSize: 13, color: "var(--muted)", fontWeight: 600 }}>
-            {txMes.length} transações ·<br/> Total:{" "}
+            {t("{n} transações ·", { n: txMes.length })}<br/> {t("Total:")}{" "}
             <span style={{ color: "var(--ink)", fontWeight: 700 }}>
               {fmtBRL(total, ocultar)}
             </span>
@@ -151,7 +153,7 @@ export function GastosScreen({ ctx }) {
           <input
             value={busca}
             onChange={(e) => setBusca(e.target.value)}
-            placeholder="Buscar gasto..."
+            placeholder={t("Buscar gasto...")}
             style={{
               flex: 1,
               border: "none",
@@ -231,7 +233,7 @@ export function GastosScreen({ ctx }) {
                     }}
                   />
                 )}
-                {c === "todas" ? "Todas" : cat.nome}
+                {c === "todas" ? t("Todas") : t(cat.nome)}
               </button>
             );
           })}
@@ -315,10 +317,10 @@ export function GastosScreen({ ctx }) {
               />
             </div>
             <div style={{ fontSize: 15, fontWeight: 700, color: "var(--ink)" }}>
-              Nenhum gasto
+              {t("Nenhum gasto")}
             </div>
             <div style={{ fontSize: 13, color: "var(--muted)", marginTop: 4 }}>
-              Tente outro filtro ou adicione um novo.
+              {t("Tente outro filtro ou adicione um novo.")}
             </div>
           </Card>
         ) : (
@@ -365,7 +367,7 @@ export function GastosScreen({ ctx }) {
                         gap: 6,
                       }}
                     >
-                      <Icon name="edit" size={14} strokeWidth={2.2} /> Editar
+                      <Icon name="edit" size={14} strokeWidth={2.2} /> {t("Editar")}
                     </button>
                     <button
                       onClick={() => {
@@ -388,7 +390,7 @@ export function GastosScreen({ ctx }) {
                         gap: 6,
                       }}
                     >
-                      <Icon name="trash" size={14} strokeWidth={2.2} /> Excluir
+                      <Icon name="trash" size={14} strokeWidth={2.2} /> {t("Excluir")}
                     </button>
                   </div>
                 )}
@@ -402,13 +404,13 @@ export function GastosScreen({ ctx }) {
         <ConfirmModal
           titulo={
             confirmarExclusao.parcelas
-              ? "Excluir parcelamento?"
-              : "Excluir este gasto?"
+              ? t("Excluir parcelamento?")
+              : t("Excluir este gasto?")
           }
           mensagem={
             confirmarExclusao.parcelas
-              ? `"${confirmarExclusao.descricao}" foi parcelado em ${confirmarExclusao.parcelas.total}×. Todas as parcelas serão removidas.`
-              : `"${confirmarExclusao.descricao}" (${fmtBRL(confirmarExclusao.valor)}) será removido permanentemente.`
+              ? t("\"{desc}\" foi parcelado em {n}×. Todas as parcelas serão removidas.", { desc: confirmarExclusao.descricao, n: confirmarExclusao.parcelas.total })
+              : t("\"{desc}\" ({valor}) será removido permanentemente.", { desc: confirmarExclusao.descricao, valor: fmtBRL(confirmarExclusao.valor) })
           }
           onCancelar={() => setConfirmarExclusao(null)}
           onConfirmar={() => {

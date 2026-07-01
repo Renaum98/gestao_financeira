@@ -1,31 +1,29 @@
 // recorrentes.jsx — Tela para visualizar, editar e cancelar gastos recorrentes.
 
 import React from 'react';
-import { CATEGORIAS, catsMinhas, PAGAMENTOS, fmtBRL, MESES_CURTO } from '../data.js';
+import { CATEGORIAS, catsMinhas, PAGAMENTOS, fmtBRL, rotuloMesCurtoT } from '../data.js';
 import { CatChip, Icon, iconePagamento } from '../ui/icons.jsx';
 import { Card, TopBar } from '../ui/common.jsx';
 import { ConfirmModal } from '../ui/confirm-modal.jsx';
 import { ModalOverlay } from '../ui/modal-base.jsx';
 import { COR_NEG } from '../lib/colors.js';
 import { vibrar } from '../lib/haptics.js';
-import { formatarValorDigitado, parseValorBR } from '../lib/money-input.js';
-
-function rotuloDataDeRec(yyyymm) {
-  const [a, m] = yyyymm.split('-');
-  return `${MESES_CURTO[parseInt(m,10) - 1]} ${a.slice(2)}`;
-}
+import { formatarValorDigitado, formatarValorInicial, parseValorBR } from '../lib/money-input.js';
+import { simboloMoeda } from '../lib/moeda.js';
+import { useT } from '../lib/i18n.jsx';
 
 export function RecorrentesScreen({ ctx }) {
   const { recorrentes, cancelarRecorrente, editarRecorrente, voltar, ocultar, ehDesktop } = ctx;
+  const t = useT();
   const [confirmar, setConfirmar] = React.useState(null);
   const [editando, setEditando] = React.useState(null);
 
   return (
     <div style={{ paddingBottom: "var(--pad-bottom)" }}>
-      <TopBar voltar={ehDesktop ? undefined : voltar} titulo="Recorrentes" />
+      <TopBar voltar={ehDesktop ? undefined : voltar} titulo={t("Recorrentes")} />
 
       <div style={{ padding: '0 20px 12px', fontSize: 13, color: 'var(--muted)', fontWeight: 500, lineHeight: 1.45 }}>
-        Esses gastos são adicionados automaticamente todo mês. Edite para atualizar do mês atual em diante ou cancele se a cobrança parar.
+        {t("Esses gastos são adicionados automaticamente todo mês. Edite para atualizar do mês atual em diante ou cancele se a cobrança parar.")}
       </div>
 
       <div style={{ padding: '4px 20px 0' }}>
@@ -39,10 +37,10 @@ export function RecorrentesScreen({ ctx }) {
               <Icon name="history" size={26} color="var(--primary)" strokeWidth={2.2} />
             </div>
             <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--ink)' }}>
-              Nenhum gasto recorrente
+              {t("Nenhum gasto recorrente")}
             </div>
             <div style={{ fontSize: 13, color: 'var(--muted)', fontWeight: 500, marginTop: 6, lineHeight: 1.4 }}>
-              Ao adicionar um gasto, marque "Repetir todo mês" para ele aparecer aqui e ser lançado automaticamente nos próximos meses.
+              {t("Ao adicionar um gasto, marque \"Repetir todo mês\" para ele aparecer aqui e ser lançado automaticamente nos próximos meses.")}
             </div>
           </Card>
         ) : (
@@ -60,9 +58,9 @@ export function RecorrentesScreen({ ctx }) {
                       {r.descricao}
                     </div>
                     <div style={{ fontSize: 11, color: 'var(--muted)', fontWeight: 600, marginTop: 2 }}>
-                      {cat.nome} · todo dia {r.dia} · desde {rotuloDataDeRec(r.inicio)}
-                      {r.fim ? ` · até ${rotuloDataDeRec(r.fim)}` : ''}
-                      {r.crescimento ? ` · reajuste ${(r.crescimento * 100).toLocaleString('pt-BR', { maximumFractionDigits: 2 })}% por parcela` : ''}
+                      {t("{cat} · todo dia {dia} · desde {inicio}", { cat: t(cat.nome), dia: r.dia, inicio: rotuloMesCurtoT(t, r.inicio) })}
+                      {r.fim ? t(" · até {fim}", { fim: rotuloMesCurtoT(t, r.fim) }) : ''}
+                      {r.crescimento ? t(" · reajuste {pct}% por parcela", { pct: (r.crescimento * 100).toLocaleString('pt-BR', { maximumFractionDigits: 2 }) }) : ''}
                     </div>
                   </div>
                   <div style={{ textAlign: 'right' }}>
@@ -74,12 +72,12 @@ export function RecorrentesScreen({ ctx }) {
                         background: 'transparent', border: 'none', cursor: 'pointer',
                         padding: 0, color: 'var(--primary)', fontSize: 11, fontWeight: 700,
                         fontFamily: 'inherit',
-                      }}>Editar</button>
+                      }}>{t("Editar")}</button>
                       <button onClick={() => setConfirmar(r)} style={{
                         background: 'transparent', border: 'none', cursor: 'pointer',
                         padding: 0, color: COR_NEG, fontSize: 11, fontWeight: 700,
                         fontFamily: 'inherit',
-                      }}>Cancelar</button>
+                      }}>{t("Cancelar")}</button>
                     </div>
                   </div>
                 </div>
@@ -91,9 +89,9 @@ export function RecorrentesScreen({ ctx }) {
 
       {confirmar && (
         <ConfirmModal
-          titulo={`Cancelar "${confirmar.descricao}"?`}
-          mensagem="Os lançamentos de meses passados continuam no histórico. Os do mês atual em diante serão removidos."
-          textoConfirmar="Cancelar recorrência"
+          titulo={t("Cancelar \"{desc}\"?", { desc: confirmar.descricao })}
+          mensagem={t("Os lançamentos de meses passados continuam no histórico. Os do mês atual em diante serão removidos.")}
+          textoConfirmar={t("Cancelar recorrência")}
           icone="close"
           onCancelar={() => setConfirmar(null)}
           onConfirmar={() => { cancelarRecorrente(confirmar.id); setConfirmar(null); }}
@@ -115,11 +113,10 @@ export function RecorrentesScreen({ ctx }) {
 }
 
 function EditarRecorrenteModal({ rec, onFechar, onSalvar }) {
+  const t = useT();
   const ehEntrada = rec.tipo === 'entrada';
   const [descricao, setDescricao] = React.useState(rec.descricao || '');
-  const [valor, setValor] = React.useState(
-    String((rec.valor || 0).toFixed(2)).replace('.', ','),
-  );
+  const [valor, setValor] = React.useState(formatarValorInicial(rec.valor));
   const [categoria, setCategoria] = React.useState(rec.categoria || 'outros');
   const [pagamento, setPagamento] = React.useState(rec.pagamento || 'Pix');
   const [dia, setDia] = React.useState(rec.dia || 1);
@@ -152,9 +149,9 @@ function EditarRecorrenteModal({ rec, onFechar, onSalvar }) {
         <button onClick={onFechar} style={{
           background: 'transparent', border: 'none', color: 'var(--muted)',
           fontWeight: 700, fontSize: 14, cursor: 'pointer',
-        }}>Cancelar</button>
+        }}>{t("Cancelar")}</button>
         <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--ink)', letterSpacing: '-0.01em' }}>
-          Editar recorrente
+          {t("Editar recorrente")}
         </div>
         <button onClick={salvar} disabled={!podeSalvar} style={{
           background: podeSalvar ? 'var(--primary)' : 'var(--linha)',
@@ -162,7 +159,7 @@ function EditarRecorrenteModal({ rec, onFechar, onSalvar }) {
           border: 'none', padding: '6px 14px', borderRadius: 999,
           fontWeight: 800, fontSize: 13, cursor: podeSalvar ? 'pointer' : 'default',
           fontFamily: 'inherit',
-        }}>Salvar</button>
+        }}>{t("Salvar")}</button>
       </div>
 
       <div style={{
@@ -170,7 +167,7 @@ function EditarRecorrenteModal({ rec, onFechar, onSalvar }) {
         background: 'var(--card-2)', padding: '10px 12px', borderRadius: 10,
         marginBottom: 14,
       }}>
-        As mudanças valem do mês atual em diante.
+        {t("As mudanças valem do mês atual em diante.")}
       </div>
 
       {/* Valor */}
@@ -182,7 +179,7 @@ function EditarRecorrenteModal({ rec, onFechar, onSalvar }) {
           fontSize: 12, fontWeight: 700, color: 'var(--muted)',
           textTransform: 'uppercase', letterSpacing: 0.6,
         }}>
-          Valor
+          {t("Valor")}
         </div>
         <div style={{
           fontSize: 44, fontWeight: 800, color: 'var(--ink)',
@@ -190,7 +187,7 @@ function EditarRecorrenteModal({ rec, onFechar, onSalvar }) {
         }}>
           <span style={{
             fontSize: 22, color: 'var(--muted)', marginRight: 6, verticalAlign: 'top',
-          }}>R$</span>
+          }}>{simboloMoeda()}</span>
           {valor}
         </div>
         <input
@@ -199,7 +196,7 @@ function EditarRecorrenteModal({ rec, onFechar, onSalvar }) {
           pattern="[0-9]*"
           value={valor.replace(',', '')}
           onChange={(e) => aoDigitar(e.target.value)}
-          aria-label="Valor"
+          aria-label={t("Valor")}
           style={{
             position: 'absolute', inset: 0, opacity: 0, border: 'none',
             background: 'transparent', outline: 'none', fontSize: 16, cursor: 'text',
@@ -212,7 +209,7 @@ function EditarRecorrenteModal({ rec, onFechar, onSalvar }) {
         <input
           value={descricao}
           onChange={(e) => setDescricao(e.target.value)}
-          placeholder="Descrição"
+          placeholder={t("Descrição")}
           style={{
             width: '100%', padding: '14px 16px', borderRadius: 14, border: 'none',
             background: 'var(--card-2)', outline: 'none', fontSize: 14, fontWeight: 600,
@@ -229,7 +226,7 @@ function EditarRecorrenteModal({ rec, onFechar, onSalvar }) {
             fontSize: 11, fontWeight: 700, color: 'var(--muted)',
             textTransform: 'uppercase', letterSpacing: 0.4, padding: '0 4px 8px',
           }}>
-            Categoria
+            {t("Categoria")}
           </div>
           <div
             className="carrossel"
@@ -256,7 +253,7 @@ function EditarRecorrenteModal({ rec, onFechar, onSalvar }) {
                 >
                   <CatChip catId={c} size={32} raised />
                   <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--ink)' }}>
-                    {cat.nome}
+                    {t(cat.nome)}
                   </span>
                 </button>
               );
@@ -289,7 +286,7 @@ function EditarRecorrenteModal({ rec, onFechar, onSalvar }) {
                   color={sel ? 'var(--bg)' : 'var(--ink)'}
                   strokeWidth={2}
                 />
-                {p.replace('Cartão de ', '')}
+                {t(p.replace('Cartão de ', ''))}
               </button>
             );
           })}
@@ -304,7 +301,7 @@ function EditarRecorrenteModal({ rec, onFechar, onSalvar }) {
       }}>
         <Icon name="calendar" size={18} color="var(--muted)" strokeWidth={2} />
         <span style={{ flex: 1, fontSize: 13, fontWeight: 700, color: 'var(--muted)' }}>
-          Vence todo dia
+          {t("Vence todo dia")}
         </span>
         <select
           value={dia}

@@ -3,6 +3,7 @@
 
 import React from 'react';
 import { TopBar } from '../../ui/common.jsx';
+import { useT } from '../../lib/i18n.jsx';
 import {
   notificacoesSuportadas,
   permissaoNotificacoes,
@@ -27,6 +28,7 @@ export function NotificacoesScreen({ ctx }) {
     convitesRecebidos = [], usuario, orcamentos = {},
     notificacoesParceria = [], dispensarNotifParceria,
   } = ctx;
+  const t = useT();
   const lidas = preferences?.notifLidas || [];
   const { proximas, terminando, recsRevisar, orcEstourados, orcProximos, idsAtivos } = React.useMemo(
     () => calcularNotificacoes(txs, recorrentes, lidas, convitesRecebidos, notificacoesParceria, orcamentos),
@@ -72,7 +74,7 @@ export function NotificacoesScreen({ ctx }) {
 
   return (
     <div style={{ paddingBottom: 'var(--pad-bottom)' }}>
-      <TopBar voltar={voltar} titulo="Notificações" />
+      <TopBar voltar={voltar} titulo={t("Notificações")} />
 
       {notificacoesSuportadas() && permissao !== 'granted' && permissao !== 'unsupported' && (
         <BannerPermissao permissao={permissao} onAtivar={ativarNotificacoes} />
@@ -81,7 +83,7 @@ export function NotificacoesScreen({ ctx }) {
       {total === 0 && <EstadoVazio />}
 
       {notificacoesParceria.length > 0 && (
-        <Secao titulo="Conta compartilhada" subtitulo="Eventos recentes da parceria">
+        <Secao titulo={t("Conta compartilhada")} subtitulo={t("Eventos recentes da parceria")}>
           <Card style={{ padding: '4px 16px' }}>
             {notificacoesParceria.map((n, i) => (
               <NotifParceriaItem
@@ -96,7 +98,7 @@ export function NotificacoesScreen({ ctx }) {
       )}
 
       {convitesRecebidos.length > 0 && (
-        <Secao titulo="Convites de conta compartilhada" subtitulo="Aceite para visualizar os gastos um do outro">
+        <Secao titulo={t("Convites de conta compartilhada")} subtitulo={t("Aceite para visualizar os gastos um do outro")}>
           <Card style={{ padding: '4px 16px' }}>
             {convitesRecebidos.map((c, i) => (
               <ConviteItem

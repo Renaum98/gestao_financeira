@@ -9,8 +9,10 @@ import { reautenticarComSenha } from "../../lib/firebase.js";
 import { excluirContaCompleta, precisaReautenticar } from "../../lib/account.js";
 import { Loader } from "../../ui/loader.jsx";
 import { COR_NEG, COR_NEG_FUNDO } from "../../lib/colors.js";
+import { useT } from "../../lib/i18n.jsx";
 
 export function ExcluirContaModal({ uid, meuEmail, meuNome, partnershipId, onFechar }) {
+  const t = useT();
   // 'aviso'    → tela inicial com a confirmação textual
   // 'senha'    → pedindo senha (reautenticação)
   // 'apagando' → spinner
@@ -28,7 +30,7 @@ export function ExcluirContaModal({ uid, meuEmail, meuNome, partnershipId, onFec
       if (precisaReautenticar(err)) {
         setEtapa("senha");
       } else {
-        setErro(err?.message || "Não foi possível excluir a conta.");
+        setErro(err?.message || t("Não foi possível excluir a conta."));
         setEtapa("aviso");
       }
     }
@@ -38,7 +40,7 @@ export function ExcluirContaModal({ uid, meuEmail, meuNome, partnershipId, onFec
     e?.preventDefault();
     setErro("");
     if (!senha) {
-      setErro("Digite sua senha.");
+      setErro(t("Digite sua senha."));
       return;
     }
     setEtapa("apagando");
@@ -48,9 +50,9 @@ export function ExcluirContaModal({ uid, meuEmail, meuNome, partnershipId, onFec
     } catch (err) {
       const cod = err?.code;
       if (cod === "auth/wrong-password" || cod === "auth/invalid-credential") {
-        setErro("Senha incorreta.");
+        setErro(t("Senha incorreta."));
       } else {
-        setErro(err?.message || "Não foi possível excluir a conta.");
+        setErro(err?.message || t("Não foi possível excluir a conta."));
       }
       setEtapa("senha");
     }
@@ -109,14 +111,13 @@ export function ExcluirContaModal({ uid, meuEmail, meuNome, partnershipId, onFec
         </div>
 
         <div style={{ fontSize: 18, fontWeight: 800, color: "var(--ink)", letterSpacing: "-0.02em", textAlign: "center" }}>
-          Excluir sua conta?
+          {t("Excluir sua conta?")}
         </div>
 
         {etapa === "aviso" && (
           <>
             <div style={{ fontSize: 13, color: "var(--muted)", fontWeight: 500, marginTop: 8, lineHeight: 1.45, textAlign: "center" }}>
-              Essa ação é <strong style={{ color: "var(--ink)" }}>irreversível</strong>. Todos os seus dados
-              (gastos, caixinhas, orçamentos, recorrentes) serão apagados permanentemente da nuvem.
+              {t("Essa ação é ")}<strong style={{ color: "var(--ink)" }}>{t("irreversível")}</strong>{t(". Todos os seus dados (gastos, caixinhas, orçamentos, recorrentes) serão apagados permanentemente da nuvem.")}
             </div>
             {partnershipId && (
               <div
@@ -131,8 +132,7 @@ export function ExcluirContaModal({ uid, meuEmail, meuNome, partnershipId, onFec
                   lineHeight: 1.4,
                 }}
               >
-                Você está em uma conta compartilhada — seu parceiro receberá uma notificação avisando que
-                você saiu, e as caixinhas dele serão limpas.
+                {t("Você está em uma conta compartilhada — seu parceiro receberá uma notificação avisando que você saiu, e as caixinhas dele serão limpas.")}
               </div>
             )}
             {erro && (
@@ -158,7 +158,7 @@ export function ExcluirContaModal({ uid, meuEmail, meuNome, partnershipId, onFec
                   boxShadow: "0 1px 2px rgba(0,0,0,0.06)",
                 }}
               >
-                Cancelar
+                {t("Cancelar")}
               </button>
               <button
                 type="button"
@@ -177,7 +177,7 @@ export function ExcluirContaModal({ uid, meuEmail, meuNome, partnershipId, onFec
                   boxShadow: "0 4px 14px rgba(214,58,85,0.32)",
                 }}
               >
-                Excluir
+                {t("Excluir")}
               </button>
             </div>
           </>
@@ -186,11 +186,11 @@ export function ExcluirContaModal({ uid, meuEmail, meuNome, partnershipId, onFec
         {etapa === "senha" && (
           <>
             <div style={{ fontSize: 13, color: "var(--muted)", fontWeight: 500, marginTop: 8, lineHeight: 1.45, textAlign: "center" }}>
-              Por segurança, digite sua senha pra confirmar a exclusão.
+              {t("Por segurança, digite sua senha pra confirmar a exclusão.")}
             </div>
             <label style={{ display: "block", marginTop: 14 }}>
               <div style={{ fontSize: 12, fontWeight: 700, color: "var(--muted)", marginBottom: 6, paddingLeft: 2 }}>
-                Senha
+                {t("Senha")}
               </div>
               <input
                 autoFocus
@@ -198,7 +198,7 @@ export function ExcluirContaModal({ uid, meuEmail, meuNome, partnershipId, onFec
                 autoComplete="current-password"
                 value={senha}
                 onChange={(e) => setSenha(e.target.value)}
-                placeholder="Sua senha"
+                placeholder={t("Sua senha")}
                 style={{
                   width: "100%",
                   padding: "13px 14px",
@@ -237,7 +237,7 @@ export function ExcluirContaModal({ uid, meuEmail, meuNome, partnershipId, onFec
                   boxShadow: "0 1px 2px rgba(0,0,0,0.06)",
                 }}
               >
-                Cancelar
+                {t("Cancelar")}
               </button>
               <button
                 type="submit"
@@ -255,7 +255,7 @@ export function ExcluirContaModal({ uid, meuEmail, meuNome, partnershipId, onFec
                   boxShadow: "0 4px 14px rgba(214,58,85,0.32)",
                 }}
               >
-                Confirmar exclusão
+                {t("Confirmar exclusão")}
               </button>
             </div>
           </>
@@ -263,8 +263,8 @@ export function ExcluirContaModal({ uid, meuEmail, meuNome, partnershipId, onFec
 
         {apagando && (
           <div style={{ marginTop: 16, display: "flex", flexDirection: "column", alignItems: "center", gap: 10 }}>
-            <Loader size={44} label="Apagando seus dados" />
-            <div style={{ fontSize: 13, fontWeight: 700, color: "var(--muted)" }}>Apagando seus dados…</div>
+            <Loader size={44} label={t("Apagando seus dados")} />
+            <div style={{ fontSize: 13, fontWeight: 700, color: "var(--muted)" }}>{t("Apagando seus dados…")}</div>
           </div>
         )}
       </form>

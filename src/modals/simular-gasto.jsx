@@ -9,7 +9,9 @@ import { Icon } from "../ui/icons.jsx";
 import { ModalOverlay } from "../ui/modal-base.jsx";
 import { vibrar } from "../lib/haptics.js";
 import { COR_POS, COR_NEG, COR_AVISO } from "../lib/colors.js";
-import { formatarValorDigitado, parseValorBR } from "../lib/money-input.js";
+import { formatarValorDigitado, parseValorBR, valorZero } from "../lib/money-input.js";
+import { simboloMoeda } from "../lib/moeda.js";
+import { useT } from "../lib/i18n.jsx";
 
 export function SimularGastoModal({
   restante = 0,
@@ -18,7 +20,8 @@ export function SimularGastoModal({
   ocultar = false,
   fechar,
 }) {
-  const [valor, setValor] = React.useState("0,00");
+  const t = useT();
+  const [valor, setValor] = React.useState(valorZero());
   const [parcelas, setParcelas] = React.useState(1);
 
   const aoDigitar = (texto) => setValor(formatarValorDigitado(texto));
@@ -38,8 +41,10 @@ export function SimularGastoModal({
           tom: COR_NEG,
           texto: (
             <>
-              Seu orçamento deste mês já está <strong>negativo em {fmtBRL(Math.abs(restante))}</strong>.
-              Esse gasto aumentaria o déficit em <strong>{fmtBRL(valorNum)}</strong>.
+              {t("Seu orçamento deste mês já está ")}
+              <strong>{t("negativo em {x}", { x: fmtBRL(Math.abs(restante)) })}</strong>
+              {t(". Esse gasto aumentaria o déficit em ")}
+              <strong>{fmtBRL(valorNum)}</strong>.
             </>
           ),
         });
@@ -50,8 +55,10 @@ export function SimularGastoModal({
           tom: COR_POS,
           texto: (
             <>
-              <strong>Cabe no orçamento.</strong> Compromete {pct}% do mês e ainda
-              sobrariam <strong>{fmtBRL(sobra)}</strong> até o fim do mês.
+              <strong>{t("Cabe no orçamento.")}</strong>
+              {t(" Compromete {pct}% do mês e ainda sobrariam ", { pct })}
+              <strong>{fmtBRL(sobra)}</strong>
+              {t(" até o fim do mês.")}
             </>
           ),
         });
@@ -61,9 +68,8 @@ export function SimularGastoModal({
           tom: COR_NEG,
           texto: (
             <>
-              <strong>Estoura o orçamento em {fmtBRL(estouro)}.</strong> Você
-              só tem {fmtBRL(restante)} disponíveis no mês — o restante teria
-              que sair de outra fonte.
+              <strong>{t("Estoura o orçamento em {x}.", { x: fmtBRL(estouro) })}</strong>
+              {t(" Você só tem {restante} disponíveis no mês — o restante teria que sair de outra fonte.", { restante: fmtBRL(restante) })}
             </>
           ),
         });
@@ -71,15 +77,15 @@ export function SimularGastoModal({
     } else {
       // Parcelado — mostra horizonte + impacto mensal.
       const fim = new Date(y, m - 1 + n - 1, 1);
-      const periodoIni = `${MESES_CURTO[m - 1]}/${String(y).slice(2)}`;
-      const periodoFim = `${MESES_CURTO[fim.getMonth()]}/${String(fim.getFullYear()).slice(2)}`;
+      const periodoIni = `${t(MESES_CURTO[m - 1])}/${String(y).slice(2)}`;
+      const periodoFim = `${t(MESES_CURTO[fim.getMonth()])}/${String(fim.getFullYear()).slice(2)}`;
 
       out.push({
         tom: "var(--primary)",
         texto: (
           <>
-            <strong>{n}× de {fmtBRL(valorParcela)}</strong> — de {periodoIni} até {periodoFim}.
-            Total final: {fmtBRL(valorNum)}.
+            <strong>{t("{n}× de {vp}", { n, vp: fmtBRL(valorParcela) })}</strong>
+            {t(" — de {ini} até {fim}. Total final: {total}.", { ini: periodoIni, fim: periodoFim, total: fmtBRL(valorNum) })}
           </>
         ),
       });
@@ -90,8 +96,10 @@ export function SimularGastoModal({
           tom: COR_NEG,
           texto: (
             <>
-              Este mês já está com orçamento <strong>negativo</strong> — a 1ª
-              parcela aumentaria o déficit em <strong>{fmtBRL(valorParcela)}</strong>.
+              {t("Este mês já está com orçamento ")}
+              <strong>{t("negativo")}</strong>
+              {t(" — a 1ª parcela aumentaria o déficit em ")}
+              <strong>{fmtBRL(valorParcela)}</strong>.
             </>
           ),
         });
@@ -101,7 +109,9 @@ export function SimularGastoModal({
           tom: COR_POS,
           texto: (
             <>
-              A 1ª parcela <strong>cabe neste mês</strong> — restarão {fmtBRL(sobra)} depois dela.
+              {t("A 1ª parcela ")}
+              <strong>{t("cabe neste mês")}</strong>
+              {t(" — restarão {sobra} depois dela.", { sobra: fmtBRL(sobra) })}
             </>
           ),
         });
@@ -111,7 +121,9 @@ export function SimularGastoModal({
           tom: COR_NEG,
           texto: (
             <>
-              A parcela de {fmtBRL(valorParcela)} já <strong>estoura o restante deste mês</strong> em {fmtBRL(estouro)}.
+              {t("A parcela de {vp} já ", { vp: fmtBRL(valorParcela) })}
+              <strong>{t("estoura o restante deste mês")}</strong>
+              {t(" em {estouro}.", { estouro: fmtBRL(estouro) })}
             </>
           ),
         });
@@ -125,8 +137,10 @@ export function SimularGastoModal({
             tom: COR_NEG,
             texto: (
               <>
-                Cada parcela toma <strong>{Math.round(pctMensal)}% do seu orçamento mensal</strong> —
-                comprometimento alto por <strong>{n} meses</strong>.
+                {t("Cada parcela toma ")}
+                <strong>{t("{pct}% do seu orçamento mensal", { pct: Math.round(pctMensal) })}</strong>
+                {t(" — comprometimento alto por ")}
+                <strong>{t("{n} meses", { n })}</strong>.
               </>
             ),
           });
@@ -135,8 +149,9 @@ export function SimularGastoModal({
             tom: COR_AVISO,
             texto: (
               <>
-                Cada parcela representa <strong>{Math.round(pctMensal)}%</strong> do seu orçamento mensal
-                — comprometimento médio por {n} meses.
+                {t("Cada parcela representa ")}
+                <strong>{Math.round(pctMensal)}%</strong>
+                {t(" do seu orçamento mensal — comprometimento médio por {n} meses.", { n })}
               </>
             ),
           });
@@ -145,8 +160,9 @@ export function SimularGastoModal({
             tom: COR_POS,
             texto: (
               <>
-                Cada parcela representa apenas <strong>{Math.round(pctMensal)}%</strong> do seu orçamento
-                mensal — impacto leve durante {n} meses.
+                {t("Cada parcela representa apenas ")}
+                <strong>{Math.round(pctMensal)}%</strong>
+                {t(" do seu orçamento mensal — impacto leve durante {n} meses.", { n })}
               </>
             ),
           });
@@ -155,7 +171,7 @@ export function SimularGastoModal({
     }
 
     return out;
-  }, [valorNum, n, restante, orcTotal, mes, valorParcela]);
+  }, [valorNum, n, restante, orcTotal, mes, valorParcela, t]);
 
   return (
     <ModalOverlay onClose={fechar} maxWidth={420}>
@@ -191,12 +207,12 @@ export function SimularGastoModal({
                 letterSpacing: "-0.01em",
               }}
             >
-              Cabe no orçamento?
+              {t("Cabe no orçamento?")}
             </div>
           </div>
           <button
             onClick={fechar}
-            aria-label="Fechar"
+            aria-label={t("Fechar")}
             style={{
               background: "transparent",
               border: "none",
@@ -218,7 +234,7 @@ export function SimularGastoModal({
             marginBottom: 6,
           }}
         >
-          Simule um gasto e veja como ele afeta seu mês.
+          {t("Simule um gasto e veja como ele afeta seu mês.")}
         </div>
 
         {/* Valor — input "calculadora" */}
@@ -240,7 +256,7 @@ export function SimularGastoModal({
               letterSpacing: 0.6,
             }}
           >
-            Valor da compra
+            {t("Valor da compra")}
           </div>
           <div
             style={{
@@ -260,7 +276,7 @@ export function SimularGastoModal({
                 verticalAlign: "top",
               }}
             >
-              R$
+              {simboloMoeda()}
             </span>
             {valor}
           </div>
@@ -271,7 +287,7 @@ export function SimularGastoModal({
             pattern="[0-9]*"
             value={valor.replace(",", "")}
             onChange={(e) => aoDigitar(e.target.value)}
-            aria-label="Valor da compra"
+            aria-label={t("Valor da compra")}
             style={{
               position: "absolute",
               inset: 0,
@@ -302,7 +318,7 @@ export function SimularGastoModal({
                 color: "var(--ink)",
               }}
             >
-              Parcelas
+              {t("Parcelas")}
             </div>
             <div
               style={{
@@ -312,7 +328,7 @@ export function SimularGastoModal({
                 fontVariantNumeric: "tabular-nums",
               }}
             >
-              {n === 1 ? "à vista" : `${n}× de ${fmtBRL(valorParcela)}`}
+              {n === 1 ? t("à vista") : t("{n}× de {vp}", { n, vp: fmtBRL(valorParcela) })}
             </div>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
@@ -321,7 +337,7 @@ export function SimularGastoModal({
                 vibrar(8);
                 setParcelas((p) => Math.max(1, p - 1));
               }}
-              aria-label="Diminuir parcelas"
+              aria-label={t("Diminuir parcelas")}
               style={{
                 width: 36,
                 height: 36,
@@ -346,14 +362,14 @@ export function SimularGastoModal({
               value={n}
               onChange={(e) => setParcelas(parseInt(e.target.value, 10))}
               style={{ flex: 1, accentColor: "var(--primary)" }}
-              aria-label="Quantidade de parcelas"
+              aria-label={t("Quantidade de parcelas")}
             />
             <button
               onClick={() => {
                 vibrar(8);
                 setParcelas((p) => Math.min(48, p + 1));
               }}
-              aria-label="Aumentar parcelas"
+              aria-label={t("Aumentar parcelas")}
               style={{
                 width: 36,
                 height: 36,
@@ -388,7 +404,7 @@ export function SimularGastoModal({
                 lineHeight: 1.45,
               }}
             >
-              Digite um valor para ver a análise.
+              {t("Digite um valor para ver a análise.")}
             </div>
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
@@ -442,7 +458,7 @@ export function SimularGastoModal({
               fontWeight: 600,
             }}
           >
-            <span>Restante deste mês</span>
+            <span>{t("Restante deste mês")}</span>
             <span
               style={{
                 color: restante >= 0 ? COR_POS : COR_NEG,

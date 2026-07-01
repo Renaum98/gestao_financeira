@@ -6,8 +6,11 @@ import { formatarValorDigitado, formatarValorInicial, parseValorBR } from "../..
 import { useSelic, taxaAnualEfetiva } from "../../lib/selic.js";
 import { CORES_CAIXINHA, hojeISO } from "./utils.js";
 import { ModalShell, Campo, Toggle, inputStyle } from "./ModalShell.jsx";
+import { simboloMoeda } from "../../lib/moeda.js";
+import { useT } from "../../lib/i18n.jsx";
 
 export function ModalCaixinha({ editando, onFechar, onSalvar }) {
+  const t = useT();
   const selic = useSelic();
   const [nome, setNome] = React.useState(editando?.nome ?? "");
   const [cor, setCor] = React.useState(editando?.cor ?? CORES_CAIXINHA[0]);
@@ -39,22 +42,22 @@ export function ModalCaixinha({ editando, onFechar, onSalvar }) {
 
   return (
     <ModalShell
-      titulo={editando ? "Editar caixinha" : "Nova caixinha"}
+      titulo={editando ? t("Editar caixinha") : t("Nova caixinha")}
       onFechar={onFechar}
       onSalvar={salvar}
       salvarAtivo={valido}
     >
-      <Campo label="Nome">
+      <Campo label={t("Nome")}>
         <input
           autoFocus
           value={nome}
           onChange={(e) => setNome(e.target.value)}
-          placeholder="Ex: Viagem para a praia"
+          placeholder={t("Ex: Viagem para a praia")}
           style={inputStyle}
         />
       </Campo>
 
-      <Campo label="Cor">
+      <Campo label={t("Cor")}>
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
           {CORES_CAIXINHA.map((c) => {
             const sel = cor === c;
@@ -77,7 +80,7 @@ export function ModalCaixinha({ editando, onFechar, onSalvar }) {
         </div>
       </Campo>
 
-      <Campo label="Meta (opcional)">
+      <Campo label={t("Meta (opcional)")}>
         <div
           style={{
             display: "flex",
@@ -88,13 +91,13 @@ export function ModalCaixinha({ editando, onFechar, onSalvar }) {
         >
           <Toggle ativo={temMeta} onChange={setTemMeta} />
           <span style={{ fontSize: 13, color: "var(--muted)", fontWeight: 600 }}>
-            {temMeta ? "Definir um valor-alvo" : "Sem meta — só vou juntando"}
+            {temMeta ? t("Definir um valor-alvo") : t("Sem meta — só vou juntando")}
           </span>
         </div>
         {temMeta && (
           <>
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 6 }}>
-              <span style={{ fontSize: 14, color: "var(--muted)", fontWeight: 700 }}>R$</span>
+              <span style={{ fontSize: 14, color: "var(--muted)", fontWeight: 700 }}>{simboloMoeda()}</span>
               <input
                 type="text"
                 inputMode="numeric"
@@ -118,7 +121,7 @@ export function ModalCaixinha({ editando, onFechar, onSalvar }) {
               >
                 <Icon name="calendar" size={16} color="var(--muted)" strokeWidth={2} />
                 <span style={{ flex: 1, fontSize: 12, fontWeight: 700, color: "var(--muted)" }}>
-                  Até quando? <span style={{ opacity: 0.7 }}>(opcional)</span>
+                  {t("Até quando?")} <span style={{ opacity: 0.7 }}>{t("(opcional)")}</span>
                 </span>
                 <input
                   type="date"
@@ -162,8 +165,8 @@ export function ModalCaixinha({ editando, onFechar, onSalvar }) {
         >
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <Icon name="chart" size={16} color="var(--muted)" strokeWidth={2.2} />
-            <span style={{ fontSize: 13, fontWeight: 800, color: "var(--ink)" }}>Avançado</span>
-            <span style={{ fontSize: 11, fontWeight: 600, color: "var(--muted)" }}>Investimento</span>
+            <span style={{ fontSize: 13, fontWeight: 800, color: "var(--ink)" }}>{t("Avançado")}</span>
+            <span style={{ fontSize: 11, fontWeight: 600, color: "var(--muted)" }}>{t("Investimento")}</span>
           </div>
           <span
             style={{
@@ -196,7 +199,7 @@ export function ModalCaixinha({ editando, onFechar, onSalvar }) {
             >
               <Toggle ativo={rendimentoAtivo} onChange={setRendimentoAtivo} />
               <span style={{ fontSize: 13, color: "var(--muted)", fontWeight: 600 }}>
-                {rendimentoAtivo ? "Render como investimento" : "Sem rendimento — caixinha comum"}
+                {rendimentoAtivo ? t("Render como investimento") : t("Sem rendimento — caixinha comum")}
               </span>
             </div>
 
@@ -212,7 +215,7 @@ export function ModalCaixinha({ editando, onFechar, onSalvar }) {
                     marginBottom: 6,
                   }}
                 >
-                  Taxa de rendimento (% do CDI)
+                  {t("Taxa de rendimento (% do CDI)")}
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                   <input
@@ -227,7 +230,7 @@ export function ModalCaixinha({ editando, onFechar, onSalvar }) {
                     placeholder="100"
                     style={{ ...inputStyle, flex: 1 }}
                   />
-                  <span style={{ fontSize: 14, color: "var(--muted)", fontWeight: 700 }}>% CDI</span>
+                  <span style={{ fontSize: 14, color: "var(--muted)", fontWeight: 700 }}>{t("% CDI")}</span>
                 </div>
                 <div
                   style={{
@@ -238,15 +241,15 @@ export function ModalCaixinha({ editando, onFechar, onSalvar }) {
                     lineHeight: 1.45,
                   }}
                 >
-                  Selic atual:{" "}
+                  {t("Selic atual: ")}
                   <strong style={{ color: "var(--ink)" }}>
-                    {selic.toFixed(2).replace(".", ",")}% a.a.
+                    {selic.toFixed(2).replace(".", ",")}% {t("a.a.")}
                   </strong>
                   {cdiNum > 0 && (
                     <>
-                      {" · "}rende ~
+                      {t(" · rende ~")}
                       <strong style={{ color: "var(--ink)" }}>
-                        {taxaEfetiva.toFixed(2).replace(".", ",")}% a.a.
+                        {taxaEfetiva.toFixed(2).replace(".", ",")}% {t("a.a.")}
                       </strong>
                     </>
                   )}
@@ -261,8 +264,7 @@ export function ModalCaixinha({ editando, onFechar, onSalvar }) {
                     opacity: 0.85,
                   }}
                 >
-                  100% CDI = renda igual ao CDI · Estimativa diária com base na Meta Selic do BCB.
-                  Não considera IR.
+                  {t("100% CDI = renda igual ao CDI · Estimativa diária com base na Meta Selic do BCB. Não considera IR.")}
                 </div>
               </>
             )}

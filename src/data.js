@@ -1,5 +1,7 @@
 // data.js — categorias, pagamentos, helpers de formatação e agregação.
 
+import { getMoeda } from './lib/moeda.js';
+
 export const CATEGORIAS = {
   alimentacao: { id: 'alimentacao', nome: 'Alimentação', cor: '#FF9B6E', corFundo: '#FFEEDF', emoji: 'A' },
   transporte:  { id: 'transporte',  nome: 'Transporte',  cor: '#5DA8FF', corFundo: '#E0EFFF', emoji: 'T' },
@@ -110,19 +112,34 @@ export const PALETAS = [
   },
 ];
 
+// Formatação monetária localizada. A moeda ativa (símbolo + formato) vem de
+// lib/moeda.js. O nome `fmtBRL` é histórico — hoje formata na moeda escolhida.
 export function fmtBRL(v, ocultar = false) {
-  if (ocultar) return 'R$ •••••';
-  const sign = v < 0 ? '-' : '';
-  const abs = Math.abs(v);
-  const [int, dec] = abs.toFixed(2).split('.');
-  const intF = int.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-  return `${sign}R$ ${intF},${dec}`;
+  const m = getMoeda();
+  if (ocultar) return `${m.simbolo} •••••`;
+  try {
+    return new Intl.NumberFormat(m.locale, {
+      style: 'currency',
+      currency: m.codigo,
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(v || 0);
+  } catch {
+    return `${m.simbolo} ${(v || 0).toFixed(2)}`;
+  }
 }
 
 export function fmtBRLCompacto(v, ocultar = false) {
-  if (ocultar) return 'R$ •••';
+  const m = getMoeda();
+  if (ocultar) return `${m.simbolo} •••`;
   if (Math.abs(v) >= 1000) {
-    return `R$ ${(v / 1000).toFixed(1).replace('.', ',')}k`;
+    let n;
+    try {
+      n = new Intl.NumberFormat(m.locale, { maximumFractionDigits: 1 }).format(v / 1000);
+    } catch {
+      n = (v / 1000).toFixed(1);
+    }
+    return `${m.simbolo} ${n}k`;
   }
   return fmtBRL(v);
 }
@@ -159,9 +176,23 @@ export function rotuloMes(yyyymm) {
   return `${MESES[parseInt(m,10) - 1]} ${a}`;
 }
 
+// Versões traduzíveis: recebem a função `t` (de useT) e localizam o nome do
+// mês. Sem `t`, comportam-se como as originais (português).
+export function rotuloMesT(t, yyyymm) {
+  const [a, m] = yyyymm.split('-');
+  const nome = MESES[parseInt(m, 10) - 1];
+  return `${t ? t(nome) : nome} ${a}`;
+}
+
 export function rotuloMesCurto(yyyymm) {
   const [a, m] = yyyymm.split('-');
   return `${MESES_CURTO[parseInt(m,10) - 1]} ${a.slice(2)}`;
+}
+
+export function rotuloMesCurtoT(t, yyyymm) {
+  const [a, m] = yyyymm.split('-');
+  const nome = MESES_CURTO[parseInt(m, 10) - 1];
+  return `${t ? t(nome) : nome} ${a.slice(2)}`;
 }
 
 export function totalPorCategoria(txs) {

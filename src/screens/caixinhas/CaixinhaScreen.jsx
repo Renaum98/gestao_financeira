@@ -15,6 +15,7 @@ import { HistoricoDepositos } from "./HistoricoDepositos.jsx";
 import { ModalCaixinha } from "./ModalCaixinha.jsx";
 import { ModalDeposito } from "./ModalDeposito.jsx";
 import { ModalResgate } from "./ModalResgate.jsx";
+import { useT } from "../../lib/i18n.jsx";
 
 export function CaixinhaScreen({ ctx, params }) {
   const {
@@ -30,6 +31,7 @@ export function CaixinhaScreen({ ctx, params }) {
     partnerNome,
     caixinhasCompartilhadas,
   } = ctx;
+  const tr = useT();
   const entradas = React.useMemo(() => (txs || []).filter((t) => t.tipo === "entrada"), [txs]);
   // Agrupa entradas pela descrição (ex: várias txs "Shopee" viram uma única origem)
   const gruposEntrada = React.useMemo(() => {
@@ -70,9 +72,9 @@ export function CaixinhaScreen({ ctx, params }) {
   if (!cx) {
     return (
       <div>
-        <TopBar voltar={voltar} titulo="Caixinha" />
+        <TopBar voltar={voltar} titulo={tr("Caixinha")} />
         <div style={{ padding: 20, textAlign: "center", color: "var(--muted)" }}>
-          Caixinha não encontrada.
+          {tr("Caixinha não encontrada.")}
         </div>
       </div>
     );
@@ -151,7 +153,7 @@ export function CaixinhaScreen({ ctx, params }) {
             }}
           >
             <Icon name="plus" size={18} color="#fff" strokeWidth={2.6} />
-            Adicionar
+            {tr("Adicionar")}
           </button>
           <button
             onClick={() => atual > 0 && setModalResgate(true)}
@@ -175,7 +177,7 @@ export function CaixinhaScreen({ ctx, params }) {
             }}
           >
             <Icon name="minus" size={18} color={atual > 0 ? cx.cor : "var(--muted)"} strokeWidth={2.6} />
-            Resgatar
+            {tr("Resgatar")}
           </button>
         </div>
 
@@ -211,7 +213,7 @@ export function CaixinhaScreen({ ctx, params }) {
           }}
         >
           <Icon name="trash" size={14} color={COR_NEG} strokeWidth={2.2} />
-          Excluir caixinha
+          {tr("Excluir caixinha")}
         </button>
       </div>
 
@@ -251,11 +253,13 @@ export function CaixinhaScreen({ ctx, params }) {
       )}
       {confirmarExclusao && (
         <ConfirmModal
-          titulo={`Excluir "${cx.nome}"?`}
+          titulo={tr("Excluir \"{nome}\"?", { nome: cx.nome })}
           mensagem={
             (cx.depositos || []).length > 0
-              ? `Os ${cx.depositos.length} depósito${cx.depositos.length === 1 ? "" : "s"} guardado${cx.depositos.length === 1 ? "" : "s"} (${fmtBRL(valorAtual(cx), ocultar)}) serão perdidos.`
-              : "Essa caixinha será removida permanentemente."
+              ? (cx.depositos.length === 1
+                  ? tr("Os {n} depósito guardado ({x}) serão perdidos.", { n: cx.depositos.length, x: fmtBRL(valorAtual(cx), ocultar) })
+                  : tr("Os {n} depósitos guardados ({x}) serão perdidos.", { n: cx.depositos.length, x: fmtBRL(valorAtual(cx), ocultar) }))
+              : tr("Essa caixinha será removida permanentemente.")
           }
           onCancelar={() => setConfirmarExclusao(false)}
           onConfirmar={onConfirmarExclusao}

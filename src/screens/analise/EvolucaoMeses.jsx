@@ -5,11 +5,13 @@ import React from "react";
 import { fmtBRL, fmtBRLCompacto } from "../../data.js";
 import { Card } from "../../ui/common.jsx";
 import { SecaoTitulo } from "./SecaoTitulo.jsx";
+import { useT } from "../../lib/i18n.jsx";
 
 export function EvolucaoMeses({ evolucao, maxEvol, mediaEvol, mes, setMes, ocultar }) {
+  const t = useT();
   return (
     <div style={{ padding: "16px 20px 0" }}>
-      <SecaoTitulo>Evolução (6 meses)</SecaoTitulo>
+      <SecaoTitulo>{t("Evolução (6 meses)")}</SecaoTitulo>
       <Card>
         <div
           style={{
@@ -78,7 +80,7 @@ export function EvolucaoMeses({ evolucao, maxEvol, mediaEvol, mes, setMes, ocult
             textAlign: "center",
           }}
         >
-          Média mensal: {fmtBRL(mediaEvol, ocultar)}
+          {t("Média mensal: {x}", { x: fmtBRL(mediaEvol, ocultar) })}
         </div>
       </Card>
     </div>

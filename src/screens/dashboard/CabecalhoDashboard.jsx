@@ -4,6 +4,7 @@
 import React from "react";
 import { Icon } from "../../ui/icons.jsx";
 import { COR_NEG } from "../../lib/colors.js";
+import { useT } from "../../lib/i18n.jsx";
 
 const ACAO_BTN = {
   width: 36,
@@ -27,6 +28,7 @@ export function CabecalhoDashboard({
   usuario,
   ehDesktop,
 }) {
+  const t = useT();
   return (
     <div
       className={ehDesktop ? "col-span-all" : undefined}
@@ -53,7 +55,7 @@ export function CabecalhoDashboard({
           <button
             onClick={() => setOcultar(!ocultar)}
             className="glass-surface"
-            aria-label={ocultar ? "Mostrar valores" : "Ocultar valores"}
+            aria-label={ocultar ? t("Mostrar valores") : t("Ocultar valores")}
             style={ACAO_BTN}
           >
             <Icon
@@ -66,7 +68,7 @@ export function CabecalhoDashboard({
           <button
             onClick={() => irPara("notificacoes")}
             className="glass-surface"
-            aria-label={`Notificações${totalNotif ? ` (${totalNotif})` : ""}`}
+            aria-label={`${t("Notificações")}${totalNotif ? ` (${totalNotif})` : ""}`}
             style={{ ...ACAO_BTN, position: "relative" }}
           >
             <Icon name="bell" size={18} color="var(--ink)" strokeWidth={2} />
@@ -100,13 +102,13 @@ export function CabecalhoDashboard({
           <button
             onClick={() => irPara("perfil")}
             className="glass-surface"
-            aria-label="Abrir perfil"
+            aria-label={t("Abrir perfil")}
             style={{ ...ACAO_BTN, padding: 0, overflow: "hidden" }}
           >
             {preferences.fotoUrl || usuario?.photoURL ? (
               <img
                 src={preferences.fotoUrl || usuario.photoURL}
-                alt={primeiroNome || "Perfil"}
+                alt={primeiroNome || t("Perfil")}
                 referrerPolicy="no-referrer"
                 style={{
                   width: "100%",
@@ -147,7 +149,7 @@ export function CabecalhoDashboard({
           marginTop: 6,
         }}
       >
-        {primeiroNome ? `${primeiroNome} ✦` : "Bem-vindo ✦"}
+        {primeiroNome ? `${primeiroNome} ✦` : t("Bem-vindo ✦")}
       </div>
     </div>
   );

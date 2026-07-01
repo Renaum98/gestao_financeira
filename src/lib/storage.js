@@ -50,6 +50,8 @@ const DEFAULT_STATE = {
   preferences: {
     paleta: "#6E4FF6",
     modo: "sistema",
+    idioma: "pt",
+    moeda: "BRL",
     nome: "",
     fotoUrl: "",
     orcamentoMensal: 0,

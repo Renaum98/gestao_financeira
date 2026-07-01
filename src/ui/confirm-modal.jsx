@@ -4,6 +4,7 @@ import React from 'react';
 import { Icon } from './icons.jsx';
 import { ModalOverlay } from './modal-base.jsx';
 import { COR_NEG, COR_NEG_FUNDO } from '../lib/colors.js';
+import { useT } from '../lib/i18n.jsx';
 
 export function ConfirmModal({
   titulo,
@@ -15,6 +16,7 @@ export function ConfirmModal({
   onConfirmar,
   onCancelar,
 }) {
+  const t = useT();
   const corAcao = destrutivo ? COR_NEG : 'var(--primary)';
   const corFundoIcone = destrutivo ? COR_NEG_FUNDO : 'color-mix(in oklab, var(--primary) 14%, transparent)';
 
@@ -54,13 +56,13 @@ export function ConfirmModal({
           background: 'var(--card-2)', color: 'var(--ink)',
           fontSize: 14, fontWeight: 800, fontFamily: 'inherit', cursor: 'pointer',
           boxShadow: '0 1px 2px rgba(0,0,0,0.06)',
-        }}>{textoCancelar}</button>
+        }}>{t(textoCancelar)}</button>
         <button onClick={onConfirmar} style={{
           flex: 1, padding: '12px', borderRadius: 14, border: 'none',
           background: corAcao, color: '#fff',
           fontSize: 14, fontWeight: 800, fontFamily: 'inherit', cursor: 'pointer',
           boxShadow: destrutivo ? '0 4px 14px rgba(214,58,85,0.32)' : '0 4px 14px color-mix(in oklab, var(--primary) 32%, transparent)',
-        }}>{textoConfirmar}</button>
+        }}>{t(textoConfirmar)}</button>
       </div>
     </ModalOverlay>
   );

@@ -12,6 +12,7 @@ import {
 import { Icon } from '../ui/icons.jsx';
 import { vibrar } from '../lib/haptics.js';
 import { COR_POS, COR_NEG } from '../lib/colors.js';
+import { useT } from '../lib/i18n.jsx';
 
 const EMAIL_OK = (e) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test((e || '').trim());
 const SENHA_OK = (s) => (s || '').length >= 8 && /[a-zA-Z]/.test(s) && /[0-9]/.test(s);
@@ -50,6 +51,7 @@ function Campo({ label, ...props }) {
 // Reaproveita o `inputStyle` base e adiciona padding extra à direita pra não
 // sobrepor o ícone.
 function CampoSenha({ label, value, onChange, ...props }) {
+  const t = useT();
   const [mostrar, setMostrar] = React.useState(false);
   return (
     <label style={{ display: 'block' }}>
@@ -65,7 +67,7 @@ function CampoSenha({ label, value, onChange, ...props }) {
         <button
           type="button"
           onClick={() => setMostrar((v) => !v)}
-          aria-label={mostrar ? 'Esconder senha' : 'Mostrar senha'}
+          aria-label={mostrar ? t('Esconder senha') : t('Mostrar senha')}
           aria-pressed={mostrar}
           tabIndex={-1}
           style={{
@@ -146,6 +148,7 @@ function BotaoPrimario({ children, ...props }) {
 
 // ─── Tela de login / cadastro ───
 export function LoginScreen() {
+  const t = useT();
   const [modo, setModo] = React.useState('entrar'); // 'entrar' | 'cadastrar' | 'recuperar'
   const [nome, setNome] = React.useState('');
   const [email, setEmail] = React.useState('');
@@ -167,17 +170,20 @@ export function LoginScreen() {
     return null;
   };
 
+  // `validar` e `msgErro` devolvem as strings em português (chaves do
+  // dicionário); traduzimos no momento de exibir.
+
   const enviar = async (e) => {
     e?.preventDefault();
     limpar();
     const v = validar();
-    if (v) { setErro(v); return; }
+    if (v) { setErro(t(v)); return; }
     vibrar();
     setCarregando(true);
     try {
       if (modo === 'recuperar') {
         await redefinirSenha(email.trim());
-        setInfo('Enviamos um link para redefinir sua senha. Confira seu e-mail.');
+        setInfo(t('Enviamos um link para redefinir sua senha. Confira seu e-mail.'));
       } else if (modo === 'cadastrar') {
         await criarConta(nome.trim(), email.trim(), senha);
         // onAuthStateChanged dispara → o app mostra a tela de verificação de e-mail.
@@ -187,7 +193,7 @@ export function LoginScreen() {
         // o app mostra a tela de verificação.
       }
     } catch (err) {
-      setErro(msgErro(err?.code));
+      setErro(t(msgErro(err?.code)));
       setCarregando(false);
     }
   };
@@ -204,27 +210,27 @@ export function LoginScreen() {
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', gap: 14 }}>
         <Logo />
         <div>
-          <div style={{ fontSize: 26, fontWeight: 800, color: 'var(--ink)', letterSpacing: '-0.03em' }}>{titulo}</div>
-          <div style={{ fontSize: 14, color: 'var(--muted)', fontWeight: 500, marginTop: 6, lineHeight: 1.45, maxWidth: 300 }}>{subtitulo}</div>
+          <div style={{ fontSize: 26, fontWeight: 800, color: 'var(--ink)', letterSpacing: '-0.03em' }}>{t(titulo)}</div>
+          <div style={{ fontSize: 14, color: 'var(--muted)', fontWeight: 500, marginTop: 6, lineHeight: 1.45, maxWidth: 300 }}>{t(subtitulo)}</div>
         </div>
       </div>
 
       <form onSubmit={enviar} style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 12 }}>
         {modo === 'cadastrar' && (
-          <Campo label="Nome" type="text" autoComplete="name" placeholder="Como quer ser chamado(a)?"
+          <Campo label={t("Nome")} type="text" autoComplete="name" placeholder={t("Como quer ser chamado(a)?")}
             value={nome} onChange={(e) => setNome(e.target.value)} />
         )}
-        <Campo label="E-mail" type="email" autoComplete="email" inputMode="email" placeholder="voce@email.com"
+        <Campo label={t("E-mail")} type="email" autoComplete="email" inputMode="email" placeholder="voce@email.com"
           value={email} onChange={(e) => setEmail(e.target.value)} />
         {modo !== 'recuperar' && (
-          <CampoSenha label="Senha"
+          <CampoSenha label={t("Senha")}
             autoComplete={modo === 'cadastrar' ? 'new-password' : 'current-password'}
-            placeholder={modo === 'cadastrar' ? 'Mín. 8 caracteres, letras e números' : 'Sua senha'}
+            placeholder={modo === 'cadastrar' ? t('Mín. 8 caracteres, letras e números') : t('Sua senha')}
             value={senha} onChange={(e) => setSenha(e.target.value)} />
         )}
         {modo === 'cadastrar' && (
           <div style={{ fontSize: 11, color: 'var(--muted)', fontWeight: 500, paddingLeft: 2, lineHeight: 1.4 }}>
-            Você receberá um e-mail de confirmação. A conta só é ativada depois que você clicar no link.
+            {t("Você receberá um e-mail de confirmação. A conta só é ativada depois que você clicar no link.")}
           </div>
         )}
 
@@ -232,21 +238,21 @@ export function LoginScreen() {
         {info && <div style={{ fontSize: 12.5, fontWeight: 700, color: COR_POS }}>{info}</div>}
 
         <BotaoPrimario type="submit" disabled={carregando}>
-          {carregando ? 'Aguarde…' : modo === 'cadastrar' ? 'Criar conta' : modo === 'recuperar' ? 'Enviar link' : 'Entrar'}
+          {carregando ? t('Aguarde…') : modo === 'cadastrar' ? t('Criar conta') : modo === 'recuperar' ? t('Enviar link') : t('Entrar')}
         </BotaoPrimario>
 
         {modo === 'entrar' && (
-          <button type="button" onClick={() => trocarModo('recuperar')} style={linkStyle}>Esqueci minha senha</button>
+          <button type="button" onClick={() => trocarModo('recuperar')} style={linkStyle}>{t('Esqueci minha senha')}</button>
         )}
       </form>
 
       <div style={{ fontSize: 13, color: 'var(--muted)', fontWeight: 600 }}>
         {modo === 'cadastrar' ? (
-          <>Já tem conta? <button type="button" onClick={() => trocarModo('entrar')} style={linkInlineStyle}>Entrar</button></>
+          <>{t('Já tem conta? ')}<button type="button" onClick={() => trocarModo('entrar')} style={linkInlineStyle}>{t('Entrar')}</button></>
         ) : modo === 'recuperar' ? (
-          <button type="button" onClick={() => trocarModo('entrar')} style={linkInlineStyle}>Voltar para o login</button>
+          <button type="button" onClick={() => trocarModo('entrar')} style={linkInlineStyle}>{t('Voltar para o login')}</button>
         ) : (
-          <>Não tem conta? <button type="button" onClick={() => trocarModo('cadastrar')} style={linkInlineStyle}>Cadastre-se</button></>
+          <>{t('Não tem conta? ')}<button type="button" onClick={() => trocarModo('cadastrar')} style={linkInlineStyle}>{t('Cadastre-se')}</button></>
         )}
       </div>
     </Casca>
@@ -264,6 +270,7 @@ const linkInlineStyle = {
 
 // ─── Tela "confirme seu e-mail" (usuário logado mas sem verificação) ───
 export function VerifyEmailScreen({ email, onAtualizar }) {
+  const t = useT();
   const [carregando, setCarregando] = React.useState(false);
   const [reenviando, setReenviando] = React.useState(false);
   const [msg, setMsg] = React.useState('');
@@ -274,9 +281,9 @@ export function VerifyEmailScreen({ email, onAtualizar }) {
     try {
       const u = await recarregarUsuario();
       if (u?.emailVerified) { vibrar(14); onAtualizar?.(u); }
-      else setErro('Ainda não detectamos a confirmação. Abra o link do e-mail e tente de novo.');
+      else setErro(t('Ainda não detectamos a confirmação. Abra o link do e-mail e tente de novo.'));
     } catch {
-      setErro('Não foi possível verificar agora. Tente novamente.');
+      setErro(t('Não foi possível verificar agora. Tente novamente.'));
     }
     setCarregando(false);
   };
@@ -285,11 +292,11 @@ export function VerifyEmailScreen({ email, onAtualizar }) {
     setMsg(''); setErro(''); setReenviando(true);
     try {
       await reenviarVerificacao();
-      setMsg('E-mail de confirmação reenviado. Confira sua caixa de entrada (e o spam).');
+      setMsg(t('E-mail de confirmação reenviado. Confira sua caixa de entrada (e o spam).'));
     } catch (err) {
       setErro(err?.code === 'auth/too-many-requests'
-        ? 'Você pediu muitos e-mails. Aguarde alguns minutos.'
-        : 'Não foi possível reenviar agora.');
+        ? t('Você pediu muitos e-mails. Aguarde alguns minutos.')
+        : t('Não foi possível reenviar agora.'));
     }
     setReenviando(false);
   };
@@ -303,11 +310,11 @@ export function VerifyEmailScreen({ email, onAtualizar }) {
         <Icon name="mail" size={32} color="var(--primary)" strokeWidth={2} />
       </div>
       <div style={{ textAlign: 'center' }}>
-        <div style={{ fontSize: 22, fontWeight: 800, color: 'var(--ink)', letterSpacing: '-0.02em' }}>Confirme seu e-mail</div>
+        <div style={{ fontSize: 22, fontWeight: 800, color: 'var(--ink)', letterSpacing: '-0.02em' }}>{t('Confirme seu e-mail')}</div>
         <div style={{ fontSize: 14, color: 'var(--muted)', fontWeight: 500, marginTop: 8, lineHeight: 1.5 }}>
-          Enviamos um link de confirmação para{' '}
-          <span style={{ color: 'var(--ink)', fontWeight: 700 }}>{email}</span>.
-          Clique nele para ativar sua conta e depois volte aqui.
+          {t('Enviamos um link de confirmação para')}{' '}
+          <span style={{ color: 'var(--ink)', fontWeight: 700 }}>{email}</span>{'. '}
+          {t('Clique nele para ativar sua conta e depois volte aqui.')}
         </div>
       </div>
 
@@ -316,14 +323,14 @@ export function VerifyEmailScreen({ email, onAtualizar }) {
 
       <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 10 }}>
         <BotaoPrimario type="button" onClick={jaConfirmei} disabled={carregando}>
-          {carregando ? 'Verificando…' : 'Já confirmei, entrar'}
+          {carregando ? t('Verificando…') : t('Já confirmei, entrar')}
         </BotaoPrimario>
         <button type="button" onClick={reenviar} disabled={reenviando} style={{
           width: '100%', padding: '12px', borderRadius: 14, border: '1.5px solid var(--linha)',
           background: 'var(--card)', color: 'var(--ink)', fontSize: 14, fontWeight: 700,
           cursor: reenviando ? 'default' : 'pointer', fontFamily: 'inherit',
-        }}>{reenviando ? 'Reenviando…' : 'Reenviar e-mail'}</button>
-        <button type="button" onClick={() => sairFirebase()} style={linkStyle}>Usar outra conta</button>
+        }}>{reenviando ? t('Reenviando…') : t('Reenviar e-mail')}</button>
+        <button type="button" onClick={() => sairFirebase()} style={linkStyle}>{t('Usar outra conta')}</button>
       </div>
     </Casca>
   );

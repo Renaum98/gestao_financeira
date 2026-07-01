@@ -4,8 +4,10 @@ import React from "react";
 import { PALETAS } from "../../data.js";
 import { Card } from "../../ui/common.jsx";
 import { vibrar } from "../../lib/haptics.js";
+import { useT } from "../../lib/i18n.jsx";
 
 export function AparenciaCard({ preferences, setPreferences }) {
+  const t = useT();
   return (
     <Card style={{ padding: 16 }}>
       <div
@@ -18,10 +20,10 @@ export function AparenciaCard({ preferences, setPreferences }) {
           paddingBottom: 12,
         }}
       >
-        Aparência
+        {t("Aparência")}
       </div>
       <div style={{ padding: "8px 0 4px" }}>
-        <div style={{ fontSize: 14, fontWeight: 600, color: "var(--ink)", marginBottom: 10 }}>Tema</div>
+        <div style={{ fontSize: 14, fontWeight: 600, color: "var(--ink)", marginBottom: 10 }}>{t("Tema")}</div>
         <div
           style={{
             display: "flex",
@@ -33,9 +35,9 @@ export function AparenciaCard({ preferences, setPreferences }) {
           }}
         >
           {[
-            { id: "sistema", label: "Sistema" },
-            { id: "claro", label: "Claro" },
-            { id: "escuro", label: "Escuro" },
+            { id: "sistema", label: t("Sistema") },
+            { id: "claro", label: t("Claro") },
+            { id: "escuro", label: t("Escuro") },
           ].map((opt) => {
             const sel = (preferences.modo || "sistema") === opt.id;
             return (
@@ -68,7 +70,7 @@ export function AparenciaCard({ preferences, setPreferences }) {
       </div>
       <div style={{ padding: "12px 0 4px" }}>
         <div style={{ fontSize: 14, fontWeight: 600, color: "var(--ink)", marginBottom: 10 }}>
-          Cor de destaque
+          {t("Cor de destaque")}
         </div>
         <div style={{ display: "flex", gap: 10 }}>
           {PALETAS.map((p) => {

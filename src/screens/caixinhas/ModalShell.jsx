@@ -4,8 +4,10 @@
 import React from "react";
 import { createPortal } from "react-dom";
 import { Z_MODAL } from "../../ui/modal-base.jsx";
+import { useT } from "../../lib/i18n.jsx";
 
 export function ModalShell({ titulo, onFechar, onSalvar, salvarAtivo, corAcento, children }) {
+  const t = useT();
   return createPortal(
     <div
       onClick={onFechar}
@@ -58,7 +60,7 @@ export function ModalShell({ titulo, onFechar, onSalvar, salvarAtivo, corAcento,
               cursor: "pointer",
             }}
           >
-            Cancelar
+            {t("Cancelar")}
           </button>
           <div style={{ fontSize: 16, fontWeight: 800, color: "var(--ink)", letterSpacing: "-0.01em" }}>
             {titulo}
@@ -78,7 +80,7 @@ export function ModalShell({ titulo, onFechar, onSalvar, salvarAtivo, corAcento,
               fontFamily: "inherit",
             }}
           >
-            Salvar
+            {t("Salvar")}
           </button>
         </div>
         {children}

@@ -7,8 +7,10 @@ import { COR_POS, COR_POS_FUNDO } from "../../lib/colors.js";
 import { BarraProgresso } from "../../ui/charts.jsx";
 import { useSelic, calcularRendimento } from "../../lib/selic.js";
 import { valorAtual, calcularLembranca } from "./utils.js";
+import { useT } from "../../lib/i18n.jsx";
 
 export function CardCaixinha({ cx, ocultar, onClick }) {
+  const t = useT();
   const selic = useSelic();
   const principal = valorAtual(cx);
   const rendimento = calcularRendimento(cx, selic);
@@ -70,8 +72,8 @@ export function CardCaixinha({ cx, ocultar, onClick }) {
           >
             <span>
               {cx.meta > 0
-                ? `${fmtBRLCompacto(atual, ocultar)} de ${fmtBRLCompacto(cx.meta, ocultar)}`
-                : `Guardado: ${fmtBRLCompacto(atual, ocultar)}`}
+                ? t("{gasto} de {orc}", { gasto: fmtBRLCompacto(atual, ocultar), orc: fmtBRLCompacto(cx.meta, ocultar) })
+                : t("Guardado: {x}", { x: fmtBRLCompacto(atual, ocultar) })}
             </span>
             {rendimento > 0 && (
               <span
@@ -86,7 +88,7 @@ export function CardCaixinha({ cx, ocultar, onClick }) {
                   fontWeight: 800,
                   fontSize: 10,
                 }}
-                title={!ocultar ? `Rendimento: +${fmtBRLCompacto(rendimento)}` : undefined}
+                title={!ocultar ? t("Rendimento: +{x}", { x: fmtBRLCompacto(rendimento) }) : undefined}
               >
                 +{fmtBRLCompacto(rendimento, ocultar)}
               </span>
@@ -119,8 +121,11 @@ export function CardCaixinha({ cx, ocultar, onClick }) {
           }}
         >
           <Icon name="target" size={12} color={cx.cor} strokeWidth={2.4} />
-          Guarde {fmtBRLCompacto(lembranca.valor, ocultar)} por{" "}
-          {lembranca.tipo === "mensal" ? "mês" : lembranca.tipo === "semanal" ? "semana" : "dia"}
+          {lembranca.tipo === "mensal"
+            ? t("Guarde {x} por mês", { x: fmtBRLCompacto(lembranca.valor, ocultar) })
+            : lembranca.tipo === "semanal"
+              ? t("Guarde {x} por semana", { x: fmtBRLCompacto(lembranca.valor, ocultar) })
+              : t("Guarde {x} por dia", { x: fmtBRLCompacto(lembranca.valor, ocultar) })}
         </div>
       )}
     </div>

@@ -8,18 +8,19 @@ import { Z_MODAL } from "../../ui/modal-base.jsx";
 import { vibrar } from "../../lib/haptics.js";
 import { convidarPorEmail } from "../../lib/partnership.js";
 import { COR_POS, COR_NEG } from "../../lib/colors.js";
+import { useT } from "../../lib/i18n.jsx";
 
 function ExplicacaoConta({ onContinuar, onCancelar }) {
+  const t = useT();
   const itens = [
-    { icon: "eye", texto: "Vocês veem os gastos um do outro (sem editar)." },
-    { icon: "piggy", texto: "Caixinhas viram compartilhadas — ambos editam." },
-    { icon: "close", texto: "Dá pra desfazer; quem desfaz leva as caixinhas." },
+    { icon: "eye", texto: t("Vocês veem os gastos um do outro (sem editar).") },
+    { icon: "piggy", texto: t("Caixinhas viram compartilhadas — ambos editam.") },
+    { icon: "close", texto: t("Dá pra desfazer; quem desfaz leva as caixinhas.") },
   ];
   return (
     <div>
       <div style={{ fontSize: 13, color: "var(--muted)", fontWeight: 500, lineHeight: 1.45, marginBottom: 12 }}>
-        Pensada pra <strong style={{ color: "var(--ink)" }}>dois usuários</strong> (ex: casal) acompanharem os
-        gastos um do outro e juntarem dinheiro pra metas comuns.
+        {t("Pensada pra ")}<strong style={{ color: "var(--ink)" }}>{t("dois usuários")}</strong>{t(" (ex: casal) acompanharem os gastos um do outro e juntarem dinheiro pra metas comuns.")}
       </div>
 
       <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
@@ -67,8 +68,7 @@ function ExplicacaoConta({ onContinuar, onCancelar }) {
           padding: "0 4px",
         }}
       >
-        Só entre <strong style={{ color: "var(--ink)" }}>2 pessoas</strong>. Pra trocar, desfaça a parceria
-        atual antes.
+        {t("Só entre ")}<strong style={{ color: "var(--ink)" }}>{t("2 pessoas")}</strong>{t(". Pra trocar, desfaça a parceria atual antes.")}
       </div>
 
       <div style={{ display: "flex", gap: 10, marginTop: 14 }}>
@@ -89,7 +89,7 @@ function ExplicacaoConta({ onContinuar, onCancelar }) {
             boxShadow: "0 1px 2px rgba(0,0,0,0.06)",
           }}
         >
-          Cancelar
+          {t("Cancelar")}
         </button>
         <button
           type="button"
@@ -108,7 +108,7 @@ function ExplicacaoConta({ onContinuar, onCancelar }) {
             boxShadow: "0 4px 14px color-mix(in oklab, var(--primary) 32%, transparent)",
           }}
         >
-          Continuar
+          {t("Continuar")}
         </button>
       </div>
     </div>
@@ -116,6 +116,7 @@ function ExplicacaoConta({ onContinuar, onCancelar }) {
 }
 
 export function ConvidarParceiroModal({ meuUid, meuNome, meuEmail, onFechar }) {
+  const t = useT();
   const [etapa, setEtapa] = React.useState("explicacao"); // 'explicacao' | 'email' | 'sucesso'
   const [email, setEmail] = React.useState("");
   const [erro, setErro] = React.useState("");
@@ -132,7 +133,7 @@ export function ConvidarParceiroModal({ meuUid, meuNome, meuEmail, onFechar }) {
       setEtapa("sucesso");
       setTimeout(onFechar, 1400);
     } catch (err) {
-      setErro(err?.message || "Não foi possível enviar o convite.");
+      setErro(err?.message || t("Não foi possível enviar o convite."));
       setEnviando(false);
     }
   };
@@ -189,12 +190,12 @@ export function ConvidarParceiroModal({ meuUid, meuNome, meuEmail, onFechar }) {
           </div>
           <div>
             <div style={{ fontSize: 17, fontWeight: 800, color: "var(--ink)", letterSpacing: "-0.02em" }}>
-              {etapa === "explicacao" ? "Conta compartilhada" : "Convidar parceiro"}
+              {etapa === "explicacao" ? t("Conta compartilhada") : t("Convidar parceiro")}
             </div>
             <div style={{ fontSize: 12, color: "var(--muted)", fontWeight: 600, marginTop: 2 }}>
               {etapa === "explicacao"
-                ? "Entenda como funciona antes de convidar."
-                : "Ele(a) precisa já ter conta no app."}
+                ? t("Entenda como funciona antes de convidar.")
+                : t("Ele(a) precisa já ter conta no app.")}
             </div>
           </div>
         </div>
@@ -211,16 +212,16 @@ export function ConvidarParceiroModal({ meuUid, meuNome, meuEmail, onFechar }) {
               borderRadius: 14,
             }}
           >
-            <div style={{ fontSize: 14, fontWeight: 800, color: COR_POS }}>Convite enviado!</div>
+            <div style={{ fontSize: 14, fontWeight: 800, color: COR_POS }}>{t("Convite enviado!")}</div>
             <div style={{ fontSize: 12, color: "var(--muted)", fontWeight: 600, marginTop: 4 }}>
-              Aguarde a resposta nas notificações.
+              {t("Aguarde a resposta nas notificações.")}
             </div>
           </div>
         ) : (
           <>
             <label style={{ display: "block" }}>
               <div style={{ fontSize: 12, fontWeight: 700, color: "var(--muted)", marginBottom: 6, paddingLeft: 2 }}>
-                E-mail do parceiro
+                {t("E-mail do parceiro")}
               </div>
               <input
                 autoFocus
@@ -271,7 +272,7 @@ export function ConvidarParceiroModal({ meuUid, meuNome, meuEmail, onFechar }) {
                   opacity: enviando ? 0.6 : 1,
                 }}
               >
-                Cancelar
+                {t("Cancelar")}
               </button>
               <button
                 type="submit"
@@ -296,7 +297,7 @@ export function ConvidarParceiroModal({ meuUid, meuNome, meuEmail, onFechar }) {
                       : "0 4px 14px color-mix(in oklab, var(--primary) 32%, transparent)",
                 }}
               >
-                {enviando ? "Enviando…" : "Enviar convite"}
+                {enviando ? t("Enviando…") : t("Enviar convite")}
               </button>
             </div>
           </>

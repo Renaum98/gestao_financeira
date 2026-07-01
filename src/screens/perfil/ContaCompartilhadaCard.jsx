@@ -5,6 +5,7 @@ import React from "react";
 import { Icon } from "../../ui/icons.jsx";
 import { Card } from "../../ui/common.jsx";
 import { COR_NEG } from "../../lib/colors.js";
+import { useT } from "../../lib/i18n.jsx";
 
 export function ContaCompartilhadaCard({
   partnerUid,
@@ -14,6 +15,7 @@ export function ContaCompartilhadaCard({
   onCancelarConvite,
   onDesfazer,
 }) {
+  const t = useT();
   const conectado = !!partnerUid;
   const inicialParceiro = (partnerNome?.trim()[0] || "?").toUpperCase();
 
@@ -29,7 +31,7 @@ export function ContaCompartilhadaCard({
           paddingBottom: 12,
         }}
       >
-        Conta compartilhada
+        {t("Conta compartilhada")}
       </div>
 
       {conectado ? (
@@ -55,10 +57,10 @@ export function ContaCompartilhadaCard({
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontSize: 14, fontWeight: 800, color: "var(--ink)" }}>
-                Conectado com {partnerNome || "seu parceiro"}
+                {t("Conectado com {nome}", { nome: partnerNome || t("seu parceiro") })}
               </div>
               <div style={{ fontSize: 12, color: "var(--muted)", fontWeight: 500, marginTop: 2 }}>
-                Vocês visualizam os gastos um do outro. Caixinhas são compartilhadas.
+                {t("Vocês visualizam os gastos um do outro. Caixinhas são compartilhadas.")}
               </div>
             </div>
           </div>
@@ -81,16 +83,16 @@ export function ContaCompartilhadaCard({
             }}
           >
             <Icon name="close" size={14} color={COR_NEG} strokeWidth={2.4} />
-            Desfazer parceria
+            {t("Desfazer parceria")}
           </button>
         </div>
       ) : convitePendente ? (
         <div>
           <div style={{ fontSize: 13, fontWeight: 700, color: "var(--ink)", marginBottom: 4 }}>
-            Convite enviado para {convitePendente.toNome || convitePendente.toUid}
+            {t("Convite enviado para {nome}", { nome: convitePendente.toNome || convitePendente.toUid })}
           </div>
           <div style={{ fontSize: 12, color: "var(--muted)", fontWeight: 500, marginBottom: 12 }}>
-            Aguardando aceite. Você pode cancelar enquanto não houver resposta.
+            {t("Aguardando aceite. Você pode cancelar enquanto não houver resposta.")}
           </div>
           <button
             onClick={() => onCancelarConvite(convitePendente.id)}
@@ -106,13 +108,13 @@ export function ContaCompartilhadaCard({
               cursor: "pointer",
             }}
           >
-            Cancelar convite
+            {t("Cancelar convite")}
           </button>
         </div>
       ) : (
         <div>
           <div style={{ fontSize: 13, color: "var(--muted)", fontWeight: 500, lineHeight: 1.45, marginBottom: 12 }}>
-            Convide seu parceiro pra que vocês vejam os gastos um do outro e dividam caixinhas.
+            {t("Convide seu parceiro pra que vocês vejam os gastos um do outro e dividam caixinhas.")}
           </div>
           <button
             onClick={onConvidar}
@@ -133,7 +135,7 @@ export function ContaCompartilhadaCard({
             }}
           >
             <Icon name="plus" size={14} color="#fff" strokeWidth={2.6} />
-            Convidar parceiro
+            {t("Convidar parceiro")}
           </button>
         </div>
       )}

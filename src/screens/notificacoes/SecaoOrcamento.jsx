@@ -7,15 +7,17 @@ import { CatChip } from '../../ui/icons.jsx';
 import { Card } from '../../ui/common.jsx';
 import { COR_NEG, COR_AVISO } from '../../lib/colors.js';
 import { NotifItem, Secao, LinkAcao } from './parts.jsx';
+import { useT } from '../../lib/i18n.jsx';
 
 export function SecaoOrcamento({ orcEstourados, orcProximos, ocultar, irPara, ehLida, marcarLida }) {
+  const t = useT();
   if (orcEstourados.length === 0 && orcProximos.length === 0) return null;
 
   return (
     <Secao
-      titulo="Orçamento por categoria"
-      subtitulo="Alertas das categorias com orçamento definido"
-      acao={<LinkAcao onClick={() => irPara('orcamentos')}>Ajustar →</LinkAcao>}
+      titulo={t("Orçamento por categoria")}
+      subtitulo={t("Alertas das categorias com orçamento definido")}
+      acao={<LinkAcao onClick={() => irPara('orcamentos')}>{t("Ajustar →")}</LinkAcao>}
     >
       <Card style={{ padding: '4px 16px' }}>
         {[...orcEstourados, ...orcProximos].map((a, i) => {
@@ -29,11 +31,11 @@ export function SecaoOrcamento({ orcEstourados, orcProximos, ocultar, irPara, eh
               lida={ehLida(a.id)}
               onClick={() => marcarLida(a.id)}
               leading={<CatChip catId={a.catId} size={42} />}
-              titulo={estourou ? `${cat.nome} estourou o orçamento` : `${cat.nome} chegando ao limite`}
+              titulo={estourou ? t('{cat} estourou o orçamento', { cat: t(cat.nome) }) : t('{cat} chegando ao limite', { cat: t(cat.nome) })}
               subtituloCor={cor}
               subtitulo={
                 <>
-                  {fmtBRL(a.gasto, ocultar)} de {fmtBRL(a.orc, ocultar)}
+                  {t('{gasto} de {orc}', { gasto: fmtBRL(a.gasto, ocultar), orc: fmtBRL(a.orc, ocultar) })}
                   <span style={{ opacity: 0.5, padding: '0 4px' }}>·</span>
                   {Math.round(a.pct)}%
                 </>

@@ -6,8 +6,10 @@ import { CATEGORIAS, fmtBRL } from "../../data.js";
 import { Icon } from "../../ui/icons.jsx";
 import { ModalOverlay } from "../../ui/modal-base.jsx";
 import { COR_POS } from "../../lib/colors.js";
+import { useT } from "../../lib/i18n.jsx";
 
 export function ContaProximaModal({ tx, ocultar, onFechar, onMarcarPago }) {
+  const t = useT();
   const [, mm, dd] = tx.data.split("-").map(Number);
   const cat = CATEGORIAS[tx.categoria] || CATEGORIAS.outros;
   const diasAte = Math.ceil(
@@ -15,10 +17,10 @@ export function ContaProximaModal({ tx, ocultar, onFechar, onMarcarPago }) {
   );
   const rotuloPrazo =
     diasAte <= 0
-      ? "Vence hoje"
+      ? t("Vence hoje")
       : diasAte === 1
-        ? "Vence amanhã"
-        : `Vence em ${diasAte} dias`;
+        ? t("Vence amanhã")
+        : t("Vence em {n} dias", { n: diasAte });
 
   return (
     <ModalOverlay
@@ -48,7 +50,7 @@ export function ContaProximaModal({ tx, ocultar, onFechar, onMarcarPago }) {
         {tx.descricao}
       </div>
       <div style={{ fontSize: 13, color: "var(--muted)", fontWeight: 600, marginTop: 4 }}>
-        {dd}/{String(mm).padStart(2, "0")} · {cat.nome}
+        {dd}/{String(mm).padStart(2, "0")} · {t(cat.nome)}
       </div>
 
       <div
@@ -72,7 +74,7 @@ export function ContaProximaModal({ tx, ocultar, onFechar, onMarcarPago }) {
               letterSpacing: 0.4,
             }}
           >
-            Valor
+            {t("Valor")}
           </div>
           <div style={{ fontSize: 18, fontWeight: 800, color: "var(--ink)", marginTop: 2 }}>
             {fmtBRL(tx.valor, ocultar)}
@@ -88,7 +90,7 @@ export function ContaProximaModal({ tx, ocultar, onFechar, onMarcarPago }) {
               letterSpacing: 0.4,
             }}
           >
-            Prazo
+            {t("Prazo")}
           </div>
           <div style={{ fontSize: 13, fontWeight: 700, color: "var(--ink)", marginTop: 2 }}>
             {rotuloPrazo}
@@ -113,7 +115,7 @@ export function ContaProximaModal({ tx, ocultar, onFechar, onMarcarPago }) {
             boxShadow: "0 1px 2px rgba(0,0,0,0.06)",
           }}
         >
-          Fechar
+          {t("Fechar")}
         </button>
         <button
           onClick={onMarcarPago}
@@ -136,7 +138,7 @@ export function ContaProximaModal({ tx, ocultar, onFechar, onMarcarPago }) {
           }}
         >
           <Icon name="check" size={16} color="#fff" strokeWidth={2.6} />
-          Marcar como pago
+          {t("Marcar como pago")}
         </button>
       </div>
     </ModalOverlay>

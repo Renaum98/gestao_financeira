@@ -1,10 +1,12 @@
 // common.jsx — componentes visuais compartilhados (TopBar, SeletorMes, Card, ItemTransacao)
 
-import { CATEGORIAS, MESES_CURTO, fmtBRL, fmtBRLCompacto, rotuloMes } from '../data.js';
+import { CATEGORIAS, MESES_CURTO, fmtBRL, fmtBRLCompacto, rotuloMesT } from '../data.js';
 import { Icon, CatChip, iconePagamento } from './icons.jsx';
 import { COR_POS, COR_POS_FUNDO } from '../lib/colors.js';
+import { useT } from '../lib/i18n.jsx';
 
 export function TopBar({ titulo, voltar, acao, subtitulo }) {
+  const t = useT();
   return (
     <div style={{
       padding: 'var(--pad-top) 20px 12px', display: 'flex',
@@ -12,7 +14,7 @@ export function TopBar({ titulo, voltar, acao, subtitulo }) {
     }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', minHeight: 32 }}>
         {voltar ? (
-          <button onClick={voltar} aria-label="Voltar" style={{
+          <button onClick={voltar} aria-label={t("Voltar")} style={{
             width: 36, height: 36, borderRadius: 18,
             background: 'var(--card)', border: 'none', display: 'flex',
             alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
@@ -34,6 +36,7 @@ export function TopBar({ titulo, voltar, acao, subtitulo }) {
 }
 
 export function SeletorMes({ mes, setMes, todosMeses }) {
+  const t = useT();
   const idx = todosMeses.indexOf(mes);
   const podeProx = idx > 0;
   const podeAnt = idx < todosMeses.length - 1;
@@ -43,7 +46,7 @@ export function SeletorMes({ mes, setMes, todosMeses }) {
       background: 'var(--card)', borderRadius: 999, padding: 4,
       boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
     }}>
-      <button onClick={() => podeAnt && setMes(todosMeses[idx + 1])} disabled={!podeAnt} aria-label="Mês anterior" style={{
+      <button onClick={() => podeAnt && setMes(todosMeses[idx + 1])} disabled={!podeAnt} aria-label={t("Mês anterior")} style={{
         width: 30, height: 30, borderRadius: 999, border: 'none',
         background: 'transparent', cursor: podeAnt ? 'pointer' : 'default',
         opacity: podeAnt ? 1 : 0.3, display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -51,9 +54,9 @@ export function SeletorMes({ mes, setMes, todosMeses }) {
         <Icon name="arrow-left" size={14} color="var(--ink)" strokeWidth={2.4} />
       </button>
       <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--ink)', minWidth: 110, textAlign: 'center', letterSpacing: '-0.01em' }}>
-        {rotuloMes(mes)}
+        {rotuloMesT(t, mes)}
       </div>
-      <button onClick={() => podeProx && setMes(todosMeses[idx - 1])} disabled={!podeProx} aria-label="Próximo mês" style={{
+      <button onClick={() => podeProx && setMes(todosMeses[idx - 1])} disabled={!podeProx} aria-label={t("Próximo mês")} style={{
         width: 30, height: 30, borderRadius: 999, border: 'none',
         background: 'transparent', cursor: podeProx ? 'pointer' : 'default',
         opacity: podeProx ? 1 : 0.3, display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -78,10 +81,11 @@ export function Card({ children, style = {}, onClick, ...rest }) {
 }
 
 export function ItemTransacao({ tx, ocultar, onClick, doParceiro = false, nomeParceiro = '' }) {
+  const t = useT();
   const ehEntrada = tx.tipo === 'entrada';
   const cat = ehEntrada ? null : CATEGORIAS[tx.categoria];
   const d = new Date(tx.data + 'T12:00:00');
-  const dia = d.getDate(), mesC = MESES_CURTO[d.getMonth()];
+  const dia = d.getDate(), mesC = t(MESES_CURTO[d.getMonth()]);
   const parc = tx.parcelas;
   const valorFmt = fmtBRL(tx.valor, ocultar);
   const inicialParceiro = (nomeParceiro?.trim()[0] || '?').toUpperCase();
@@ -110,7 +114,7 @@ export function ItemTransacao({ tx, ocultar, onClick, doParceiro = false, nomePa
         )}
         {doParceiro && (
           <div
-            title={nomeParceiro ? `Do(a) ${nomeParceiro}` : 'Do parceiro'}
+            title={nomeParceiro ? t('Do(a) {nome}', { nome: nomeParceiro }) : t('Do parceiro')}
             style={{
               position: 'absolute', right: -3, bottom: -3,
               width: 18, height: 18, borderRadius: 9,
@@ -143,7 +147,7 @@ export function ItemTransacao({ tx, ocultar, onClick, doParceiro = false, nomePa
             </div>
           )}
           {tx.recorrenteId && !parc && (
-            <div title="Cobrança recorrente todo mês" style={{
+            <div title={t("Cobrança recorrente todo mês")} style={{
               fontSize: 10, fontWeight: 800,
               color: doParceiro ? 'var(--muted)' : 'var(--primary)',
               background: doParceiro
@@ -152,16 +156,16 @@ export function ItemTransacao({ tx, ocultar, onClick, doParceiro = false, nomePa
               padding: '2px 6px', borderRadius: 6, letterSpacing: '-0.01em',
               flexShrink: 0, display: 'inline-flex', alignItems: 'center', gap: 3,
             }}>
-              <Icon name="history" size={9} color={doParceiro ? 'var(--muted)' : 'var(--primary)'} strokeWidth={2.6} /> Mensal
+              <Icon name="history" size={9} color={doParceiro ? 'var(--muted)' : 'var(--primary)'} strokeWidth={2.6} /> {t('Mensal')}
             </div>
           )}
         </div>
         <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 2, display: 'flex', alignItems: 'center', gap: 6 }}>
           {ehEntrada ? (
-            <span style={{ fontWeight: 700, color: doParceiro ? 'var(--muted)' : COR_POS }}>Entrada</span>
+            <span style={{ fontWeight: 700, color: doParceiro ? 'var(--muted)' : COR_POS }}>{t('Entrada')}</span>
           ) : (
             <>
-              <span>{cat?.nome || 'Outros'}</span>
+              <span>{t(cat?.nome || 'Outros')}</span>
               <span style={{ width: 3, height: 3, borderRadius: 3, background: 'var(--muted)', opacity: 0.5 }} />
               <Icon name={iconePagamento(tx.pagamento)} size={12} color="var(--muted)" strokeWidth={2} />
             </>

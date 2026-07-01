@@ -12,9 +12,11 @@ import { COR_POS, COR_NEG, COR_AVISO } from "../lib/colors.js";
 import { CatChip } from "../ui/icons.jsx";
 import { Card, ItemTransacao, TopBar } from "../ui/common.jsx";
 import { BarraProgresso } from "../ui/charts.jsx";
+import { useT } from "../lib/i18n.jsx";
 
 export function CategoriaScreen({ ctx, params }) {
   const { txs, mes, ocultar, voltar, orcamentos } = ctx;
+  const tr = useT();
   const cat = CATEGORIAS[params.catId];
   const txMes = txDoMes(txs, mes).filter((t) => t.categoria === params.catId);
   const total = totalGeral(txMes);
@@ -31,7 +33,7 @@ export function CategoriaScreen({ ctx, params }) {
             <div
               style={{ fontSize: 13, color: "var(--muted)", fontWeight: 600 }}
             >
-              Categoria
+              {tr("Categoria")}
             </div>
             <div
               style={{
@@ -41,14 +43,14 @@ export function CategoriaScreen({ ctx, params }) {
                 letterSpacing: "-0.02em",
               }}
             >
-              {cat.nome}
+              {tr(cat.nome)}
             </div>
           </div>
         </div>
 
         <Card style={{ marginTop: 18, padding: 20 }}>
           <div style={{ fontSize: 12, color: "var(--muted)", fontWeight: 600 }}>
-            Gasto neste mês
+            {tr("Gasto neste mês")}
           </div>
           <div
             style={{
@@ -73,7 +75,7 @@ export function CategoriaScreen({ ctx, params }) {
                   marginBottom: 6,
                 }}
               >
-                <span>Orçamento {fmtBRLCompacto(orc, ocultar)}</span>
+                <span>{tr("Orçamento {x}", { x: fmtBRLCompacto(orc, ocultar) })}</span>
                 <span
                   style={{
                     color:
@@ -99,7 +101,7 @@ export function CategoriaScreen({ ctx, params }) {
                     marginTop: 6,
                   }}
                 >
-                  Você passou {fmtBRL(total - orc, ocultar)} do limite
+                  {tr("Você passou {x} do limite", { x: fmtBRL(total - orc, ocultar) })}
                 </div>
               )}
             </div>
@@ -116,7 +118,7 @@ export function CategoriaScreen({ ctx, params }) {
             padding: "20px 4px 8px",
           }}
         >
-          {txMes.length} transações
+          {tr("{count} transações", { count: txMes.length })}
         </div>
         <Card style={{ padding: "6px 16px" }}>
           {txMes.length === 0 && (
@@ -128,7 +130,7 @@ export function CategoriaScreen({ ctx, params }) {
                 fontSize: 13,
               }}
             >
-              Nenhum gasto nesta categoria neste mês.
+              {tr("Nenhum gasto nesta categoria neste mês.")}
             </div>
           )}
           {txMes.map((tx, i) => (

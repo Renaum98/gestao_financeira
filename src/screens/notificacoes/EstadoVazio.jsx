@@ -3,8 +3,10 @@
 import React from 'react';
 import { Icon } from '../../ui/icons.jsx';
 import { Card } from '../../ui/common.jsx';
+import { useT } from '../../lib/i18n.jsx';
 
 export function EstadoVazio() {
+  const t = useT();
   return (
     <div style={{ padding: '4px 20px 0' }}>
       <Card style={{ padding: 28, textAlign: 'center' }}>
@@ -22,9 +24,9 @@ export function EstadoVazio() {
         >
           <Icon name="bell" size={26} color="var(--primary)" strokeWidth={2.2} />
         </div>
-        <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--ink)' }}>Tudo em dia</div>
+        <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--ink)' }}>{t('Tudo em dia')}</div>
         <div style={{ fontSize: 13, color: 'var(--muted)', fontWeight: 500, marginTop: 6, lineHeight: 1.4 }}>
-          Sem contas a vencer nos próximos dias.
+          {t('Sem contas a vencer nos próximos dias.')}
         </div>
       </Card>
     </div>

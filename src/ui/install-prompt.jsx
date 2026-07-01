@@ -6,6 +6,7 @@ import React from 'react';
 import { Icon } from './icons.jsx';
 import { ModalOverlay } from './modal-base.jsx';
 import { vibrar } from '../lib/haptics.js';
+import { useT } from '../lib/i18n.jsx';
 
 const DISMISS_KEY = 'finca.installPrompt.dismissedAt';
 const DISMISS_DURATION_MS = 1000 * 60 * 60 * 24 * 7; // 7 dias
@@ -98,6 +99,7 @@ export function useInstallPrompt() {
 }
 
 export function InstallPromptModal({ temAtalho, plataformaIOS, onInstalar, onDispensar }) {
+  const tr = useT();
   const [instrucoesIOS, setInstrucoesIOS] = React.useState(false);
 
   const acaoInstalar = async () => {
@@ -142,15 +144,13 @@ export function InstallPromptModal({ temAtalho, plataformaIOS, onInstalar, onDis
             <div style={{
               fontSize: 19, fontWeight: 800, color: 'var(--ink)',
               letterSpacing: '-0.02em',
-            }}>Instale o MyCounts</div>
+            }}>{tr("Instale o MyCounts")}</div>
 
             <div style={{
               fontSize: 13.5, color: 'var(--muted)', fontWeight: 500,
               marginTop: 8, lineHeight: 1.5,
             }}>
-              O app instalado abre mais rápido, funciona offline e tem desempenho
-              melhor que o navegador. Você ganha um ícone na tela inicial e
-              uma experiência sem barras de endereço.
+              {tr("O app instalado abre mais rápido, funciona offline e tem desempenho melhor que o navegador. Você ganha um ícone na tela inicial e uma experiência sem barras de endereço.")}
             </div>
 
             <div style={{
@@ -158,9 +158,9 @@ export function InstallPromptModal({ temAtalho, plataformaIOS, onInstalar, onDis
               margin: '18px 0 4px', textAlign: 'left',
             }}>
               {[
-                { ico: 'sparkle', txt: 'Abre instantaneamente, como um app nativo.' },
-                { ico: 'check',   txt: 'Funciona mesmo com internet instável.' },
-                { ico: 'home',    txt: 'Ícone na tela inicial, sem barras do navegador.' },
+                { ico: 'sparkle', txt: tr('Abre instantaneamente, como um app nativo.') },
+                { ico: 'check',   txt: tr('Funciona mesmo com internet instável.') },
+                { ico: 'home',    txt: tr('Ícone na tela inicial, sem barras do navegador.') },
               ].map((b) => (
                 <div key={b.ico} style={{
                   display: 'flex', alignItems: 'center', gap: 10,
@@ -189,13 +189,13 @@ export function InstallPromptModal({ temAtalho, plataformaIOS, onInstalar, onDis
                 color: '#fff', fontSize: 15, fontWeight: 800, fontFamily: 'inherit',
                 cursor: 'pointer',
                 boxShadow: '0 8px 20px color-mix(in oklab, var(--primary) 30%, transparent)',
-              }}>Instalar app</button>
+              }}>{tr("Instalar app")}</button>
               <button onClick={onDispensar} style={{
                 width: '100%', padding: '12px', borderRadius: 14,
                 border: '1.5px solid var(--linha)',
                 background: 'var(--card)', color: 'var(--ink)',
                 fontSize: 14, fontWeight: 700, fontFamily: 'inherit', cursor: 'pointer',
-              }}>Continuar no navegador</button>
+              }}>{tr("Continuar no navegador")}</button>
             </div>
           </>
         ) : (
@@ -203,13 +203,12 @@ export function InstallPromptModal({ temAtalho, plataformaIOS, onInstalar, onDis
             <div style={{
               fontSize: 19, fontWeight: 800, color: 'var(--ink)',
               letterSpacing: '-0.02em',
-            }}>Como instalar no iPhone</div>
+            }}>{tr("Como instalar no iPhone")}</div>
             <div style={{
               fontSize: 13.5, color: 'var(--muted)', fontWeight: 500,
               marginTop: 8, lineHeight: 1.5,
             }}>
-              No Safari, toque no botão de Compartilhar e depois em
-              "Adicionar à Tela de Início".
+              {tr("No Safari, toque no botão de Compartilhar e depois em \"Adicionar à Tela de Início\".")}
             </div>
 
             <div style={{
@@ -220,12 +219,12 @@ export function InstallPromptModal({ temAtalho, plataformaIOS, onInstalar, onDis
                 '1. Toque no ícone de Compartilhar na barra inferior do Safari.',
                 '2. Role e selecione "Adicionar à Tela de Início".',
                 '3. Confirme em "Adicionar" no canto superior direito.',
-              ].map((t, i) => (
+              ].map((linha, i) => (
                 <div key={i} style={{
                   padding: '10px 12px', borderRadius: 12,
                   background: 'var(--surface-sunken)',
                   fontSize: 12.5, fontWeight: 600, color: 'var(--ink)', lineHeight: 1.4,
-                }}>{t}</div>
+                }}>{tr(linha)}</div>
               ))}
             </div>
 
@@ -235,7 +234,7 @@ export function InstallPromptModal({ temAtalho, plataformaIOS, onInstalar, onDis
               color: '#fff', fontSize: 14, fontWeight: 800, fontFamily: 'inherit',
               cursor: 'pointer', marginTop: 16,
               boxShadow: '0 8px 20px color-mix(in oklab, var(--primary) 30%, transparent)',
-            }}>Entendi</button>
+            }}>{tr("Entendi")}</button>
           </>
         )}
     </ModalOverlay>

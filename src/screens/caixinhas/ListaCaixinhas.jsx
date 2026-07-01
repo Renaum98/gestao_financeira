@@ -5,14 +5,16 @@ import { Icon } from "../../ui/icons.jsx";
 import { Card, TopBar } from "../../ui/common.jsx";
 import { CardCaixinha } from "./CardCaixinha.jsx";
 import { ModalCaixinha } from "./ModalCaixinha.jsx";
+import { useT } from "../../lib/i18n.jsx";
 
 export function CaixinhasScreen({ ctx }) {
   const { caixinhas, salvarCaixinha, voltar, irPara, ocultar, ehDesktop } = ctx;
+  const t = useT();
   const [modal, setModal] = React.useState(null); // null | 'nova' | { editando: caixinha }
 
   return (
     <div style={{ paddingBottom: "var(--pad-bottom)" }}>
-      <TopBar voltar={ehDesktop ? undefined : voltar} titulo="Caixinhas" />
+      <TopBar voltar={ehDesktop ? undefined : voltar} titulo={t("Caixinhas")} />
 
       <div style={{ padding: "4px 20px 0" }}>
         {caixinhas.length === 0 ? (
@@ -32,7 +34,7 @@ export function CaixinhasScreen({ ctx }) {
               <Icon name="piggy" size={26} color="#fff" strokeWidth={2.2} />
             </div>
             <div style={{ fontSize: 15, fontWeight: 800, color: "var(--ink)" }}>
-              Sem caixinhas ainda
+              {t("Sem caixinhas ainda")}
             </div>
             <div
               style={{
@@ -43,8 +45,7 @@ export function CaixinhasScreen({ ctx }) {
                 lineHeight: 1.4,
               }}
             >
-              Crie uma caixinha para juntar dinheiro com um objetivo (viagem, reserva, presente…). A
-              meta é opcional.
+              {t("Crie uma caixinha para juntar dinheiro com um objetivo (viagem, reserva, presente…). A meta é opcional.")}
             </div>
           </Card>
         ) : (
@@ -82,7 +83,7 @@ export function CaixinhasScreen({ ctx }) {
           }}
         >
           <Icon name="plus" size={18} color="#fff" strokeWidth={2.6} />
-          Nova caixinha
+          {t("Nova caixinha")}
         </button>
       </div>
 

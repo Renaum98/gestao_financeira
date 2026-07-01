@@ -4,6 +4,7 @@ import React from "react";
 import { fmtBRL, fmtBRLCompacto } from "../../data.js";
 import { Card } from "../../ui/common.jsx";
 import { COR_POS as VERDE, COR_NEG as VERMELHO } from "../../lib/colors.js";
+import { useT } from "../../lib/i18n.jsx";
 
 function StatCard({ rotulo, valor, valorCor, extra, extraCor }) {
   return (
@@ -62,39 +63,40 @@ export function ResumoMes({
   pctRestante,
   spanAll,
 }) {
+  const t = useT();
   return (
     <div className={spanAll} style={{ padding: "0 20px" }}>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
         <StatCard
-          rotulo="Total gasto"
+          rotulo={t("Total gasto")}
           valor={fmtBRL(total, ocultar)}
           extra={
             diffTotal !== null
-              ? `${diffTotal >= 0 ? "▲" : "▼"} ${Math.abs(diffTotal).toFixed(0)}% vs mês anterior`
+              ? `${diffTotal >= 0 ? "▲" : "▼"} ${t("{pct}% vs mês anterior", { pct: Math.abs(diffTotal).toFixed(0) })}`
               : null
           }
           extraCor={diffTotal >= 0 ? VERMELHO : VERDE}
         />
         <StatCard
-          rotulo="Média por dia"
+          rotulo={t("Média por dia")}
           valor={fmtBRL(mediaDia, ocultar)}
-          extra={`${diasDecorridos} dia${diasDecorridos > 1 ? "s" : ""}`}
+          extra={diasDecorridos > 1 ? t("{n} dias", { n: diasDecorridos }) : t("{n} dia", { n: diasDecorridos })}
         />
         <StatCard
-          rotulo="Transações"
+          rotulo={t("Transações")}
           valor={String(txCount)}
-          extra={`${catCount} categoria${catCount > 1 ? "s" : ""}`}
+          extra={catCount > 1 ? t("{n} categorias", { n: catCount }) : t("{n} categoria", { n: catCount })}
         />
         <StatCard
-          rotulo="Sobrou"
+          rotulo={t("Sobrou")}
           valor={fmtBRLCompacto(restante, ocultar)}
           valorCor={restante >= 0 ? VERDE : VERMELHO}
           extra={
             orcTotal <= 0
-              ? "sem orçamento definido"
+              ? t("sem orçamento definido")
               : restante >= 0
-                ? `${pctRestante.toFixed(0)}% do orçamento`
-                : "acima do orçamento"
+                ? t("{pct}% do orçamento", { pct: pctRestante.toFixed(0) })
+                : t("acima do orçamento")
           }
           extraCor={restante >= 0 ? VERDE : VERMELHO}
         />
