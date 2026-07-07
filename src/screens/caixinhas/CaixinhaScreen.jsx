@@ -2,7 +2,7 @@
 // CTAs (depositar/resgatar), histórico e os modais.
 
 import React from "react";
-import { fmtBRL } from "../../data.js";
+import { fmtBRL, chaveMes } from "../../data.js";
 import { Icon } from "../../ui/icons.jsx";
 import { COR_NEG } from "../../lib/colors.js";
 import { TopBar } from "../../ui/common.jsx";
@@ -33,10 +33,18 @@ export function CaixinhaScreen({ ctx, params }) {
   } = ctx;
   const tr = useT();
   const entradas = React.useMemo(() => (txs || []).filter((t) => t.tipo === "entrada"), [txs]);
+  // Só o mês atual pode financiar um depósito: não dá pra guardar uma entrada
+  // que ainda não caiu (mês futuro) nem reaproveitar entradas de meses passados
+  // (essas já viram carryover). O depósito é sempre uma ação de "agora".
+  const mesAtual = chaveMes(new Date());
+  const entradasDoMes = React.useMemo(
+    () => entradas.filter((t) => (t.data || "").startsWith(mesAtual)),
+    [entradas, mesAtual],
+  );
   // Agrupa entradas pela descrição (ex: várias txs "Shopee" viram uma única origem)
   const gruposEntrada = React.useMemo(() => {
     const m = {};
-    for (const t of entradas) {
+    for (const t of entradasDoMes) {
       const k = t.descricao;
       if (!m[k]) m[k] = { descricao: k, total: 0, ultimaData: t.data, count: 0 };
       m[k].total += t.valor;
@@ -44,14 +52,17 @@ export function CaixinhaScreen({ ctx, params }) {
       if (t.data > m[k].ultimaData) m[k].ultimaData = t.data;
     }
     return Object.values(m);
-  }, [entradas]);
+  }, [entradasDoMes]);
   // Soma o que já foi alocado de cada grupo de entradas em todas as caixinhas.
   // Aceita depósitos antigos (origem.entradaId) resolvendo pela descrição da tx.
+  // Só conta depósitos do mês atual, pra ficar simétrico com `entradasDoMes`:
+  // o disponível é (entrada do mês) − (o que já foi guardado dela neste mês).
   const alocadoPorDescricao = React.useMemo(() => {
     const m = {};
     for (const c of caixinhas) {
       for (const dep of c.depositos || []) {
         if (dep.origem?.tipo !== "entrada") continue;
+        if (!(dep.data || "").startsWith(mesAtual)) continue;
         let desc = dep.origem.descricao;
         if (!desc && dep.origem.entradaId) {
           const tx = entradas.find((e) => e.id === dep.origem.entradaId);
@@ -61,7 +72,7 @@ export function CaixinhaScreen({ ctx, params }) {
       }
     }
     return m;
-  }, [caixinhas, entradas]);
+  }, [caixinhas, entradas, mesAtual]);
   const cx = caixinhas.find((c) => c.id === params.id);
   const [modalDeposito, setModalDeposito] = React.useState(false);
   const [modalResgate, setModalResgate] = React.useState(false);

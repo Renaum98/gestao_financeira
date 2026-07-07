@@ -59,7 +59,6 @@ export function ModalCaixinha({ editando, onFechar, onSalvar }) {
     >
       <Campo label={t("Nome")}>
         <input
-          autoFocus
           value={nome}
           onChange={(e) => setNome(e.target.value)}
           placeholder={t("Ex: Viagem para a praia")}

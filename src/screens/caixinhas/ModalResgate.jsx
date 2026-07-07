@@ -62,7 +62,6 @@ export function ModalResgate({ cor, nome, disponivel, onFechar, onSalvar }) {
           {valor}
         </div>
         <input
-          autoFocus
           type="text"
           inputMode="numeric"
           pattern="[0-9]*"
