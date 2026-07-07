@@ -3,7 +3,6 @@
 // usuário quer trazer essa diferença pro mês atual (soma se sobrou, vira
 // dívida se faltou). A escolha fica em preferences.carryover[mesAtual].
 
-import React from "react";
 import { fmtBRL } from "../../data.js";
 import { Icon } from "../../ui/icons.jsx";
 import { ModalOverlay } from "../../ui/modal-base.jsx";

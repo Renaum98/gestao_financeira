@@ -1,6 +1,5 @@
 // categoria.jsx — Tela de detalhe de uma categoria
 
-import React from "react";
 import {
   CATEGORIAS,
   fmtBRL,

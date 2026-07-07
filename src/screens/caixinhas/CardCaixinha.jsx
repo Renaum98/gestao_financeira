@@ -1,6 +1,5 @@
 // CardCaixinha.jsx — card de caixinha (usado na lista e no dashboard).
 
-import React from "react";
 import { fmtBRLCompacto } from "../../data.js";
 import { Icon } from "../../ui/icons.jsx";
 import { COR_POS, COR_POS_FUNDO } from "../../lib/colors.js";

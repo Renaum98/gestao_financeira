@@ -17,7 +17,6 @@
 //   <Loader size={32} /> — spinner inline (botões, ações)
 //   <Skeleton w h r />  — bloco primitivo, para compor skeletons custom
 
-import React from 'react';
 
 // Bloco primitivo. width/height aceitam número (px) ou string (CSS).
 // radius padrão segue o "card" do app.

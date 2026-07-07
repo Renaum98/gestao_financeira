@@ -2,7 +2,6 @@
 // mês). Auto-contido: recalcula os agregados do mês recebido em vez de
 // reaproveitar os do mês ativo, simplificando o uso no carrossel.
 
-import React from "react";
 import { fmtBRL, fmtBRLCompacto, rotuloMesT, MESES } from "../../data.js";
 import { SeletorMes } from "../../ui/common.jsx";
 import { calcularSaldoMes } from "../../lib/saldo-mes.js";

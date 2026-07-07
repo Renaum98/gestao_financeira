@@ -1,6 +1,5 @@
 // MaioresGastos.jsx — top 5 saídas do mês.
 
-import React from "react";
 import { CATEGORIAS, fmtBRL } from "../../data.js";
 import { CatChip } from "../../ui/icons.jsx";
 import { Card } from "../../ui/common.jsx";

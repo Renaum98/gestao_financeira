@@ -1,7 +1,6 @@
 // ModalShell.jsx — wrapper de modal centralizado (mesmo estilo do add-expense)
 // e os controles de formulário reusados pelos modais de caixinha.
 
-import React from "react";
 import { createPortal } from "react-dom";
 import { Z_MODAL } from "../../ui/modal-base.jsx";
 import { useT } from "../../lib/i18n.jsx";

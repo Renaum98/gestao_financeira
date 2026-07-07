@@ -63,7 +63,3 @@ export function useT() {
   const lang = React.useContext(I18nContext);
   return React.useCallback((texto, vars) => traduzir(lang, texto, vars), [lang]);
 }
-
-export function useIdioma() {
-  return React.useContext(I18nContext);
-}

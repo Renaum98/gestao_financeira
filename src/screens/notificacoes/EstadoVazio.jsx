@@ -1,6 +1,5 @@
 // EstadoVazio.jsx — placeholder "Tudo em dia" quando não há notificações.
 
-import React from 'react';
 import { Icon } from '../../ui/icons.jsx';
 import { Card } from '../../ui/common.jsx';
 import { useT } from '../../lib/i18n.jsx';

@@ -1,6 +1,5 @@
 // AparenciaCard.jsx — escolha de tema (sistema/claro/escuro) e cor de destaque.
 
-import React from "react";
 import { PALETAS } from "../../data.js";
 import { Card } from "../../ui/common.jsx";
 import { vibrar } from "../../lib/haptics.js";

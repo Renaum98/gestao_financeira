@@ -1,7 +1,6 @@
 // UltimosGastos.jsx — resumo dos gastos recentes do mês (somente os MEUS; txs
 // do parceiro ficam na aba de Transações por opção de UX).
 
-import React from "react";
 import { ItemTransacao, Card } from "../../ui/common.jsx";
 import { useT } from "../../lib/i18n.jsx";
 

@@ -1,7 +1,6 @@
 // TopCategorias.jsx — ranking de categorias com variação vs. mês anterior.
 // Tocar numa categoria abre o detalhe dela.
 
-import React from "react";
 import { fmtBRLCompacto } from "../../data.js";
 import { CatChip } from "../../ui/icons.jsx";
 import { Card } from "../../ui/common.jsx";

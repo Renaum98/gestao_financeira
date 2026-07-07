@@ -1,6 +1,5 @@
 // BannerPermissao.jsx — banner para ativar notificações nativas do sistema.
 
-import React from 'react';
 import { Icon } from '../../ui/icons.jsx';
 import { useT } from '../../lib/i18n.jsx';
 

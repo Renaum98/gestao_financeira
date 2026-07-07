@@ -52,11 +52,6 @@ export function calcularLembranca(cx) {
   return { tipo: "diario", valor: faltam / dias, dias, dataMeta: cx.dataMeta, faltam };
 }
 
-export function rotuloDataCurto(yyyymmdd) {
-  const d = new Date(yyyymmdd + "T12:00:00");
-  return `${d.getDate()} ${MESES_CURTO[d.getMonth()]} ${String(d.getFullYear()).slice(2)}`;
-}
-
 // Versão traduzível: recebe a função `t` (de useT) para localizar o mês.
 export function rotuloDataCurtoT(t, yyyymmdd) {
   const d = new Date(yyyymmdd + "T12:00:00");

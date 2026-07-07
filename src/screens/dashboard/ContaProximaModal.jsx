@@ -1,7 +1,6 @@
 // ContaProximaModal.jsx — modal acionado ao tocar numa conta de "Próximas a
 // vencer", permitindo marcá-la como paga.
 
-import React from "react";
 import { CATEGORIAS, fmtBRL } from "../../data.js";
 import { Icon } from "../../ui/icons.jsx";
 import { ModalOverlay } from "../../ui/modal-base.jsx";

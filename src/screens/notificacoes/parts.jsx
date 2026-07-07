@@ -1,7 +1,6 @@
 // parts.jsx — primitivos de layout das notificações: item genérico (3 colunas)
 // e o cabeçalho de seção.
 
-import React from 'react';
 
 // Item de notificação genérico: 3 colunas (leading | titulo+subtitulo | trailing).
 // Padroniza padding, divisor entre linhas e estado de "lida" (opacidade reduzida).

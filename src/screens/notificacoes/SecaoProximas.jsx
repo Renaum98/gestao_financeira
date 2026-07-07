@@ -1,6 +1,5 @@
 // SecaoProximas.jsx — cobranças (recorrentes/parcelas) nos próximos 7 dias.
 
-import React from 'react';
 import { MESES_CURTO, fmtBRL } from '../../data.js';
 import { Card } from '../../ui/common.jsx';
 import { COR_NEG } from '../../lib/colors.js';

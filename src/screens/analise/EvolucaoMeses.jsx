@@ -1,7 +1,6 @@
 // EvolucaoMeses.jsx — barras de gasto total nos últimos 6 meses. Tocar numa
 // barra troca o mês selecionado.
 
-import React from "react";
 import { fmtBRL, fmtBRLCompacto } from "../../data.js";
 import { Card } from "../../ui/common.jsx";
 import { SecaoTitulo } from "./SecaoTitulo.jsx";

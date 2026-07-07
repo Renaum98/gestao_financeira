@@ -1,7 +1,6 @@
 // CabecalhoCaixinha.jsx — cartão colorido do topo do detalhe: total juntado,
 // bloco de rendimento (se investimento) e barra de progresso da meta.
 
-import React from "react";
 import { fmtBRL, fmtBRLCompacto } from "../../data.js";
 import { Icon } from "../../ui/icons.jsx";
 import { useT } from "../../lib/i18n.jsx";

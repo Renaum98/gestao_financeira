@@ -1,6 +1,5 @@
 // MoedaCard.jsx — escolha da moeda de exibição (símbolo/formato, sem conversão).
 
-import React from "react";
 import { Card } from "../../ui/common.jsx";
 import { useT } from "../../lib/i18n.jsx";
 import { MOEDAS, MOEDAS_SUPORTADAS } from "../../lib/moeda.js";

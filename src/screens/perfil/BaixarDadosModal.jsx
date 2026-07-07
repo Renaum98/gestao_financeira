@@ -1,6 +1,5 @@
 // BaixarDadosModal.jsx — escolha do período e exportação dos dados em .xlsx.
 
-import React from "react";
 import { createPortal } from "react-dom";
 import { rotuloMes } from "../../data.js";
 import { Icon } from "../../ui/icons.jsx";

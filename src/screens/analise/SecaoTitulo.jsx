@@ -1,6 +1,5 @@
 // SecaoTitulo.jsx — título padrão das seções da Análise.
 
-import React from "react";
 
 export function SecaoTitulo({ children }) {
   return (

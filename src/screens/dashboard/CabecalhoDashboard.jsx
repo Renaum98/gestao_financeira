@@ -1,7 +1,6 @@
 // CabecalhoDashboard.jsx — saudação + ações (ocultar valores, notificações,
 // perfil) e o nome em destaque no topo da tela Início.
 
-import React from "react";
 import { Icon } from "../../ui/icons.jsx";
 import { COR_NEG } from "../../lib/colors.js";
 import { useT } from "../../lib/i18n.jsx";

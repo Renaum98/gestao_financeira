@@ -1,6 +1,5 @@
 // confirm-modal.jsx — Modal de confirmação reutilizável (destrutivo por padrão).
 
-import React from 'react';
 import { Icon } from './icons.jsx';
 import { ModalOverlay } from './modal-base.jsx';
 import { COR_NEG, COR_NEG_FUNDO } from '../lib/colors.js';

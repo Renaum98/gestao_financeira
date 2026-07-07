@@ -1,7 +1,6 @@
 // SecaoOrcamento.jsx — alertas das categorias com orçamento estourado ou perto
 // do limite.
 
-import React from 'react';
 import { CATEGORIAS, fmtBRL } from '../../data.js';
 import { CatChip } from '../../ui/icons.jsx';
 import { Card } from '../../ui/common.jsx';

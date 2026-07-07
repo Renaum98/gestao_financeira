@@ -1,7 +1,6 @@
 // NotifParceriaItem.jsx — item de evento da parceria (aceite, depósito, etc.),
 // com botão "Entendi" para dispensar.
 
-import React from 'react';
 import { MESES_CURTO, fmtBRL } from '../../data.js';
 import { Icon } from '../../ui/icons.jsx';
 import { COR_POS, COR_NEG } from '../../lib/colors.js';

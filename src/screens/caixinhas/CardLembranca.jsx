@@ -1,7 +1,6 @@
 // CardLembranca.jsx — estado da meta: concluída, vencida, sem prazo ou
 // sugestão de quanto guardar por período.
 
-import React from "react";
 import { fmtBRL } from "../../data.js";
 import { Icon } from "../../ui/icons.jsx";
 import { COR_POS, COR_NEG, COR_POS_FUNDO, COR_NEG_FUNDO } from "../../lib/colors.js";

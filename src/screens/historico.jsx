@@ -1,6 +1,5 @@
 // historico.jsx — Tela Histórico (comparativo de meses)
 
-import React from "react";
 import {
   MESES_CURTO,
   fmtBRLCompacto,

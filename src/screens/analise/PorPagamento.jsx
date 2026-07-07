@@ -1,6 +1,5 @@
 // PorPagamento.jsx — distribuição das saídas por forma de pagamento.
 
-import React from "react";
 import { fmtBRLCompacto } from "../../data.js";
 import { Icon, iconePagamento } from "../../ui/icons.jsx";
 import { Card } from "../../ui/common.jsx";

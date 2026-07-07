@@ -1,6 +1,5 @@
 // ResumoMes.jsx — grade de 4 indicadores no topo da Análise.
 
-import React from "react";
 import { fmtBRL, fmtBRLCompacto } from "../../data.js";
 import { Card } from "../../ui/common.jsx";
 import { COR_POS as VERDE, COR_NEG as VERMELHO } from "../../lib/colors.js";

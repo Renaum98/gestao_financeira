@@ -1,6 +1,5 @@
 // SecaoRecorrencias.jsx — recorrências sem cobrança gerada para o próximo mês.
 
-import React from 'react';
 import { CATEGORIAS, MESES_CURTO, fmtBRL } from '../../data.js';
 import { CatChip } from '../../ui/icons.jsx';
 import { Card } from '../../ui/common.jsx';

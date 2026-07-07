@@ -1,6 +1,5 @@
 // SecaoTerminando.jsx — parcelamentos na última parcela (liberam orçamento).
 
-import React from 'react';
 import { fmtBRL } from '../../data.js';
 import { CatChip } from '../../ui/icons.jsx';
 import { Card } from '../../ui/common.jsx';

@@ -1,7 +1,6 @@
 // ContaCompartilhadaCard.jsx — estado da parceria: conectado, convite pendente
 // ou convite ainda não enviado.
 
-import React from "react";
 import { Icon } from "../../ui/icons.jsx";
 import { Card } from "../../ui/common.jsx";
 import { COR_NEG } from "../../lib/colors.js";

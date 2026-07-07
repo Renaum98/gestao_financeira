@@ -1,7 +1,6 @@
 // ProximasVencer.jsx — lista das recorrentes/parcelas a vencer nos próximos
 // dias. Tocar numa conta abre o ContaProximaModal (gerido pelo Dashboard).
 
-import React from "react";
 import { MESES_CURTO, fmtBRL } from "../../data.js";
 import { Icon } from "../../ui/icons.jsx";
 import { Card } from "../../ui/common.jsx";

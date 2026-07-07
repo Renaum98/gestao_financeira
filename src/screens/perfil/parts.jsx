@@ -1,6 +1,5 @@
 // parts.jsx — controles pequenos reusados na tela de Perfil.
 
-import React from "react";
 import { Icon } from "../../ui/icons.jsx";
 import { vibrar } from "../../lib/haptics.js";
 

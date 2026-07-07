@@ -1,7 +1,6 @@
 // EvolucaoConjunta.jsx — barras lado a lado (você x parceiro) nos últimos 6
 // meses. Só renderiza em conta compartilhada.
 
-import React from "react";
 import { fmtBRL } from "../../data.js";
 import { Card } from "../../ui/common.jsx";
 import { SecaoTitulo } from "./SecaoTitulo.jsx";

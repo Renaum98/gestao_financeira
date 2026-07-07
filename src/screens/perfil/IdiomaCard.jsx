@@ -1,6 +1,5 @@
 // IdiomaCard.jsx — escolha do idioma do app (Português / Inglês).
 
-import React from "react";
 import { Card } from "../../ui/common.jsx";
 import { useT } from "../../lib/i18n.jsx";
 import { SelectPerfil } from "./parts.jsx";

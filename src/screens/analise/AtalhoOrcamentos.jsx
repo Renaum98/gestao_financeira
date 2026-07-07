@@ -1,6 +1,5 @@
 // AtalhoOrcamentos.jsx — cartão-atalho para a tela de orçamentos.
 
-import React from "react";
 import { Icon } from "../../ui/icons.jsx";
 import { Card } from "../../ui/common.jsx";
 import { useT } from "../../lib/i18n.jsx";

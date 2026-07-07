@@ -1,7 +1,6 @@
 // CaixinhasPreview.jsx — prévia das primeiras caixinhas no Dashboard. Só
 // aparece quando há pelo menos uma.
 
-import React from "react";
 import { CardCaixinha } from "../caixinhas.jsx";
 import { useT } from "../../lib/i18n.jsx";
 
