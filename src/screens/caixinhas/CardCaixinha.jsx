@@ -29,8 +29,7 @@ export function CardCaixinha({ cx, ocultar, onClick }) {
         overflow: "hidden",
       }}
     >
-      <div style={{ position: "absolute", top: 0, left: 0, bottom: 0, width: 4, background: cx.cor }} />
-      <div style={{ display: "flex", alignItems: "center", gap: 10, marginLeft: 4 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
         <div
           style={{
             width: 36,
@@ -98,7 +97,7 @@ export function CardCaixinha({ cx, ocultar, onClick }) {
       </div>
 
       {cx.meta > 0 && (
-        <div style={{ marginLeft: 4, marginTop: 10 }}>
+        <div style={{ marginTop: 10 }}>
           <BarraProgresso valor={atual} max={cx.meta} cor={cx.cor} altura={6} />
         </div>
       )}
@@ -106,7 +105,6 @@ export function CardCaixinha({ cx, ocultar, onClick }) {
       {lembranca && !lembranca.completo && !lembranca.vencido && !lembranca.semData && (
         <div
           style={{
-            marginLeft: 4,
             marginTop: 10,
             padding: "8px 10px",
             borderRadius: 10,
