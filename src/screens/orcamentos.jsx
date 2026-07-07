@@ -42,6 +42,8 @@ export function OrcamentosScreen({ ctx }) {
       (c.depositos || []).reduce((s2, d) => {
         if (!d.data || !d.data.startsWith(mes)) return s2;
         if (!(d.valor > 0)) return s2;
+        // Saldo inicial não abate o orçamento: já existia antes de cadastrar.
+        if (d.tipo === "inicial") return s2;
         const dono = d.feitoPor || meuUid;
         if (meuUid && dono !== meuUid) return s2;
         return s2 + d.valor;

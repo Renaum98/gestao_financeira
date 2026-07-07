@@ -15,6 +15,8 @@ import { deleteField } from "./firebase.js";
 
 const PALETA_PADRAO = "#6E4FF6";
 const MODO_PADRAO = "sistema";
+const IDIOMA_PADRAO = "pt";
+const MOEDA_PADRAO = "BRL";
 
 function ehObjetoVazio(o) {
   return !o || Object.keys(o).length === 0;
@@ -28,6 +30,10 @@ function compactarDeposito(d) {
   if (d.origem && d.origem.tipo && d.origem.tipo !== "orcamento") {
     out.origem = d.origem;
   }
+  // Preserva o tipo do depósito. "inicial" é essencial: sem ele, o depósito
+  // (positivo) voltaria a abater o saldo após recarregar. "saque" sobrevive
+  // pelo valor negativo, mas mantê-lo é mais explícito.
+  if (d.tipo) out.tipo = d.tipo;
   if (d.feitoPor) out.feitoPor = d.feitoPor;
   return out;
 }
@@ -67,6 +73,10 @@ function compactarPreferences(p) {
   const out = {};
   if (p.paleta && p.paleta !== PALETA_PADRAO) out.paleta = p.paleta;
   if (p.modo && p.modo !== MODO_PADRAO) out.modo = p.modo;
+  // Idioma e moeda: sem eles aqui, qualquer troca de preferência (ex.: tema)
+  // reescrevia o doc sem esses campos e o app voltava pro padrão (pt/BRL).
+  if (p.idioma && p.idioma !== IDIOMA_PADRAO) out.idioma = p.idioma;
+  if (p.moeda && p.moeda !== MOEDA_PADRAO) out.moeda = p.moeda;
   if (p.nome) out.nome = p.nome;
   if (p.fotoUrl) out.fotoUrl = p.fotoUrl;
   if (p.orcamentoMensal > 0) out.orcamentoMensal = p.orcamentoMensal;

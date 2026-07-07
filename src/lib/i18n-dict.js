@@ -410,6 +410,11 @@ export const EN = {
   "Crie uma caixinha para juntar dinheiro com um objetivo (viagem, reserva, presente…). A meta é opcional.":
     "Create a savings jar to set money aside for a goal (trip, emergency fund, gift…). The target is optional.",
   "Nova caixinha": "New savings",
+  "Já tinha dinheiro guardado?": "Already had money saved?",
+  "Informar o valor que já havia": "Enter the amount already there",
+  "Começar do zero": "Start from zero",
+  "Esse valor já existia — entra na caixinha sem sair do seu saldo do mês.":
+    "This money already existed — it goes into the savings without leaving your monthly balance.",
   "Guardado: {x}": "Saved: {x}",
   "Rendimento: +{x}": "Earnings: +{x}",
   "Guarde {x} por mês": "Save {x} per month",
@@ -445,6 +450,7 @@ export const EN = {
   "{n} depósito": "{n} deposit",
   "{n} depósitos": "{n} deposits",
   "Do orçamento": "From the budget",
+  "Saldo inicial": "Opening balance",
   "Resgatado para entradas": "Withdrawn to income",
   "Da entrada: {desc}": "From income: {desc}",
   "removida": "removed",

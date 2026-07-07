@@ -18,6 +18,14 @@ export function ModalCaixinha({ editando, onFechar, onSalvar }) {
   const [meta, setMeta] = React.useState(formatarValorInicial(editando?.meta || 0));
   const [dataMeta, setDataMeta] = React.useState(editando?.dataMeta ?? "");
 
+  // ─── Saldo inicial (só ao criar) ───
+  // Dinheiro que já existia na caixinha antes de cadastrá-la aqui. Vira um
+  // depósito do tipo "inicial", que soma ao valor atual mas NÃO abate o saldo
+  // do mês (esse dinheiro não está saindo do orçamento agora).
+  const [temSaldoInicial, setTemSaldoInicial] = React.useState(false);
+  const [saldoInicial, setSaldoInicial] = React.useState(formatarValorInicial(0));
+  const saldoInicialNum = parseValorBR(saldoInicial);
+
   // ─── Avançado / investimento ───
   const [avancadoAberto, setAvancadoAberto] = React.useState(!!editando?.rendimentoAtivo);
   const [rendimentoAtivo, setRendimentoAtivo] = React.useState(!!editando?.rendimentoAtivo);
@@ -37,6 +45,8 @@ export function ModalCaixinha({ editando, onFechar, onSalvar }) {
       dataMeta: temMeta && metaNum > 0 && dataMeta ? dataMeta : "",
       rendimentoAtivo: rendimentoAtivo && cdiNum > 0,
       rendimentoCDI: rendimentoAtivo && cdiNum > 0 ? cdiNum : 0,
+      // Só faz sentido ao criar: caixinha nova pode já ter um valor prévio.
+      saldoInicial: !editando && temSaldoInicial && saldoInicialNum > 0 ? saldoInicialNum : 0,
     });
   };
 
@@ -143,6 +153,51 @@ export function ModalCaixinha({ editando, onFechar, onSalvar }) {
           </>
         )}
       </Campo>
+
+      {/* ─── Saldo inicial (só ao criar) ─── */}
+      {!editando && (
+        <Campo label={t("Já tinha dinheiro guardado?")}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              marginBottom: temSaldoInicial ? 10 : 0,
+            }}
+          >
+            <Toggle ativo={temSaldoInicial} onChange={setTemSaldoInicial} />
+            <span style={{ fontSize: 13, color: "var(--muted)", fontWeight: 600 }}>
+              {temSaldoInicial ? t("Informar o valor que já havia") : t("Começar do zero")}
+            </span>
+          </div>
+          {temSaldoInicial && (
+            <>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 6 }}>
+                <span style={{ fontSize: 14, color: "var(--muted)", fontWeight: 700 }}>{simboloMoeda()}</span>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  value={saldoInicial}
+                  onChange={(e) => setSaldoInicial(formatarValorDigitado(e.target.value))}
+                  style={inputStyle}
+                />
+              </div>
+              <div
+                style={{
+                  marginTop: 8,
+                  fontSize: 11,
+                  color: "var(--muted)",
+                  fontWeight: 500,
+                  lineHeight: 1.45,
+                }}
+              >
+                {t("Esse valor já existia — entra na caixinha sem sair do seu saldo do mês.")}
+              </div>
+            </>
+          )}
+        </Campo>
+      )}
 
       {/* ─── Avançado (investimento) ─── */}
       <div style={{ marginTop: 18 }}>

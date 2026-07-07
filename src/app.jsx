@@ -926,13 +926,22 @@ export function App() {
     }
     cloud.setCaixinhas((atual) => {
       if (dados.id) {
-        return atual.map((c) => (c.id === dados.id ? { ...c, ...dados } : c));
+        const { saldoInicial, ...resto } = dados;
+        return atual.map((c) => (c.id === dados.id ? { ...c, ...resto } : c));
       }
+      const { saldoInicial, ...resto } = dados;
+      const hoje = new Date().toISOString().slice(0, 10);
+      // Valor que já existia na caixinha vira um depósito "inicial": soma ao
+      // valor atual mas não abate o saldo do mês (guardadoNoMes o ignora).
+      const depositos =
+        saldoInicial > 0
+          ? [{ id: `dp-${Date.now()}`, valor: saldoInicial, data: hoje, tipo: "inicial" }]
+          : [];
       const nova = {
         id: `cx-${Date.now()}`,
-        criadoEm: new Date().toISOString().slice(0, 10),
-        depositos: [],
-        ...dados,
+        criadoEm: hoje,
+        depositos,
+        ...resto,
       };
       return [nova, ...atual];
     });

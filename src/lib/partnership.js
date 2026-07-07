@@ -609,16 +609,24 @@ export function useSharedCaixinhas({ partnershipId, uid, partnerNome }) {
     const lista = caixinhasRef.current;
     let novaLista;
     if (dados.id) {
+      const { saldoInicial, ...resto } = dados;
       novaLista = lista.map((c) =>
-        c.id === dados.id ? { ...c, ...dados } : c,
+        c.id === dados.id ? { ...c, ...resto } : c,
       );
     } else {
+      const { saldoInicial, ...resto } = dados;
+      const hoje = new Date().toISOString().slice(0, 10);
+      // Valor prévio da caixinha: depósito "inicial", não abate o saldo do mês.
+      const depositos =
+        saldoInicial > 0
+          ? [{ id: `dp-${Date.now()}`, valor: saldoInicial, data: hoje, tipo: "inicial", feitoPor: uid }]
+          : [];
       const nova = {
         id: `cx-${Date.now()}`,
-        criadoEm: new Date().toISOString().slice(0, 10),
+        criadoEm: hoje,
         criadoPor: uid,
-        depositos: [],
-        ...dados,
+        depositos,
+        ...resto,
       };
       novaLista = [nova, ...lista];
     }

@@ -1,7 +1,6 @@
 // HistoricoDepositos.jsx — lista de depósitos/saques da caixinha, com origem e
 // marca de quem fez (em caixinha compartilhada).
 
-import React from "react";
 import { fmtBRL } from "../../data.js";
 import { Icon } from "../../ui/icons.jsx";
 import { COR_NEG, COR_NEG_FUNDO } from "../../lib/colors.js";
@@ -36,6 +35,8 @@ export function HistoricoDepositos({ depositos, cx, ocultar, entradas, caixinhas
             let labelOrigem = tr("Do orçamento");
             if (ehSaque) {
               labelOrigem = tr("Resgatado para entradas");
+            } else if (d.tipo === "inicial") {
+              labelOrigem = tr("Saldo inicial");
             } else if (d.origem?.tipo === "entrada") {
               let desc = d.origem.descricao;
               if (!desc && d.origem.entradaId) {

@@ -15,6 +15,9 @@ export function guardadoNoMes(caixinhas, mes, meuUid, partnerUid) {
     for (const d of c.depositos || []) {
       if (!d.data || !d.data.startsWith(mes)) continue;
       if (!(d.valor > 0)) continue;
+      // Saldo inicial: dinheiro que já existia na caixinha ao criá-la. Não é
+      // dinheiro saindo do orçamento agora, então não abate o saldo do mês.
+      if (d.tipo === "inicial") continue;
       const dono = d.feitoPor || meuUid || "_anon";
       if (dono === (meuUid || "_anon")) meu += d.valor;
       else if (partnerUid && dono === partnerUid) parceiro += d.valor;
