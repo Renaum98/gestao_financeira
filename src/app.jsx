@@ -597,6 +597,31 @@ export function App() {
   const ehDesktop = useEhDesktop();
   const install = useInstallPrompt();
 
+  // Prefetch dos chunks das telas quando o browser estiver ocioso. Como as
+  // telas são carregadas com React.lazy (code-splitting), a PRIMEIRA visita a
+  // cada aba precisaria baixar+parsear o chunk e parava no Splash no meio da
+  // navegação — a "engasgada" que só acontece na primeira vez. Aquecendo o
+  // cache de módulos em idle, a navegação resolve na hora, sem flash.
+  React.useEffect(() => {
+    if (!cloud.ready) return;
+    const agendar =
+      window.requestIdleCallback || ((fn) => setTimeout(fn, 200));
+    const cancelar = window.cancelIdleCallback || clearTimeout;
+    const id = agendar(() => {
+      import("./screens/dashboard.jsx");
+      import("./screens/gastos.jsx");
+      import("./screens/analise.jsx");
+      import("./screens/perfil.jsx");
+      import("./screens/orcamentos.jsx");
+      import("./screens/historico.jsx");
+      import("./screens/caixinhas.jsx");
+      import("./screens/recorrentes.jsx");
+      import("./screens/notificacoes.jsx");
+      import("./modals/add-expense.jsx");
+    });
+    return () => cancelar(id);
+  }, [cloud.ready]);
+
   // Navegação local
   const [mes, setMes] = React.useState(chaveMes(new Date()));
   const [tela, setTela] = React.useState("inicio");
