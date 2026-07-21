@@ -8,7 +8,7 @@ import { simboloMoeda } from "../../lib/moeda.js";
 import { ModalShell } from "./ModalShell.jsx";
 import { useT } from "../../lib/i18n.jsx";
 
-export function ModalResgate({ cor, nome, disponivel, onFechar, onSalvar }) {
+export function ModalResgate({ cor, nome, disponivel, rendimento = 0, onFechar, onSalvar }) {
   const t = useT();
   const [valor, setValor] = React.useState(valorZero());
 
@@ -16,6 +16,12 @@ export function ModalResgate({ cor, nome, disponivel, onFechar, onSalvar }) {
   const valorNum = parseValorBR(valor);
   const excede = valorNum > disponivel + 0.001;
   const podeSalvar = valorNum > 0 && !excede;
+  // O rendimento sai proporcional ao que for resgatado — a caixinha volta a
+  // acumular do zero sobre o que sobrar.
+  const rendimentoQueSai =
+    rendimento > 0 && disponivel > 0 && valorNum > 0
+      ? rendimento * Math.min(1, valorNum / disponivel)
+      : 0;
 
   const aplicarTudo = () => setValor(formatarValorInicial(disponivel));
 
@@ -157,6 +163,13 @@ export function ModalResgate({ cor, nome, disponivel, onFechar, onSalvar }) {
         }}
       >
         {t("O valor volta como uma ")}<strong style={{ color: "var(--ink)" }}>{t("entrada do mês atual")}</strong>{t(" e fica disponível no orçamento.")}
+        {rendimentoQueSai > 0.005 && (
+          <div style={{ marginTop: 6 }}>
+            {t("O rendimento de {x} sai junto e deixa de render.", {
+              x: fmtBRL(rendimentoQueSai),
+            })}
+          </div>
+        )}
       </div>
     </ModalShell>
   );

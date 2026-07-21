@@ -80,9 +80,15 @@ export function Card({ children, style = {}, onClick, ...rest }) {
   );
 }
 
-export function ItemTransacao({ tx, ocultar, onClick, doParceiro = false, nomeParceiro = '' }) {
+export function ItemTransacao({ tx, ocultar, onClick, doParceiro = false, nomeParceiro = '', guardado = 0 }) {
   const t = useT();
   const ehEntrada = tx.tipo === 'entrada';
+  // Parte desta entrada que já foi pra uma caixinha (ver lib/guardado-entradas).
+  // Esse dinheiro entrou mas não está mais disponível pra gastar — marcamos a
+  // transação pra não parecer saldo livre.
+  const guardadoNum = ehEntrada ? Number(guardado) || 0 : 0;
+  const guardadoTudo = guardadoNum >= tx.valor - 0.005;
+  const temGuardado = guardadoNum > 0.005;
   // Resgate de caixinha: é uma "entrada" técnica (o dinheiro volta pro mês),
   // mas não é renda nova — rotulamos como "Resgatado" pra não se confundir
   // com um salário/recebimento de verdade. Marcado por `caixinhaId`.
@@ -95,7 +101,7 @@ export function ItemTransacao({ tx, ocultar, onClick, doParceiro = false, nomePa
   const inicialParceiro = (nomeParceiro?.trim()[0] || '?').toUpperCase();
   // No modo "parceiro" deixamos tudo bem mais discreto: cores muted, sem hover.
   const corTitulo = doParceiro ? 'var(--muted)' : 'var(--ink)';
-  const corValor = doParceiro
+  const corValor = doParceiro || (temGuardado && guardadoTudo)
     ? 'var(--muted)'
     : (ehEntrada ? COR_POS : 'var(--ink)');
   return (
@@ -163,10 +169,25 @@ export function ItemTransacao({ tx, ocultar, onClick, doParceiro = false, nomePa
               <Icon name="history" size={9} color={doParceiro ? 'var(--muted)' : 'var(--primary)'} strokeWidth={2.6} /> {t('Mensal')}
             </div>
           )}
+          {temGuardado && (
+            <div title={t("Já está numa caixinha — não está disponível pra gastar")} style={{
+              fontSize: 10, fontWeight: 800,
+              color: 'var(--muted)',
+              background: 'var(--surface-sunken)',
+              padding: '2px 6px', borderRadius: 6, letterSpacing: '-0.01em',
+              flexShrink: 0, display: 'inline-flex', alignItems: 'center', gap: 3,
+            }}>
+              <Icon name="piggy" size={9} color="var(--muted)" strokeWidth={2.6} />
+              {guardadoTudo ? t('Guardado') : fmtBRLCompacto(guardadoNum, ocultar)}
+            </div>
+          )}
         </div>
         <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 2, display: 'flex', alignItems: 'center', gap: 6 }}>
           {ehEntrada ? (
-            <span style={{ fontWeight: 700, color: doParceiro ? 'var(--muted)' : COR_POS }}>{ehResgate ? t('Resgatado') : t('Entrada')}</span>
+            <span style={{ fontWeight: 700, color: corValor }}>
+              {ehResgate ? t('Resgatado') : t('Entrada')}
+              {temGuardado && (guardadoTudo ? ` · ${t('na caixinha')}` : ` · ${t('parte na caixinha')}`)}
+            </span>
           ) : (
             <>
               <span>{t(cat?.nome || 'Outros')}</span>
@@ -188,6 +209,8 @@ export function ItemTransacao({ tx, ocultar, onClick, doParceiro = false, nomePa
           fontSize: 15, fontWeight: 700,
           color: corValor,
           letterSpacing: '-0.01em',
+          // Entrada inteiramente guardada: risca o valor — entrou, mas já saiu.
+          textDecoration: guardadoTudo && temGuardado ? 'line-through' : 'none',
         }}>
           {ehEntrada && !ocultar && !doParceiro ? `+${valorFmt}` : valorFmt}
         </div>

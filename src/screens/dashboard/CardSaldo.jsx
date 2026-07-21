@@ -27,7 +27,8 @@ export function CardSaldo({
   const {
     total,
     totalAnt,
-    entradas,
+    entradasDisponiveis,
+    entradasGuardadas,
     delta,
     orcTotal,
     restante,
@@ -177,9 +178,16 @@ export function CardSaldo({
           <div style={{ fontSize: 15, fontWeight: 700, marginTop: 2 }}>
             {fmtBRL(orcTotal, ocultar)}
           </div>
+          {/* Só o que ainda dá pra gastar: entradas guardadas em caixinha
+              saíram do bolso do mês e não entram nessa linha. */}
           {temEntrada && (
             <div style={{ fontSize: 10, fontWeight: 700, opacity: 0.85, marginTop: 2 }}>
-              +{fmtBRL(entradas, ocultar)} {t("entradas")}
+              +{fmtBRL(entradasDisponiveis, ocultar)} {t("entradas")}
+            </div>
+          )}
+          {entradasGuardadas > 0.005 && (
+            <div style={{ fontSize: 10, fontWeight: 600, opacity: 0.7, marginTop: 2 }}>
+              {fmtBRL(entradasGuardadas, ocultar)} {t("guardado em caixinhas")}
             </div>
           )}
           {carryover !== 0 && (

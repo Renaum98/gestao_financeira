@@ -4,6 +4,7 @@
 
 import { totalGeral, totalEntradas, txDoMes } from "../data.js";
 import { obterOrcBaseDoMes, mesCorrente } from "./orcamento.js";
+import { totalEntradasGuardadas } from "./guardado-entradas.js";
 
 // Soma depósitos em caixinhas feitos no mês, separando o que é meu do parceiro.
 // Saques (valor <= 0) são ignorados: voltam como entrada do mês e seriam
@@ -57,6 +58,11 @@ export function calcularSaldoMes(
   const carryover = preferences?.carryover?.[mesCard] || 0;
   const orcTotal = orcBase + entradas - guardado + carryover;
   const restante = orcTotal - total;
+  // Parte das entradas que já foi pra dentro de uma caixinha. A conta acima já
+  // é neutra (a entrada soma, o depósito abate), mas pra EXIBIR "entradas" só
+  // vale o que sobrou disponível — o resto não existe mais pra gastar.
+  const entradasGuardadas = totalEntradasGuardadas(txs, caixinhas, mesCard);
+  const entradasDisponiveis = Math.max(0, entradas - entradasGuardadas);
 
   const parceiroDoMes = txDoMes(partnerTxs, mesCard);
   const totalParceiro = totalGeral(parceiroDoMes);
@@ -71,6 +77,8 @@ export function calcularSaldoMes(
     total,
     totalAnt,
     entradas,
+    entradasGuardadas,
+    entradasDisponiveis,
     delta,
     orcBase,
     guardado,
@@ -83,6 +91,6 @@ export function calcularSaldoMes(
     orcTotalParceiro,
     restanteParceiro,
     disponivelConjunto,
-    temEntrada: entradas > 0,
+    temEntrada: entradasDisponiveis > 0.005,
   };
 }

@@ -5,8 +5,11 @@ import { fmtBRL, fmtBRLCompacto } from "../../data.js";
 import { Icon } from "../../ui/icons.jsx";
 import { useT } from "../../lib/i18n.jsx";
 
-export function CabecalhoCaixinha({ cx, ocultar, atual, rendimento, comRendimento, pct }) {
+export function CabecalhoCaixinha({ cx, ocultar, atual, rendimento, rendimentoTotal = 0, comRendimento, pct }) {
   const t = useT();
+  // Só vale mostrar o histórico quando ele diverge do rendimento atual — ou
+  // seja, quando algum resgate já levou rendimento embora.
+  const mostrarTotal = rendimentoTotal > rendimento + 0.005;
   return (
     <div
       style={{
@@ -97,6 +100,14 @@ export function CabecalhoCaixinha({ cx, ocultar, atual, rendimento, comRendiment
                 <div style={{ fontSize: 16, fontWeight: 800, letterSpacing: "-0.01em", marginTop: 1 }}>
                   {fmtBRL(rendimento, ocultar)}
                 </div>
+                {mostrarTotal && (
+                  <div
+                    title={t("Inclui o rendimento que já saiu em resgates")}
+                    style={{ fontSize: 9, fontWeight: 600, opacity: 0.7, marginTop: 2 }}
+                  >
+                    {t("{x} desde sempre", { x: fmtBRL(rendimentoTotal, ocultar) })}
+                  </div>
+                )}
               </div>
             </div>
             <div style={{ textAlign: "right", fontSize: 10, fontWeight: 700, opacity: 0.85, lineHeight: 1.3 }}>

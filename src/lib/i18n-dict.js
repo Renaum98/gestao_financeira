@@ -213,6 +213,7 @@ export const EN = {
   "vs. mês anterior": "vs. last month",
   "Orçamento": "Budget",
   "entradas": "income",
+  "guardado em caixinhas": "saved in jars",
   "Restante": "Remaining",
   "Acima do orçamento": "Over budget",
   "Parceiro": "Partner",
@@ -283,6 +284,10 @@ export const EN = {
   "Entrada": "Income",
   "Entradas": "Income",
   "Resgatado": "Withdrawn",
+  "Guardado": "Saved",
+  "na caixinha": "in savings",
+  "parte na caixinha": "partly in savings",
+  "Já está numa caixinha — não está disponível pra gastar": "Already in a savings jar — not available to spend",
   "Diferença de {mes}": "{mes} difference",
   "Em {mes} você fechou com sobra. Quer trazer esse valor pro mês atual?": "You ended {mes} with money left over. Bring it into the current month?",
   "Em {mes} você gastou mais que o orçamento. Quer trazer essa diferença como dívida do mês atual?": "You overspent your budget in {mes}. Bring that difference in as a debt for the current month?",
@@ -298,6 +303,7 @@ export const EN = {
   // ─── Transações (Gastos) ───
   "{n} transações ·": "{n} transactions ·",
   "Total:": "Total:",
+  "{x} já em caixinhas": "{x} already in savings jars",
   "Buscar gasto...": "Search expense...",
   "Todas": "All",
   "Todos": "All",
@@ -309,6 +315,9 @@ export const EN = {
   "Editar": "Edit",
   "Excluir parcelamento?": "Delete installment plan?",
   "Excluir este gasto?": "Delete this expense?",
+  "Excluir esta entrada?": "Delete this income?",
+  "Os {valor} guardados em {caixinhas} saem da caixinha junto — tudo volta a como estava antes desta entrada.": "The {valor} saved in {caixinhas} comes back out too — everything returns to how it was before this income.",
+  "Esta entrada banca {valor} guardados em {caixinhas}. Ao salvar, esse valor sai da caixinha.": "This income backs {valor} saved in {caixinhas}. On save, that amount comes back out of the jar.",
   "\"{desc}\" foi parcelado em {n}×. Todas as parcelas serão removidas.":
     "\"{desc}\" was split into {n}×. All installments will be removed.",
   "\"{desc}\" ({valor}) será removido permanentemente.":
@@ -442,6 +451,8 @@ export const EN = {
   // CabecalhoCaixinha
   "Você já juntou": "You've saved",
   "Já rendeu": "Earned so far",
+  "{x} desde sempre": "{x} all time",
+  "Inclui o rendimento que já saiu em resgates": "Includes earnings already taken out in withdrawals",
   "{x}% do CDI": "{x}% of CDI",
   "Principal {x}": "Principal {x}",
   "Meta {x}": "Target {x}",
@@ -452,6 +463,7 @@ export const EN = {
   "Do orçamento": "From the budget",
   "Saldo inicial": "Opening balance",
   "Resgatado para entradas": "Withdrawn to income",
+  " · levou {x} de rendimento": " · took {x} of earnings",
   "Da entrada: {desc}": "From income: {desc}",
   "removida": "removed",
   "Por {nome}": "By {nome}",
@@ -495,6 +507,7 @@ export const EN = {
   "O valor volta como uma ": "The money comes back as an ",
   "entrada do mês atual": "income for the current month",
   " e fica disponível no orçamento.": " and becomes available in the budget.",
+  "O rendimento de {x} sai junto e deixa de render.": "The {x} in earnings comes out with it and stops compounding.",
 
   // ─── Análise ───
   "Nenhum gasto registrado neste mês.": "No expenses recorded this month.",

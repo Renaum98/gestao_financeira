@@ -4,7 +4,7 @@
 import { ItemTransacao, Card } from "../../ui/common.jsx";
 import { useT } from "../../lib/i18n.jsx";
 
-export function UltimosGastos({ recentes, ocultar, irPara }) {
+export function UltimosGastos({ recentes, ocultar, irPara, guardadoTx = {} }) {
   const t = useT();
   return (
     <div style={{ padding: "16px 20px 0" }}>
@@ -42,7 +42,12 @@ export function UltimosGastos({ recentes, ocultar, irPara }) {
         )}
         {recentes.map((tx, i) => (
           <div key={tx.id} style={{ borderTop: i === 0 ? "none" : "1px solid var(--linha)" }}>
-            <ItemTransacao tx={tx} ocultar={ocultar} onClick={() => irPara("gastos")} />
+            <ItemTransacao
+              tx={tx}
+              ocultar={ocultar}
+              guardado={guardadoTx[tx.id]}
+              onClick={() => irPara("gastos")}
+            />
           </div>
         ))}
       </Card>

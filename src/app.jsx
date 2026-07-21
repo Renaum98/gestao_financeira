@@ -27,6 +27,8 @@ import { vibrar } from "./lib/haptics.js";
 import { useInstallPrompt, InstallPromptModal } from "./ui/install-prompt.jsx";
 import { LoaderTela } from "./ui/loader.jsx";
 import { calcOrcBaseAtual, mesCorrente, mesAnteriorDe } from "./lib/orcamento.js";
+import { rendimentoRealizadoAoResgatar } from "./lib/selic.js";
+import { ajustarGuardado } from "./lib/guardado-entradas.js";
 import { I18nProvider, useT, lerIdiomaSalvo, salvarIdioma } from "./lib/i18n.jsx";
 import { setMoedaAtiva, lerMoedaSalva, salvarMoeda } from "./lib/moeda.js";
 
@@ -833,6 +835,18 @@ export function App() {
       return;
     }
 
+    // Editar uma entrada pode deixar depósitos sem lastro (valor menor que o
+    // guardado, ou descrição/data que tira a tx do grupo que bancava eles).
+    if (editando) {
+      const original = (cloud.txs || []).find((t) => t.id === tx.id);
+      if (original?.tipo === "entrada" || tx.tipo === "entrada") {
+        const depois = (cloud.txs || [])
+          .filter((t) => t.id !== tx.id)
+          .concat(expandir(tx));
+        sincronizarGuardado(depois, original, tx);
+      }
+    }
+
     cloud.setTxs((atual) => {
       if (editando) {
         const original = atual.find((t) => t.id === tx.id);
@@ -927,7 +941,32 @@ export function App() {
     );
   };
 
+  // Entrada que financiou depósitos em caixinhas: ao excluí-la ou editá-la, o
+  // que ela não banca mais volta pra fora da caixinha. Sem isso o depósito fica
+  // órfão — continua abatendo o orçamento do mês enquanto a entrada que o
+  // compensava sumiu (ou encolheu), e o saldo fecha menor como se aquilo
+  // tivesse virado gasto. Ver lib/guardado-entradas.
+  const sincronizarGuardado = (txsDepois, txAntes, txDepois) => {
+    const { detalhes } = ajustarGuardado(caixinhasAtivas, txsDepois, txAntes, txDepois);
+    if (detalhes.length === 0) return;
+    if (ehCompartilhado) {
+      const { caixinhas: novas } = ajustarGuardado(shared.caixinhas, txsDepois, txAntes, txDepois);
+      for (const d of detalhes) {
+        const cx = novas.find((c) => c.id === d.id);
+        if (cx) shared.salvarCaixinha({ id: cx.id, depositos: cx.depositos });
+      }
+    } else {
+      cloud.setCaixinhas(
+        (atual) => ajustarGuardado(atual, txsDepois, txAntes, txDepois).caixinhas,
+      );
+    }
+  };
+
   const excluirTx = (id) => {
+    const alvo = (cloud.txs || []).find((x) => x.id === id);
+    if (alvo?.tipo === "entrada") {
+      sincronizarGuardado((cloud.txs || []).filter((x) => x.id !== id), alvo, null);
+    }
     cloud.setTxs((atual) => {
       const t = atual.find((x) => x.id === id);
       if (t && t.parcelas)
@@ -995,7 +1034,12 @@ export function App() {
   // Resgata um valor da caixinha: registra um "saque" na caixinha (valor
   // negativo, pra `valorAtual` continuar somando tudo) e cria uma entrada
   // do tipo "entrada" no mês atual, devolvendo o dinheiro pro orçamento.
-  const resgatarCaixinha = (id, valor) => {
+  //
+  // `rendimentoAtual` (opcional) é o rendimento projetado na hora do resgate —
+  // a tela passa o valor que está exibindo. Gravamos no saque a fatia que saiu
+  // junto (`rendimentoRealizado`) pra que o "Já rendeu" da caixinha zere: aquele
+  // rendimento virou dinheiro na conta e não está mais rendendo ali.
+  const resgatarCaixinha = (id, valor, rendimentoAtual = 0) => {
     const v = Number(valor);
     if (!v || v <= 0) return;
     const lista = caixinhasAtivas || [];
@@ -1004,12 +1048,14 @@ export function App() {
     const hoje = new Date();
     const yyyymmdd = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, "0")}-${String(hoje.getDate()).padStart(2, "0")}`;
     const txId = `tx-${Date.now()}`;
+    const realizado = rendimentoRealizadoAoResgatar(cx, v, rendimentoAtual);
     const saque = {
       id: `dp-${Date.now()}`,
       valor: -v,
       data: yyyymmdd,
       tipo: "saque",
       txEntradaId: txId,
+      ...(realizado > 0 && { rendimentoRealizado: realizado }),
     };
 
     if (ehCompartilhado) {

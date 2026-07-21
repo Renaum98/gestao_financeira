@@ -18,6 +18,7 @@ import { ConfirmModal } from "../ui/confirm-modal.jsx";
 import { COR_POS, COR_AVISO, COR_NEG } from "../lib/colors.js";
 import { formatarValorDigitado, formatarValorInicial, parseValorBR, valorZero } from "../lib/money-input.js";
 import { simboloMoeda } from "../lib/moeda.js";
+import { ajustarGuardado } from "../lib/guardado-entradas.js";
 import { useT } from "../lib/i18n.jsx";
 
 function hojeISO() {
@@ -31,7 +32,7 @@ const CORES_CAT = [
 ];
 
 export function AddExpenseModal({ ctx, params }) {
-  const { fechar, salvarTx, adicionarCategoria, excluirCategoria, ehDesktop, txs, mes, orcamentos, preferences } = ctx;
+  const { fechar, salvarTx, adicionarCategoria, excluirCategoria, ehDesktop, txs, mes, orcamentos, preferences, caixinhas } = ctx;
   const t = useT();
   const editar = params && params.editar;
   // Estado da confirmação de exclusão de categoria personalizada.
@@ -135,6 +136,19 @@ export function AddExpenseModal({ ctx, params }) {
     if (pct < 80) return null;
     return { pct, excedeu: projetado > limite, limite, projetado };
   }, [ehEntrada, pagamento, preferences, txs, mes, valorNum, editar]);
+
+  // Aviso de caixinha: editar uma entrada que já foi guardada pode deixar o
+  // depósito sem lastro (valor menor que o guardado, ou descrição/data que tira
+  // a tx do grupo que bancava ele). Nesse caso a diferença sai da caixinha ao
+  // salvar — avisamos antes. Mesmo cálculo que o app.jsx aplica.
+  const avisoGuardado = React.useMemo(() => {
+    if (!editar || (editar.tipo !== "entrada" && !ehEntrada)) return null;
+    const descFinal = descricao.trim() || (ehEntrada ? "Entrada" : CATEGORIAS[categoria].nome);
+    const txNova = { ...editar, tipo, valor: valorNum, descricao: descFinal, data };
+    const depois = (txs || []).filter((t) => t.id !== editar.id).concat([txNova]);
+    const { removido, detalhes } = ajustarGuardado(caixinhas, depois, editar, txNova);
+    return removido > 0.005 ? { removido, detalhes } : null;
+  }, [editar, ehEntrada, tipo, valorNum, descricao, categoria, data, txs, caixinhas]);
 
   const salvar = () => {
     if (valorNum <= 0) return;
@@ -781,6 +795,30 @@ export function AddExpenseModal({ ctx, params }) {
               {avisoCartao.excedeu
                 ? t("Você excedeu o limite do cartão de crédito: {proj} de {lim}.", { proj: fmtBRL(avisoCartao.projetado), lim: fmtBRL(avisoCartao.limite) })
                 : t("Atenção: {pct}% do limite do cartão de crédito ({proj} de {lim}).", { pct: avisoCartao.pct.toFixed(0), proj: fmtBRL(avisoCartao.projetado), lim: fmtBRL(avisoCartao.limite) })}
+            </div>
+          </div>
+        )}
+
+        {/* Aviso: parte do que está na caixinha volta ao salvar esta edição */}
+        {avisoGuardado && (
+          <div
+            style={{
+              marginTop: 10,
+              padding: "10px 14px",
+              borderRadius: 12,
+              background: COR_AVISO + "1A",
+              border: `1px solid ${COR_AVISO}55`,
+              display: "flex",
+              alignItems: "center",
+              gap: 10,
+            }}
+          >
+            <Icon name="piggy" size={18} color={COR_AVISO} strokeWidth={2.4} />
+            <div style={{ fontSize: 12, fontWeight: 700, color: COR_AVISO, lineHeight: 1.4 }}>
+              {t("Esta entrada banca {valor} guardados em {caixinhas}. Ao salvar, esse valor sai da caixinha.", {
+                valor: fmtBRL(avisoGuardado.removido),
+                caixinhas: avisoGuardado.detalhes.map((d) => `"${d.nome}"`).join(", "),
+              })}
             </div>
           </div>
         )}

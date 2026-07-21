@@ -11,6 +11,7 @@ import { vibrar } from "../lib/haptics.js";
 import { useT } from "../lib/i18n.jsx";
 import { computeInsights } from "../lib/insights.jsx";
 import { calcularSaldoMes } from "../lib/saldo-mes.js";
+import { guardadoPorTx } from "../lib/guardado-entradas.js";
 import { mesAnteriorDe } from "../lib/orcamento.js";
 import { DiferencaMesModal } from "./dashboard/DiferencaMesModal.jsx";
 import { CabecalhoDashboard } from "./dashboard/CabecalhoDashboard.jsx";
@@ -106,7 +107,14 @@ export function DashboardScreen({ ctx }) {
       }),
     [mes, txs, partnerTxs, todosMeses, preferences, caixinhas, meuUid, partnerUid, orcBaseParceiro],
   );
-  const { txMes, txMesAnt, total, totalAnt, entradas, delta, orcTotal, restante } = saldo;
+  const { txMes, txMesAnt, total, totalAnt, entradasDisponiveis, delta, orcTotal, restante } = saldo;
+
+  // Entradas que já foram pra uma caixinha: sinalizadas na lista de gastos
+  // recentes como valor que não está mais disponível.
+  const guardadoTx = React.useMemo(
+    () => guardadoPorTx(txs, caixinhas, mes),
+    [txs, caixinhas, mes],
+  );
 
   // ─── Modal de virada de mês (diferença do mês anterior) ───
   // No primeiro acesso de um mês novo, oferece trazer o que sobrou/faltou no
@@ -202,13 +210,14 @@ export function DashboardScreen({ ctx }) {
         mes,
         orcTotal,
         restante,
-        entradas,
+        // Só o que ainda dá pra gastar — o que foi pra caixinha não conta.
+        entradas: entradasDisponiveis,
         caixinhas,
         proximas,
         orcCategorias,
         t,
       }),
-    [txMes, txMesAnt, total, totalAnt, delta, ocultar, mes, orcTotal, restante, entradas, caixinhas, proximas, orcCategorias, t],
+    [txMes, txMesAnt, total, totalAnt, delta, ocultar, mes, orcTotal, restante, entradasDisponiveis, caixinhas, proximas, orcCategorias, t],
   );
 
   const [simularAberto, setSimularAberto] = React.useState(false);
@@ -297,7 +306,7 @@ export function DashboardScreen({ ctx }) {
         ehDesktop={ehDesktop}
       />
 
-      <UltimosGastos recentes={recentes} ocultar={ocultar} irPara={irPara} />
+      <UltimosGastos recentes={recentes} ocultar={ocultar} irPara={irPara} guardadoTx={guardadoTx} />
 
       <CaixinhasPreview caixinhas={caixinhas} ocultar={ocultar} irPara={irPara} />
 

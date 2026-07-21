@@ -35,6 +35,12 @@ export function HistoricoDepositos({ depositos, cx, ocultar, entradas, caixinhas
             let labelOrigem = tr("Do orçamento");
             if (ehSaque) {
               labelOrigem = tr("Resgatado para entradas");
+              // Rendimento que saiu junto neste resgate (e deixou de render).
+              if (d.rendimentoRealizado > 0.005) {
+                labelOrigem += tr(" · levou {x} de rendimento", {
+                  x: fmtBRL(d.rendimentoRealizado, ocultar),
+                });
+              }
             } else if (d.tipo === "inicial") {
               labelOrigem = tr("Saldo inicial");
             } else if (d.origem?.tipo === "entrada") {

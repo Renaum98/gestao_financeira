@@ -7,7 +7,8 @@ import { Icon } from "../../ui/icons.jsx";
 import { COR_NEG } from "../../lib/colors.js";
 import { TopBar } from "../../ui/common.jsx";
 import { ConfirmModal } from "../../ui/confirm-modal.jsx";
-import { useSelic, calcularRendimento } from "../../lib/selic.js";
+import { useSelic, calcularRendimento, rendimentoDesdeSempre } from "../../lib/selic.js";
+import { alocadoPorDescricao } from "../../lib/guardado-entradas.js";
 import { valorAtual, calcularLembranca } from "./utils.js";
 import { CabecalhoCaixinha } from "./CabecalhoCaixinha.jsx";
 import { CardLembranca } from "./CardLembranca.jsx";
@@ -54,25 +55,12 @@ export function CaixinhaScreen({ ctx, params }) {
     return Object.values(m);
   }, [entradasDoMes]);
   // Soma o que já foi alocado de cada grupo de entradas em todas as caixinhas.
-  // Aceita depósitos antigos (origem.entradaId) resolvendo pela descrição da tx.
   // Só conta depósitos do mês atual, pra ficar simétrico com `entradasDoMes`:
   // o disponível é (entrada do mês) − (o que já foi guardado dela neste mês).
-  const alocadoPorDescricao = React.useMemo(() => {
-    const m = {};
-    for (const c of caixinhas) {
-      for (const dep of c.depositos || []) {
-        if (dep.origem?.tipo !== "entrada") continue;
-        if (!(dep.data || "").startsWith(mesAtual)) continue;
-        let desc = dep.origem.descricao;
-        if (!desc && dep.origem.entradaId) {
-          const tx = entradas.find((e) => e.id === dep.origem.entradaId);
-          desc = tx?.descricao;
-        }
-        if (desc) m[desc] = (m[desc] || 0) + dep.valor;
-      }
-    }
-    return m;
-  }, [caixinhas, entradas, mesAtual]);
+  const alocado = React.useMemo(
+    () => alocadoPorDescricao(caixinhas, entradas, mesAtual),
+    [caixinhas, entradas, mesAtual],
+  );
   const cx = caixinhas.find((c) => c.id === params.id);
   const [modalDeposito, setModalDeposito] = React.useState(false);
   const [modalResgate, setModalResgate] = React.useState(false);
@@ -93,6 +81,9 @@ export function CaixinhaScreen({ ctx, params }) {
 
   const atual = valorAtual(cx); // principal — base p/ resgate e contabilidade
   const rendimento = calcularRendimento(cx, selic);
+  // Informativo: soma o que já rendeu desde sempre, incluindo o rendimento que
+  // saiu junto em resgates anteriores.
+  const rendimentoTotal = rendimentoDesdeSempre(cx, selic);
   const comRendimento = atual + rendimento;
   const lembranca = calcularLembranca(cx);
   const pct = cx.meta > 0 ? Math.min(100, (comRendimento / cx.meta) * 100) : 0;
@@ -135,6 +126,7 @@ export function CaixinhaScreen({ ctx, params }) {
           ocultar={ocultar}
           atual={atual}
           rendimento={rendimento}
+          rendimentoTotal={rendimentoTotal}
           comRendimento={comRendimento}
           pct={pct}
         />
@@ -232,7 +224,7 @@ export function CaixinhaScreen({ ctx, params }) {
         <ModalDeposito
           cor={cx.cor}
           gruposEntrada={gruposEntrada}
-          alocadoPorDescricao={alocadoPorDescricao}
+          alocadoPorDescricao={alocado}
           onFechar={() => setModalDeposito(false)}
           onSalvar={(dep) => {
             depositarCaixinha(cx.id, dep);
@@ -245,9 +237,10 @@ export function CaixinhaScreen({ ctx, params }) {
           cor={cx.cor}
           nome={cx.nome}
           disponivel={atual}
+          rendimento={rendimento}
           onFechar={() => setModalResgate(false)}
           onSalvar={(valor) => {
-            resgatarCaixinha(cx.id, valor);
+            resgatarCaixinha(cx.id, valor, rendimento);
             setModalResgate(false);
           }}
         />

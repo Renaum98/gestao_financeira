@@ -84,13 +84,24 @@ function diasEntre(de, ate) {
   return Math.round((d2 - d1) / (1000 * 60 * 60 * 24));
 }
 
-// Rendimento projetado (R$) entre os depósitos e hoje.
+// Soma o rendimento que já saiu da caixinha em resgates (campo
+// `rendimentoRealizado`, gravado no saque no momento do resgate).
+function rendimentoJaRetirado(cx) {
+  return (cx?.depositos || []).reduce((s, d) => s + (Number(d.rendimentoRealizado) || 0), 0);
+}
+
+// Rendimento projetado (R$) que AINDA está na caixinha.
 //
 // Cada depósito (positivo ou saque negativo) é projetado pelo regime de juros
 // compostos diários: contribuiHoje = valor * (1+r)^(diasDesdeDeposito). O ganho
 // é (somaContribuiHoje − somaPrincipal). Saques negativos removem proporção do
 // pool, então o "deveria ter rendido" daquele resgate sai junto — equivale a
 // retirada FIFO/proporcional, que é como contas de investimento se comportam.
+//
+// Mas o resgate leva junto o rendimento já acumulado da parte sacada: esse
+// dinheiro virou entrada do mês e não está mais rendendo aqui. Descontamos o
+// que foi realizado em cada saque — resgatar tudo zera o rendimento, e a
+// caixinha volta a acumular do zero a partir dos próximos depósitos.
 export function calcularRendimento(cx, selicAnualPct) {
   if (!cx?.rendimentoAtivo) return 0;
   const cdiPct = Number(cx.rendimentoCDI);
@@ -108,7 +119,25 @@ export function calcularRendimento(cx, selicAnualPct) {
     balanco += dep.valor * Math.pow(1 + taxaDiaria, dias);
     principal += dep.valor;
   }
-  return Math.max(0, balanco - principal);
+  return Math.max(0, balanco - principal - rendimentoJaRetirado(cx));
+}
+
+// Quanto do rendimento atual sai junto num resgate de `valorResgatado`.
+// Proporcional ao principal retirado: tirar metade leva metade do rendimento,
+// tirar tudo leva tudo (e o "Já rendeu" volta a zero).
+export function rendimentoRealizadoAoResgatar(cx, valorResgatado, rendimentoAtual) {
+  const rend = Number(rendimentoAtual) || 0;
+  if (rend <= 0) return 0;
+  const principal = (cx?.depositos || []).reduce((s, d) => s + d.valor, 0);
+  if (!(principal > 0)) return rend;
+  const fracao = Math.min(1, (Number(valorResgatado) || 0) / principal);
+  return rend * fracao;
+}
+
+// Tudo que a caixinha já rendeu desde sempre: o que ainda está nela mais o que
+// saiu em resgates. Puramente informativo — não entra em nenhuma conta.
+export function rendimentoDesdeSempre(cx, selicAnualPct) {
+  return rendimentoJaRetirado(cx) + calcularRendimento(cx, selicAnualPct);
 }
 
 // Taxa anual efetiva (em %) — útil pra mostrar "rendendo X% a.a." pro usuário.

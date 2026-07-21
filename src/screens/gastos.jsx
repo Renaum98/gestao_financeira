@@ -14,10 +14,11 @@ import { Icon, iconePagamento } from "../ui/icons.jsx";
 import { Card, ItemTransacao, SeletorMes, TopBar } from "../ui/common.jsx";
 import { ConfirmModal } from "../ui/confirm-modal.jsx";
 import { COR_NEG, COR_NEG_FUNDO, COR_POS } from "../lib/colors.js";
+import { guardadoPorTx, ajustarGuardado } from "../lib/guardado-entradas.js";
 import { useT } from "../lib/i18n.jsx";
 
 export function GastosScreen({ ctx }) {
-  const { txs, mes, setMes, todosMeses, ocultar, irPara, excluirTx } = ctx;
+  const { txs, mes, setMes, todosMeses, ocultar, irPara, excluirTx, caixinhas } = ctx;
   const t = useT();
   const [filtro, setFiltro] = React.useState("todas");
   const [filtroPag, setFiltroPag] = React.useState("todos");
@@ -54,6 +55,22 @@ export function GastosScreen({ ctx }) {
 
   const ehFiltroEntradas = filtro === "entradas";
 
+  // Quanto de cada entrada do mês já foi pra uma caixinha — o item da lista
+  // sinaliza esse valor como indisponível.
+  const guardadoTx = React.useMemo(
+    () => guardadoPorTx(txs, caixinhas, mes),
+    [txs, caixinhas, mes],
+  );
+
+  // Prévia do efeito colateral da exclusão: excluir uma entrada que virou
+  // depósito desfaz o depósito junto (senão o orçamento do mês encolheria).
+  const guardadoAExcluir = React.useMemo(() => {
+    if (!confirmarExclusao) return null;
+    const depois = (txs || []).filter((t) => t.id !== confirmarExclusao.id);
+    const { removido, detalhes } = ajustarGuardado(caixinhas, depois, confirmarExclusao, null);
+    return removido > 0.005 ? { removido, detalhes } : null;
+  }, [confirmarExclusao, caixinhas, txs]);
+
   // Se o filtro atual não existe mais (mudou de mês), volta pra "todas".
   React.useEffect(() => {
     if (ehFiltroEntradas) {
@@ -83,6 +100,10 @@ export function GastosScreen({ ctx }) {
   // No filtro de entradas, o "Total" soma o que entrou (totalGeral ignora
   // entradas e daria zero).
   const total = ehFiltroEntradas ? totalEntradas(txMes) : totalGeral(txMes);
+  // No filtro de entradas, quanto do total já está preso numa caixinha.
+  const guardadoNoFiltro = ehFiltroEntradas
+    ? txMes.reduce((s, t) => s + (guardadoTx[t.id] || 0), 0)
+    : 0;
 
   // Lista única do mês, ordenada da mais recente para a mais antiga.
   // O dia/mês continua visível por transação no próprio ItemTransacao.
@@ -144,6 +165,11 @@ export function GastosScreen({ ctx }) {
             <span style={{ color: "var(--ink)", fontWeight: 700 }}>
               {fmtBRL(total, ocultar)}
             </span>
+            {guardadoNoFiltro > 0.005 && (
+              <div style={{ fontSize: 11, fontWeight: 600, marginTop: 2 }}>
+                {t("{x} já em caixinhas", { x: fmtBRL(guardadoNoFiltro, ocultar) })}
+              </div>
+            )}
           </div>
           <SeletorMes mes={mes} setMes={setMes} todosMeses={todosMeses} />
         </div>
@@ -370,6 +396,7 @@ export function GastosScreen({ ctx }) {
                 <ItemTransacao
                   tx={tx}
                   ocultar={ocultar}
+                  guardado={guardadoTx[tx.id]}
                   onClick={() => setAcaoAberta(tx.id)}
                 />
                 {acaoAberta === tx.id && (
@@ -439,12 +466,20 @@ export function GastosScreen({ ctx }) {
           titulo={
             confirmarExclusao.parcelas
               ? t("Excluir parcelamento?")
-              : t("Excluir este gasto?")
+              : confirmarExclusao.tipo === "entrada"
+                ? t("Excluir esta entrada?")
+                : t("Excluir este gasto?")
           }
           mensagem={
-            confirmarExclusao.parcelas
+            (confirmarExclusao.parcelas
               ? t("\"{desc}\" foi parcelado em {n}×. Todas as parcelas serão removidas.", { desc: confirmarExclusao.descricao, n: confirmarExclusao.parcelas.total })
-              : t("\"{desc}\" ({valor}) será removido permanentemente.", { desc: confirmarExclusao.descricao, valor: fmtBRL(confirmarExclusao.valor) })
+              : t("\"{desc}\" ({valor}) será removido permanentemente.", { desc: confirmarExclusao.descricao, valor: fmtBRL(confirmarExclusao.valor) })) +
+            (guardadoAExcluir
+              ? " " + t("Os {valor} guardados em {caixinhas} saem da caixinha junto — tudo volta a como estava antes desta entrada.", {
+                  valor: fmtBRL(guardadoAExcluir.removido),
+                  caixinhas: guardadoAExcluir.detalhes.map((d) => `"${d.nome}"`).join(", "),
+                })
+              : "")
           }
           onCancelar={() => setConfirmarExclusao(null)}
           onConfirmar={() => {
