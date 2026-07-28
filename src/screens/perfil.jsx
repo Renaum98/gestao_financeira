@@ -67,7 +67,11 @@ export function PerfilScreen({ ctx }) {
     const nomeUsuario = preferences.nome || nomeConta;
     try {
       if (baixar.formato === "pdf") {
-        await baixarRelatorioPDF({ txs, mes: baixar.mes, nomeUsuario, lang, t });
+        await baixarRelatorioPDF({
+          txs, caixinhas, preferences, todosMeses,
+          meuUid: usuario?.uid, partnerUid,
+          mes: baixar.mes, nomeUsuario, lang, t,
+        });
       } else {
         await baixarDadosXLSX({
           txs, caixinhas, recorrentes, orcamentos,

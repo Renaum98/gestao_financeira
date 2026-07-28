@@ -7,12 +7,19 @@
 // Só existe versão POR MÊS — um relatório "de tudo" viraria um calhamaço sem
 // leitura útil; pra isso o usuário baixa o .xlsx.
 //
+// O resumo sai de `calcularSaldoMes`, a mesma conta do Dashboard: o restante do
+// mês é orçamento fixo + entradas - guardado em caixinhas + diferença trazida
+// do mês anterior - gastos. Duplicar a fórmula aqui só criaria um relatório que
+// discorda da tela.
+//
 // Como no export.js, o `jspdf` entra por dynamic import: só quem gera relatório
 // paga o custo no bundle.
 
 import { CATEGORIAS, fmtBRL, rotuloMesT, txDoMes } from '../data.js';
 import { COR_NEG, COR_POS } from './colors.js';
 import { slugNome } from './export.js';
+import { calcularSaldoMes } from './saldo-mes.js';
+import { mesAnteriorDe } from './orcamento.js';
 
 // ─── Medidas (mm, A4 retrato) ───
 const LARG = 210;
@@ -187,37 +194,58 @@ function tituloSecao(ctx, rotulo) {
 }
 
 // ─── Resumo do mês ───
-// Três caixas: entradas, gastos e o resultado (entradas - gastos) das
-// transações do mês. É um fechamento do extrato, não o "saldo do mês" do app
-// (que envolve orçamento fixo, guardado e carryover).
-function blocoResumo(ctx, { entradas, gastos }) {
+// Quatro números: o orçamento fixo do mês, as entradas extras, o que foi gasto
+// e o restante — a mesma linha de fundo que o Dashboard mostra. Guardado em
+// caixinhas e diferença trazida do mês anterior entram na conta do restante,
+// mas viram uma linha de detalhe: só aparecem quando existem, senão o leitor
+// não consegue fechar a soma de cabeça.
+function blocoResumo(ctx, resumo) {
   const { doc, t } = ctx;
-  const resultado = entradas - gastos;
-  const caixas = [
+  const { orcBase, entradas, gastos, guardado, carryover, restante, mesAnterior } = resumo;
+  const colunas = [
+    { rotulo: t('Orçamento do mês'), valor: orcBase, cor: TINTA },
     { rotulo: t('Entradas'), valor: entradas, cor: COR_POS },
     { rotulo: t('Gastos'), valor: gastos, cor: COR_NEG },
-    { rotulo: t('Resultado'), valor: resultado, cor: resultado < 0 ? COR_NEG : TINTA },
+    { rotulo: t('Restante'), valor: restante, cor: restante < 0 ? COR_NEG : COR_POS },
   ];
 
   const vao = 4;
-  const largCol = (LARG_UTIL - vao * (caixas.length - 1)) / caixas.length;
+  const largCol = (LARG_UTIL - vao * (colunas.length - 1)) / colunas.length;
   const altBloco = 16;
   garantirEspaco(ctx, altBloco + 4);
 
-  caixas.forEach((c, i) => {
+  colunas.forEach((c, i) => {
     const x = MARGEM + i * (largCol + vao);
 
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(7.5);
     texto(doc, SUAVE);
-    doc.text(c.rotulo.toUpperCase(), x, ctx.y + 4);
+    doc.text(cortar(doc, c.rotulo.toUpperCase(), largCol - 2), x, ctx.y + 4);
 
     doc.setFontSize(12);
     texto(doc, c.cor);
     doc.text(cortar(doc, fmtBRL(c.valor), largCol - 2), x, ctx.y + 12);
   });
 
-  ctx.y += altBloco + 6;
+  ctx.y += altBloco;
+
+  const detalhes = [];
+  if (guardado > 0.005) {
+    detalhes.push(`${t('Guardado em caixinhas')} -${fmtBRL(guardado)}`);
+  }
+  if (Math.abs(carryover) > 0.005) {
+    const rotulo = t('Diferença de {mes}', { mes: rotuloMesT(t, mesAnterior) });
+    detalhes.push(`${rotulo} ${carryover < 0 ? '-' : '+'}${fmtBRL(Math.abs(carryover))}`);
+  }
+  if (detalhes.length) {
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(7.5);
+    texto(doc, SUAVE);
+    doc.text(`${t('Também na conta do restante')}: ${detalhes.join(' · ')}`, MARGEM, ctx.y + 2);
+    ctx.y += 5;
+  }
+
+  ctx.y += 6;
 }
 
 // ─── Tabela de transações ───
@@ -297,6 +325,8 @@ function linhaTabela(ctx, tx) {
   ctx.y += altLinha;
 }
 
+// Fecha a tabela somando o que está listado nela — nada de orçamento aqui, pra
+// não misturar com o resumo lá em cima.
 function totalTabela(ctx, { entradas, gastos }) {
   const { doc, t } = ctx;
   const altLinha = 9;
@@ -306,13 +336,15 @@ function totalTabela(ctx, { entradas, gastos }) {
   doc.setLineWidth(0.3);
   doc.line(MARGEM, ctx.y, LARG - MARGEM, ctx.y);
 
-  const resultado = entradas - gastos;
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(8.5);
   texto(doc, TINTA);
-  doc.text(t('Resultado do mês'), MARGEM + 3, ctx.y + 6);
-  texto(doc, resultado < 0 ? COR_NEG : COR_POS);
-  doc.text(fmtBRL(resultado), LARG - MARGEM - 3, ctx.y + 6, { align: 'right' });
+  doc.text(t('Total lançado no mês'), MARGEM + 3, ctx.y + 6);
+
+  texto(doc, COR_POS);
+  doc.text(`+ ${fmtBRL(entradas)}`, LARG - MARGEM - 48, ctx.y + 6, { align: 'right' });
+  texto(doc, COR_NEG);
+  doc.text(`- ${fmtBRL(gastos)}`, LARG - MARGEM - 3, ctx.y + 6, { align: 'right' });
 
   ctx.y += altLinha + 6;
 }
@@ -391,8 +423,15 @@ function rodapes(ctx) {
 }
 
 // Gera e baixa o relatório do mês `mes` ('YYYY-MM').
+// `preferences`, `caixinhas`, `todosMeses` e `meuUid` alimentam o resumo — sem
+// eles a conta cai pra "entradas - gastos", que é o relatório sem orçamento.
 export async function baixarRelatorioPDF({
   txs = [],
+  caixinhas = [],
+  preferences = {},
+  todosMeses = [],
+  meuUid = null,
+  partnerUid = null,
   mes,
   nomeUsuario = '',
   lang = 'pt',
@@ -406,18 +445,35 @@ export async function baixarRelatorioPDF({
 
   const doMes = txDoMes(txs, mes).sort((a, b) => a.data.localeCompare(b.data));
 
-  let entradas = 0;
-  let gastos = 0;
   const gastosPorCat = {};
   for (const tx of doMes) {
+    if (tx.tipo === 'entrada') continue;
     const valor = Number(tx.valor) || 0;
-    if (tx.tipo === 'entrada') {
-      entradas += valor;
-    } else {
-      gastos += valor;
-      gastosPorCat[tx.categoria] = (gastosPorCat[tx.categoria] || 0) + valor;
-    }
+    gastosPorCat[tx.categoria] = (gastosPorCat[tx.categoria] || 0) + valor;
   }
+
+  // Mesma conta do Dashboard. O parceiro fica de fora: o relatório é do extrato
+  // de quem baixou, e `partnerUid` entra só pra não contar como meu o que o
+  // parceiro guardou nas caixinhas compartilhadas.
+  const saldo = calcularSaldoMes(mes, {
+    txs,
+    partnerTxs: [],
+    todosMeses,
+    preferences,
+    caixinhas,
+    meuUid,
+    partnerUid,
+    orcBaseParceiro: 0,
+  });
+  const resumo = {
+    orcBase: saldo.orcBase,
+    entradas: saldo.entradas,
+    gastos: saldo.total,
+    guardado: saldo.guardado,
+    carryover: saldo.carryover,
+    restante: saldo.restante,
+    mesAnterior: mesAnteriorDe(mes),
+  };
 
   const mesRotulo = rotuloMesT(t, mes);
   const ctx = { doc, logo, t, y: 0, zebra: false, mesRotulo };
@@ -426,14 +482,14 @@ export async function baixarRelatorioPDF({
   cabecalhoCompleto(ctx, { mesRotulo, nomeUsuario, geradoEm });
 
   tituloSecao(ctx, t('Resumo do mês'));
-  blocoResumo(ctx, { entradas, gastos });
+  blocoResumo(ctx, resumo);
 
   tituloSecao(ctx, t('Transações ({n})', { n: doMes.length }));
   if (doMes.length) {
     cabecalhoTabela(ctx);
     for (const tx of doMes) linhaTabela(ctx, tx);
-    totalTabela(ctx, { entradas, gastos });
-    blocoCategorias(ctx, gastosPorCat, gastos);
+    totalTabela(ctx, { entradas: resumo.entradas, gastos: resumo.gastos });
+    blocoCategorias(ctx, gastosPorCat, resumo.gastos);
   } else {
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(9);
