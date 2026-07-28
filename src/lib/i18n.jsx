@@ -63,3 +63,9 @@ export function useT() {
   const lang = React.useContext(I18nContext);
   return React.useCallback((texto, vars) => traduzir(lang, texto, vars), [lang]);
 }
+
+// Idioma ativo ("pt" | "en"). Pra quem precisa do código em si — por exemplo
+// escolher o locale de `toLocaleDateString` — e não só da função `t`.
+export function useLang() {
+  return React.useContext(I18nContext);
+}

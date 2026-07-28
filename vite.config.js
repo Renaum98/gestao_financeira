@@ -58,6 +58,15 @@ export default defineConfig({
       workbox: {
         cacheId: `finca-${buildId}`,
         globPatterns: ['**/*.{js,css,html,svg,png,ico,woff2,webmanifest}'],
+        // O jspdf traz html2canvas/canvg/dompurify como deps opcionais do
+        // `doc.html()` — que o relatório não usa (desenhamos tudo na mão).
+        // Eles viram chunks próprios e só entrariam por dynamic import, então
+        // ficam fora do precache: são ~380 KB que nenhum usuário baixaria.
+        globIgnores: [
+          '**/assets/html2canvas-*.js',
+          '**/assets/purify.es-*.js',
+          '**/assets/index.es-*.js',
+        ],
         importScripts: ['sw-notifications.js'],
         cleanupOutdatedCaches: true,
         clientsClaim: true,

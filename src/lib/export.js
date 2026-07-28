@@ -8,6 +8,19 @@ function nomeCategoria(catId) {
   return CATEGORIAS[catId]?.nome || catId || '—';
 }
 
+// Nome do usuário virado em pedaço de nome de arquivo (sem acento/espaço).
+// Usado tanto pelo .xlsx quanto pelo relatório .pdf.
+export function slugNome(nomeUsuario) {
+  return (
+    (nomeUsuario || 'mycounts')
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[̀-ͯ]/g, '')
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '') || 'mycounts'
+  );
+}
+
 // Nº de meses entre dois "YYYY-MM" (alvo - início).
 function mesesEntre(inicioYYMM, alvoYYMM) {
   const [iy, im] = inicioYYMM.split('-').map(Number);
@@ -172,13 +185,7 @@ export async function baixarDadosXLSX({
     }
   }
 
-  const slugUsuario = (nomeUsuario || 'mycounts')
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '') || 'mycounts';
   const rotulo = mes ? mes : 'todos';
-  const fileName = `${slugUsuario}-${rotulo}.xlsx`;
+  const fileName = `${slugNome(nomeUsuario)}-${rotulo}.xlsx`;
   XLSX.writeFile(wb, fileName);
 }

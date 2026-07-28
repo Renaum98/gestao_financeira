@@ -50,6 +50,8 @@ export function Icon({ name, size = 22, color = 'currentColor', strokeWidth = 2 
       return (<svg style={s} viewBox="0 0 24 24" {...props}><path d="M3 11l9-8 9 8"/><path d="M5 9.5V21h14V9.5"/></svg>);
     case 'list':
       return (<svg style={s} viewBox="0 0 24 24" {...props}><path d="M4 6h16M4 12h16M4 18h16"/></svg>);
+    case 'file-text':
+      return (<svg style={s} viewBox="0 0 24 24" {...props}><path d="M14 3H7a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2V8l-5-5z"/><path d="M14 3v5h5"/><path d="M9 13h6M9 17h4"/></svg>);
     case 'chart':
       return (<svg style={s} viewBox="0 0 24 24" {...props}><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>);
     case 'user':

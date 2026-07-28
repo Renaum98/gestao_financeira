@@ -6,8 +6,9 @@ import { Icon } from "../ui/icons.jsx";
 import { Card, TopBar } from "../ui/common.jsx";
 import { ConfirmModal } from "../ui/confirm-modal.jsx";
 import { vibrar } from "../lib/haptics.js";
-import { useT } from "../lib/i18n.jsx";
+import { useT, useLang } from "../lib/i18n.jsx";
 import { baixarDadosXLSX } from "../lib/export.js";
+import { baixarRelatorioPDF } from "../lib/relatorio-pdf.js";
 import { cancelarConvite } from "../lib/partnership.js";
 import { COR_NEG } from "../lib/colors.js";
 import { ConfigItem } from "./perfil/parts.jsx";
@@ -29,10 +30,12 @@ export function PerfilScreen({ ctx }) {
     partnershipId,
   } = ctx;
   const t = useT();
+  const lang = useLang();
   const nomeConta = usuario?.displayName || "";
 
   const [confirmarSair, setConfirmarSair] = React.useState(false);
-  const [baixar, setBaixar] = React.useState(null); // null | { mes: 'todos' | 'YYYY-MM', baixando, erro }
+  // null | { formato: 'xlsx' | 'pdf', mes: 'todos' | 'YYYY-MM', baixando, erro }
+  const [baixar, setBaixar] = React.useState(null);
   const [convidando, setConvidando] = React.useState(false);
   const [confirmandoDesfazer, setConfirmandoDesfazer] = React.useState(false);
   const [desfazendo, setDesfazendo] = React.useState(false);
@@ -40,17 +43,28 @@ export function PerfilScreen({ ctx }) {
 
   const abrirBaixar = () => {
     vibrar();
-    setBaixar({ mes: "todos", baixando: false, erro: "" });
+    setBaixar({ formato: "xlsx", mes: "todos", baixando: false, erro: "" });
+  };
+  // O relatório PDF só existe por mês — abre já no mês mais recente
+  // (`todosMeses` vem ordenado do mais novo pro mais antigo).
+  const abrirRelatorio = () => {
+    vibrar();
+    setBaixar({ formato: "pdf", mes: todosMeses[0], baixando: false, erro: "" });
   };
   const executarBaixar = async () => {
     if (!baixar) return;
     setBaixar((b) => ({ ...b, baixando: true, erro: "" }));
+    const nomeUsuario = preferences.nome || nomeConta;
     try {
-      await baixarDadosXLSX({
-        txs, caixinhas, recorrentes, orcamentos,
-        mes: baixar.mes === "todos" ? null : baixar.mes,
-        nomeUsuario: preferences.nome || nomeConta,
-      });
+      if (baixar.formato === "pdf") {
+        await baixarRelatorioPDF({ txs, mes: baixar.mes, nomeUsuario, lang, t });
+      } else {
+        await baixarDadosXLSX({
+          txs, caixinhas, recorrentes, orcamentos,
+          mes: baixar.mes === "todos" ? null : baixar.mes,
+          nomeUsuario,
+        });
+      }
       vibrar(14);
       setBaixar(null);
     } catch (err) {
@@ -106,6 +120,7 @@ export function PerfilScreen({ ctx }) {
         <Card style={{ padding: "4px 16px" }}>
           <ConfigItem icon="sparkle" label={t("Refazer tour")} onClick={() => setOnboarding(true)} />
           <ConfigItem icon="list" label={t("Baixar dados (.xlsx)")} onClick={abrirBaixar} />
+          <ConfigItem icon="file-text" label={t("Baixar relatório (.pdf)")} onClick={abrirRelatorio} />
         </Card>
 
         <div style={{ height: 14 }} />
@@ -229,6 +244,7 @@ export function PerfilScreen({ ctx }) {
 
       {baixar && (
         <BaixarDadosModal
+          formato={baixar.formato}
           mesSelecionado={baixar.mes}
           onSelecionarMes={(m) => setBaixar((b) => ({ ...b, mes: m }))}
           baixando={baixar.baixando}

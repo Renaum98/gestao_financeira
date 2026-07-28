@@ -1,4 +1,8 @@
-// BaixarDadosModal.jsx — escolha do período e exportação dos dados em .xlsx.
+// BaixarDadosModal.jsx — escolha do período e exportação dos dados.
+//
+// Serve aos dois formatos: `.xlsx` (dados crus, mês a mês ou tudo) e `.pdf`
+// (relatório formatado). O PDF é sempre de UM mês — a opção "Todos os dados"
+// nem aparece nesse modo.
 
 import { createPortal } from "react-dom";
 import { rotuloMes } from "../../data.js";
@@ -52,6 +56,7 @@ function OpcaoBaixar({ label, descricao, selecionado, onClick }) {
 }
 
 export function BaixarDadosModal({
+  formato = "xlsx",
   mesSelecionado,
   onSelecionarMes,
   baixando,
@@ -61,6 +66,7 @@ export function BaixarDadosModal({
   onConfirmar,
 }) {
   const t = useT();
+  const ehPdf = formato === "pdf";
   return createPortal(
     <div
       onClick={baixando ? undefined : onCancelar}
@@ -109,14 +115,16 @@ export function BaixarDadosModal({
               flexShrink: 0,
             }}
           >
-            <Icon name="list" size={20} color="#fff" strokeWidth={2.4} />
+            <Icon name={ehPdf ? "file-text" : "list"} size={20} color="#fff" strokeWidth={2.4} />
           </div>
           <div>
             <div style={{ fontSize: 17, fontWeight: 800, color: "var(--ink)", letterSpacing: "-0.02em" }}>
-              {t("Baixar dados")}
+              {ehPdf ? t("Baixar relatório") : t("Baixar dados")}
             </div>
             <div style={{ fontSize: 12, color: "var(--muted)", fontWeight: 600, marginTop: 2 }}>
-              {t("Arquivo .xlsx para abrir no Excel ou Google Sheets")}
+              {ehPdf
+                ? t("Relatório em PDF com as transações do mês")
+                : t("Arquivo .xlsx para abrir no Excel ou Google Sheets")}
             </div>
           </div>
         </div>
@@ -132,7 +140,7 @@ export function BaixarDadosModal({
             paddingLeft: 2,
           }}
         >
-          {t("Período")}
+          {ehPdf ? t("Mês do relatório") : t("Período")}
         </div>
 
         <div
@@ -145,22 +153,40 @@ export function BaixarDadosModal({
             background: "var(--card)",
           }}
         >
-          <OpcaoBaixar
-            label={t("Todos os dados")}
-            descricao={t("Transações, caixinhas, recorrentes e orçamentos")}
-            selecionado={mesSelecionado === "todos"}
-            onClick={() => onSelecionarMes("todos")}
-          />
+          {!ehPdf && (
+            <OpcaoBaixar
+              label={t("Todos os dados")}
+              descricao={t("Transações, caixinhas, recorrentes e orçamentos")}
+              selecionado={mesSelecionado === "todos"}
+              onClick={() => onSelecionarMes("todos")}
+            />
+          )}
           {todosMeses.map((m) => (
             <OpcaoBaixar
               key={m}
               label={rotuloMes(m)}
-              descricao={t("Apenas transações deste mês")}
+              descricao={
+                ehPdf ? t("Relatório deste mês") : t("Apenas transações deste mês")
+              }
               selecionado={mesSelecionado === m}
               onClick={() => onSelecionarMes(m)}
             />
           ))}
         </div>
+
+        {ehPdf && (
+          <div
+            style={{
+              marginTop: 10,
+              fontSize: 11.5,
+              color: "var(--muted)",
+              fontWeight: 600,
+              textAlign: "center",
+            }}
+          >
+            {t("O relatório é sempre de um mês só.")}
+          </div>
+        )}
 
         {erro && (
           <div style={{ marginTop: 10, fontSize: 12.5, fontWeight: 700, color: COR_NEG, textAlign: "center" }}>
