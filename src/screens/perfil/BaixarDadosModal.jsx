@@ -67,6 +67,10 @@ export function BaixarDadosModal({
 }) {
   const t = useT();
   const ehPdf = formato === "pdf";
+  // Sem mês com lançamento não há relatório possível. No .xlsx ainda sobra a
+  // opção "Todos os dados", então só o PDF trava.
+  const semOpcoes = ehPdf && todosMeses.length === 0;
+  const podeBaixar = !baixando && !!mesSelecionado;
   return createPortal(
     <div
       onClick={baixando ? undefined : onCancelar}
@@ -172,9 +176,23 @@ export function BaixarDadosModal({
               onClick={() => onSelecionarMes(m)}
             />
           ))}
+          {semOpcoes && (
+            <div
+              style={{
+                padding: "24px 18px",
+                textAlign: "center",
+                fontSize: 13,
+                fontWeight: 600,
+                color: "var(--muted)",
+                lineHeight: 1.5,
+              }}
+            >
+              {t("Você ainda não tem nenhum mês com transações lançadas.")}
+            </div>
+          )}
         </div>
 
-        {ehPdf && (
+        {ehPdf && !semOpcoes && (
           <div
             style={{
               marginTop: 10,
@@ -217,7 +235,7 @@ export function BaixarDadosModal({
           </button>
           <button
             onClick={onConfirmar}
-            disabled={baixando}
+            disabled={!podeBaixar}
             style={{
               flex: 1,
               padding: 12,
@@ -228,9 +246,9 @@ export function BaixarDadosModal({
               fontSize: 14,
               fontWeight: 800,
               fontFamily: "inherit",
-              cursor: baixando ? "default" : "pointer",
+              cursor: podeBaixar ? "pointer" : "default",
               boxShadow: "0 4px 14px color-mix(in oklab, var(--primary) 32%, transparent)",
-              opacity: baixando ? 0.7 : 1,
+              opacity: podeBaixar ? 1 : 0.5,
             }}
           >
             {baixando ? t("Gerando…") : t("Baixar")}

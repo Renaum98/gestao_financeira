@@ -3,6 +3,7 @@
 
 import React from "react";
 import { Icon } from "../ui/icons.jsx";
+import { chaveMes } from "../data.js";
 import { Card, TopBar } from "../ui/common.jsx";
 import { ConfirmModal } from "../ui/confirm-modal.jsx";
 import { vibrar } from "../lib/haptics.js";
@@ -41,18 +42,27 @@ export function PerfilScreen({ ctx }) {
   const [desfazendo, setDesfazendo] = React.useState(false);
   const [excluindoConta, setExcluindoConta] = React.useState(false);
 
+  // Meses que valem download. `todosMeses` serve pra navegar o app, então
+  // inclui o mês atual mesmo vazio e pode trazer meses à frente (recorrente já
+  // lançada, por exemplo) — nenhum dos dois rende arquivo com conteúdo.
+  const mesesBaixaveis = React.useMemo(() => {
+    const mesAtual = chaveMes(new Date());
+    const comLancamento = new Set(txs.map((tx) => tx.data.slice(0, 7)));
+    return todosMeses.filter((m) => m <= mesAtual && comLancamento.has(m));
+  }, [txs, todosMeses]);
+
   const abrirBaixar = () => {
     vibrar();
     setBaixar({ formato: "xlsx", mes: "todos", baixando: false, erro: "" });
   };
-  // O relatório PDF só existe por mês — abre já no mês mais recente
-  // (`todosMeses` vem ordenado do mais novo pro mais antigo).
+  // O relatório PDF só existe por mês — abre já no mais recente que dá pra
+  // baixar (`mesesBaixaveis` vem ordenado do mais novo pro mais antigo).
   const abrirRelatorio = () => {
     vibrar();
-    setBaixar({ formato: "pdf", mes: todosMeses[0], baixando: false, erro: "" });
+    setBaixar({ formato: "pdf", mes: mesesBaixaveis[0] || null, baixando: false, erro: "" });
   };
   const executarBaixar = async () => {
-    if (!baixar) return;
+    if (!baixar || !baixar.mes) return;
     setBaixar((b) => ({ ...b, baixando: true, erro: "" }));
     const nomeUsuario = preferences.nome || nomeConta;
     try {
@@ -249,7 +259,7 @@ export function PerfilScreen({ ctx }) {
           onSelecionarMes={(m) => setBaixar((b) => ({ ...b, mes: m }))}
           baixando={baixar.baixando}
           erro={baixar.erro}
-          todosMeses={todosMeses}
+          todosMeses={mesesBaixaveis}
           onCancelar={() => setBaixar(null)}
           onConfirmar={executarBaixar}
         />

@@ -144,6 +144,8 @@ export const EN = {
   "Mês do relatório": "Report month",
   "Relatório deste mês": "Report for this month",
   "O relatório é sempre de um mês só.": "The report always covers a single month.",
+  "Você ainda não tem nenhum mês com transações lançadas.":
+    "You don't have any month with transactions logged yet.",
   "Relatório mensal": "Monthly report",
   "Gerado em {data}": "Generated on {data}",
   "Resumo do mês": "Month summary",
