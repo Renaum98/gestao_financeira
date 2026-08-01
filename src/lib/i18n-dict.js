@@ -178,6 +178,8 @@ export const EN = {
   "Você receberá um e-mail de confirmação. A conta só é ativada depois que você clicar no link.":
     "You'll receive a confirmation email. The account is only activated after you click the link.",
   "Aguarde…": "Please wait…",
+  "Muitas tentativas. Aguarde {tempo}.": "Too many attempts. Wait {tempo}.",
+  "Aguarde {tempo}": "Wait {tempo}",
   "Enviar link": "Send link",
   "Esqueci minha senha": "Forgot my password",
   "Já tem conta? ": "Already have an account? ",
@@ -197,6 +199,9 @@ export const EN = {
   "Muitas tentativas. Tente novamente em alguns minutos.":
     "Too many attempts. Try again in a few minutes.",
   "Sem conexão. Verifique sua internet.": "No connection. Check your internet.",
+  "Sem conexão": "No connection",
+  "Não dá pra salvar agora. Se este aparelho gravasse offline, ao voltar a internet ele substituiria o que está na nuvem por esta versão — inclusive apagando o que você tiver lançado em outro aparelho. Conecte e tente de novo.":
+    "Can't save right now. If this device wrote while offline, it would replace what's in the cloud with this version once the internet came back — including erasing anything you entered on another device. Connect and try again.",
   "Algo deu errado. Tente novamente.": "Something went wrong. Try again.",
   "Enviamos um link para redefinir sua senha. Confira seu e-mail.":
     "We sent a link to reset your password. Check your email.",

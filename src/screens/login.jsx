@@ -13,9 +13,25 @@ import { Icon } from '../ui/icons.jsx';
 import { vibrar } from '../lib/haptics.js';
 import { COR_POS, COR_NEG } from '../lib/colors.js';
 import { useT } from '../lib/i18n.jsx';
+import {
+  msRestantes,
+  registrarFalha,
+  limparTentativas,
+  formatarEspera,
+} from '../lib/rate-limit-login.js';
 
 const EMAIL_OK = (e) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test((e || '').trim());
 const SENHA_OK = (s) => (s || '').length >= 8 && /[a-zA-Z]/.test(s) && /[0-9]/.test(s);
+
+// Erros que representam um palpite errado de credencial — os únicos que contam
+// pra trava. `too-many-requests` entra porque é o próprio Firebase dizendo que
+// já viu tentativas demais: seguimos o freio dele em vez de insistir.
+const CODIGOS_DE_PALPITE = new Set([
+  'auth/invalid-credential',
+  'auth/wrong-password',
+  'auth/user-not-found',
+  'auth/too-many-requests',
+]);
 
 function msgErro(code) {
   switch (code) {
@@ -156,6 +172,18 @@ export function LoginScreen() {
   const [carregando, setCarregando] = React.useState(false);
   const [erro, setErro] = React.useState('');
   const [info, setInfo] = React.useState('');
+  // Quanto falta pra destravar o login deste e-mail (0 = liberado).
+  const [esperaMs, setEsperaMs] = React.useState(0);
+
+  // Reavalia a cada segundo pra o contador andar sozinho e o botão liberar na
+  // hora certa, sem depender de o usuário mexer em nada. Quando não há bloqueio
+  // o valor continua 0 e o React nem re-renderiza.
+  React.useEffect(() => {
+    const atualizar = () => setEsperaMs(msRestantes(email));
+    atualizar();
+    const id = setInterval(atualizar, 1000);
+    return () => clearInterval(id);
+  }, [email]);
 
   const limpar = () => { setErro(''); setInfo(''); };
   const trocarModo = (m) => { setModo(m); setSenha(''); limpar(); };
@@ -178,6 +206,15 @@ export function LoginScreen() {
     limpar();
     const v = validar();
     if (v) { setErro(t(v)); return; }
+    // A trava vale só pro login: cadastro e recuperação não adivinham senha.
+    if (modo === 'entrar') {
+      const restante = msRestantes(email);
+      if (restante > 0) {
+        setEsperaMs(restante);
+        setErro(t('Muitas tentativas. Aguarde {tempo}.', { tempo: formatarEspera(restante) }));
+        return;
+      }
+    }
     vibrar();
     setCarregando(true);
     try {
@@ -189,15 +226,28 @@ export function LoginScreen() {
         // onAuthStateChanged dispara → o app mostra a tela de verificação de e-mail.
       } else {
         await entrarFirebase(email.trim(), senha);
+        limparTentativas(email);
         // onAuthStateChanged dispara; se o e-mail não estiver confirmado,
         // o app mostra a tela de verificação.
       }
     } catch (err) {
+      // Só conta como tentativa o que é palpite de credencial. Erro de rede ou
+      // e-mail malformado não é ataque e não pode travar quem está sem sinal.
+      if (modo === 'entrar' && CODIGOS_DE_PALPITE.has(err?.code)) {
+        const restante = registrarFalha(email);
+        setEsperaMs(restante);
+        if (restante > 0) {
+          setErro(t('Muitas tentativas. Aguarde {tempo}.', { tempo: formatarEspera(restante) }));
+          setCarregando(false);
+          return;
+        }
+      }
       setErro(t(msgErro(err?.code)));
       setCarregando(false);
     }
   };
 
+  const travado = modo === 'entrar' && esperaMs > 0;
   const titulo = modo === 'cadastrar' ? 'Criar conta' : modo === 'recuperar' ? 'Recuperar senha' : 'Entrar';
   const subtitulo = modo === 'cadastrar'
     ? 'Crie sua conta para começar a organizar suas finanças.'
@@ -237,8 +287,10 @@ export function LoginScreen() {
         {erro && <div style={{ fontSize: 12.5, fontWeight: 700, color: COR_NEG }}>{erro}</div>}
         {info && <div style={{ fontSize: 12.5, fontWeight: 700, color: COR_POS }}>{info}</div>}
 
-        <BotaoPrimario type="submit" disabled={carregando}>
-          {carregando ? t('Aguarde…') : modo === 'cadastrar' ? t('Criar conta') : modo === 'recuperar' ? t('Enviar link') : t('Entrar')}
+        <BotaoPrimario type="submit" disabled={carregando || travado}>
+          {travado
+            ? t('Aguarde {tempo}', { tempo: formatarEspera(esperaMs) })
+            : carregando ? t('Aguarde…') : modo === 'cadastrar' ? t('Criar conta') : modo === 'recuperar' ? t('Enviar link') : t('Entrar')}
         </BotaoPrimario>
 
         {modo === 'entrar' && (
