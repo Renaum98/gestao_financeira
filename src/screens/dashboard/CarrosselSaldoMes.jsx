@@ -35,11 +35,18 @@ export function CarrosselSaldoMes({ todosMeses, mes, setMes, renderCard }) {
     const el = ref.current;
     if (!el) return;
     const centro = el.scrollLeft + el.clientWidth / 2;
+    // Lê TODA a geometria antes de escrever qualquer estilo. Intercalado, cada
+    // leitura de offsetLeft depois de um write forçava o navegador a recalcular
+    // o layout — um reflow síncrono por slide, e a conta cresce com o número de
+    // meses. Separado em duas passadas, é um layout só.
+    const medidas = [];
     for (const s of slideRefs.current) {
       if (!s) continue;
-      const sc = s.offsetLeft + s.clientWidth / 2;
+      medidas.push({ s, centroSlide: s.offsetLeft + s.clientWidth / 2, largura: s.clientWidth });
+    }
+    for (const { s, centroSlide, largura } of medidas) {
       // distância normalizada: 0 = centralizado, 1 = totalmente deslocado
-      const d = Math.min(1, Math.abs(sc - centro) / s.clientWidth);
+      const d = Math.min(1, Math.abs(centroSlide - centro) / largura);
       const op = 1 - d * 0.45; // até 0.55 de opacidade nos extremos
       const scale = 1 - d * 0.14; // scale-down até 14% nos slides laterais
       s.style.opacity = op.toFixed(3);
@@ -149,30 +156,38 @@ export function CarrosselSaldoMes({ todosMeses, mes, setMes, renderCard }) {
         gap: 12,
       }}
     >
-      {mesesAsc.map((m, i) => (
-        <div
-          key={m}
-          ref={(node) => {
-            slideRefs.current[i] = node;
-          }}
-          style={{
-            flex: "0 0 calc(100vw - 56px)",
-            scrollSnapAlign: "center",
-            // sem scrollSnapStop: "always" — permite gestos rápidos
-            // atravessarem mais de um slide sem travar
-            willChange: "opacity, transform",
-            transformOrigin: "center center",
-            // Sem transition: opacity/transform são reescritos a cada frame de
-            // scroll por aplicarEfeitos (via rAF), então o efeito acompanha o
-            // dedo 1:1. Uma transition aqui só adicionaria lag perseguindo o
-            // gesto. O snap nativo continua emitindo scroll até assentar, então
-            // o estado final também fica suave sem transição.
-            backfaceVisibility: "hidden",
-          }}
-        >
-          {renderCard(m)}
-        </div>
-      ))}
+      {mesesAsc.map((m, i) => {
+        // `will-change` e `backface-visibility` promovem o slide a camada de
+        // composição própria. Em todos os slides isso significava uma camada por
+        // mês de histórico (e parcelamentos jogam meses futuros na lista), todas
+        // recriadas quando a aba volta a ficar visível. Só os vizinhos do slide
+        // ativo chegam a se mover no gesto, então só eles precisam da promoção.
+        const perto = Math.abs(i - idxAtivo) <= 1;
+        return (
+          <div
+            key={m}
+            ref={(node) => {
+              slideRefs.current[i] = node;
+            }}
+            style={{
+              flex: "0 0 calc(100vw - 56px)",
+              scrollSnapAlign: "center",
+              // sem scrollSnapStop: "always" — permite gestos rápidos
+              // atravessarem mais de um slide sem travar
+              willChange: perto ? "opacity, transform" : "auto",
+              transformOrigin: "center center",
+              // Sem transition: opacity/transform são reescritos a cada frame de
+              // scroll por aplicarEfeitos (via rAF), então o efeito acompanha o
+              // dedo 1:1. Uma transition aqui só adicionaria lag perseguindo o
+              // gesto. O snap nativo continua emitindo scroll até assentar, então
+              // o estado final também fica suave sem transição.
+              backfaceVisibility: perto ? "hidden" : undefined,
+            }}
+          >
+            {renderCard(m)}
+          </div>
+        );
+      })}
     </div>
   );
 }
