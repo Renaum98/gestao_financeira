@@ -11,6 +11,58 @@
 
 import React from "react";
 
+// Quantos slides de cada lado do ativo têm o card renderizado de verdade. O
+// resto mostra o esqueleto. Abaixar aperta mais a tela de entrada; subir dá mais
+// folga pra swipes rápidos não cruzarem slide sem card.
+const JANELA = 3;
+
+// Esqueleto do CardSaldo, exibido nos slides fora da janela. Repete o desenho do
+// card — cabeçalho, valor grande, chip de variação e o rodapé em duas colunas —
+// pra o swipe rápido mostrar a forma da informação que está vindo, em vez de um
+// vazio. `.skeleton` (loaders.css) cuida do shimmer e do prefers-reduced-motion.
+function EsqueletoCard() {
+  return (
+    <div
+      aria-hidden="true"
+      style={{
+        height: "100%",
+        minHeight: 168,
+        borderRadius: 28,
+        padding: 22,
+        boxSizing: "border-box",
+        background: "color-mix(in oklab, var(--ink) 5%, var(--card))",
+        display: "flex",
+        flexDirection: "column",
+      }}
+    >
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div className="skeleton" style={{ width: 92, height: 13, borderRadius: 6 }} />
+        <div className="skeleton" style={{ width: 116, height: 28, borderRadius: 999 }} />
+      </div>
+      <div className="skeleton" style={{ width: "62%", height: 36, borderRadius: 10, marginTop: 12 }} />
+      <div className="skeleton" style={{ width: 132, height: 22, borderRadius: 999, marginTop: 8 }} />
+      <div
+        style={{
+          marginTop: 18,
+          paddingTop: 14,
+          borderTop: "1px solid color-mix(in oklab, var(--ink) 10%, transparent)",
+          display: "flex",
+          justifyContent: "space-between",
+        }}
+      >
+        <div>
+          <div className="skeleton" style={{ width: 66, height: 11, borderRadius: 6 }} />
+          <div className="skeleton" style={{ width: 88, height: 15, borderRadius: 7, marginTop: 5 }} />
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end" }}>
+          <div className="skeleton" style={{ width: 58, height: 11, borderRadius: 6 }} />
+          <div className="skeleton" style={{ width: 80, height: 15, borderRadius: 7, marginTop: 5 }} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function CarrosselSaldoMes({ todosMeses, mes, setMes, renderCard }) {
   const ref = React.useRef(null);
   const slideRefs = React.useRef([]);
@@ -30,6 +82,20 @@ export function CarrosselSaldoMes({ todosMeses, mes, setMes, renderCard }) {
   // nesse caso o scroll-snap nativo já está centralizando, então o layoutEffect
   // NÃO deve disparar um scrollTo programático (que brigaria com o dedo).
   const mudouPorSwipeRef = React.useRef(false);
+
+  // Altura reservada pros slides sem card. Sem ela, a altura da fileira passaria
+  // a ser ditada só pelos cards renderizados e mudaria conforme a janela desliza
+  // (os cards variam de altura: entradas, diferença do mês, bloco do parceiro).
+  // Só cresce, nunca encolhe, então converge no primeiro card mais alto e para.
+  const [alturaSlide, setAlturaSlide] = React.useState(0);
+  React.useLayoutEffect(() => {
+    const s = slideRefs.current[idxAtivo];
+    const card = s?.firstElementChild;
+    if (!card) return;
+    // offsetHeight ignora o scale aplicado por aplicarEfeitos — é a caixa real
+    const h = card.offsetHeight;
+    if (h > alturaSlide) setAlturaSlide(h);
+  });
 
   const aplicarEfeitos = React.useCallback(() => {
     const el = ref.current;
@@ -157,12 +223,25 @@ export function CarrosselSaldoMes({ todosMeses, mes, setMes, renderCard }) {
       }}
     >
       {mesesAsc.map((m, i) => {
+        const dist = Math.abs(i - idxAtivo);
         // `will-change` e `backface-visibility` promovem o slide a camada de
         // composição própria. Em todos os slides isso significava uma camada por
         // mês de histórico (e parcelamentos jogam meses futuros na lista), todas
         // recriadas quando a aba volta a ficar visível. Só os vizinhos do slide
         // ativo chegam a se mover no gesto, então só eles precisam da promoção.
-        const perto = Math.abs(i - idxAtivo) <= 1;
+        const perto = dist <= 1;
+        // Fora da janela o slide continua existindo, com a mesma largura e
+        // altura, mostrando o esqueleto no lugar do card. Assim o card caro (que
+        // varre a lista de transações e rende ~300 linhas de markup) some da
+        // entrada da tela sem que a geometria do scroll mude: tirar os meses da
+        // lista encolheria o container e faria o scroll saltar quando eles
+        // voltassem.
+        const naJanela = dist <= JANELA;
+        // O shimmer é uma animação infinita: deixá-la em todos os meses traria
+        // de volta o custo que a janela acabou de tirar. Só os slides logo além
+        // da janela ganham esqueleto — são os únicos que um swipe alcança antes
+        // de a janela se atualizar. Mais longe que isso, caixa vazia mesmo.
+        const comEsqueleto = dist <= JANELA + 2;
         return (
           <div
             key={m}
@@ -171,6 +250,7 @@ export function CarrosselSaldoMes({ todosMeses, mes, setMes, renderCard }) {
             }}
             style={{
               flex: "0 0 calc(100vw - 56px)",
+              minHeight: alturaSlide || undefined,
               scrollSnapAlign: "center",
               // sem scrollSnapStop: "always" — permite gestos rápidos
               // atravessarem mais de um slide sem travar
@@ -184,7 +264,7 @@ export function CarrosselSaldoMes({ todosMeses, mes, setMes, renderCard }) {
               backfaceVisibility: perto ? "hidden" : undefined,
             }}
           >
-            {renderCard(m)}
+            {naJanela ? renderCard(m) : comEsqueleto ? <EsqueletoCard /> : null}
           </div>
         );
       })}
