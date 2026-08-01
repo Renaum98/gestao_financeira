@@ -391,6 +391,67 @@ function TabBar({ tela, irPara, abrirAdd }) {
   );
 }
 
+// ─── Palco das telas ───
+// As 4 abas principais ficam montadas depois da primeira visita. Voltar pra uma
+// delas deixa de reconstruir a tela inteira do zero — o que doía principalmente
+// no Início, que orquestra 9 blocos e recalcula insights, notificações e saldo
+// antes do primeiro pixel. As telas secundárias (categoria, histórico, ...) são
+// visitas pontuais e continuam montando e desmontando.
+const ABAS_VIVAS = {
+  inicio: DashboardScreen,
+  gastos: GastosScreen,
+  analise: AnaliseScreen,
+  perfil: PerfilScreen,
+};
+
+// Devolve sempre o MESMO elemento enquanto congelada. O React desiste de
+// re-renderizar uma subárvore quando recebe um elemento idêntico ao anterior,
+// então a aba escondida para de custar render sem precisar memoizar o ctx
+// inteiro — que tem meia centena de campos e callbacks recriados a cada render.
+// Ao voltar a ficar visível ela recebe o elemento novo e reflete os dados atuais.
+function Congelada({ congelar, children }) {
+  const ultimo = React.useRef(children);
+  if (!congelar) ultimo.current = children;
+  return ultimo.current;
+}
+
+function AreaDeTelas({ tela, params, ctx, secundaria }) {
+  const vivas = React.useRef(new Set());
+  const ehAba = Object.hasOwn(ABAS_VIVAS, tela);
+  if (ehAba) vivas.current.add(tela);
+
+  // Sem a `key` que remontava tudo, a animação de entrada não reinicia sozinha:
+  // reiniciamos na mão a cada troca, como se o nó fosse novo.
+  const palco = React.useRef(null);
+  const assinatura = tela + JSON.stringify(params || {});
+  React.useLayoutEffect(() => {
+    const el = palco.current;
+    if (!el) return;
+    el.classList.remove("page-transition");
+    void el.offsetWidth; // força o reflow pra o navegador reiniciar a animação
+    el.classList.add("page-transition");
+  }, [assinatura]);
+
+  return (
+    <div ref={palco} className="page-transition">
+      <React.Suspense fallback={<Splash />}>
+        {[...vivas.current].map((id) => {
+          const Tela = ABAS_VIVAS[id];
+          const visivel = id === tela;
+          return (
+            <div key={id} style={visivel ? undefined : { display: "none" }}>
+              <Congelada congelar={!visivel}>
+                <Tela ctx={ctx} />
+              </Congelada>
+            </div>
+          );
+        })}
+        {!ehAba && secundaria}
+      </React.Suspense>
+    </div>
+  );
+}
+
 // ─── Sidebar (layout desktop) ───
 const NAV_DESKTOP = [
   { id: "inicio", icon: "home", label: "Início" },
@@ -1444,12 +1505,10 @@ export function App() {
     },
   };
 
+  // As 4 abas principais são montadas pelo AreaDeTelas, que as mantém vivas.
+  // Aqui ficam só as telas secundárias.
   let conteudo;
-  if (tela === "inicio") conteudo = <DashboardScreen ctx={ctx} />;
-  else if (tela === "gastos") conteudo = <GastosScreen ctx={ctx} />;
-  else if (tela === "analise") conteudo = <AnaliseScreen ctx={ctx} />;
-  else if (tela === "perfil") conteudo = <PerfilScreen ctx={ctx} />;
-  else if (tela === "categoria")
+  if (tela === "categoria")
     conteudo = <CategoriaScreen ctx={ctx} params={params} />;
   else if (tela === "orcamentos") conteudo = <OrcamentosScreen ctx={ctx} />;
   else if (tela === "historico") conteudo = <HistoricoScreen ctx={ctx} />;
@@ -1490,12 +1549,12 @@ export function App() {
               minHeight: "100vh",
             }}
           >
-            <div
-              key={tela + JSON.stringify(params || {})}
-              className="page-transition"
-            >
-              <React.Suspense fallback={<Splash />}>{conteudo}</React.Suspense>
-            </div>
+            <AreaDeTelas
+              tela={tela}
+              params={params}
+              ctx={ctx}
+              secundaria={conteudo}
+            />
           </div>
         </main>
         {addModal && (
@@ -1521,12 +1580,12 @@ export function App() {
         role="main"
         style={{ maxWidth: 480, margin: "0 auto", minHeight: "100vh" }}
       >
-        <div
-          key={tela + JSON.stringify(params || {})}
-          className="page-transition"
-        >
-          <React.Suspense fallback={<Splash />}>{conteudo}</React.Suspense>
-        </div>
+        <AreaDeTelas
+          tela={tela}
+          params={params}
+          ctx={ctx}
+          secundaria={conteudo}
+        />
       </main>
       <TabBar tela={tela} irPara={irPara} abrirAdd={() => { vibrar(); setAddModal({}); }} />
       {addModal && (

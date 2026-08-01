@@ -36,13 +36,17 @@
 /* Transição de página ao trocar de aba.
    Só opacity + translateY: sem `scale`, que forçava compor a página inteira
    como camada justo enquanto a nova tela monta (era a maior fonte de "engasgo"
-   nos primeiros frames). translate3d mantém a animação na GPU. */
+   nos primeiros frames). translate3d mantém a animação na GPU.
+
+   Começa em .35 e não em 0: partindo do zero, a tela já pintada ficava invisível
+   e o fade inteiro era somado ao tempo de montagem — dava a impressão de demora
+   pra abrir mesmo quando o React já tinha terminado. */
 @keyframes pageIn {
-  from { opacity: 0; transform: translate3d(0, 8px, 0); }
-  to   { opacity: 1; transform: translate3d(0, 0,   0); }
+  from { opacity: .35; transform: translate3d(0, 6px, 0); }
+  to   { opacity: 1;   transform: translate3d(0, 0,   0); }
 }
 .page-transition {
-  animation: pageIn .24s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: pageIn .12s cubic-bezier(0.22, 1, 0.36, 1) both;
   will-change: opacity, transform;
 }
 @media (prefers-reduced-motion: reduce) {
