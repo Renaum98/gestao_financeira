@@ -2,13 +2,14 @@
 // mês). Auto-contido: recalcula os agregados do mês recebido em vez de
 // reaproveitar os do mês ativo, simplificando o uso no carrossel.
 
+import React from "react";
 import { fmtBRL, fmtBRLCompacto, rotuloMesT, MESES } from "../../data.js";
 import { SeletorMes } from "../../ui/common.jsx";
 import { calcularSaldoMes } from "../../lib/saldo-mes.js";
 import { mesAnteriorDe } from "../../lib/orcamento.js";
 import { useT } from "../../lib/i18n.jsx";
 
-export function CardSaldo({
+function CardSaldoBase({
   mesCard,
   todosMeses,
   txs,
@@ -38,16 +39,20 @@ export function CardSaldo({
     restanteParceiro,
     disponivelConjunto,
     temEntrada,
-  } = calcularSaldoMes(mesCard, {
-    txs,
-    partnerTxs,
-    todosMeses,
-    preferences,
-    caixinhas,
-    meuUid,
-    partnerUid,
-    orcBaseParceiro,
-  });
+  } = React.useMemo(
+    () =>
+      calcularSaldoMes(mesCard, {
+        txs,
+        partnerTxs,
+        todosMeses,
+        preferences,
+        caixinhas,
+        meuUid,
+        partnerUid,
+        orcBaseParceiro,
+      }),
+    [mesCard, txs, partnerTxs, todosMeses, preferences, caixinhas, meuUid, partnerUid, orcBaseParceiro],
+  );
 
   // Nome do mês de onde veio a diferença (mês anterior a este card).
   const nomeMesAnt = t(MESES[Number(mesAnteriorDe(mesCard).split("-")[1]) - 1]);
@@ -301,3 +306,10 @@ export function CardSaldo({
     </div>
   );
 }
+
+// No mobile o carrossel monta um CardSaldo por mês com histórico, e cada um
+// varre a lista inteira de transações (o mês do card e o anterior). Sem memo,
+// qualquer render do Dashboard repetia isso vezes o número de meses — o custo
+// crescia a cada mês de uso. Todas as props aqui são referências estáveis
+// (nada de lambda inline), então a comparação rasa do memo resolve.
+export const CardSaldo = React.memo(CardSaldoBase);
