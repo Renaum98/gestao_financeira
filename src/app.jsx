@@ -24,6 +24,8 @@ import {
   desfazerParceria as desfazerParceriaFn,
 } from "./lib/partnership.js";
 import { vibrar } from "./lib/haptics.js";
+import { estaOffline } from "./lib/conexao.js";
+import { ModalOverlay } from "./ui/modal-base.jsx";
 import { useInstallPrompt, InstallPromptModal } from "./ui/install-prompt.jsx";
 import { LoaderTela } from "./ui/loader.jsx";
 import { calcOrcBaseAtual, mesCorrente, mesAnteriorDe } from "./lib/orcamento.js";
@@ -54,6 +56,28 @@ const NotificacoesScreen= lazyNamed(() => import("./screens/notificacoes.jsx"), 
 const AddExpenseModal   = lazyNamed(() => import("./modals/add-expense.jsx"), "AddExpenseModal");
 
 const ONBOARDING_KEY = "finca.onboarded";
+
+// Ações do ctx que gravam na nuvem. Ficam bloqueadas enquanto o aparelho está
+// sem internet — ver src/lib/conexao.js pro porquê. Escritas automáticas (como
+// o backfill de orcBaseAt) chamam cloud.* direto e não passam por aqui: elas são
+// barradas silenciosamente no patchKey, sem incomodar o usuário com um aviso.
+const ACOES_QUE_ESCREVEM = [
+  "salvarTx",
+  "excluirTx",
+  "marcarTxPago",
+  "setOrcamentos",
+  "salvarCaixinha",
+  "excluirCaixinha",
+  "depositarCaixinha",
+  "resgatarCaixinha",
+  "cancelarRecorrente",
+  "editarRecorrente",
+  "adicionarCategoria",
+  "excluirCategoria",
+  "setPreferences",
+  "dispensarNotifParceria",
+  "desfazerParceria",
+];
 
 // Raio de repouso da "gota" da tab bar: os cantos maiores ficam sempre voltados
 // pro lado de fora, então as abas à esquerda do "+" são o espelho das da direita.
@@ -956,6 +980,7 @@ export function App() {
     }
   }, [uid]);
   const [ocultar, setOcultar] = React.useState(false);
+  const [avisoOffline, setAvisoOffline] = React.useState(false);
   const [addModal, setAddModal] = React.useState(null);
   const [onboarding, setOnboarding] = React.useState(
     () => !localStorage.getItem(ONBOARDING_KEY),
@@ -1505,6 +1530,19 @@ export function App() {
     },
   };
 
+  // Sem conexão o app é somente leitura: a trava de verdade está no patchKey do
+  // storage, que não deixa o state local divergir do servidor. Aqui só
+  // interceptamos as ações do usuário pra que a recusa apareça como um aviso e
+  // não como um botão que não faz nada.
+  for (const acao of ACOES_QUE_ESCREVEM) {
+    const original = ctx[acao];
+    if (typeof original !== "function") continue;
+    ctx[acao] = (...args) => {
+      if (estaOffline()) return setAvisoOffline(true);
+      return original(...args);
+    };
+  }
+
   // As 4 abas principais são montadas pelo AreaDeTelas, que as mantém vivas.
   // Aqui ficam só as telas secundárias.
   let conteudo;
@@ -1562,6 +1600,7 @@ export function App() {
             <AddExpenseModal ctx={ctx} params={addModal} />
           </React.Suspense>
         )}
+        {avisoOffline && <AvisoOffline onFechar={() => setAvisoOffline(false)} />}
       </div>
       </I18nProvider>
     );
@@ -1601,8 +1640,86 @@ export function App() {
           onDispensar={install.dispensar}
         />
       )}
+      {avisoOffline && <AvisoOffline onFechar={() => setAvisoOffline(false)} />}
     </div>
     </I18nProvider>
+  );
+}
+
+// Aviso de que o app está somente leitura. Não é erro do usuário nem falha do
+// app — é a regra de sincronização protegendo o que está na nuvem. Modal próprio
+// em vez do ConfirmModal porque aqui não há escolha a fazer: só um "entendi".
+function AvisoOffline({ onFechar }) {
+  const t = useT();
+  return (
+    <ModalOverlay
+      onClose={onFechar}
+      maxWidth={360}
+      padding="24px 22px 18px"
+      borderRadius={24}
+      scrollable={false}
+      center
+    >
+      <div
+        style={{
+          width: 56,
+          height: 56,
+          borderRadius: 28,
+          background: "color-mix(in oklab, var(--primary) 14%, transparent)",
+          margin: "0 auto 14px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <Icon name="lock" size={26} color="var(--primary)" strokeWidth={2.2} />
+      </div>
+
+      <div
+        style={{
+          fontSize: 17,
+          fontWeight: 800,
+          color: "var(--ink)",
+          letterSpacing: "-0.02em",
+        }}
+      >
+        {t("Sem conexão")}
+      </div>
+
+      <div
+        style={{
+          fontSize: 13,
+          color: "var(--muted)",
+          fontWeight: 500,
+          marginTop: 6,
+          lineHeight: 1.45,
+        }}
+      >
+        {t(
+          "Não dá pra salvar agora. Se este aparelho gravasse offline, ao voltar a internet ele substituiria o que está na nuvem por esta versão — inclusive apagando o que você tiver lançado em outro aparelho. Conecte e tente de novo.",
+        )}
+      </div>
+
+      <button
+        onClick={onFechar}
+        style={{
+          width: "100%",
+          marginTop: 20,
+          padding: 12,
+          borderRadius: 14,
+          border: "none",
+          background: "var(--primary)",
+          color: "#fff",
+          fontSize: 14,
+          fontWeight: 800,
+          fontFamily: "inherit",
+          cursor: "pointer",
+          boxShadow: "0 4px 14px color-mix(in oklab, var(--primary) 32%, transparent)",
+        }}
+      >
+        {t("Entendi")}
+      </button>
+    </ModalOverlay>
   );
 }
 

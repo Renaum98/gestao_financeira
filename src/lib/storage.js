@@ -26,6 +26,7 @@ import {
   deleteField,
 } from "./firebase.js";
 import { compactarPorChave } from "./compact.js";
+import { estaOffline } from "./conexao.js";
 
 const DOC_PATH = (uid) => `users/${uid}`;
 const INDEX_PATH = (emailLower) => `userIndex/${emailLower}`;
@@ -193,12 +194,20 @@ export function useCloudState(uid) {
   }, [uid, ready, state]);
 
   // Helper: marca a chave como suja e atualiza só ela no state.
+  //
+  // Sem conexão, nada é alterado — nem no state local. Essa é a trava central
+  // que garante a regra "a nuvem sempre prevalece": se o state local nunca
+  // diverge do servidor enquanto estamos offline, não existe array velho pra
+  // ser enfileirado e sobrescrever o que outro aparelho gravou. Devolve false
+  // pra quem chamou saber que não salvou; a UI usa isso pra avisar o usuário.
   const patchKey = (key, valOrFn) => {
+    if (estaOffline()) return false;
     dirtyKeys.current.add(key);
     setState((s) => ({
       ...s,
       [key]: typeof valOrFn === "function" ? valOrFn(s[key]) : valOrFn,
     }));
+    return true;
   };
 
   const setTxs = (v) => patchKey("txs", v);
@@ -208,8 +217,10 @@ export function useCloudState(uid) {
   const setCategoriasCustom = (v) => patchKey("categoriasCustom", v);
   const setNotificacoesParceria = (v) => patchKey("notificacoesParceria", v);
   const setPreferences = (patch) => {
+    if (estaOffline()) return false;
     dirtyKeys.current.add("preferences");
     setState((s) => ({ ...s, preferences: { ...s.preferences, ...patch } }));
+    return true;
   };
 
   return {
