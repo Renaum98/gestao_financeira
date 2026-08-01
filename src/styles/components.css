@@ -17,6 +17,88 @@
 /* Primeira opção de cada card de configuração não tem linha em cima */
 .config-item:first-child { border-top: none !important; }
 
+/* Indicador da tab bar (só no layout mobile): uma "gota" única na cor de
+   destaque que desliza até a aba ativa em vez de piscar de lugar. A posição e o
+   tamanho vêm de style inline (medidos do botão); aqui ficam a aparência e o
+   movimento. */
+.nav-indicador {
+  position: absolute;
+  left: 0;
+  z-index: 0;
+  pointer-events: none;
+  /* --nav-raio vem inline: 20px 16px nas abas à esquerda do "+", espelhado
+     (16px 20px) nas da direita, pra ponta mais aberta olhar sempre pra fora */
+  border-radius: var(--nav-raio, 20px 16px);
+  /* radial suave: denso atrás do ícone e dissolvendo antes da borda */
+  background: radial-gradient(115% 95% at 50% 42%,
+    color-mix(in oklab, var(--primary) 28%, transparent) 0%,
+    color-mix(in oklab, var(--primary) 14%, transparent) 58%,
+    transparent 100%);
+  transition:
+    transform .44s cubic-bezier(.32, .96, .36, 1),
+    width .44s cubic-bezier(.32, .96, .36, 1),
+    border-radius .18s ease,
+    opacity .2s ease;
+  will-change: transform;
+}
+
+/* Dedo segurando: a gota se recolhe num círculo. O JS encolhe a largura até a
+   altura (caixa quadrada), então aqui o 50% vira circunferência e não elipse.
+   Transição curta porque isso responde ao dedo — os .44s do deslize atrasariam. */
+.nav-indicador.is-segurando {
+  border-radius: 50%;
+  transition:
+    transform .2s ease,
+    width .2s ease,
+    border-radius .2s ease,
+    opacity .2s ease;
+}
+
+/* Durante o deslize a gota se deforma e volta ao formato — é o que dá a
+   sensação orgânica, de algo que escorre até a aba em vez de deslizar rígido.
+   Só o border-radius entra na animação: o transform fica com a transição, e as
+   duas não brigam. */
+.nav-indicador.is-deslizando { animation: nav-gota .44s cubic-bezier(.32, .96, .36, 1); }
+
+/* Enquanto o dedo arrasta, a bolha gruda nele: o transform perde a transição
+   (senão ficaria correndo atrás), mas raio e largura mantêm a delas pra o
+   encolhimento de "is-segurando" continuar suave. */
+.nav-indicador.is-arrastando {
+  transition: width .2s ease, border-radius .2s ease;
+  animation: none;
+}
+
+/* Começa redonda porque no toque a gota vem do estado "segurando" (50%): ela
+   desincha passando por duas deformações antes de assentar no formato da aba. */
+@keyframes nav-gota {
+  0%   { border-radius: 50%; }
+  30%  { border-radius: 30px 12px 26px 14px; }
+  60%  { border-radius: 13px 28px 15px 26px; }
+  100% { border-radius: var(--nav-raio, 20px 16px); }
+}
+
+/* Variante da sidebar (desktop): leva só o deslize. O fundo e o canto voltam a
+   ser os de antes — chapado e 12px — sem gradiente, sem raio assimétrico e sem
+   deformação no caminho. Segurar e arrastar são gestos de dedo, não existem
+   aqui. */
+.nav-indicador--v {
+  background: color-mix(in oklab, var(--primary) 12%, transparent);
+  border-radius: 12px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nav-indicador { transition: opacity .2s ease; }
+  .nav-indicador.is-deslizando { animation: none; }
+}
+
+/* Botões da tab bar — o fundo é do indicador, aqui só o anel de foco. */
+.nav-btn:focus-visible,
+.nav-fab:focus-visible {
+  outline: 2px solid color-mix(in oklab, var(--primary) 60%, transparent);
+  outline-offset: -2px;
+}
+.nav-fab:focus-visible { outline-offset: 3px; }
+
 /* Botão "swatch" de cor de destaque — efeito de alto relevo (convexo) */
 .swatch-raised {
   border: none;

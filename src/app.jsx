@@ -55,15 +55,204 @@ const AddExpenseModal   = lazyNamed(() => import("./modals/add-expense.jsx"), "A
 
 const ONBOARDING_KEY = "finca.onboarded";
 
+// Raio de repouso da "gota" da tab bar: os cantos maiores ficam sempre voltados
+// pro lado de fora, então as abas à esquerda do "+" são o espelho das da direita.
+const RAIO_ESQ = "20px 16px";
+const RAIO_DIR = "16px 20px";
+const raioDoLado = (lado) => (lado === "dir" ? RAIO_DIR : RAIO_ESQ);
+
+const ITENS_TAB = [
+  { id: "inicio", icon: "home", label: "Início" },
+  { id: "gastos", icon: "list", label: "Transações" },
+  { id: "add", icon: "plus", label: "", destaque: true },
+  { id: "analise", icon: "chart", label: "Análise" },
+  { id: "perfil", icon: "user", label: "Perfil" },
+];
+const I_DESTAQUE = ITENS_TAB.findIndex((it) => it.destaque);
+const ladoDaAba = (id) =>
+  ITENS_TAB.findIndex((it) => it.id === id) > I_DESTAQUE ? "dir" : "esq";
+
+// Mede o botão ativo da tab bar e devolve onde o indicador (a "gota" de fundo)
+// precisa parar. Como o indicador é um único elemento que se move, ele desliza
+// de uma aba pra outra em vez de piscar de lugar.
+function usePosicaoIndicador(tela, barraRef, itemRefs, ladoDe) {
+  const [pos, setPos] = React.useState(null);
+
+  React.useLayoutEffect(() => {
+    const medir = () => {
+      const btn = itemRefs.current[tela];
+      const barra = barraRef.current;
+      if (!btn || !barra) return setPos(null);
+      setPos({
+        left: btn.offsetLeft,
+        top: btn.offsetTop,
+        width: btn.offsetWidth,
+        height: btn.offsetHeight,
+        lado: ladoDe(tela),
+      });
+    };
+    medir();
+    // Rótulos traduzidos e rotação de tela mudam a largura dos itens.
+    window.addEventListener("resize", medir);
+    return () => window.removeEventListener("resize", medir);
+  }, [tela, barraRef, itemRefs, ladoDe]);
+
+  return pos;
+}
+
 function TabBar({ tela, irPara, abrirAdd }) {
   const t = useT();
-  const itens = [
-    { id: "inicio", icon: "home", label: t("Início") },
-    { id: "gastos", icon: "list", label: t("Transações") },
-    { id: "add", icon: "plus", label: "", destaque: true },
-    { id: "analise", icon: "chart", label: t("Análise") },
-    { id: "perfil", icon: "user", label: t("Perfil") },
-  ];
+  const barraRef = React.useRef(null);
+  const itemRefs = React.useRef({});
+  const indicadorRef = React.useRef(null);
+  const pos = usePosicaoIndicador(tela, barraRef, itemRefs, ladoDaAba);
+  const posAnterior = React.useRef(null);
+
+  const dispararGota = React.useCallback(() => {
+    const el = indicadorRef.current;
+    if (!el) return;
+    el.classList.remove("is-deslizando");
+    void el.offsetWidth; // força o reflow pra o navegador reiniciar a animação
+    el.classList.add("is-deslizando");
+  }, []);
+
+  // Reinicia a animação de deformação a cada troca de aba (só quando o
+  // indicador realmente muda de lugar — não na primeira medição nem num resize).
+  React.useLayoutEffect(() => {
+    const antes = posAnterior.current;
+    posAnterior.current = pos;
+    if (!pos || !antes || antes.left === pos.left) return;
+    dispararGota();
+  }, [pos, dispararGota]);
+
+  // ─── Arrastar a gota de uma aba pra outra (só no toque) ───
+  // Enquanto o dedo está na tela a gota acompanha ele sem transição; ao soltar,
+  // ela solta e escorre até a aba mais próxima com a mesma animação do toque.
+  const arraste = React.useRef(null);
+  const arrastou = React.useRef(false);
+
+  const medirAbas = React.useCallback(() => {
+    const barra = barraRef.current;
+    if (!barra) return [];
+    const base = barra.getBoundingClientRect().left;
+    return Object.entries(itemRefs.current)
+      .filter(([, el]) => el)
+      .map(([id, el]) => ({
+        id,
+        left: el.offsetLeft,
+        width: el.offsetWidth,
+        centro: base + el.offsetLeft + el.offsetWidth / 2,
+      }))
+      .sort((a, b) => a.left - b.left);
+  }, [barraRef, itemRefs]);
+
+  // "Redondo" só existe em caixa quadrada: com 50% num retângulo de 107×51 sai
+  // uma elipse. Então o círculo é a gota encolhida à própria altura, centrada em
+  // cima do botão — só assim o 50% vira circunferência de verdade.
+  const virarBolha = (el, left, width) => {
+    const d = el.offsetHeight;
+    el.style.width = `${d}px`;
+    el.style.transform = `translateX(${left + (width - d) / 2}px)`;
+    return d;
+  };
+
+  const encaixar = (el, left, width) => {
+    el.style.width = `${width}px`;
+    el.style.transform = `translateX(${left}px)`;
+  };
+
+  const aoApontar = (e) => {
+    // "somente no mobile": mouse e caneta seguem só com o clique normal
+    if (e.pointerType !== "touch" || !pos) return;
+    const alvo = e.target.closest?.("[data-aba]");
+    if (!alvo) return;
+    const el = indicadorRef.current;
+    arrastou.current = false;
+    arraste.current = { x0: e.clientX, ativo: false, id: alvo.dataset.aba };
+    // Dedo parado em cima da aba onde a gota está: ela vira bolha. Nas outras
+    // não faz sentido — a gota não está lá pra reagir.
+    if (el && alvo.dataset.aba === tela) {
+      el.classList.add("is-segurando");
+      virarBolha(el, pos.left, pos.width);
+    }
+  };
+
+  const aoMover = (e) => {
+    const a = arraste.current;
+    const el = indicadorRef.current;
+    if (!a || !el) return;
+
+    if (!a.ativo) {
+      if (Math.abs(e.clientX - a.x0) < 8) return; // ainda pode virar um toque
+      a.ativo = true;
+      a.abas = medirAbas();
+      a.base = barraRef.current.getBoundingClientRect().left;
+      arrastou.current = true;
+      e.currentTarget.setPointerCapture(e.pointerId);
+      // a gota passa a estar sob o dedo, então vira bolha mesmo se o toque
+      // tiver começado em outra aba
+      el.classList.add("is-arrastando", "is-segurando");
+      const daVez = a.abas.find((ab) => ab.id === tela) ?? a.abas[0];
+      a.diametro = virarBolha(el, daVez.left, daVez.width);
+    }
+
+    const abas = a.abas;
+    if (!abas.length) return;
+    // a bolha fica centrada no dedo, presa entre os centros da primeira e da
+    // última aba pra não escapar da barra
+    const d = a.diametro;
+    const primeira = abas[0];
+    const ultima = abas[abas.length - 1];
+    const minC = primeira.left + primeira.width / 2;
+    const maxC = ultima.left + ultima.width / 2;
+    const centro = Math.min(maxC, Math.max(minC, e.clientX - a.base));
+    el.style.transform = `translateX(${centro - d / 2}px)`;
+
+    const perto = abas.reduce((m, ab) =>
+      Math.abs(ab.centro - e.clientX) < Math.abs(m.centro - e.clientX) ? ab : m
+    );
+    if (perto.id !== a.id) {
+      a.id = perto.id;
+      el.style.setProperty("--nav-raio", raioDoLado(ladoDaAba(perto.id)));
+      vibrar();
+    }
+  };
+
+  const aoSoltar = (e) => {
+    const a = arraste.current;
+    const el = indicadorRef.current;
+    arraste.current = null;
+    if (!el) return;
+    const eraBolha = el.classList.contains("is-segurando");
+    el.classList.remove("is-segurando"); // soltou o dedo: a bolha se espalha
+
+    if (!a || !a.ativo) {
+      // foi só um toque parado: desfaz a bolha de volta no encaixe da aba
+      if (eraBolha && pos) encaixar(el, pos.left, pos.width);
+      return;
+    }
+    el.classList.remove("is-arrastando");
+    // devolve a gota ao encaixe da aba escolhida; se for a mesma de onde saiu, o
+    // React não re-renderiza, então largura e posição são repostas aqui na mão
+    const destino = a.abas.find((ab) => ab.id === a.id);
+    if (destino) encaixar(el, destino.left, destino.width);
+    dispararGota();
+    if (a.id !== tela) irPara(a.id);
+    const barra = e.currentTarget;
+    if (barra.hasPointerCapture?.(e.pointerId)) barra.releasePointerCapture(e.pointerId);
+  };
+
+  const aoCancelar = () => {
+    const a = arraste.current;
+    const el = indicadorRef.current;
+    arraste.current = null;
+    if (!el) return;
+    el.classList.remove("is-segurando", "is-arrastando");
+    if (pos) encaixar(el, pos.left, pos.width);
+    el.style.setProperty("--nav-raio", raioDoLado(pos?.lado));
+  };
+
+  const itens = ITENS_TAB.map((it) => ({ ...it, label: t(it.label) }));
   return (
     <div
       style={{
@@ -79,6 +268,7 @@ function TabBar({ tela, irPara, abrirAdd }) {
       }}
     >
       <div
+        ref={barraRef}
         className="glass-surface"
         style={{
           maxWidth: 480,
@@ -91,8 +281,30 @@ function TabBar({ tela, irPara, abrirAdd }) {
           alignItems: "center",
           justifyContent: "space-between",
           pointerEvents: "auto",
+          position: "relative",
+          // o arraste horizontal é nosso; a barra é fixa, não rola nada por baixo
+          touchAction: "none",
         }}
+        onPointerDown={aoApontar}
+        onPointerMove={aoMover}
+        onPointerUp={aoSoltar}
+        onPointerCancel={aoCancelar}
       >
+        <div
+          ref={indicadorRef}
+          className="nav-indicador"
+          aria-hidden="true"
+          style={{
+            opacity: pos ? 1 : 0,
+            top: pos?.top ?? 0,
+            width: pos?.width ?? 0,
+            height: pos?.height ?? 0,
+            transform: `translateX(${pos?.left ?? 0}px)`,
+            // o CSS (inclusive os quadros da animação) lê o raio daqui, então a
+            // gota já chega ao destino com os cantos do lado certo
+            "--nav-raio": raioDoLado(pos?.lado),
+          }}
+        />
         {itens.map((it) => {
           const ativo = tela === it.id;
           if (it.destaque) {
@@ -101,6 +313,7 @@ function TabBar({ tela, irPara, abrirAdd }) {
                 key={it.id}
                 onClick={abrirAdd}
                 aria-label={t("Nova transação")}
+                className="nav-fab"
                 style={{
                   width: 52,
                   height: 52,
@@ -116,6 +329,8 @@ function TabBar({ tela, irPara, abrirAdd }) {
                   boxShadow:
                     "0 6px 16px color-mix(in oklab, var(--primary) 35%, transparent)",
                   transform: "translateY(-8px)",
+                  position: "relative",
+                  zIndex: 1,
                 }}
               >
                 <Icon name="plus" size={26} color="#fff" strokeWidth={2.6} />
@@ -126,21 +341,30 @@ function TabBar({ tela, irPara, abrirAdd }) {
             <button
               key={it.id}
               onClick={() => {
+                // um arraste que terminou aqui já navegou no pointerup
+                if (arrastou.current) return void (arrastou.current = false);
                 if (it.id !== tela) vibrar();
                 irPara(it.id);
               }}
               aria-label={it.label}
               aria-current={ativo ? "page" : undefined}
+              className="nav-btn"
+              data-aba={it.id}
+              ref={(el) => { itemRefs.current[it.id] = el; }}
               style={{
                 flex: 1,
                 background: "transparent",
                 border: "none",
+                borderRadius: raioDoLado(ladoDaAba(it.id)),
                 padding: "8px 4px",
                 cursor: "pointer",
                 display: "flex",
                 flexDirection: "column",
                 alignItems: "center",
                 gap: 2,
+                // acima do indicador, que desliza por baixo dos ícones
+                position: "relative",
+                zIndex: 1,
               }}
             >
               <Icon
@@ -179,8 +403,18 @@ const NAV_DESKTOP = [
   { id: "perfil", icon: "user", label: "Perfil" },
 ];
 
+// Na sidebar a gota anda no eixo Y e não tem lado esquerdo/direito pra espelhar.
+const ladoFixo = () => "esq";
+
 function Sidebar({ tela, irPara, abrirAdd, usuario, fotoPerfil }) {
   const t = useT();
+  const navRef = React.useRef(null);
+  const itemRefs = React.useRef({});
+  // O desktop leva só o deslize: o indicador é o mesmo retângulo de antes, que
+  // agora escorrega entre os itens em vez de reaparecer no lugar novo. Nada de
+  // deformação no caminho — por isso não há classe de animação aqui.
+  const pos = usePosicaoIndicador(tela, navRef, itemRefs, ladoFixo);
+
   return (
     <aside
       className="glass-surface"
@@ -244,7 +478,26 @@ function Sidebar({ tela, irPara, abrirAdd, usuario, fotoPerfil }) {
         {t("Nova Transação")}
       </button>
 
-      <nav style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+      <nav
+        ref={navRef}
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          gap: 2,
+          position: "relative",
+        }}
+      >
+        <div
+          className="nav-indicador nav-indicador--v"
+          aria-hidden="true"
+          style={{
+            opacity: pos ? 1 : 0,
+            top: 0,
+            width: pos?.width ?? 0,
+            height: pos?.height ?? 0,
+            transform: `translateY(${pos?.top ?? 0}px)`,
+          }}
+        />
         {NAV_DESKTOP.map((it) => {
           const ativo = tela === it.id;
           return (
@@ -254,6 +507,7 @@ function Sidebar({ tela, irPara, abrirAdd, usuario, fotoPerfil }) {
                 if (it.id !== tela) vibrar();
                 irPara(it.id);
               }}
+              ref={(el) => { itemRefs.current[it.id] = el; }}
               style={{
                 display: "flex",
                 alignItems: "center",
@@ -262,14 +516,14 @@ function Sidebar({ tela, irPara, abrirAdd, usuario, fotoPerfil }) {
                 borderRadius: 12,
                 border: "none",
                 cursor: "pointer",
-                background: ativo
-                  ? "color-mix(in oklab, var(--primary) 12%, transparent)"
-                  : "transparent",
+                background: "transparent", // o fundo agora é o indicador que desliza
                 color: ativo ? "var(--primary)" : "var(--ink)",
                 fontSize: 14,
                 fontWeight: ativo ? 800 : 600,
                 fontFamily: "inherit",
                 textAlign: "left",
+                position: "relative",
+                zIndex: 1,
               }}
             >
               <Icon
