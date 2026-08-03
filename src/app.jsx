@@ -79,11 +79,9 @@ const ACOES_QUE_ESCREVEM = [
   "desfazerParceria",
 ];
 
-// Raio de repouso da "gota" da tab bar: os cantos maiores ficam sempre voltados
-// pro lado de fora, então as abas à esquerda do "+" são o espelho das da direita.
-const RAIO_ESQ = "20px 16px";
-const RAIO_DIR = "16px 20px";
-const raioDoLado = (lado) => (lado === "dir" ? RAIO_DIR : RAIO_ESQ);
+// Raio de repouso da "gota" da tab bar — igual nos quatro cantos.
+// Acompanha o .nav-indicador em components.css.
+const RAIO_GOTA = 18;
 
 const ITENS_TAB = [
   { id: "inicio", icon: "home", label: "Início" },
@@ -92,14 +90,11 @@ const ITENS_TAB = [
   { id: "analise", icon: "chart", label: "Análise" },
   { id: "perfil", icon: "user", label: "Perfil" },
 ];
-const I_DESTAQUE = ITENS_TAB.findIndex((it) => it.destaque);
-const ladoDaAba = (id) =>
-  ITENS_TAB.findIndex((it) => it.id === id) > I_DESTAQUE ? "dir" : "esq";
 
 // Mede o botão ativo da tab bar e devolve onde o indicador (a "gota" de fundo)
 // precisa parar. Como o indicador é um único elemento que se move, ele desliza
 // de uma aba pra outra em vez de piscar de lugar.
-function usePosicaoIndicador(tela, barraRef, itemRefs, ladoDe) {
+function usePosicaoIndicador(tela, barraRef, itemRefs) {
   const [pos, setPos] = React.useState(null);
 
   React.useLayoutEffect(() => {
@@ -112,14 +107,13 @@ function usePosicaoIndicador(tela, barraRef, itemRefs, ladoDe) {
         top: btn.offsetTop,
         width: btn.offsetWidth,
         height: btn.offsetHeight,
-        lado: ladoDe(tela),
       });
     };
     medir();
     // Rótulos traduzidos e rotação de tela mudam a largura dos itens.
     window.addEventListener("resize", medir);
     return () => window.removeEventListener("resize", medir);
-  }, [tela, barraRef, itemRefs, ladoDe]);
+  }, [tela, barraRef, itemRefs]);
 
   return pos;
 }
@@ -129,7 +123,7 @@ function TabBar({ tela, irPara, abrirAdd }) {
   const barraRef = React.useRef(null);
   const itemRefs = React.useRef({});
   const indicadorRef = React.useRef(null);
-  const pos = usePosicaoIndicador(tela, barraRef, itemRefs, ladoDaAba);
+  const pos = usePosicaoIndicador(tela, barraRef, itemRefs);
   const posAnterior = React.useRef(null);
 
   const dispararGota = React.useCallback(() => {
@@ -237,7 +231,6 @@ function TabBar({ tela, irPara, abrirAdd }) {
     );
     if (perto.id !== a.id) {
       a.id = perto.id;
-      el.style.setProperty("--nav-raio", raioDoLado(ladoDaAba(perto.id)));
       vibrar();
     }
   };
@@ -273,7 +266,6 @@ function TabBar({ tela, irPara, abrirAdd }) {
     if (!el) return;
     el.classList.remove("is-segurando", "is-arrastando");
     if (pos) encaixar(el, pos.left, pos.width);
-    el.style.setProperty("--nav-raio", raioDoLado(pos?.lado));
   };
 
   const itens = ITENS_TAB.map((it) => ({ ...it, label: t(it.label) }));
@@ -324,9 +316,6 @@ function TabBar({ tela, irPara, abrirAdd }) {
             width: pos?.width ?? 0,
             height: pos?.height ?? 0,
             transform: `translateX(${pos?.left ?? 0}px)`,
-            // o CSS (inclusive os quadros da animação) lê o raio daqui, então a
-            // gota já chega ao destino com os cantos do lado certo
-            "--nav-raio": raioDoLado(pos?.lado),
           }}
         />
         {itens.map((it) => {
@@ -379,7 +368,7 @@ function TabBar({ tela, irPara, abrirAdd }) {
                 flex: 1,
                 background: "transparent",
                 border: "none",
-                borderRadius: raioDoLado(ladoDaAba(it.id)),
+                borderRadius: RAIO_GOTA,
                 padding: "8px 4px",
                 cursor: "pointer",
                 display: "flex",
@@ -488,9 +477,6 @@ const NAV_DESKTOP = [
   { id: "perfil", icon: "user", label: "Perfil" },
 ];
 
-// Na sidebar a gota anda no eixo Y e não tem lado esquerdo/direito pra espelhar.
-const ladoFixo = () => "esq";
-
 function Sidebar({ tela, irPara, abrirAdd, usuario, fotoPerfil }) {
   const t = useT();
   const navRef = React.useRef(null);
@@ -498,7 +484,7 @@ function Sidebar({ tela, irPara, abrirAdd, usuario, fotoPerfil }) {
   // O desktop leva só o deslize: o indicador é o mesmo retângulo de antes, que
   // agora escorrega entre os itens em vez de reaparecer no lugar novo. Nada de
   // deformação no caminho — por isso não há classe de animação aqui.
-  const pos = usePosicaoIndicador(tela, navRef, itemRefs, ladoFixo);
+  const pos = usePosicaoIndicador(tela, navRef, itemRefs);
 
   return (
     <aside

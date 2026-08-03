@@ -26,9 +26,8 @@
   left: 0;
   z-index: 0;
   pointer-events: none;
-  /* --nav-raio vem inline: 20px 16px nas abas à esquerda do "+", espelhado
-     (16px 20px) nas da direita, pra ponta mais aberta olhar sempre pra fora */
-  border-radius: var(--nav-raio, 20px 16px);
+  /* raio parelho nos quatro cantos (o mesmo RAIO_GOTA dos botões, no app.jsx) */
+  border-radius: 18px;
   /* radial suave: denso atrás do ícone e dissolvendo antes da borda */
   background: radial-gradient(115% 95% at 50% 42%,
     color-mix(in oklab, var(--primary) 28%, transparent) 0%,
@@ -74,7 +73,7 @@
   0%   { border-radius: 50%; }
   30%  { border-radius: 30px 12px 26px 14px; }
   60%  { border-radius: 13px 28px 15px 26px; }
-  100% { border-radius: var(--nav-raio, 20px 16px); }
+  100% { border-radius: 18px; }
 }
 
 /* Variante da sidebar (desktop): leva só o deslize. O fundo e o canto voltam a
