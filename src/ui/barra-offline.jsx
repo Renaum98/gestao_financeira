@@ -60,7 +60,16 @@ export function BarraOffline({ offline, tentativa }) {
         cursor: "pointer",
         // fora da tela quando online, pra descida e subida serem animadas
         transform: offline ? "translateY(0)" : "translateY(-100%)",
-        transition: "transform .32s cubic-bezier(.45,.1,.35,1)",
+        // O translate tira a faixa do lugar, mas ela continua sendo um elemento
+        // pintado e clicável em cima de tudo — e subindo por baixo da safe area
+        // sobrava uma tira colorida no topo. Some de verdade quando online.
+        visibility: offline ? "visible" : "hidden",
+        pointerEvents: offline ? "auto" : "none",
+        // A visibilidade não anima: ela só troca no fim da subida (senão a faixa
+        // sumiria de uma vez, sem animação) e volta na hora na descida.
+        transition: offline
+          ? "transform .32s cubic-bezier(.45,.1,.35,1), visibility 0s"
+          : "transform .32s cubic-bezier(.45,.1,.35,1), visibility 0s linear .32s",
         boxShadow: "0 2px 12px rgba(20,16,24,0.18)",
       }}
     >

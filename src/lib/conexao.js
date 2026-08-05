@@ -29,11 +29,28 @@ export function useEstaOffline() {
   React.useEffect(() => {
     const sincronizar = () => setOffline(estaOffline());
     sincronizar(); // a conexão pode ter mudado entre o primeiro render e aqui
+
     window.addEventListener("online", sincronizar);
     window.addEventListener("offline", sincronizar);
+
+    // Os eventos online/offline sozinhos deixam o aviso preso. A conexão
+    // costuma voltar com o app em segundo plano — trocar de wifi, sair do modo
+    // avião, destravar o aparelho — e aí a aba está congelada ou veio do
+    // bfcache: o evento não chega, ou chega e é descartado, e o app volta
+    // pintando "sem conexão" com a internet já de pé. Então, além de escutar,
+    // reconferimos o navigator.onLine em todo momento em que a página volta a
+    // ser vista. É barato (uma leitura de propriedade) e o setState com o mesmo
+    // valor não re-renderiza.
+    document.addEventListener("visibilitychange", sincronizar);
+    window.addEventListener("pageshow", sincronizar);
+    window.addEventListener("focus", sincronizar);
+
     return () => {
       window.removeEventListener("online", sincronizar);
       window.removeEventListener("offline", sincronizar);
+      document.removeEventListener("visibilitychange", sincronizar);
+      window.removeEventListener("pageshow", sincronizar);
+      window.removeEventListener("focus", sincronizar);
     };
   }, []);
   return offline;
