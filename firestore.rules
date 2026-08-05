@@ -83,14 +83,19 @@ service cloud.firestore {
         && emailLower == meuEmail()
         && request.resource.data.uid == request.auth.uid
         && request.resource.data.keys().hasOnly(['uid', 'nome', 'temParceiro']);
+      // O update NÃO exige que o uid que já está no doc seja o seu, só que o
+      // doc seja o do seu e-mail. A diferença aparece quando alguém apaga a
+      // conta e cria outra com o mesmo e-mail: sobra um índice apontando pro
+      // uid antigo, e exigir que ele aponte pra você tranca o doc pra sempre —
+      // o dono novo nunca consegue se registrar e some da busca por e-mail.
+      // Autorizar pelo e-mail do token é o que faz sentido: o Auth garante uma
+      // conta por e-mail, então quem tem o e-mail confirmado é o dono atual
+      // daquele índice, tenha ou não estado lá antes.
       allow update: if verificado()
         && emailLower == meuEmail()
-        && resource.data.uid == request.auth.uid
         && request.resource.data.uid == request.auth.uid
         && request.resource.data.keys().hasOnly(['uid', 'nome', 'temParceiro']);
-      allow delete: if verificado()
-        && emailLower == meuEmail()
-        && resource.data.uid == request.auth.uid;
+      allow delete: if verificado() && emailLower == meuEmail();
     }
 
     // ─── partnerships/{pId} ───────────────────────────────────────────────
