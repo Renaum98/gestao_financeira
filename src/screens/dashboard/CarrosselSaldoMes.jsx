@@ -161,11 +161,10 @@ export function CarrosselSaldoMes({ todosMeses, mes, setMes, renderCard }) {
   // Só cresce, nunca encolhe, então converge no primeiro card mais alto e para.
   const [alturaSlide, setAlturaSlide] = React.useState(0);
   React.useLayoutEffect(() => {
-    const s = slideRefs.current[idxAtivo];
-    const card = s?.firstElementChild;
-    if (!card) return;
-    // offsetHeight ignora o scale aplicado por aplicarEfeitos — é a caixa real
-    const h = card.offsetHeight;
+    const face = slideRefs.current[idxAtivo]?.firstElementChild;
+    if (!face) return;
+    // offsetHeight ignora o transform aplicado por aplicarEfeitos — é a caixa real
+    const h = face.offsetHeight;
     if (h > alturaSlide) setAlturaSlide(h);
   });
 
@@ -177,15 +176,18 @@ export function CarrosselSaldoMes({ todosMeses, mes, setMes, renderCard }) {
     // leitura de offsetLeft depois de um write forçava o navegador a recalcular
     // o layout — um reflow síncrono por slide, e a conta cresce com o número de
     // meses. Separado em duas passadas, é um layout só.
+    // Mede o slide (caixa de layout, nunca transformada) e escreve na face
+    // (filho único, é ela que gira).
     const medidas = [];
     for (const s of slideRefs.current) {
-      if (!s) continue;
-      medidas.push({ s, centroSlide: s.offsetLeft + s.clientWidth / 2, largura: s.clientWidth });
+      const face = s?.firstElementChild;
+      if (!face) continue;
+      medidas.push({ face, centroSlide: s.offsetLeft + s.clientWidth / 2, largura: s.clientWidth });
     }
     // Inclinação vinda do gesto, não da posição: -1 arrastando pra um lado, +1
     // pro outro, 0 parado. É o que faz a roda parecer que TEM inércia.
     const arrasto = cinetica.current.arrasto;
-    for (const { s, centroSlide, largura } of medidas) {
+    for (const { face, centroSlide, largura } of medidas) {
       // com sinal: -1 = encostado à esquerda, 0 = centrado, +1 = à direita
       const pos = Math.max(-1, Math.min(1, (centroSlide - centro) / largura));
       const d = Math.abs(pos);
@@ -210,9 +212,9 @@ export function CarrosselSaldoMes({ todosMeses, mes, setMes, renderCard }) {
       // roda inteira recua um pouco, como câmera que se afasta na corrida e
       // volta ao parar.
       const z = -(q * PROFUNDIDADE + Math.abs(arrasto) * RECUO_ARRASTO);
-      s.style.opacity = op.toFixed(3);
-      s.style.transformOrigin = `${origemX.toFixed(1)}% center`;
-      s.style.transform =
+      face.style.opacity = op.toFixed(3);
+      face.style.transformOrigin = `${origemX.toFixed(1)}% center`;
+      face.style.transform =
         `translateZ(${z.toFixed(1)}px) rotateY(${giro.toFixed(2)}deg) scale(${escala.toFixed(3)})`;
     }
   }, []);
@@ -397,6 +399,12 @@ export function CarrosselSaldoMes({ todosMeses, mes, setMes, renderCard }) {
         // de a janela se atualizar. Mais longe que isso, caixa vazia mesmo.
         const comEsqueleto = dist <= JANELA + 2;
         return (
+          // O slide é o alvo do snap e por isso NÃO pode receber transform: a
+          // área de encaixe que o navegador usa é a border box já transformada,
+          // então girar o próprio slide move o ponto onde ele deveria encaixar
+          // — e move a cada frame, enquanto o dedo rola. O efeito vive na face
+          // aqui dentro; a caixa de fora fica parada e o snap tem onde se
+          // segurar.
           <div
             key={m}
             className="carrossel-saldo__slide"
@@ -409,19 +417,31 @@ export function CarrosselSaldoMes({ todosMeses, mes, setMes, renderCard }) {
               scrollSnapAlign: "center",
               // sem scrollSnapStop: "always" — permite gestos rápidos
               // atravessarem mais de um slide sem travar
-              willChange: perto ? "opacity, transform" : "auto",
-              // transform/transformOrigin/opacity ficam por conta de
-              // aplicarEfeitos — não declarar aqui pra o React não reescrever
-              // por cima do que o rAF acabou de calcular.
-              // Sem transition: opacity/transform são reescritos a cada frame de
-              // scroll por aplicarEfeitos (via rAF), então o efeito acompanha o
-              // dedo 1:1. Uma transition aqui só adicionaria lag perseguindo o
-              // gesto. O snap nativo continua emitindo scroll até assentar, então
-              // o estado final também fica suave sem transição.
-              backfaceVisibility: perto ? "hidden" : undefined,
             }}
           >
-            {naJanela ? renderCard(m) : comEsqueleto ? <EsqueletoCard /> : null}
+            <div
+              className="carrossel-saldo__face"
+              style={{
+                height: "100%",
+                // `will-change` e `backface-visibility` promovem a face a camada
+                // de composição própria. Em todas elas isso significava uma
+                // camada por mês de histórico (e parcelamentos jogam meses
+                // futuros na lista), todas recriadas quando a aba volta a ficar
+                // visível. Só as vizinhas da ativa chegam a se mover no gesto.
+                willChange: perto ? "opacity, transform" : "auto",
+                // transform/transformOrigin/opacity ficam por conta de
+                // aplicarEfeitos — não declarar aqui pra o React não reescrever
+                // por cima do que o rAF acabou de calcular.
+                // Sem transition: são reescritos a cada frame de scroll (via
+                // rAF), então o efeito acompanha o dedo 1:1. Uma transition aqui
+                // só adicionaria lag perseguindo o gesto. O snap nativo continua
+                // emitindo scroll até assentar, então o estado final também fica
+                // suave sem transição.
+                backfaceVisibility: perto ? "hidden" : undefined,
+              }}
+            >
+              {naJanela ? renderCard(m) : comEsqueleto ? <EsqueletoCard /> : null}
+            </div>
           </div>
         );
       })}
