@@ -121,22 +121,23 @@ export function InstallPromptModal({ temAtalho, plataformaIOS, onInstalar, onDis
       scrollable={false}
       center
       >
+        {/* O mesmo ícone que a instalação vai colocar na tela inicial — e o
+            mesmo azulejo branco do login. É a promessa da tela: o usuário
+            precisa reconhecer depois o que viu aqui. */}
         <div style={{
-          width: 72, height: 72, borderRadius: 24,
+          width: 72, height: 72, borderRadius: 20,
           margin: '0 auto 16px',
-          background: 'linear-gradient(135deg, var(--primary), var(--primary-2))',
+          background: '#fff',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           boxShadow: '0 12px 28px color-mix(in oklab, var(--primary) 32%, transparent)',
           position: 'relative', overflow: 'hidden',
         }}>
-          <div style={{
-            position: 'absolute', top: -14, left: -14, width: 38, height: 38,
-            borderRadius: '50%', background: 'rgba(255,255,255,0.18)',
-          }} />
-          <div style={{
-            fontSize: 42, fontWeight: 800, color: '#fff',
-            letterSpacing: '-0.05em', lineHeight: 1, position: 'relative',
-          }}>F</div>
+          <img
+            src={`${import.meta.env.BASE_URL}logo.png`}
+            alt=""
+            aria-hidden="true"
+            style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }}
+          />
         </div>
 
         {!instrucoesIOS ? (
