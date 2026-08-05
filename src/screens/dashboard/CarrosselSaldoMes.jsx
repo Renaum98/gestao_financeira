@@ -351,6 +351,23 @@ export function CarrosselSaldoMes({ todosMeses, mes, setMes, renderCard }) {
     [],
   );
 
+  // O scroll era o único gatilho do efeito, então uma mudança de layout sem
+  // gesto nenhum — girar o aparelho, a barra do navegador sumindo (muda 100vw),
+  // o teclado abrindo — deixava os cards com a inclinação da largura antiga até
+  // o usuário tocar na tela. O observer devolve o recálculo pra quem não pode
+  // depender de um gesto pra acontecer.
+  //
+  // Escreve só na face (filha), e transform não altera layout, então o
+  // callback não consegue mudar o tamanho do que está sendo observado: sem
+  // risco do loop de ResizeObserver.
+  React.useEffect(() => {
+    const el = ref.current;
+    if (!el || typeof ResizeObserver === "undefined") return;
+    const ro = new ResizeObserver(() => aplicarEfeitos());
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [aplicarEfeitos]);
+
   return (
     <div
       ref={ref}
