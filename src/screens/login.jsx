@@ -10,6 +10,7 @@ import {
   sair as sairFirebase,
 } from '../lib/firebase.js';
 import { Icon } from '../ui/icons.jsx';
+import { LogoAnimado } from '../ui/logo-animado.jsx';
 import { vibrar } from '../lib/haptics.js';
 import { COR_POS, COR_NEG } from '../lib/colors.js';
 import { useT } from '../lib/i18n.jsx';
@@ -133,34 +134,19 @@ function CampoSenha({ label, value, onChange, ...props }) {
   );
 }
 
+// O azulejo. Sombra e movimento (o estouro no fim da entrada e o flutuar que
+// vem depois) estão em components.css, junto da coreografia do próprio logo —
+// os tempos de um dependem dos do outro. Aqui fica só o que depende do `size`.
 function Logo({ size = 100 }) {
   return (
-    <>
-      <style>{`
-        @keyframes logoFloat {
-          0%, 100% { transform: translateY(0); box-shadow: 0 16px 36px color-mix(in oklab, var(--primary) 30%, transparent); }
-          50%      { transform: translateY(-8px); box-shadow: 0 24px 44px color-mix(in oklab, var(--primary) 26%, transparent); }
-        }
-        @media (prefers-reduced-motion: reduce) {
-          .login-logo-float { animation: none !important; transform: none !important; }
-        }
-      `}</style>
-      <div className="login-logo-float" style={{
-        width: size, height: size, borderRadius: size * 0.28,
-        background: '#fff',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        boxShadow: '0 16px 36px color-mix(in oklab, var(--primary) 30%, transparent)',
-        position: 'relative', overflow: 'hidden', flexShrink: 0,
-        animation: 'logoFloat 3.6s ease-in-out infinite',
-        willChange: 'transform',
-      }}>
-        <img
-          src={`${import.meta.env.BASE_URL}logo.png`}
-          alt="Finça"
-          style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }}
-        />
-      </div>
-    </>
+    <div className="login-logo-float" style={{
+      width: size, height: size, borderRadius: size * 0.28,
+      background: '#fff',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      position: 'relative', overflow: 'hidden', flexShrink: 0,
+    }}>
+      <LogoAnimado titulo="MyCounts" />
+    </div>
   );
 }
 

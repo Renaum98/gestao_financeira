@@ -206,6 +206,122 @@
 }
 .nav-fab:focus-visible { outline-offset: 3px; }
 
+/* ─── Logo animado (ui/logo-animado.jsx) ─────────────────────────────────
+   A seta se desenha da cauda até a ponta, e cada barra brota no instante em
+   que o traço passa por baixo dela — o gráfico não é montado antes nem depois
+   da seta, ele nasce da passagem dela.
+
+   Os atrasos das barras não são um ritmo escolhido a gosto: são o tempo em que
+   o traço chega em cada uma. Os pontos ficam a 23%, 41% e 63% do caminho, e a
+   curva abaixo (a mesma dos ícones da tab bar) converte isso em 0.28s, 0.39s e
+   0.50s de 1.1s. Mexer na duração ou na curva desalinha os três.
+
+   Tudo com `both`: durante o atraso a forma fica no quadro inicial, e onde a
+   animação não roda o logo aparece inteiro em vez de sumir. */
+.logo-svg { display: block; width: 100%; height: 100%; }
+
+.logo-haste { animation: logo-tracar 1.1s cubic-bezier(.45, .05, .35, 1) both; }
+@keyframes logo-tracar {
+  from { stroke-dasharray: 100; stroke-dashoffset: 100; }
+  to   { stroke-dasharray: 100; stroke-dashoffset: 0; }
+}
+
+/* O pé de cada barra é o ponto onde ela encosta no contorno da seta — por isso
+   cada transform-origin é diferente: é dali que ela cresce. */
+.logo-barra {
+  transform-box: view-box;
+  animation: logo-brotar .44s cubic-bezier(.45, .05, .35, 1) both;
+}
+.logo-barra-1 { transform-origin: 482px 1008px; animation-delay: .28s; }
+.logo-barra-2 { transform-origin: 696px 1119px; animation-delay: .39s; }
+.logo-barra-3 { transform-origin: 912px  923px; animation-delay: .50s; }
+@keyframes logo-brotar {
+  0%   { transform: scaleY(0); }
+  72%  { transform: scaleY(1.04); }
+  100% { transform: scaleY(1); }
+}
+
+/* A ponta encaixa quando o traço chega nela (78% de 1.1s), com o mesmo repique
+   da cabeça do ícone de Perfil. Cresce do meio da base do triângulo, que é onde
+   a haste termina — assim ela parece brotar do traço, não pousar sobre ele.
+
+   O recuo do repique fecha em 85% e não em 78%: o trecho final vai de .985 a 1,
+   que ninguém enxerga, então quanto mais curto melhor. Sobrando muito ali, a
+   animação "acaba" aos olhos bem antes de acabar de fato, e o estouro — que
+   espera o fim de verdade — parece atrasado. */
+.logo-ponta {
+  transform-box: view-box;
+  transform-origin: 1228px 767px;
+  animation: logo-encaixar .44s cubic-bezier(.45, .1, .35, 1) .84s both;
+}
+@keyframes logo-encaixar {
+  0%   { transform: scale(.3); opacity: 0; }
+  58%  { transform: scale(1.12); opacity: 1; }
+  85%  { transform: scale(.985); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* O fecho: quando a ponta encaixa, o azulejo inteiro dá um estouro — cresce, a
+   sombra abre — e volta ao repouso. Some daí em diante: o que continua é o
+   flutuar de sempre.
+
+   As duas animações do azulejo mexem em transform e box-shadow, as mesmas
+   propriedades — sobrepostas, a última da lista simplesmente anula a outra. Por
+   isso elas não se cruzam: o estouro vai de 1.10s a 1.80s e o flutuar só começa
+   aos 1.80s. Sem `forwards` no estouro, pra que o azulejo volte à sombra
+   declarada na regra em vez de ficar com o último quadro grudado.
+
+   A linha do tempo inteira: 0→1.1s a seta se desenha (barras em .28/.39/.50),
+   .84→1.28s a ponta encaixa, 1.10→1.80s o estouro, 1.80s em diante o flutuar.
+   O estouro pega o bastão no quadro exato em que a ponta larga: sem sobreposição
+   (senão ele entra por cima do repique) e sem folga (senão sobra um vazio no
+   meio). Mudar a duração do traço ou da ponta empurra tudo que vem depois.
+
+   A sombra tem duas camadas: a de baixo é a sombra projetada de sempre, e a de
+   cima é um halo centrado (sem deslocamento, com spread) que só aparece no
+   estouro — é ele que faz o glow. As duas camadas existem no repouso, com o
+   halo em 0%, porque box-shadow só interpola suave entre listas do mesmo
+   tamanho: com uma camada de um lado e duas do outro, o glow entraria de
+   estalo em vez de crescer.
+
+   Mora aqui, e não no login, porque esses números só fazem sentido ao lado da
+   coreografia acima. */
+.login-logo-float {
+  box-shadow:
+    0 16px 36px color-mix(in oklab, var(--primary) 30%, transparent),
+    0 0 0 color-mix(in oklab, var(--primary) 0%, transparent);
+  will-change: transform;
+  animation:
+    logo-estourar .7s cubic-bezier(.34, .8, .3, 1) 1.1s,
+    logo-flutuar 3.6s ease-in-out 1.8s infinite;
+}
+@keyframes logo-estourar {
+  0%   { transform: scale(1); }
+  34%  {
+    transform: scale(1.11);
+    box-shadow:
+      0 22px 56px color-mix(in oklab, var(--primary) 52%, transparent),
+      0 0 100px 22px color-mix(in oklab, var(--primary) 55%, transparent);
+  }
+  66%  { transform: scale(.985); }
+  100% { transform: scale(1); }
+}
+@keyframes logo-flutuar {
+  0%, 100% {
+    transform: translateY(0);
+    box-shadow: 0 16px 36px color-mix(in oklab, var(--primary) 30%, transparent);
+  }
+  50% {
+    transform: translateY(-8px);
+    box-shadow: 0 24px 44px color-mix(in oklab, var(--primary) 26%, transparent);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .logo-haste, .logo-barra, .logo-ponta { animation: none; }
+  .login-logo-float { animation: none; transform: none; }
+}
+
 /* Botão "swatch" de cor de destaque — efeito de alto relevo (convexo) */
 .swatch-raised {
   border: none;
