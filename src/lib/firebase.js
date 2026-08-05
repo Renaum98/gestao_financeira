@@ -14,6 +14,7 @@
 //   3. (Opcional) Authentication → Templates → personalizar o e-mail de verificação.
 
 import { initializeApp } from "firebase/app";
+import { iniciarAppCheck } from "./app-check.js";
 import {
   getAuth,
   createUserWithEmailAndPassword,
@@ -59,6 +60,12 @@ const firebaseConfig = {
 };
 
 export const app = initializeApp(firebaseConfig);
+
+// Antes do getAuth/initializeFirestore de propósito: o App Check precisa estar
+// de pé antes que qualquer serviço faça a primeira chamada, senão ela sai sem
+// token e é recusada quando a aplicação estiver ligada no Console.
+iniciarAppCheck(app);
+
 export const auth = getAuth(app);
 
 export const db = initializeFirestore(app, {
@@ -95,9 +102,23 @@ export function reenviarVerificacao() {
 }
 
 // Recarrega o usuário do servidor (para detectar que o e-mail acabou de ser confirmado).
+//
+// O getIdToken(true) não é detalhe: as Security Rules exigem `email_verified`, e
+// esse claim mora no ID token, que vale ~1h. O reload() atualiza o objeto em
+// memória, mas o token que o Firestore usa nas requisições continua sendo o
+// antigo — o que dizia que o e-mail não estava confirmado. Sem forçar a troca,
+// quem acabou de confirmar entra no app e leva permission-denied em tudo até o
+// token vencer sozinho.
 export async function recarregarUsuario() {
   if (!auth.currentUser) return null;
   await auth.currentUser.reload();
+  if (auth.currentUser.emailVerified) {
+    try {
+      await auth.currentUser.getIdToken(true);
+    } catch (err) {
+      console.warn("[auth] não renovou o token depois da confirmação:", err);
+    }
+  }
   return auth.currentUser;
 }
 

@@ -44,6 +44,27 @@ O app **não funciona** sem um projeto Firebase configurado.
 
 > A chave do Firebase é **pública por design** — pode ir no repositório. O controle de acesso vem das Security Rules acima, não da chave.
 
+> As regras acima são só o mínimo pra subir. As que valem estão em [`firestore.rules`](firestore.rules) — publique esse arquivo antes de abrir o app pra outras pessoas.
+
+## Proteção contra bot
+
+Criar conta no Firebase Auth é grátis e automatizável, então "está autenticado" não quer dizer que tem gente do outro lado. A defesa está em três camadas:
+
+1. **Security Rules** (`firestore.rules`) — toda escrita exige `email_verified`. Um bot que cria contas em massa fica com contas vazias que não gravam nada.
+2. **App Check** (`src/lib/app-check.js`) — atesta que a requisição veio do nosso app, e não de um script falando com a API REST. É a única camada que barra o bot *antes* de ele consumir cota.
+3. **Trava no formulário** (`src/lib/rate-limit-auth.js`) — escada de espera por e-mail e no total, separada para login, cadastro e recuperação de senha. Vive no navegador: pega quem martela a tela, não quem ignora a tela.
+
+Para ligar o App Check (só a camada 2 precisa de configuração):
+
+1. Console do Firebase → **App Check → Apps** → registra o app Web com o provedor **reCAPTCHA v3**. Ele gera uma chave de site.
+2. Põe a chave no `.env` como `VITE_FIREBASE_APPCHECK_KEY` (e nas Environment Variables da Vercel / Secrets do GitHub Actions).
+3. Em dev, gera um token de debug em **App Check → Apps → Gerenciar tokens de depuração** e põe em `VITE_FIREBASE_APPCHECK_DEBUG_TOKEN`.
+4. Deixa alguns dias com a métrica em **Não aplicado**; quando as requisições verificadas forem a maioria, liga o **Aplicar** no Cloud Firestore e no Authentication.
+
+Sem a variável de ambiente o módulo não faz nada e o app roda como antes — configurar pela metade não derruba ninguém.
+
+Vale ligar também, no Console: **Authentication → Settings → Proteção contra enumeração de e-mail**, e a política de senha (mínimo 8 caracteres), que hoje só é exigida no cliente.
+
 ## Build + Deploy no GitHub Pages
 
 O repositório já tem o workflow `.github/workflows/deploy.yml`. Para publicar:

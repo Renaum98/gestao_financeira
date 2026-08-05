@@ -10,6 +10,13 @@
 //   userIndex/{emailLower}      ← { uid, nome } pra busca por e-mail
 //   partnerships/{pId}          ← (Etapa 4) caixinhas compartilhadas
 //   invites/{inviteId}          ← (Etapa 2) convites in-app
+//
+// Postura contra bot: criar conta no Firebase Auth é grátis, instantâneo e
+// automatizável — não dá pra tratar "está autenticado" como sinal de que tem
+// gente do outro lado. Então a linha que separa o cadastro do acesso ao banco é
+// o e-mail confirmado: toda escrita, e toda leitura que não seja a do próprio
+// dono, exige `email_verified`. Quem cria mil contas fica com mil contas vazias
+// que não gravam um byte.
 
 rules_version = '2';
 service cloud.firestore {
@@ -19,66 +26,122 @@ service cloud.firestore {
     function logado() {
       return request.auth != null;
     }
+
+    // O claim vem do ID token, que vale ~1h. No instante em que a pessoa
+    // confirma o e-mail o token em mãos ainda diz `false` — por isso
+    // recarregarUsuario() força getIdToken(true) logo depois do reload
+    // (lib/firebase.js). Sem esse refresh, quem acabou de confirmar levaria
+    // permission-denied até o token vencer sozinho.
+    function verificado() {
+      return logado() && request.auth.token.email_verified == true;
+    }
+
     function souEu(uid) {
       return logado() && request.auth.uid == uid;
     }
+
+    // E-mail do token, minúsculo — '' quando o provedor não mandou nenhum.
+    function meuEmail() {
+      return request.auth.token.email is string
+        ? request.auth.token.email.lower()
+        : '';
+    }
+
     // Verifica se o usuário autenticado é o parceiro de `uid` (lendo o doc dele).
     // Usado pra liberar a leitura cruzada das txs do parceiro.
     function souParceiroDe(uid) {
-      return logado()
+      return verificado()
         && exists(/databases/$(database)/documents/users/$(uid))
         && get(/databases/$(database)/documents/users/$(uid)).data.partnerUid == request.auth.uid;
     }
 
     // ─── users/{uid} ──────────────────────────────────────────────────────
     // Leitura: o dono ou o parceiro vinculado.
-    // Escrita: só o dono.
+    // Escrita: só o dono, e só com e-mail confirmado.
     match /users/{uid} {
       allow read: if souEu(uid) || souParceiroDe(uid);
-      allow create: if souEu(uid);
-      allow update: if souEu(uid);
-      allow delete: if souEu(uid);
+      allow create, update, delete: if souEu(uid) && verificado();
     }
 
     // ─── userIndex/{emailLower} ───────────────────────────────────────────
     // Doc minúsculo com só { uid, nome } pra que um usuário consiga descobrir
-    // o uid do parceiro pelo e-mail. Leitura liberada a qualquer autenticado
-    // (a privacidade aqui é equivalente a "esse e-mail tem conta?" — qualquer
-    // um já descobriria isso tentando criar conta com o mesmo e-mail).
-    // Escrita: só quem está autenticado e está gravando o próprio uid.
+    // o uid do parceiro pelo e-mail.
     match /userIndex/{emailLower} {
-      allow read: if logado();
-      allow create: if logado() && request.resource.data.uid == request.auth.uid;
-      allow update: if logado() && resource.data.uid == request.auth.uid;
-      allow delete: if logado() && resource.data.uid == request.auth.uid;
+      // `get` e não `read`: `read` cobre também o `list`, e com list liberado
+      // qualquer conta baixava a coleção inteira — o nome, o e-mail e o uid de
+      // todos os usuários de uma vez. O app sempre busca doc a doc
+      // (buscarUidPorEmail, em lib/partnership.js), então não perde nada.
+      // Ler um doc específico continua liberado: a resposta equivale a "esse
+      // e-mail tem conta?", que qualquer um descobre tentando se cadastrar.
+      allow get: if verificado();
+
+      // Escrita só no doc do próprio e-mail e apontando pro próprio uid. Antes
+      // bastava estar autenticado: dava pra criar userIndex/<e-mail alheio>
+      // apontando pra si mesmo e passar a receber os convites de parceria
+      // destinados àquela pessoa.
+      allow create: if verificado()
+        && emailLower == meuEmail()
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.keys().hasOnly(['uid', 'nome', 'temParceiro']);
+      allow update: if verificado()
+        && emailLower == meuEmail()
+        && resource.data.uid == request.auth.uid
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.keys().hasOnly(['uid', 'nome', 'temParceiro']);
+      allow delete: if verificado()
+        && emailLower == meuEmail()
+        && resource.data.uid == request.auth.uid;
     }
 
     // ─── partnerships/{pId} ───────────────────────────────────────────────
     // (Etapa 4) Caixinhas compartilhadas. Ler/escrever só quem está em members.
     match /partnerships/{pId} {
-      allow read, update, delete: if logado() && request.auth.uid in resource.data.members;
-      // Criação: o criador precisa estar em members.
-      allow create: if logado() && request.auth.uid in request.resource.data.members;
+      allow read: if verificado() && request.auth.uid in resource.data.members;
+      // Criação: o criador precisa estar em members, e a conta é entre duas
+      // pessoas — nem uma (eu comigo mesmo) nem uma lista aberta.
+      allow create: if verificado()
+        && request.resource.data.members is list
+        && request.resource.data.members.size() == 2
+        && request.auth.uid in request.resource.data.members;
+      // `members` é imutável: quem está dentro edita as caixinhas, mas não
+      // troca o par nem se enfia numa parceria alheia reescrevendo a lista.
+      allow update: if verificado()
+        && request.auth.uid in resource.data.members
+        && request.resource.data.members == resource.data.members;
+      allow delete: if verificado() && request.auth.uid in resource.data.members;
     }
 
     // ─── invites/{inviteId} ───────────────────────────────────────────────
     // (Etapa 2) Convites in-app.
     match /invites/{inviteId} {
       // Lê quem enviou ou quem recebeu.
-      allow read: if logado()
+      allow read: if verificado()
         && (resource.data.fromUid == request.auth.uid
             || resource.data.toUid == request.auth.uid);
-      // Cria: precisa estar autenticado e ser o `fromUid` do próprio convite.
-      allow create: if logado()
+      // Cria: precisa ser o `fromUid` do próprio convite. O campo fechado
+      // impede usar o convite (que o destinatário vai ler) como canal pra
+      // despejar texto arbitrário na tela de outra pessoa.
+      allow create: if verificado()
         && request.resource.data.fromUid == request.auth.uid
-        && request.resource.data.status == 'pendente';
-      // Atualiza: só o destinatário pode aceitar/recusar.
-      allow update: if logado()
+        && request.resource.data.toUid is string
+        && request.resource.data.toUid != request.auth.uid
+        && request.resource.data.status == 'pendente'
+        && request.resource.data.keys().hasOnly(
+             ['fromUid', 'fromNome', 'fromEmail', 'toUid', 'toNome', 'status', 'criadoEm'])
+        && request.resource.data.fromNome is string
+        && request.resource.data.fromNome.size() <= 80
+        && request.resource.data.toNome is string
+        && request.resource.data.toNome.size() <= 80;
+      // Atualiza: só o destinatário pode aceitar/recusar, e o par de uids não
+      // muda no caminho.
+      allow update: if verificado()
         && resource.data.toUid == request.auth.uid
         && resource.data.status == 'pendente'
-        && request.resource.data.status in ['aceito', 'recusado'];
+        && request.resource.data.status in ['aceito', 'recusado']
+        && request.resource.data.fromUid == resource.data.fromUid
+        && request.resource.data.toUid == resource.data.toUid;
       // Deleta: quem enviou (cancelar convite) ou quem recebeu (descartar).
-      allow delete: if logado()
+      allow delete: if verificado()
         && (resource.data.fromUid == request.auth.uid
             || resource.data.toUid == request.auth.uid);
     }

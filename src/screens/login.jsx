@@ -15,10 +15,13 @@ import { COR_POS, COR_NEG } from '../lib/colors.js';
 import { useT } from '../lib/i18n.jsx';
 import {
   msRestantes,
-  registrarFalha,
+  registrarTentativa,
   limparTentativas,
   formatarEspera,
-} from '../lib/rate-limit-login.js';
+  ACAO_LOGIN,
+  ACAO_CADASTRO,
+  ACAO_RECUPERAR,
+} from '../lib/rate-limit-auth.js';
 
 const EMAIL_OK = (e) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test((e || '').trim());
 const SENHA_OK = (s) => (s || '').length >= 8 && /[a-zA-Z]/.test(s) && /[0-9]/.test(s);
@@ -32,6 +35,34 @@ const CODIGOS_DE_PALPITE = new Set([
   'auth/user-not-found',
   'auth/too-many-requests',
 ]);
+
+// Qual trava vale em cada modo da tela.
+const ACAO_DO_MODO = {
+  entrar: ACAO_LOGIN,
+  cadastrar: ACAO_CADASTRO,
+  recuperar: ACAO_RECUPERAR,
+};
+
+// Um formulário preenchido em menos de MS_MINIMO não foi preenchido por gente.
+// Vale só pro cadastro: ali são três campos, e nem o gerenciador de senhas
+// preenche nome + e-mail + senha nova em dois segundos. No login o contrário é
+// comum — autofill e Enter fecham em menos de um segundo — e travar isso seria
+// punir o uso normal.
+const MS_MINIMO = 2500;
+
+// O campo-armadilha. Fica fora da tela e sem foco possível, então ninguém que
+// esteja de fato olhando a tela o preenche; um bot que varre os inputs do
+// formulário e escreve em todos, sim. É a peneira mais barata que existe — pega
+// só o robô preguiçoso, mas não custa nada e não atrapalha ninguém.
+const NOME_ARMADILHA = 'sobrenome-do-meio';
+const estiloArmadilha = {
+  position: 'absolute',
+  left: '-9999px',
+  width: 1,
+  height: 1,
+  opacity: 0,
+  pointerEvents: 'none',
+};
 
 function msgErro(code) {
   switch (code) {
@@ -172,21 +203,33 @@ export function LoginScreen() {
   const [carregando, setCarregando] = React.useState(false);
   const [erro, setErro] = React.useState('');
   const [info, setInfo] = React.useState('');
-  // Quanto falta pra destravar o login deste e-mail (0 = liberado).
+  // Quanto falta pra destravar esta ação para este e-mail (0 = liberado).
   const [esperaMs, setEsperaMs] = React.useState(0);
+  // Campo-armadilha: só bot escreve aqui.
+  const [armadilha, setArmadilha] = React.useState('');
+  // Quando o modo atual entrou na tela — base do tempo mínimo de preenchimento.
+  const entradaEm = React.useRef(Date.now());
+
+  const acao = ACAO_DO_MODO[modo];
 
   // Reavalia a cada segundo pra o contador andar sozinho e o botão liberar na
   // hora certa, sem depender de o usuário mexer em nada. Quando não há bloqueio
   // o valor continua 0 e o React nem re-renderiza.
   React.useEffect(() => {
-    const atualizar = () => setEsperaMs(msRestantes(email));
+    const atualizar = () => setEsperaMs(msRestantes(acao, email));
     atualizar();
     const id = setInterval(atualizar, 1000);
     return () => clearInterval(id);
-  }, [email]);
+  }, [acao, email]);
 
   const limpar = () => { setErro(''); setInfo(''); };
-  const trocarModo = (m) => { setModo(m); setSenha(''); limpar(); };
+  const trocarModo = (m) => {
+    setModo(m);
+    setSenha('');
+    setArmadilha('');
+    entradaEm.current = Date.now();
+    limpar();
+  };
 
   const validar = () => {
     if (!EMAIL_OK(email)) return 'Digite um e-mail válido.';
@@ -204,17 +247,31 @@ export function LoginScreen() {
   const enviar = async (e) => {
     e?.preventDefault();
     limpar();
+
+    // As duas peneiras de bot vêm antes de tudo, inclusive da validação: se for
+    // robô, não gastamos nem uma chamada ao Firebase. A recusa usa a mensagem
+    // genérica de propósito — dizer "você caiu na armadilha" é ensinar a
+    // desviar dela.
+    const suspeito =
+      armadilha !== '' ||
+      (modo === 'cadastrar' && Date.now() - entradaEm.current < MS_MINIMO);
+    if (suspeito) { setErro(t('Algo deu errado. Tente novamente.')); return; }
+
     const v = validar();
     if (v) { setErro(t(v)); return; }
-    // A trava vale só pro login: cadastro e recuperação não adivinham senha.
-    if (modo === 'entrar') {
-      const restante = msRestantes(email);
-      if (restante > 0) {
-        setEsperaMs(restante);
-        setErro(t('Muitas tentativas. Aguarde {tempo}.', { tempo: formatarEspera(restante) }));
-        return;
-      }
+
+    const bloqueado = msRestantes(acao, email);
+    if (bloqueado > 0) {
+      setEsperaMs(bloqueado);
+      setErro(t('Muitas tentativas. Aguarde {tempo}.', { tempo: formatarEspera(bloqueado) }));
+      return;
     }
+
+    // Cadastro e recuperação contam o envio aqui, antes da chamada: o que
+    // limitamos nessas duas é o sucesso — uma conta criada, um e-mail enviado —
+    // e não o erro. No login é o contrário, e a contagem fica no catch.
+    if (modo !== 'entrar') setEsperaMs(registrarTentativa(acao, email));
+
     vibrar();
     setCarregando(true);
     try {
@@ -226,7 +283,7 @@ export function LoginScreen() {
         // onAuthStateChanged dispara → o app mostra a tela de verificação de e-mail.
       } else {
         await entrarFirebase(email.trim(), senha);
-        limparTentativas(email);
+        limparTentativas(ACAO_LOGIN, email);
         // onAuthStateChanged dispara; se o e-mail não estiver confirmado,
         // o app mostra a tela de verificação.
       }
@@ -234,7 +291,7 @@ export function LoginScreen() {
       // Só conta como tentativa o que é palpite de credencial. Erro de rede ou
       // e-mail malformado não é ataque e não pode travar quem está sem sinal.
       if (modo === 'entrar' && CODIGOS_DE_PALPITE.has(err?.code)) {
-        const restante = registrarFalha(email);
+        const restante = registrarTentativa(ACAO_LOGIN, email);
         setEsperaMs(restante);
         if (restante > 0) {
           setErro(t('Muitas tentativas. Aguarde {tempo}.', { tempo: formatarEspera(restante) }));
@@ -247,7 +304,7 @@ export function LoginScreen() {
     }
   };
 
-  const travado = modo === 'entrar' && esperaMs > 0;
+  const travado = esperaMs > 0;
   const titulo = modo === 'cadastrar' ? 'Criar conta' : modo === 'recuperar' ? 'Recuperar senha' : 'Entrar';
   const subtitulo = modo === 'cadastrar'
     ? 'Crie sua conta para começar a organizar suas finanças.'
@@ -266,6 +323,19 @@ export function LoginScreen() {
       </div>
 
       <form onSubmit={enviar} style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 12 }}>
+        {/* Armadilha: escondida da tela e do teclado, e sem rótulo traduzido —
+            o nome do campo é o que o bot lê. aria-hidden + tabIndex -1 mantêm
+            leitor de tela e navegação por Tab longe dela. */}
+        <input
+          type="text"
+          name={NOME_ARMADILHA}
+          value={armadilha}
+          onChange={(e) => setArmadilha(e.target.value)}
+          tabIndex={-1}
+          autoComplete="off"
+          aria-hidden="true"
+          style={estiloArmadilha}
+        />
         {modo === 'cadastrar' && (
           <Campo label={t("Nome")} type="text" autoComplete="name" placeholder={t("Como quer ser chamado(a)?")}
             value={nome} onChange={(e) => setNome(e.target.value)} />
