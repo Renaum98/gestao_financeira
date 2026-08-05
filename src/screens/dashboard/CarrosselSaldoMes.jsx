@@ -34,8 +34,10 @@ const JANELA = 3;
 // carrossel: sem ela o card ativo parece uma tela estática. Sobe isso e o card
 // ativo aperta o conteúdo; abaixa e a dica de swipe some.
 const ESPIADA = 30;
-// Respiro entre um card e o outro.
-const ESPACO = 12;
+// Respiro entre um card e o outro. Sai da largura do card ativo, não da
+// espiada: PADDING_LATERAL cresce junto pra a beirada do vizinho continuar
+// aparecendo os mesmos ESPIADA px.
+const ESPACO = 18;
 // Padding lateral do scroller = espiada + espaço. Precisa bater com o
 // flex-basis dos slides (100vw - 2×), senão o primeiro e o último slide não
 // conseguem parar centralizados no snap.
