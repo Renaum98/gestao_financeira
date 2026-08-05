@@ -6,7 +6,7 @@ import { Card } from "../../ui/common.jsx";
 import { SecaoTitulo } from "./SecaoTitulo.jsx";
 import { useT } from "../../lib/i18n.jsx";
 
-export function EvolucaoConjunta({ evolucaoConjunta, maxEvolConjunta, mes, setMes, ocultar, partnerNome }) {
+export function EvolucaoConjunta({ evolucaoConjunta, maxEvolConjunta, mes, setMes, partnerNome }) {
   const t = useT();
   if (!evolucaoConjunta) return null;
 
@@ -53,7 +53,7 @@ export function EvolucaoConjunta({ evolucaoConjunta, maxEvolConjunta, mes, setMe
                   }}
                 >
                   <div
-                    title={t("Você: {x}", { x: fmtBRL(e.meu, ocultar) })}
+                    title={t("Você: {x}", { x: fmtBRL(e.meu) })}
                     style={{
                       flex: 1,
                       maxWidth: 16,
@@ -65,7 +65,7 @@ export function EvolucaoConjunta({ evolucaoConjunta, maxEvolConjunta, mes, setMe
                     }}
                   />
                   <div
-                    title={t("{nome}: {x}", { nome: partnerNome || t("Parceiro"), x: fmtBRL(e.parceiro, ocultar) })}
+                    title={t("{nome}: {x}", { nome: partnerNome || t("Parceiro"), x: fmtBRL(e.parceiro) })}
                     style={{
                       flex: 1,
                       maxWidth: 16,

@@ -19,7 +19,6 @@ export const EN = {
   "Nova transação": "New transaction",
 
   // ─── Tela de Perfil ───
-  "Modo privacidade": "Privacy mode",
   "Refazer tour": "Redo tour",
   "Baixar dados (.xlsx)": "Download data (.xlsx)",
   "Baixar relatório (.pdf)": "Download report (.pdf)",
@@ -200,8 +199,9 @@ export const EN = {
     "Too many attempts. Try again in a few minutes.",
   "Sem conexão. Verifique sua internet.": "No connection. Check your internet.",
   "Sem conexão": "No connection",
-  "Não dá pra salvar agora. Se este aparelho gravasse offline, ao voltar a internet ele substituiria o que está na nuvem por esta versão — inclusive apagando o que você tiver lançado em outro aparelho. Conecte e tente de novo.":
-    "Can't save right now. If this device wrote while offline, it would replace what's in the cloud with this version once the internet came back — including erasing anything you entered on another device. Connect and try again.",
+  "Sem conexão · somente leitura": "No connection · read-only",
+  "Não é possível adicionar ou editar transações offline.":
+    "You can't add or edit transactions offline.",
   "Algo deu errado. Tente novamente.": "Something went wrong. Try again.",
   "Enviamos um link para redefinir sua senha. Confira seu e-mail.":
     "We sent a link to reset your password. Check your email.",
@@ -233,8 +233,6 @@ export const EN = {
   "Boa tarde": "Good afternoon",
   "Boa noite": "Good evening",
   "Bem-vindo ✦": "Welcome ✦",
-  "Mostrar valores": "Show amounts",
-  "Ocultar valores": "Hide amounts",
   "Notificações": "Notifications",
   "Abrir perfil": "Open profile",
   "Simular um gasto": "Simulate an expense",

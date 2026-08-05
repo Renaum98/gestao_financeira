@@ -7,7 +7,7 @@ import { Card } from "../../ui/common.jsx";
 import { PieChart } from "../../ui/charts.jsx";
 import { useT } from "../../lib/i18n.jsx";
 
-export function PizzaCategorias({ dados, total, ocultar }) {
+export function PizzaCategorias({ dados, total }) {
   const t = useT();
   const [ativa, setAtiva] = React.useState(null);
 
@@ -21,7 +21,6 @@ export function PizzaCategorias({ dados, total, ocultar }) {
             tamanho={230}
             ativo={ativa}
             onHover={setAtiva}
-            ocultar={ocultar}
           />
         </div>
         <div
@@ -62,7 +61,7 @@ export function PizzaCategorias({ dados, total, ocultar }) {
                   {t(d.nome)}
                 </div>
                 <div style={{ fontSize: 11, color: "var(--muted)", fontWeight: 600 }}>
-                  {fmtBRLCompacto(d.valor, ocultar)} · {((d.valor / total) * 100).toFixed(0)}%
+                  {fmtBRLCompacto(d.valor)} · {((d.valor / total) * 100).toFixed(0)}%
                 </div>
               </div>
             </div>

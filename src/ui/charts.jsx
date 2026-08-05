@@ -2,7 +2,7 @@
 
 import { fmtBRL } from '../data.js';
 
-export function PieChart({ dados, total, tamanho = 200, ativo, onHover, ocultar }) {
+export function PieChart({ dados, total, tamanho = 200, ativo, onHover }) {
   // dados: [{ id, valor, cor, nome }]
   const cx = tamanho / 2, cy = tamanho / 2;
   const rOut = tamanho * 0.46;
@@ -39,7 +39,7 @@ export function PieChart({ dados, total, tamanho = 200, ativo, onHover, ocultar 
 
   // Espaço útil dentro do furo da rosca; a fonte do valor encolhe pra nunca encostar nas fatias.
   const larguraInterna = rIn * 2 * 0.94;
-  const valorStr = fmtBRL(exibirValor, ocultar);
+  const valorStr = fmtBRL(exibirValor);
   const fonteValor = Math.max(11, Math.min(22, Math.floor(larguraInterna / (valorStr.length * 0.62))));
 
   return (

@@ -14,7 +14,7 @@ import { BarraProgresso } from "../ui/charts.jsx";
 import { useT } from "../lib/i18n.jsx";
 
 export function CategoriaScreen({ ctx, params }) {
-  const { txs, mes, ocultar, voltar, orcamentos } = ctx;
+  const { txs, mes, voltar, orcamentos } = ctx;
   const tr = useT();
   const cat = CATEGORIAS[params.catId];
   const txMes = txDoMes(txs, mes).filter((t) => t.categoria === params.catId);
@@ -60,7 +60,7 @@ export function CategoriaScreen({ ctx, params }) {
               marginTop: 2,
             }}
           >
-            {fmtBRL(total, ocultar)}
+            {fmtBRL(total)}
           </div>
           {orc > 0 && (
             <div style={{ marginTop: 14 }}>
@@ -74,7 +74,7 @@ export function CategoriaScreen({ ctx, params }) {
                   marginBottom: 6,
                 }}
               >
-                <span>{tr("Orçamento {x}", { x: fmtBRLCompacto(orc, ocultar) })}</span>
+                <span>{tr("Orçamento {x}", { x: fmtBRLCompacto(orc) })}</span>
                 <span
                   style={{
                     color:
@@ -100,7 +100,7 @@ export function CategoriaScreen({ ctx, params }) {
                     marginTop: 6,
                   }}
                 >
-                  {tr("Você passou {x} do limite", { x: fmtBRL(total - orc, ocultar) })}
+                  {tr("Você passou {x} do limite", { x: fmtBRL(total - orc) })}
                 </div>
               )}
             </div>
@@ -137,7 +137,7 @@ export function CategoriaScreen({ ctx, params }) {
               key={tx.id}
               style={{ borderTop: i === 0 ? "none" : "1px solid var(--linha)" }}
             >
-              <ItemTransacao tx={tx} ocultar={ocultar} />
+              <ItemTransacao tx={tx} />
             </div>
           ))}
         </Card>

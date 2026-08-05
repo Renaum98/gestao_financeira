@@ -5,7 +5,7 @@ import { fmtBRL, fmtBRLCompacto } from "../../data.js";
 import { Icon } from "../../ui/icons.jsx";
 import { useT } from "../../lib/i18n.jsx";
 
-export function CabecalhoCaixinha({ cx, ocultar, atual, rendimento, rendimentoTotal = 0, comRendimento, pct }) {
+export function CabecalhoCaixinha({ cx, atual, rendimento, rendimentoTotal = 0, comRendimento, pct }) {
   const t = useT();
   // Só vale mostrar o histórico quando ele diverge do rendimento atual — ou
   // seja, quando algum resgate já levou rendimento embora.
@@ -54,7 +54,7 @@ export function CabecalhoCaixinha({ cx, ocultar, atual, rendimento, rendimentoTo
           {t("Você já juntou")}
         </div>
         <div style={{ fontSize: 36, fontWeight: 800, letterSpacing: "-0.03em" }}>
-          {fmtBRL(comRendimento, ocultar)}
+          {fmtBRL(comRendimento)}
         </div>
 
         {cx.rendimentoAtivo && (
@@ -98,21 +98,21 @@ export function CabecalhoCaixinha({ cx, ocultar, atual, rendimento, rendimentoTo
                   {t("Já rendeu")}
                 </div>
                 <div style={{ fontSize: 16, fontWeight: 800, letterSpacing: "-0.01em", marginTop: 1 }}>
-                  {fmtBRL(rendimento, ocultar)}
+                  {fmtBRL(rendimento)}
                 </div>
                 {mostrarTotal && (
                   <div
                     title={t("Inclui o rendimento que já saiu em resgates")}
                     style={{ fontSize: 9, fontWeight: 600, opacity: 0.7, marginTop: 2 }}
                   >
-                    {t("{x} desde sempre", { x: fmtBRL(rendimentoTotal, ocultar) })}
+                    {t("{x} desde sempre", { x: fmtBRL(rendimentoTotal) })}
                   </div>
                 )}
               </div>
             </div>
             <div style={{ textAlign: "right", fontSize: 10, fontWeight: 700, opacity: 0.85, lineHeight: 1.3 }}>
               <div>{t("{x}% do CDI", { x: Number(cx.rendimentoCDI).toFixed(0) })}</div>
-              <div style={{ opacity: 0.8 }}>{t("Principal {x}", { x: fmtBRL(atual, ocultar) })}</div>
+              <div style={{ opacity: 0.8 }}>{t("Principal {x}", { x: fmtBRL(atual) })}</div>
             </div>
           </div>
         )}
@@ -139,7 +139,7 @@ export function CabecalhoCaixinha({ cx, ocultar, atual, rendimento, rendimentoTo
                 fontWeight: 700,
               }}
             >
-              <span style={{ opacity: 0.9 }}>{t("Meta {x}", { x: fmtBRLCompacto(cx.meta, ocultar) })}</span>
+              <span style={{ opacity: 0.9 }}>{t("Meta {x}", { x: fmtBRLCompacto(cx.meta) })}</span>
               <span>{pct.toFixed(0)}%</span>
             </div>
           </>

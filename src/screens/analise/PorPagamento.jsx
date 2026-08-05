@@ -7,7 +7,7 @@ import { BarraProgresso } from "../../ui/charts.jsx";
 import { SecaoTitulo } from "./SecaoTitulo.jsx";
 import { useT } from "../../lib/i18n.jsx";
 
-export function PorPagamento({ porPagamento, total, ocultar }) {
+export function PorPagamento({ porPagamento, total }) {
   const t = useT();
   return (
     <div style={{ padding: "16px 20px 0" }}>
@@ -46,7 +46,7 @@ export function PorPagamento({ porPagamento, total, ocultar }) {
             </div>
             <div style={{ textAlign: "right" }}>
               <div style={{ fontSize: 14, fontWeight: 800, color: "var(--ink)" }}>
-                {fmtBRLCompacto(valor, ocultar)}
+                {fmtBRLCompacto(valor)}
               </div>
               <div style={{ fontSize: 10, fontWeight: 700, color: "var(--muted)", marginTop: 2 }}>
                 {((valor / total) * 100).toFixed(0)}%

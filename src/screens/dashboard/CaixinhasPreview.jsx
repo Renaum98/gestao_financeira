@@ -4,7 +4,7 @@
 import { CardCaixinha } from "../caixinhas.jsx";
 import { useT } from "../../lib/i18n.jsx";
 
-export function CaixinhasPreview({ caixinhas, ocultar, irPara }) {
+export function CaixinhasPreview({ caixinhas, irPara }) {
   const t = useT();
   if (!caixinhas || caixinhas.length === 0) return null;
 
@@ -39,7 +39,6 @@ export function CaixinhasPreview({ caixinhas, ocultar, irPara }) {
           <CardCaixinha
             key={cx.id}
             cx={cx}
-            ocultar={ocultar}
             onClick={() => irPara("caixinha", { id: cx.id })}
           />
         ))}

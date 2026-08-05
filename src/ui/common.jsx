@@ -80,7 +80,7 @@ export function Card({ children, style = {}, onClick, ...rest }) {
   );
 }
 
-export function ItemTransacao({ tx, ocultar, onClick, doParceiro = false, nomeParceiro = '', guardado = 0 }) {
+export function ItemTransacao({ tx, onClick, doParceiro = false, nomeParceiro = '', guardado = 0 }) {
   const t = useT();
   const ehEntrada = tx.tipo === 'entrada';
   // Parte desta entrada que já foi pra uma caixinha (ver lib/guardado-entradas).
@@ -97,7 +97,7 @@ export function ItemTransacao({ tx, ocultar, onClick, doParceiro = false, nomePa
   const d = new Date(tx.data + 'T12:00:00');
   const dia = d.getDate(), mesC = t(MESES_CURTO[d.getMonth()]);
   const parc = tx.parcelas;
-  const valorFmt = fmtBRL(tx.valor, ocultar);
+  const valorFmt = fmtBRL(tx.valor);
   const inicialParceiro = (nomeParceiro?.trim()[0] || '?').toUpperCase();
   // No modo "parceiro" deixamos tudo bem mais discreto: cores muted, sem hover.
   const corTitulo = doParceiro ? 'var(--muted)' : 'var(--ink)';
@@ -178,7 +178,7 @@ export function ItemTransacao({ tx, ocultar, onClick, doParceiro = false, nomePa
               flexShrink: 0, display: 'inline-flex', alignItems: 'center', gap: 3,
             }}>
               <Icon name="piggy" size={9} color="var(--muted)" strokeWidth={2.6} />
-              {guardadoTudo ? t('Guardado') : fmtBRLCompacto(guardadoNum, ocultar)}
+              {guardadoTudo ? t('Guardado') : fmtBRLCompacto(guardadoNum)}
             </div>
           )}
         </div>
@@ -195,7 +195,7 @@ export function ItemTransacao({ tx, ocultar, onClick, doParceiro = false, nomePa
               <Icon name={iconePagamento(tx.pagamento)} size={12} color="var(--muted)" strokeWidth={2} />
             </>
           )}
-          {parc && <span style={{ fontWeight: 600 }}>· {parc.total}× {fmtBRLCompacto(parc.valorTotal, ocultar)}</span>}
+          {parc && <span style={{ fontWeight: 600 }}>· {parc.total}× {fmtBRLCompacto(parc.valorTotal)}</span>}
           {doParceiro && nomeParceiro && (
             <>
               <span style={{ width: 3, height: 3, borderRadius: 3, background: 'var(--muted)', opacity: 0.5 }} />
@@ -212,7 +212,7 @@ export function ItemTransacao({ tx, ocultar, onClick, doParceiro = false, nomePa
           // Entrada inteiramente guardada: risca o valor — entrou, mas já saiu.
           textDecoration: guardadoTudo && temGuardado ? 'line-through' : 'none',
         }}>
-          {ehEntrada && !ocultar && !doParceiro ? `+${valorFmt}` : valorFmt}
+          {ehEntrada && !doParceiro ? `+${valorFmt}` : valorFmt}
         </div>
         <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 2 }}>
           {dia} {mesC}

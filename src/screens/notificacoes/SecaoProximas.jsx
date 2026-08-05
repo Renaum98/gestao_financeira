@@ -7,7 +7,7 @@ import { NotifItem, Secao } from './parts.jsx';
 import { diasAte, rotuloPrazoT } from './utils.js';
 import { useT } from '../../lib/i18n.jsx';
 
-export function SecaoProximas({ proximas, ocultar, ehLida, marcarLida }) {
+export function SecaoProximas({ proximas, ehLida, marcarLida }) {
   const t = useT();
   if (proximas.length === 0) return null;
 
@@ -75,7 +75,7 @@ export function SecaoProximas({ proximas, ocultar, ehLida, marcarLida }) {
               }
               trailing={
                 <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--ink)', letterSpacing: '-0.01em' }}>
-                  {fmtBRL(tx.valor, ocultar)}
+                  {fmtBRL(tx.valor)}
                 </div>
               }
             />

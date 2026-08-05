@@ -7,7 +7,7 @@ import { ModalOverlay } from "../../ui/modal-base.jsx";
 import { COR_POS } from "../../lib/colors.js";
 import { useT } from "../../lib/i18n.jsx";
 
-export function ContaProximaModal({ tx, ocultar, onFechar, onMarcarPago }) {
+export function ContaProximaModal({ tx, onFechar, onMarcarPago }) {
   const t = useT();
   const [, mm, dd] = tx.data.split("-").map(Number);
   const cat = CATEGORIAS[tx.categoria] || CATEGORIAS.outros;
@@ -76,7 +76,7 @@ export function ContaProximaModal({ tx, ocultar, onFechar, onMarcarPago }) {
             {t("Valor")}
           </div>
           <div style={{ fontSize: 18, fontWeight: 800, color: "var(--ink)", marginTop: 2 }}>
-            {fmtBRL(tx.valor, ocultar)}
+            {fmtBRL(tx.valor)}
           </div>
         </div>
         <div style={{ textAlign: "right" }}>

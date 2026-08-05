@@ -8,7 +8,7 @@ import { COR_NEG, COR_AVISO } from '../../lib/colors.js';
 import { NotifItem, Secao, LinkAcao } from './parts.jsx';
 import { useT } from '../../lib/i18n.jsx';
 
-export function SecaoOrcamento({ orcEstourados, orcProximos, ocultar, irPara, ehLida, marcarLida }) {
+export function SecaoOrcamento({ orcEstourados, orcProximos, irPara, ehLida, marcarLida }) {
   const t = useT();
   if (orcEstourados.length === 0 && orcProximos.length === 0) return null;
 
@@ -34,7 +34,7 @@ export function SecaoOrcamento({ orcEstourados, orcProximos, ocultar, irPara, eh
               subtituloCor={cor}
               subtitulo={
                 <>
-                  {t('{gasto} de {orc}', { gasto: fmtBRL(a.gasto, ocultar), orc: fmtBRL(a.orc, ocultar) })}
+                  {t('{gasto} de {orc}', { gasto: fmtBRL(a.gasto), orc: fmtBRL(a.orc) })}
                   <span style={{ opacity: 0.5, padding: '0 4px' }}>·</span>
                   {Math.round(a.pct)}%
                 </>

@@ -8,7 +8,7 @@ import { COR_NEG } from "../../lib/colors.js";
 import { vibrar } from "../../lib/haptics.js";
 import { useT } from "../../lib/i18n.jsx";
 
-export function ProximasVencer({ proximas, ocultar, irPara, onSelecionar, ehDesktop }) {
+export function ProximasVencer({ proximas, irPara, onSelecionar, ehDesktop }) {
   const t = useT();
   if (proximas.length === 0) return null;
 
@@ -154,7 +154,7 @@ export function ProximasVencer({ proximas, ocultar, irPara, onSelecionar, ehDesk
                   letterSpacing: "-0.01em",
                 }}
               >
-                {fmtBRL(tx.valor, ocultar)}
+                {fmtBRL(tx.valor)}
               </div>
             </div>
           );

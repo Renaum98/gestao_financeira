@@ -24,7 +24,7 @@ import { SecaoRecorrencias } from './SecaoRecorrencias.jsx';
 
 export function NotificacoesScreen({ ctx }) {
   const {
-    txs, recorrentes, voltar, ocultar, irPara, preferences, setPreferences,
+    txs, recorrentes, voltar, irPara, preferences, setPreferences,
     convitesRecebidos = [], usuario, orcamentos = {},
     notificacoesParceria = [], dispensarNotifParceria,
   } = ctx;
@@ -117,19 +117,17 @@ export function NotificacoesScreen({ ctx }) {
       <SecaoOrcamento
         orcEstourados={orcEstourados}
         orcProximos={orcProximos}
-        ocultar={ocultar}
         irPara={irPara}
         ehLida={ehLida}
         marcarLida={marcarLida}
       />
 
-      <SecaoProximas proximas={proximas} ocultar={ocultar} ehLida={ehLida} marcarLida={marcarLida} />
+      <SecaoProximas proximas={proximas} ehLida={ehLida} marcarLida={marcarLida} />
 
-      <SecaoTerminando terminando={terminando} ocultar={ocultar} ehLida={ehLida} marcarLida={marcarLida} />
+      <SecaoTerminando terminando={terminando} ehLida={ehLida} marcarLida={marcarLida} />
 
       <SecaoRecorrencias
         recsRevisar={recsRevisar}
-        ocultar={ocultar}
         irPara={irPara}
         ehLida={ehLida}
         marcarLida={marcarLida}

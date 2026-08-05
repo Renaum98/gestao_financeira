@@ -13,7 +13,7 @@ import { simboloMoeda } from '../lib/moeda.js';
 import { useT } from '../lib/i18n.jsx';
 
 export function RecorrentesScreen({ ctx }) {
-  const { recorrentes, cancelarRecorrente, editarRecorrente, voltar, ocultar, ehDesktop } = ctx;
+  const { recorrentes, cancelarRecorrente, editarRecorrente, voltar, ehDesktop } = ctx;
   const t = useT();
   const [confirmar, setConfirmar] = React.useState(null);
   const [editando, setEditando] = React.useState(null);
@@ -65,7 +65,7 @@ export function RecorrentesScreen({ ctx }) {
                   </div>
                   <div style={{ textAlign: 'right' }}>
                     <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--ink)' }}>
-                      {fmtBRL(r.valor, ocultar)}
+                      {fmtBRL(r.valor)}
                     </div>
                     <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 4 }}>
                       <button onClick={() => { vibrar(); setEditando(r); }} style={{

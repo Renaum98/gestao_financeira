@@ -17,7 +17,7 @@ import { mesCorrente } from '../lib/orcamento.js';
 import { useT } from '../lib/i18n.jsx';
 
 export function OrcamentosScreen({ ctx }) {
-  const { txs, ocultar, voltar, orcamentos, setOrcamentos, preferences, setPreferences, ehDesktop, caixinhas, usuario } = ctx;
+  const { txs, voltar, orcamentos, setOrcamentos, preferences, setPreferences, ehDesktop, caixinhas, usuario } = ctx;
   const t = useT();
 
   // Orçamento é sempre do mês corrente — não do mês navegável do dashboard.
@@ -153,7 +153,7 @@ export function OrcamentosScreen({ ctx }) {
             </>
           ) : (
             <div style={{ fontSize: 28, fontWeight: 800, marginTop: 4, letterSpacing: '-0.02em', position: 'relative' }}>
-              {temOrcamento ? fmtBRL(orcMensal, ocultar) : (
+              {temOrcamento ? fmtBRL(orcMensal) : (
                 <button onClick={() => { setTempTotal(formatarValorInicial(0)); setEditandoTotal(true); }} style={{
                   background: 'transparent', border: '1.5px dashed rgba(255,255,255,0.6)',
                   color: '#fff', padding: '8px 14px', borderRadius: 12,
@@ -173,7 +173,7 @@ export function OrcamentosScreen({ ctx }) {
                 }} />
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8, fontSize: 12, fontWeight: 600 }}>
-                <span>{t("Gasto: {x}", { x: fmtBRLCompacto(totalGasto, ocultar) })}</span>
+                <span>{t("Gasto: {x}", { x: fmtBRLCompacto(totalGasto) })}</span>
                 <span style={{ opacity: 0.85 }}>{t("{pct}% utilizado", { pct: pctGeral.toFixed(0) })}</span>
               </div>
             </div>
@@ -198,7 +198,7 @@ export function OrcamentosScreen({ ctx }) {
               <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--ink)' }}>{t("Cartão de crédito")}</div>
               <div style={{ fontSize: 11, color: 'var(--muted)', fontWeight: 600, marginTop: 1 }}>
                 {temCartao
-                  ? t("{gasto} de {orc}", { gasto: fmtBRLCompacto(gastoCartao, ocultar), orc: fmtBRLCompacto(orcCartao, ocultar) })
+                  ? t("{gasto} de {orc}", { gasto: fmtBRLCompacto(gastoCartao), orc: fmtBRLCompacto(orcCartao) })
                   : t('Sem limite definido')}
               </div>
             </div>
@@ -270,7 +270,7 @@ export function OrcamentosScreen({ ctx }) {
                   <div style={{ flex: 1 }}>
                     <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--ink)' }}>{t(cat.nome)}</div>
                     <div style={{ fontSize: 11, color: 'var(--muted)', fontWeight: 600, marginTop: 1 }}>
-                      {t("{gasto} de {orc}", { gasto: fmtBRLCompacto(gasto, ocultar), orc: fmtBRLCompacto(orc, ocultar) })}
+                      {t("{gasto} de {orc}", { gasto: fmtBRLCompacto(gasto), orc: fmtBRLCompacto(orc) })}
                     </div>
                   </div>
                   {editandoCat === c ? (

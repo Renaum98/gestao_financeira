@@ -8,7 +8,7 @@ import { Card } from "../../ui/common.jsx";
 import { rotuloDataCurtoT } from "./utils.js";
 import { useT } from "../../lib/i18n.jsx";
 
-export function CardLembranca({ lembranca, ocultar }) {
+export function CardLembranca({ lembranca }) {
   const t = useT();
   if (!lembranca) return null;
 
@@ -49,13 +49,13 @@ export function CardLembranca({ lembranca, ocultar }) {
           <>
             <div style={{ fontSize: 14, fontWeight: 800, color: COR_NEG }}>{t("Prazo vencido")}</div>
             <div style={{ fontSize: 12, color: "var(--muted)", fontWeight: 500, marginTop: 2 }}>
-              {t("Ainda faltam {x}. Reajuste a data ou a meta.", { x: fmtBRL(lembranca.faltam, ocultar) })}
+              {t("Ainda faltam {x}. Reajuste a data ou a meta.", { x: fmtBRL(lembranca.faltam) })}
             </div>
           </>
         ) : lembranca.semData ? (
           <>
             <div style={{ fontSize: 14, fontWeight: 800, color: "var(--ink)" }}>
-              {t("Faltam {x}", { x: fmtBRL(lembranca.faltam, ocultar) })}
+              {t("Faltam {x}", { x: fmtBRL(lembranca.faltam) })}
             </div>
             <div style={{ fontSize: 12, color: "var(--muted)", fontWeight: 500, marginTop: 2 }}>
               {t("Sem prazo definido. Edite a caixinha para receber uma sugestão de quanto guardar por mês.")}
@@ -65,10 +65,10 @@ export function CardLembranca({ lembranca, ocultar }) {
           <>
             <div style={{ fontSize: 14, fontWeight: 800, color: "var(--ink)" }}>
               {lembranca.tipo === "mensal"
-                ? t("Guarde {x} por mês", { x: fmtBRL(lembranca.valor, ocultar) })
+                ? t("Guarde {x} por mês", { x: fmtBRL(lembranca.valor) })
                 : lembranca.tipo === "semanal"
-                  ? t("Guarde {x} por semana", { x: fmtBRL(lembranca.valor, ocultar) })
-                  : t("Guarde {x} por dia", { x: fmtBRL(lembranca.valor, ocultar) })}
+                  ? t("Guarde {x} por semana", { x: fmtBRL(lembranca.valor) })
+                  : t("Guarde {x} por dia", { x: fmtBRL(lembranca.valor) })}
             </div>
             <div style={{ fontSize: 12, color: "var(--muted)", fontWeight: 500, marginTop: 2 }}>
               {lembranca.dias === 1

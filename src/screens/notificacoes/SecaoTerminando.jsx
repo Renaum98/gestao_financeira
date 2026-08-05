@@ -8,7 +8,7 @@ import { NotifItem, Secao } from './parts.jsx';
 import { diasAte, rotuloPrazoT } from './utils.js';
 import { useT } from '../../lib/i18n.jsx';
 
-export function SecaoTerminando({ terminando, ocultar, ehLida, marcarLida }) {
+export function SecaoTerminando({ terminando, ehLida, marcarLida }) {
   const t = useT();
   if (terminando.length === 0) return null;
 
@@ -28,7 +28,7 @@ export function SecaoTerminando({ terminando, ocultar, ehLida, marcarLida }) {
               subtitulo={t("Última parcela {prazo} · {n}× {x}", {
                 prazo: rotuloPrazoT(t, n).toLowerCase(),
                 n: tx.parcelas.total,
-                x: fmtBRL(tx.parcelas.valorTotal, ocultar),
+                x: fmtBRL(tx.parcelas.valorTotal),
               })}
               trailing={
                 <div

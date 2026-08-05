@@ -6,7 +6,7 @@ import { Card } from "../../ui/common.jsx";
 import { SecaoTitulo } from "./SecaoTitulo.jsx";
 import { useT } from "../../lib/i18n.jsx";
 
-export function EvolucaoMeses({ evolucao, maxEvol, mediaEvol, mes, setMes, ocultar }) {
+export function EvolucaoMeses({ evolucao, maxEvol, mediaEvol, mes, setMes }) {
   const t = useT();
   return (
     <div style={{ padding: "16px 20px 0" }}>
@@ -41,7 +41,7 @@ export function EvolucaoMeses({ evolucao, maxEvol, mediaEvol, mes, setMes, ocult
                 }}
               >
                 <div style={{ fontSize: 9, fontWeight: 700, color: "var(--muted)" }}>
-                  {e.total > 0 ? fmtBRLCompacto(e.total, ocultar) : ""}
+                  {e.total > 0 ? fmtBRLCompacto(e.total) : ""}
                 </div>
                 <div
                   style={{
@@ -79,7 +79,7 @@ export function EvolucaoMeses({ evolucao, maxEvol, mediaEvol, mes, setMes, ocult
             textAlign: "center",
           }}
         >
-          {t("Média mensal: {x}", { x: fmtBRL(mediaEvol, ocultar) })}
+          {t("Média mensal: {x}", { x: fmtBRL(mediaEvol) })}
         </div>
       </Card>
     </div>

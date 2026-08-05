@@ -12,7 +12,7 @@ import { Card, TopBar } from "../ui/common.jsx";
 import { useT } from "../lib/i18n.jsx";
 
 export function HistoricoScreen({ ctx }) {
-  const { txs, todosMeses, ocultar, voltar, irPara, mes, ehDesktop } = ctx;
+  const { txs, todosMeses, voltar, irPara, mes, ehDesktop } = ctx;
   const t = useT();
   const dadosMeses = todosMeses.map((m) => {
     const tot = totalGeral(txDoMes(txs, m));
@@ -91,7 +91,7 @@ export function HistoricoScreen({ ctx }) {
                 <div
                   style={{ fontSize: 14, fontWeight: 800, color: "var(--ink)" }}
                 >
-                  {fmtBRLCompacto(d.total, ocultar)}
+                  {fmtBRLCompacto(d.total)}
                 </div>
               </div>
               <Icon

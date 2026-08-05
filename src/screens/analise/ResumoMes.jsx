@@ -51,7 +51,6 @@ function StatCard({ rotulo, valor, valorCor, extra, extraCor }) {
 
 export function ResumoMes({
   total,
-  ocultar,
   diffTotal,
   mediaDia,
   diasDecorridos,
@@ -68,7 +67,7 @@ export function ResumoMes({
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
         <StatCard
           rotulo={t("Total gasto")}
-          valor={fmtBRL(total, ocultar)}
+          valor={fmtBRL(total)}
           extra={
             diffTotal !== null
               ? `${diffTotal >= 0 ? "▲" : "▼"} ${t("{pct}% vs mês anterior", { pct: Math.abs(diffTotal).toFixed(0) })}`
@@ -78,7 +77,7 @@ export function ResumoMes({
         />
         <StatCard
           rotulo={t("Média por dia")}
-          valor={fmtBRL(mediaDia, ocultar)}
+          valor={fmtBRL(mediaDia)}
           extra={diasDecorridos > 1 ? t("{n} dias", { n: diasDecorridos }) : t("{n} dia", { n: diasDecorridos })}
         />
         <StatCard
@@ -88,7 +87,7 @@ export function ResumoMes({
         />
         <StatCard
           rotulo={t("Sobrou")}
-          valor={fmtBRLCompacto(restante, ocultar)}
+          valor={fmtBRLCompacto(restante)}
           valorCor={restante >= 0 ? VERDE : VERMELHO}
           extra={
             orcTotal <= 0

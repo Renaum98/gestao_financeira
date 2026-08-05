@@ -26,7 +26,6 @@ export function computeInsights({
   total,
   totalAnt,
   delta,
-  ocultar,
   mes,
   orcTotal,
   restante,
@@ -51,7 +50,7 @@ export function computeInsights({
         <>
           {t('No mês passado você gastou mais em ')}
           <strong style={{ color: 'var(--ink)' }}>{t(topAnt.nome)}</strong>
-          {t(' — {x} ({pct}% do total).', { x: fmtBRLCompacto(topAnt.valor, ocultar), pct })}
+          {t(' — {x} ({pct}% do total).', { x: fmtBRLCompacto(topAnt.valor), pct })}
         </>
       ),
     });
@@ -172,9 +171,9 @@ export function computeInsights({
         cor: 'var(--primary)',
         texto: (
           <>
-            {t('No ritmo atual ({x}/dia), você vai fechar o mês em ', { x: fmtBRLCompacto(mediaDia, ocultar) })}
+            {t('No ritmo atual ({x}/dia), você vai fechar o mês em ', { x: fmtBRLCompacto(mediaDia) })}
             <strong style={{ color: 'var(--ink)' }}>
-              {fmtBRLCompacto(projecao, ocultar)}
+              {fmtBRLCompacto(projecao)}
             </strong>
             .
           </>
@@ -201,7 +200,7 @@ export function computeInsights({
               ? t('Restam {n} dia no mês — dá pra gastar até ', { n: diasRest })
               : t('Restam {n} dias no mês — dá pra gastar até ', { n: diasRest })}
             <strong style={{ color: COR_POS }}>
-              {t('{x}/dia', { x: fmtBRLCompacto(porDia, ocultar) })}
+              {t('{x}/dia', { x: fmtBRLCompacto(porDia) })}
             </strong>
             {t(' sem estourar o orçamento.')}
           </>
@@ -215,7 +214,7 @@ export function computeInsights({
           <>
             {t('Você passou ')}
             <strong style={{ color: COR_NEG }}>
-              {fmtBRLCompacto(Math.abs(restante), ocultar)}
+              {fmtBRLCompacto(Math.abs(restante))}
             </strong>
             {t(' do orçamento deste mês.')}
           </>
@@ -240,7 +239,7 @@ export function computeInsights({
             <>
               {t('Seu maior gasto foi ')}
               <strong style={{ color: 'var(--ink)' }}>{maior.descricao}</strong>
-              {t(' — {x} ({pct}% do mês).', { x: fmtBRLCompacto(maior.valor, ocultar), pct: pctTotal })}
+              {t(' — {x} ({pct}% do mês).', { x: fmtBRLCompacto(maior.valor), pct: pctTotal })}
             </>
           ),
         });
@@ -277,7 +276,7 @@ export function computeInsights({
             <strong style={{ color: c.cor || 'var(--primary)' }}>
               {Math.round(c.pct)}%
             </strong>
-            {t(' da meta — faltam {x}.', { x: fmtBRLCompacto(c.meta - c.atual, ocultar) })}
+            {t(' da meta — faltam {x}.', { x: fmtBRLCompacto(c.meta - c.atual) })}
           </>
         ),
       });
@@ -289,7 +288,7 @@ export function computeInsights({
           <>
             {t('Você já guardou ')}
             <strong style={{ color: 'var(--ink)' }}>
-              {fmtBRLCompacto(guardadoTotal, ocultar)}
+              {fmtBRLCompacto(guardadoTotal)}
             </strong>
             {caixinhas.length === 1
               ? t(' em {n} caixinha.', { n: caixinhas.length })
@@ -312,7 +311,7 @@ export function computeInsights({
           <>
             {t('Suas entradas cobrem os gastos com ')}
             <strong style={{ color: COR_POS }}>{t('{pct}% de folga', { pct: taxaPoupanca })}</strong>
-            {t(' ({x} sobrando).', { x: fmtBRLCompacto(saldo, ocultar) })}
+            {t(' ({x} sobrando).', { x: fmtBRLCompacto(saldo) })}
           </>
         ),
       });
@@ -324,7 +323,7 @@ export function computeInsights({
           <>
             {t('Os gastos superaram as entradas em ')}
             <strong style={{ color: COR_NEG }}>
-              {fmtBRLCompacto(Math.abs(saldo), ocultar)}
+              {fmtBRLCompacto(Math.abs(saldo))}
             </strong>
             .
           </>
@@ -353,7 +352,7 @@ export function computeInsights({
             <strong style={{ color: 'var(--ink)' }}>
               {em7.length === 1 ? t('{n} conta vence', { n: em7.length }) : t('{n} contas vencem', { n: em7.length })}
             </strong>
-            {t(' nos próximos 7 dias — {x} no total.', { x: fmtBRLCompacto(totalEm7, ocultar) })}
+            {t(' nos próximos 7 dias — {x} no total.', { x: fmtBRLCompacto(totalEm7) })}
           </>
         ),
       });
@@ -412,7 +411,7 @@ export function computeInsights({
           <>
             {t('{n} transações no mês — ticket médio de ', { n: qtdGastos })}
             <strong style={{ color: 'var(--ink)' }}>
-              {fmtBRLCompacto(ticket, ocultar)}
+              {fmtBRLCompacto(ticket)}
             </strong>
             .
           </>

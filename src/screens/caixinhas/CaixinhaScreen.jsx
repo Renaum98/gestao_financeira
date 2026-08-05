@@ -27,7 +27,6 @@ export function CaixinhaScreen({ ctx, params }) {
     resgatarCaixinha,
     excluirCaixinha,
     salvarCaixinha,
-    ocultar,
     usuario,
     partnerNome,
     caixinhasCompartilhadas,
@@ -123,7 +122,6 @@ export function CaixinhaScreen({ ctx, params }) {
       <div style={{ padding: "4px 20px 0" }}>
         <CabecalhoCaixinha
           cx={cx}
-          ocultar={ocultar}
           atual={atual}
           rendimento={rendimento}
           rendimentoTotal={rendimentoTotal}
@@ -131,7 +129,7 @@ export function CaixinhaScreen({ ctx, params }) {
           pct={pct}
         />
 
-        <CardLembranca lembranca={lembranca} ocultar={ocultar} />
+        <CardLembranca lembranca={lembranca} />
 
         {/* CTA depositar / resgatar */}
         <div style={{ display: "flex", gap: 10, marginTop: 14 }}>
@@ -187,7 +185,6 @@ export function CaixinhaScreen({ ctx, params }) {
         <HistoricoDepositos
           depositos={depositos}
           cx={cx}
-          ocultar={ocultar}
           entradas={entradas}
           caixinhasCompartilhadas={caixinhasCompartilhadas}
           usuario={usuario}
@@ -261,8 +258,8 @@ export function CaixinhaScreen({ ctx, params }) {
           mensagem={
             (cx.depositos || []).length > 0
               ? (cx.depositos.length === 1
-                  ? tr("Os {n} depósito guardado ({x}) serão perdidos.", { n: cx.depositos.length, x: fmtBRL(valorAtual(cx), ocultar) })
-                  : tr("Os {n} depósitos guardados ({x}) serão perdidos.", { n: cx.depositos.length, x: fmtBRL(valorAtual(cx), ocultar) }))
+                  ? tr("Os {n} depósito guardado ({x}) serão perdidos.", { n: cx.depositos.length, x: fmtBRL(valorAtual(cx)) })
+                  : tr("Os {n} depósitos guardados ({x}) serão perdidos.", { n: cx.depositos.length, x: fmtBRL(valorAtual(cx)) }))
               : tr("Essa caixinha será removida permanentemente.")
           }
           onCancelar={() => setConfirmarExclusao(false)}

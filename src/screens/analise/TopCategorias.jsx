@@ -9,7 +9,7 @@ import { COR_POS as VERDE, COR_NEG as VERMELHO } from "../../lib/colors.js";
 import { SecaoTitulo } from "./SecaoTitulo.jsx";
 import { useT } from "../../lib/i18n.jsx";
 
-export function TopCategorias({ dados, porCatAnt, irPara, ocultar }) {
+export function TopCategorias({ dados, porCatAnt, irPara }) {
   const t = useT();
   return (
     <div style={{ padding: "16px 20px 0" }}>
@@ -40,7 +40,7 @@ export function TopCategorias({ dados, porCatAnt, irPara, ocultar }) {
               </div>
               <div style={{ textAlign: "right" }}>
                 <div style={{ fontSize: 14, fontWeight: 800, color: "var(--ink)" }}>
-                  {fmtBRLCompacto(d.valor, ocultar)}
+                  {fmtBRLCompacto(d.valor)}
                 </div>
                 {diff !== null && (
                   <div

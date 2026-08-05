@@ -6,7 +6,7 @@ import { Card } from "../../ui/common.jsx";
 import { SecaoTitulo } from "./SecaoTitulo.jsx";
 import { useT } from "../../lib/i18n.jsx";
 
-export function MaioresGastos({ maioresGastos, ocultar }) {
+export function MaioresGastos({ maioresGastos }) {
   const tr = useT();
   return (
     <div style={{ padding: "16px 20px 0" }}>
@@ -42,7 +42,7 @@ export function MaioresGastos({ maioresGastos, ocultar }) {
               </div>
             </div>
             <div style={{ fontSize: 14, fontWeight: 800, color: "var(--ink)" }}>
-              {fmtBRL(t.valor, ocultar)}
+              {fmtBRL(t.valor)}
             </div>
           </div>
         ))}

@@ -87,36 +87,102 @@ export const MESES_CURTO = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set
 //   • primary  → cor sólida usada em texto colorido (chips, links, ícones)
 //   • primary2 → segunda parada do gradiente nos cards/botões grandes
 //
-// Campos opcionais `primaryDark` / `primary2Dark` definem variantes pro modo
-// escuro — usadas quando a paleta clara seria invisível contra o `--bg`
-// escuro do app. Hoje só a paleta "Preto" precisa disso.
-//
 // O texto sobre o gradiente é sempre branco; saturação/luminância das duas
 // cores são mantidas próximas pra que o branco continue legível ao longo do
 // degradê todo.
+//
+// `primaryDark` / `primary2Dark` são as variantes do tema escuro, e TODAS as
+// paletas têm — resolvidas por coresDaPaleta(), logo abaixo.
+//
+// Por que existem: a calibragem original mirava um alvo só, o branco sobre o
+// gradiente, e isso empurra as cores pro escuro. Só que a mesma cor faz um
+// segundo trabalho — texto pequeno colorido (12/13px) sobre o fundo — que no
+// tema escuro pede o contrário. Com um valor só, as seis coloridas ficavam
+// entre 2,91:1 e 3,92:1 sobre o `--card` escuro, todas abaixo dos 4,5:1 que
+// texto pequeno exige. As variantes abaixo são a menor clareada que fecha os
+// dois lados, com folga:
+//
+//   • ≥ 4,65:1 contra o --card (#1F1B26) e o --bg (#13101A) escuros
+//   • ≥ 3,25:1 com o branco por cima, nas DUAS pontas do gradiente
+//
+// Matiz e saturação não mudam — só a luminância —, então a identidade de cada
+// cor continua a mesma. O efeito colateral é um gradiente mais raso no escuro
+// (salto de ~1,13× de luminância em vez de ~1,5×): as duas pontas ficam
+// espremidas entre o piso do texto e o teto do branco. É o preço de os dois
+// papéis dividirem o mesmo par de tokens.
 export const PALETAS = [
-  { primary: '#6E4FF6', primary2: '#8C72FF', nome: 'Violeta' },
-  { primary: '#D44B3F', primary2: '#E66659', nome: 'Coral' },
-  { primary: '#0E8554', primary2: '#1FA970', nome: 'Esmeralda' },
-  { primary: '#2563EA', primary2: '#487EE8', nome: 'Oceano' },
-  { primary: '#A26200', primary2: '#C97C0E', nome: 'Mostarda' },
-  { primary: '#B8208A', primary2: '#D43DAA', nome: 'Rosa' },
+  {
+    primary: '#6E4FF6', primary2: '#8C72FF',
+    primaryDark: '#8A71F8', primary2Dark: '#9279FF',
+    nome: 'Violeta',
+  },
+  {
+    primary: '#D44B3F', primary2: '#E66659',
+    primaryDark: '#D96156', primary2Dark: '#E6675A',
+    nome: 'Coral',
+  },
+  {
+    primary: '#0E8554', primary2: '#1FA970',
+    // o primary2 claro já estava no teto do branco: no escuro ele se repete
+    primaryDark: '#109A61', primary2Dark: '#1FA970',
+    nome: 'Esmeralda',
+  },
+  {
+    primary: '#2563EA', primary2: '#487EE8',
+    primaryDark: '#5283EE', primary2Dark: '#5C8CEB',
+    nome: 'Oceano',
+  },
+  {
+    primary: '#A26200', primary2: '#C97C0E',
+    primaryDark: '#C17500', primary2Dark: '#CA7D0E',
+    nome: 'Mostarda',
+  },
+  {
+    primary: '#B8208A', primary2: '#D43DAA',
+    primaryDark: '#E04AB2', primary2Dark: '#DC60B9',
+    nome: 'Rosa',
+  },
   {
     primary: '#1A1416',
     primary2: '#3D3338',
-    // No dark mode, preto puro some no fundo (#13101A) — usamos um grafite
-    // mais claro que ainda comunica "neutro elegante" e mantém branco legível.
-    primaryDark: '#4A3D44',
-    primary2Dark: '#6E5D66',
+    // Caso extremo da regra acima: aqui a paleta não só clareia, ela inverte —
+    // em vez de preto sobre claro, vira prata sobre preto, a mesma ideia "noir"
+    // do outro lado. O grafite que estava aqui (#4A3D44) dava 1,83:1 contra o
+    // --bg #13101A: sumia.
+    //
+    // O teto do branco é o que impede ir até o branco de verdade: o texto e os
+    // ícones em cima do gradiente são brancos em 25 lugares do app (o + da tab
+    // bar, os cards de destaque, os botões grandes). Então a prata fica na faixa
+    // que atende os dois lados:
+    //
+    //   #8B8189  →  5,0:1 contra o fundo   |  3,8:1 com o branco por cima
+    //   #998E96  →  6,0:1 contra o fundo   |  3,2:1 com o branco por cima
+    //
+    // O tom puxa um pouco pro mauve em vez de cinza neutro pra casar com o roxo
+    // do --bg escuro.
+    primaryDark: '#8B8189',
+    primary2Dark: '#998E96',
     nome: 'Preto',
   },
 ];
 
+// Resolve as duas cores de uma paleta pro tema ativo. Uma paleta só declara as
+// variantes Dark quando a versão clara não sobrevive ao fundo escuro (hoje só a
+// "Preto"); as outras usam as mesmas cores nos dois temas.
+//
+// Quem pinta com a paleta deve passar por aqui — inclusive o seletor de cor da
+// tela de Aparência, senão a bolinha mostra uma cor e o app aplica outra.
+export function coresDaPaleta(pal, ehEscuro) {
+  return {
+    primary: (ehEscuro && pal.primaryDark) || pal.primary,
+    primary2: (ehEscuro && pal.primary2Dark) || pal.primary2,
+  };
+}
+
 // Formatação monetária localizada. A moeda ativa (símbolo + formato) vem de
 // lib/moeda.js. O nome `fmtBRL` é histórico — hoje formata na moeda escolhida.
-export function fmtBRL(v, ocultar = false) {
+export function fmtBRL(v) {
   const m = getMoeda();
-  if (ocultar) return `${m.simbolo} •••••`;
   try {
     return new Intl.NumberFormat(m.locale, {
       style: 'currency',
@@ -129,9 +195,8 @@ export function fmtBRL(v, ocultar = false) {
   }
 }
 
-export function fmtBRLCompacto(v, ocultar = false) {
+export function fmtBRLCompacto(v) {
   const m = getMoeda();
-  if (ocultar) return `${m.simbolo} •••`;
   if (Math.abs(v) >= 1000) {
     let n;
     try {

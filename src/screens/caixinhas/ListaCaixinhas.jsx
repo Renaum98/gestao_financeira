@@ -8,7 +8,7 @@ import { ModalCaixinha } from "./ModalCaixinha.jsx";
 import { useT } from "../../lib/i18n.jsx";
 
 export function CaixinhasScreen({ ctx }) {
-  const { caixinhas, salvarCaixinha, voltar, irPara, ocultar, ehDesktop } = ctx;
+  const { caixinhas, salvarCaixinha, voltar, irPara, ehDesktop } = ctx;
   const t = useT();
   const [modal, setModal] = React.useState(null); // null | 'nova' | { editando: caixinha }
 
@@ -54,7 +54,6 @@ export function CaixinhasScreen({ ctx }) {
               <CardCaixinha
                 key={cx.id}
                 cx={cx}
-                ocultar={ocultar}
                 onClick={() => irPara("caixinha", { id: cx.id })}
               />
             ))}

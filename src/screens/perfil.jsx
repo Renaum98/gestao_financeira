@@ -24,7 +24,7 @@ import { BaixarDadosModal } from "./perfil/BaixarDadosModal.jsx";
 
 export function PerfilScreen({ ctx }) {
   const {
-    voltar, ocultar, setOcultar, irPara, setOnboarding,
+    voltar, irPara, setOnboarding,
     preferences, setPreferences, usuario, sair, ehDesktop,
     txs, caixinhas, recorrentes, orcamentos, todosMeses,
     partnerUid, partnerNome, convitesEnviados, desfazerParceria,
@@ -122,12 +122,6 @@ export function PerfilScreen({ ctx }) {
           <ConfigItem icon="target" label={t("Orçamentos")} onClick={() => irPara("orcamentos")} />
           <ConfigItem icon="history" label={t("Recorrentes")} onClick={() => irPara("recorrentes")} />
           <ConfigItem icon="calendar" label={t("Histórico")} onClick={() => irPara("historico")} />
-          <ConfigItem
-            icon={ocultar ? "eye-off" : "eye"}
-            label={t("Modo privacidade")}
-            toggleAtivo={ocultar}
-            onToggle={() => setOcultar(!ocultar)}
-          />
         </Card>
 
         <div style={{ height: 14 }} />

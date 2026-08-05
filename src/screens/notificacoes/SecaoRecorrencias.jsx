@@ -6,7 +6,7 @@ import { Card } from '../../ui/common.jsx';
 import { NotifItem, Secao, LinkAcao } from './parts.jsx';
 import { useT } from '../../lib/i18n.jsx';
 
-export function SecaoRecorrencias({ recsRevisar, ocultar, irPara, ehLida, marcarLida }) {
+export function SecaoRecorrencias({ recsRevisar, irPara, ehLida, marcarLida }) {
   const t = useT();
   if (recsRevisar.length === 0) return null;
 
@@ -32,7 +32,7 @@ export function SecaoRecorrencias({ recsRevisar, ocultar, irPara, ehLida, marcar
               subtitulo={t('{cat} · última cobrança em {ultimo}', { cat: t(cat.nome), ultimo })}
               trailing={
                 <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--ink)', letterSpacing: '-0.01em' }}>
-                  {fmtBRL(r.valor, ocultar)}
+                  {fmtBRL(r.valor)}
                 </div>
               }
             />

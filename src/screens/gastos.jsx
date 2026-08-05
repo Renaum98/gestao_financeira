@@ -18,7 +18,7 @@ import { guardadoPorTx, ajustarGuardado } from "../lib/guardado-entradas.js";
 import { useT } from "../lib/i18n.jsx";
 
 export function GastosScreen({ ctx }) {
-  const { txs, mes, setMes, todosMeses, ocultar, irPara, excluirTx, caixinhas } = ctx;
+  const { txs, mes, setMes, todosMeses, irPara, excluirTx, caixinhas } = ctx;
   const t = useT();
   const [filtro, setFiltro] = React.useState("todas");
   const [filtroPag, setFiltroPag] = React.useState("todos");
@@ -163,11 +163,11 @@ export function GastosScreen({ ctx }) {
           <div style={{ fontSize: 13, color: "var(--muted)", fontWeight: 600 }}>
             {t("{n} transações ·", { n: txMes.length })}<br/> {t("Total:")}{" "}
             <span style={{ color: "var(--ink)", fontWeight: 700 }}>
-              {fmtBRL(total, ocultar)}
+              {fmtBRL(total)}
             </span>
             {guardadoNoFiltro > 0.005 && (
               <div style={{ fontSize: 11, fontWeight: 600, marginTop: 2 }}>
-                {t("{x} já em caixinhas", { x: fmtBRL(guardadoNoFiltro, ocultar) })}
+                {t("{x} já em caixinhas", { x: fmtBRL(guardadoNoFiltro) })}
               </div>
             )}
           </div>
@@ -395,7 +395,6 @@ export function GastosScreen({ ctx }) {
               >
                 <ItemTransacao
                   tx={tx}
-                  ocultar={ocultar}
                   guardado={guardadoTx[tx.id]}
                   onClick={() => setAcaoAberta(tx.id)}
                 />

@@ -29,8 +29,6 @@ export function DashboardScreen({ ctx }) {
     mes,
     setMes,
     todosMeses,
-    ocultar,
-    setOcultar,
     irPara,
     orcamentos,
     preferences,
@@ -206,7 +204,6 @@ export function DashboardScreen({ ctx }) {
         total,
         totalAnt,
         delta,
-        ocultar,
         mes,
         orcTotal,
         restante,
@@ -217,7 +214,7 @@ export function DashboardScreen({ ctx }) {
         orcCategorias,
         t,
       }),
-    [txMes, txMesAnt, total, totalAnt, delta, ocultar, mes, orcTotal, restante, entradasDisponiveis, caixinhas, proximas, orcCategorias, t],
+    [txMes, txMesAnt, total, totalAnt, delta, mes, orcTotal, restante, entradasDisponiveis, caixinhas, proximas, orcCategorias, t],
   );
 
   const [simularAberto, setSimularAberto] = React.useState(false);
@@ -235,7 +232,6 @@ export function DashboardScreen({ ctx }) {
       partnerUid={partnerUid}
       orcBaseParceiro={orcBaseParceiro}
       setMes={setMes}
-      ocultar={ocultar}
       ehCompartilhado={ehCompartilhado}
       partnerNome={partnerNome}
     />
@@ -246,8 +242,6 @@ export function DashboardScreen({ ctx }) {
       <CabecalhoDashboard
         saudacao={saudacao}
         primeiroNome={primeiroNome}
-        ocultar={ocultar}
-        setOcultar={setOcultar}
         irPara={irPara}
         totalNotif={totalNotif}
         preferences={preferences}
@@ -300,22 +294,20 @@ export function DashboardScreen({ ctx }) {
 
       <ProximasVencer
         proximas={proximas}
-        ocultar={ocultar}
         irPara={irPara}
         onSelecionar={setContaSelecionada}
         ehDesktop={ehDesktop}
       />
 
-      <UltimosGastos recentes={recentes} ocultar={ocultar} irPara={irPara} guardadoTx={guardadoTx} />
+      <UltimosGastos recentes={recentes} irPara={irPara} guardadoTx={guardadoTx} />
 
-      <CaixinhasPreview caixinhas={caixinhas} ocultar={ocultar} irPara={irPara} />
+      <CaixinhasPreview caixinhas={caixinhas} irPara={irPara} />
 
       {simularAberto && (
         <SimularGastoModal
           restante={restante}
           orcTotal={orcTotal}
           mes={mes}
-          ocultar={ocultar}
           fechar={() => setSimularAberto(false)}
         />
       )}
@@ -324,7 +316,6 @@ export function DashboardScreen({ ctx }) {
         <DiferencaMesModal
           nomeMesAnt={nomeMesAntModal}
           valor={diferencaModal.valor}
-          ocultar={ocultar}
           onTrazer={() => responderDiferenca(true)}
           onIgnorar={() => responderDiferenca(false)}
         />
@@ -333,7 +324,6 @@ export function DashboardScreen({ ctx }) {
       {contaSelecionada && (
         <ContaProximaModal
           tx={contaSelecionada}
-          ocultar={ocultar}
           onFechar={() => setContaSelecionada(null)}
           onMarcarPago={() => {
             marcarTxPago(contaSelecionada.id);

@@ -27,7 +27,7 @@ import { AtalhoOrcamentos } from "./analise/AtalhoOrcamentos.jsx";
 
 export function AnaliseScreen({ ctx }) {
   const {
-    txs, mes, setMes, todosMeses, mesAnterior, ocultar, irPara, ehDesktop,
+    txs, mes, setMes, todosMeses, mesAnterior, irPara, ehDesktop,
     partnerTxs = [], partnerNome = "", partnerUid,
     preferences = {}, orcamentos = {}, caixinhas = [], usuario,
   } = ctx;
@@ -158,7 +158,6 @@ export function AnaliseScreen({ ctx }) {
         <>
           <ResumoMes
             total={total}
-            ocultar={ocultar}
             diffTotal={diffTotal}
             mediaDia={mediaDia}
             diasDecorridos={diasDecorridos}
@@ -170,7 +169,7 @@ export function AnaliseScreen({ ctx }) {
             spanAll={spanAll}
           />
 
-          <PizzaCategorias dados={dados} total={total} ocultar={ocultar} />
+          <PizzaCategorias dados={dados} total={total} />
 
           <EvolucaoMeses
             evolucao={evolucao}
@@ -178,7 +177,6 @@ export function AnaliseScreen({ ctx }) {
             mediaEvol={mediaEvol}
             mes={mes}
             setMes={setMes}
-            ocultar={ocultar}
           />
 
           <EvolucaoConjunta
@@ -186,15 +184,14 @@ export function AnaliseScreen({ ctx }) {
             maxEvolConjunta={maxEvolConjunta}
             mes={mes}
             setMes={setMes}
-            ocultar={ocultar}
             partnerNome={partnerNome}
           />
 
-          <PorPagamento porPagamento={porPagamento} total={total} ocultar={ocultar} />
+          <PorPagamento porPagamento={porPagamento} total={total} />
 
-          <TopCategorias dados={dados} porCatAnt={porCatAnt} irPara={irPara} ocultar={ocultar} />
+          <TopCategorias dados={dados} porCatAnt={porCatAnt} irPara={irPara} />
 
-          <MaioresGastos maioresGastos={maioresGastos} ocultar={ocultar} />
+          <MaioresGastos maioresGastos={maioresGastos} />
         </>
       )}
 

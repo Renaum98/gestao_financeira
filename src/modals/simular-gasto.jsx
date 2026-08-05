@@ -17,7 +17,6 @@ export function SimularGastoModal({
   restante = 0,
   orcTotal = 0,
   mes,
-  ocultar = false,
   fechar,
 }) {
   const t = useT();
@@ -465,7 +464,7 @@ export function SimularGastoModal({
                 fontVariantNumeric: "tabular-nums",
               }}
             >
-              {ocultar ? "•••" : fmtBRL(restante)}
+              {fmtBRL(restante)}
             </span>
           </div>
         )}

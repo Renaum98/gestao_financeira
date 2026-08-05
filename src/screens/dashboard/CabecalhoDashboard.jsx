@@ -1,5 +1,5 @@
-// CabecalhoDashboard.jsx — saudação + ações (ocultar valores, notificações,
-// perfil) e o nome em destaque no topo da tela Início.
+// CabecalhoDashboard.jsx — saudação + ações (notificações, perfil) e o nome em
+// destaque no topo da tela Início.
 
 import { Icon } from "../../ui/icons.jsx";
 import { COR_NEG } from "../../lib/colors.js";
@@ -19,8 +19,6 @@ const ACAO_BTN = {
 export function CabecalhoDashboard({
   saudacao,
   primeiroNome,
-  ocultar,
-  setOcultar,
   irPara,
   totalNotif,
   preferences,
@@ -51,19 +49,6 @@ export function CabecalhoDashboard({
           {primeiroNome && ","}
         </div>
         <div style={{ display: "flex", gap: 8 }}>
-          <button
-            onClick={() => setOcultar(!ocultar)}
-            className="glass-surface"
-            aria-label={ocultar ? t("Mostrar valores") : t("Ocultar valores")}
-            style={ACAO_BTN}
-          >
-            <Icon
-              name={ocultar ? "eye-off" : "eye"}
-              size={18}
-              color="var(--ink)"
-              strokeWidth={2}
-            />
-          </button>
           <button
             onClick={() => irPara("notificacoes")}
             className="glass-surface"

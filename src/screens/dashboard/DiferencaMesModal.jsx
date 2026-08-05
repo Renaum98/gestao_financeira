@@ -9,7 +9,7 @@ import { ModalOverlay } from "../../ui/modal-base.jsx";
 import { COR_POS, COR_NEG } from "../../lib/colors.js";
 import { useT } from "../../lib/i18n.jsx";
 
-export function DiferencaMesModal({ nomeMesAnt, valor, ocultar, onTrazer, onIgnorar }) {
+export function DiferencaMesModal({ nomeMesAnt, valor, onTrazer, onIgnorar }) {
   const t = useT();
   const sobrou = valor >= 0;
   const cor = sobrou ? COR_POS : COR_NEG;
@@ -60,7 +60,7 @@ export function DiferencaMesModal({ nomeMesAnt, valor, ocultar, onTrazer, onIgno
           {sobrou ? t("Sobrou") : t("Faltou")}
         </div>
         <div style={{ fontSize: 24, fontWeight: 800, color: cor, marginTop: 2, letterSpacing: "-0.02em" }}>
-          {sobrou ? "+" : "−"}{fmtBRL(Math.abs(valor), ocultar)}
+          {sobrou ? "+" : "−"}{fmtBRL(Math.abs(valor))}
         </div>
       </div>
 

@@ -5,6 +5,7 @@ import {
   CATEGORIAS,
   ORDEM_CATS,
   PALETAS,
+  coresDaPaleta,
   chaveMes,
   listarMeses,
   aplicarCategoriasCustom,
@@ -12,6 +13,7 @@ import {
   valorRecNoMes,
 } from "./data.js";
 import { Icon } from "./ui/icons.jsx";
+import { IconeTab } from "./ui/icones-tab.jsx";
 import { escutarAuth, sair as sairFirebase } from "./lib/firebase.js";
 import { useCloudState } from "./lib/storage.js";
 import {
@@ -24,8 +26,9 @@ import {
   desfazerParceria as desfazerParceriaFn,
 } from "./lib/partnership.js";
 import { vibrar } from "./lib/haptics.js";
-import { estaOffline } from "./lib/conexao.js";
-import { ModalOverlay } from "./ui/modal-base.jsx";
+import { ehTemaEscuro } from "./lib/tema.js";
+import { estaOffline, useEstaOffline } from "./lib/conexao.js";
+import { BarraOffline, EspacoBarraOffline } from "./ui/barra-offline.jsx";
 import { useInstallPrompt, InstallPromptModal } from "./ui/install-prompt.jsx";
 import { LoaderTela } from "./ui/loader.jsx";
 import { calcOrcBaseAtual, mesCorrente, mesAnteriorDe } from "./lib/orcamento.js";
@@ -81,7 +84,7 @@ const ACOES_QUE_ESCREVEM = [
 
 // Raio de repouso da "gota" da tab bar — igual nos quatro cantos.
 // Acompanha o .nav-indicador em components.css.
-const RAIO_GOTA = 18;
+const RAIO_GOTA = 20;
 
 const ITENS_TAB = [
   { id: "inicio", icon: "home", label: "Início" },
@@ -292,7 +295,7 @@ function TabBar({ tela, irPara, abrirAdd }) {
           borderRadius: 26,
           boxShadow:
             "0 10px 30px rgba(20,16,24,0.12), inset 0 1px 0 rgba(255,255,255,0.25)",
-          padding: "8px 6px",
+          padding: "6px 6px",
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
@@ -311,6 +314,11 @@ function TabBar({ tela, irPara, abrirAdd }) {
           className="nav-indicador"
           aria-hidden="true"
           style={{
+            // o raio de repouso desce daqui pra CSS (que o usa no estado parado
+            // e no último quadro do @keyframes nav-gota): assim RAIO_GOTA é o
+            // único lugar a mexer, e a gota nunca assenta num raio diferente do
+            // botão que ela preenche
+            "--raio-gota": `${RAIO_GOTA}px`,
             opacity: pos ? 1 : 0,
             top: pos?.top ?? 0,
             width: pos?.width ?? 0,
@@ -369,32 +377,26 @@ function TabBar({ tela, irPara, abrirAdd }) {
                 background: "transparent",
                 border: "none",
                 borderRadius: RAIO_GOTA,
-                padding: "8px 4px",
+                padding: "11px 4px",
                 cursor: "pointer",
                 display: "flex",
-                flexDirection: "column",
                 alignItems: "center",
-                gap: 2,
+                justifyContent: "center",
                 // acima do indicador, que desliza por baixo dos ícones
                 position: "relative",
                 zIndex: 1,
               }}
             >
-              <Icon
-                name={it.icon}
-                size={22}
-                color={ativo ? "var(--primary)" : "var(--muted)"}
-                strokeWidth={ativo ? 2.4 : 2}
-              />
-              <span
-                style={{
-                  fontSize: 10,
-                  fontWeight: 700,
-                  color: ativo ? "var(--primary)" : "var(--muted)",
-                  letterSpacing: "-0.01em",
-                }}
-              >
-                {it.label}
+              {/* sem rótulo: o ícone sozinho identifica a aba. O IconeTab tem
+                  classe em cada parte do desenho pra a CSS dar a cada aba a sua
+                  própria animação quando ela vira a ativa (aria-current) */}
+              <span className="nav-icone">
+                <IconeTab
+                  name={it.icon}
+                  size={24}
+                  color={ativo ? "var(--primary)" : "var(--muted)"}
+                  strokeWidth={ativo ? 2.4 : 2}
+                />
               </span>
             </button>
           );
@@ -673,24 +675,13 @@ function useEhDesktop() {
   return ehDesktop;
 }
 
-function sistemaPrefereDark() {
-  return (
-    typeof window !== "undefined" &&
-    window.matchMedia &&
-    window.matchMedia("(prefers-color-scheme: dark)").matches
-  );
-}
-
 function aplicarTema(paleta, modo) {
   const root = document.documentElement;
   const pal = PALETAS.find((p) => p.primary === paleta) || PALETAS[0];
-  const ehEscuro =
-    modo === "escuro" || (modo === "sistema" && sistemaPrefereDark());
-  // Paletas podem ter variantes dark (ex: "Preto" usa grafite claro pra
-  // continuar visível contra o --bg escuro). Se não houver, usa a clara.
-  const primary = ehEscuro && pal.primaryDark ? pal.primaryDark : pal.primary;
-  const primary2 =
-    ehEscuro && pal.primary2Dark ? pal.primary2Dark : pal.primary2;
+  const ehEscuro = ehTemaEscuro(modo);
+  // Paletas podem ter variantes dark (a "Preto" vira prata pra continuar
+  // visível contra o --bg escuro). Se não houver, usa a clara.
+  const { primary, primary2 } = coresDaPaleta(pal, ehEscuro);
   root.style.setProperty("--primary", primary);
   root.style.setProperty("--primary-2", primary2);
   if (ehEscuro) {
@@ -965,8 +956,11 @@ export function App() {
       setParams({});
     }
   }, [uid]);
-  const [ocultar, setOcultar] = React.useState(false);
-  const [avisoOffline, setAvisoOffline] = React.useState(false);
+  // Contador de tentativas de gravar sem internet. É número e não booleano de
+  // propósito: tentar de novo com o aviso já aberto precisa reabrir e reiniciar
+  // a contagem, e um `true` que já era `true` não dispararia efeito nenhum.
+  const [tentativaOffline, setTentativaOffline] = React.useState(0);
+  const offline = useEstaOffline();
   const [addModal, setAddModal] = React.useState(null);
   const [onboarding, setOnboarding] = React.useState(
     () => !localStorage.getItem(ONBOARDING_KEY),
@@ -1465,8 +1459,6 @@ export function App() {
     setMes,
     todosMeses,
     mesAnterior,
-    ocultar,
-    setOcultar,
     irPara,
     voltar,
     salvarTx,
@@ -1520,11 +1512,16 @@ export function App() {
   // storage, que não deixa o state local divergir do servidor. Aqui só
   // interceptamos as ações do usuário pra que a recusa apareça como um aviso e
   // não como um botão que não faz nada.
+  //
+  // Quem avisa é a BarraOffline, que já está na tela: em vez de abrir um modal,
+  // a tentativa só incrementa o contador e a faixa do topo se abre explicando.
+  // Note o estaOffline() e não o `offline` do hook — o que decide é a conexão no
+  // instante do clique, não a do último render.
   for (const acao of ACOES_QUE_ESCREVEM) {
     const original = ctx[acao];
     if (typeof original !== "function") continue;
     ctx[acao] = (...args) => {
-      if (estaOffline()) return setAvisoOffline(true);
+      if (estaOffline()) return setTentativaOffline((n) => n + 1);
       return original(...args);
     };
   }
@@ -1565,6 +1562,7 @@ export function App() {
           role="main"
           style={{ flex: 1, minWidth: 0, overflowY: "auto", height: "100vh" }}
         >
+          <EspacoBarraOffline offline={offline} />
           <div
             style={{
               maxWidth: tela === "inicio" || tela === "analise" ? 1080 : 640,
@@ -1586,7 +1584,7 @@ export function App() {
             <AddExpenseModal ctx={ctx} params={addModal} />
           </React.Suspense>
         )}
-        {avisoOffline && <AvisoOffline onFechar={() => setAvisoOffline(false)} />}
+        <BarraOffline offline={offline} tentativa={tentativaOffline} />
       </div>
       </I18nProvider>
     );
@@ -1601,6 +1599,7 @@ export function App() {
         color: "var(--ink)",
       }}
     >
+      <EspacoBarraOffline offline={offline} />
       <main
         role="main"
         style={{ maxWidth: 480, margin: "0 auto", minHeight: "100vh" }}
@@ -1626,86 +1625,9 @@ export function App() {
           onDispensar={install.dispensar}
         />
       )}
-      {avisoOffline && <AvisoOffline onFechar={() => setAvisoOffline(false)} />}
+      <BarraOffline offline={offline} tentativa={tentativaOffline} />
     </div>
     </I18nProvider>
-  );
-}
-
-// Aviso de que o app está somente leitura. Não é erro do usuário nem falha do
-// app — é a regra de sincronização protegendo o que está na nuvem. Modal próprio
-// em vez do ConfirmModal porque aqui não há escolha a fazer: só um "entendi".
-function AvisoOffline({ onFechar }) {
-  const t = useT();
-  return (
-    <ModalOverlay
-      onClose={onFechar}
-      maxWidth={360}
-      padding="24px 22px 18px"
-      borderRadius={24}
-      scrollable={false}
-      center
-    >
-      <div
-        style={{
-          width: 56,
-          height: 56,
-          borderRadius: 28,
-          background: "color-mix(in oklab, var(--primary) 14%, transparent)",
-          margin: "0 auto 14px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <Icon name="lock" size={26} color="var(--primary)" strokeWidth={2.2} />
-      </div>
-
-      <div
-        style={{
-          fontSize: 17,
-          fontWeight: 800,
-          color: "var(--ink)",
-          letterSpacing: "-0.02em",
-        }}
-      >
-        {t("Sem conexão")}
-      </div>
-
-      <div
-        style={{
-          fontSize: 13,
-          color: "var(--muted)",
-          fontWeight: 500,
-          marginTop: 6,
-          lineHeight: 1.45,
-        }}
-      >
-        {t(
-          "Não dá pra salvar agora. Se este aparelho gravasse offline, ao voltar a internet ele substituiria o que está na nuvem por esta versão — inclusive apagando o que você tiver lançado em outro aparelho. Conecte e tente de novo.",
-        )}
-      </div>
-
-      <button
-        onClick={onFechar}
-        style={{
-          width: "100%",
-          marginTop: 20,
-          padding: 12,
-          borderRadius: 14,
-          border: "none",
-          background: "var(--primary)",
-          color: "#fff",
-          fontSize: 14,
-          fontWeight: 800,
-          fontFamily: "inherit",
-          cursor: "pointer",
-          boxShadow: "0 4px 14px color-mix(in oklab, var(--primary) 32%, transparent)",
-        }}
-      >
-        {t("Entendi")}
-      </button>
-    </ModalOverlay>
   );
 }
 

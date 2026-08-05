@@ -26,8 +26,9 @@
   left: 0;
   z-index: 0;
   pointer-events: none;
-  /* raio parelho nos quatro cantos (o mesmo RAIO_GOTA dos botões, no app.jsx) */
-  border-radius: 18px;
+  /* raio parelho nos quatro cantos. O valor vem do RAIO_GOTA (app.jsx) por
+     style inline — é o mesmo raio dos botões, e mora num lugar só. */
+  border-radius: var(--raio-gota, 20px);
   /* radial suave: denso atrás do ícone e dissolvendo antes da borda */
   background: radial-gradient(115% 95% at 50% 42%,
     color-mix(in oklab, var(--primary) 28%, transparent) 0%,
@@ -68,12 +69,14 @@
 }
 
 /* Começa redonda porque no toque a gota vem do estado "segurando" (50%): ela
-   desincha passando por duas deformações antes de assentar no formato da aba. */
+   desincha passando por duas deformações antes de assentar no formato da aba.
+   O quadro final tem que ser o raio de repouso: se ficar diferente, a gota
+   assenta num valor e estala pro outro quando a animação termina. */
 @keyframes nav-gota {
   0%   { border-radius: 50%; }
   30%  { border-radius: 30px 12px 26px 14px; }
   60%  { border-radius: 13px 28px 15px 26px; }
-  100% { border-radius: 18px; }
+  100% { border-radius: var(--raio-gota, 20px); }
 }
 
 /* Variante da sidebar (desktop): leva só o deslize. O fundo e o canto voltam a
@@ -88,6 +91,90 @@
 @media (prefers-reduced-motion: reduce) {
   .nav-indicador { transition: opacity .2s ease; }
   .nav-indicador.is-deslizando { animation: none; }
+  .nav-icone :is(svg, svg *) { animation: none !important; }
+}
+
+/* ─── Ícones da tab bar ───────────────────────────────────────────────────
+   Sem rótulo embaixo, o ícone identifica a aba sozinho — então cada um ganha a
+   sua própria animação ao ser selecionado, encenando o que a aba significa: a
+   casa se monta, a lista se escreve, as barras sobem, o perfil aparece. Por
+   isso a barra usa o IconeTab (ui/icones-tab.jsx), que dá classe a cada parte
+   do desenho, e não o Icon genérico.
+
+   Tudo dispara por [aria-current="page"]: a animação começa sozinha no instante
+   em que o botão passa a casar com o seletor, sem precisar reiniciá-la na mão.
+
+   Onde o movimento é "desenhar", ele é feito com stroke-dashoffset e não com
+   escala: além de ficar mais bonito, evita depender de transform-origin em
+   caixa de área zero — que é justamente o caso de uma linha reta. O comprimento
+   de cada traço chega em --traco, definido junto do `d` lá no componente. */
+.nav-icone { display: flex; }
+
+/* a virada de cor e espessura do ativo acompanha o movimento em vez de piscar */
+.nav-icone svg * { transition: stroke .2s ease, stroke-width .2s ease; }
+
+@keyframes nav-ico-traco {
+  from { stroke-dasharray: var(--traco); stroke-dashoffset: var(--traco); }
+  to   { stroke-dasharray: var(--traco); stroke-dashoffset: 0; }
+}
+
+/* O ritmo: as animações são longas de propósito (~.8s) pra dar pra ver o desenho
+   se montando em vez de só um piscar. Quem troca de aba rápido não fica
+   esperando — a aba já mudou; o que continua é só o ícone.
+   As curvas são quase simétricas (nada de ease-out agressivo): com o movimento
+   todo espremido no começo, o resto da duração vira uma cauda parada e o ganho
+   de tempo não aparece na tela. O repique, quando tem, vem do keyframe. */
+
+/* Início — o telhado cai sobre a casa e a parede cede no impacto. */
+.nav-btn[aria-current="page"] .nav-ico-telhado {
+  animation: nav-ico-telhado .82s cubic-bezier(.45, .1, .35, 1);
+}
+.nav-btn[aria-current="page"] .nav-ico-parede {
+  animation: nav-ico-parede .42s ease-in-out .34s both;
+}
+@keyframes nav-ico-telhado {
+  0%   { transform: translateY(-5px); opacity: 0; }
+  45%  { transform: translateY(0); opacity: 1; }
+  62%  { transform: translateY(1px); }
+  100% { transform: translateY(0); opacity: 1; }
+}
+@keyframes nav-ico-parede {
+  0%, 100% { transform: translateY(0); }
+  40%      { transform: translateY(1.2px); }
+}
+
+/* Transações — as três linhas se escrevem de cima pra baixo, em cascata. */
+.nav-btn[aria-current="page"] .nav-ico-linha {
+  animation: nav-ico-traco .5s cubic-bezier(.45, .05, .35, 1) both;
+}
+.nav-btn[aria-current="page"] .nav-ico-linha-2 { animation-delay: .14s; }
+.nav-btn[aria-current="page"] .nav-ico-linha-3 { animation-delay: .28s; }
+
+/* Análise — as barras crescem da base, uma atrás da outra. A linha de base não
+   entra na dança: é o chão de onde as outras sobem. */
+.nav-btn[aria-current="page"] .nav-ico-barra {
+  animation: nav-ico-traco .55s cubic-bezier(.45, .05, .35, 1) both;
+}
+.nav-btn[aria-current="page"] .nav-ico-barra-2 { animation-delay: .15s; }
+.nav-btn[aria-current="page"] .nav-ico-barra-3 { animation-delay: .3s; }
+
+/* Perfil — a cabeça surge com um repique e os ombros entram por baixo. */
+.nav-ico-cabeca { transform-box: fill-box; transform-origin: 50% 50%; }
+.nav-btn[aria-current="page"] .nav-ico-cabeca {
+  animation: nav-ico-cabeca .78s cubic-bezier(.45, .1, .35, 1) both;
+}
+.nav-btn[aria-current="page"] .nav-ico-ombros {
+  animation: nav-ico-ombros .62s cubic-bezier(.45, .05, .35, 1) .18s both;
+}
+@keyframes nav-ico-cabeca {
+  0%   { transform: scale(.25); opacity: 0; }
+  45%  { transform: scale(1.18); opacity: 1; }
+  70%  { transform: scale(.97); }
+  100% { transform: scale(1); opacity: 1; }
+}
+@keyframes nav-ico-ombros {
+  0%   { transform: translateY(5px); opacity: 0; }
+  100% { transform: translateY(0); opacity: 1; }
 }
 
 /* Botões da tab bar — o fundo é do indicador, aqui só o anel de foco. */

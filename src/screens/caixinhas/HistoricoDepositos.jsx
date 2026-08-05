@@ -8,7 +8,7 @@ import { Card } from "../../ui/common.jsx";
 import { rotuloDataCurtoT } from "./utils.js";
 import { useT } from "../../lib/i18n.jsx";
 
-export function HistoricoDepositos({ depositos, cx, ocultar, entradas, caixinhasCompartilhadas, usuario, partnerNome }) {
+export function HistoricoDepositos({ depositos, cx, entradas, caixinhasCompartilhadas, usuario, partnerNome }) {
   const tr = useT();
   return (
     <>
@@ -38,7 +38,7 @@ export function HistoricoDepositos({ depositos, cx, ocultar, entradas, caixinhas
               // Rendimento que saiu junto neste resgate (e deixou de render).
               if (d.rendimentoRealizado > 0.005) {
                 labelOrigem += tr(" · levou {x} de rendimento", {
-                  x: fmtBRL(d.rendimentoRealizado, ocultar),
+                  x: fmtBRL(d.rendimentoRealizado),
                 });
               }
             } else if (d.tipo === "inicial") {
@@ -115,7 +115,7 @@ export function HistoricoDepositos({ depositos, cx, ocultar, entradas, caixinhas
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 14, fontWeight: 700, color: ehSaque ? COR_NEG : "var(--ink)" }}>
                     {ehSaque ? "− " : ""}
-                    {fmtBRL(Math.abs(d.valor), ocultar)}
+                    {fmtBRL(Math.abs(d.valor))}
                   </div>
                   <div
                     style={{

@@ -20,7 +20,6 @@ function CardSaldoBase({
   partnerUid,
   orcBaseParceiro,
   setMes,
-  ocultar,
   ehCompartilhado,
   partnerNome,
 }) {
@@ -136,7 +135,7 @@ function CardSaldoBase({
           position: "relative",
         }}
       >
-        {fmtBRL(total, ocultar)}
+        {fmtBRL(total)}
       </div>
 
       <div
@@ -181,25 +180,25 @@ function CardSaldoBase({
         <div>
           <div style={{ fontSize: 11, opacity: 0.8, fontWeight: 600 }}>{t("Orçamento")}</div>
           <div style={{ fontSize: 15, fontWeight: 700, marginTop: 2 }}>
-            {fmtBRL(orcTotal, ocultar)}
+            {fmtBRL(orcTotal)}
           </div>
           {/* Só o que ainda dá pra gastar: entradas guardadas em caixinha
               saíram do bolso do mês e não entram nessa linha. */}
           {temEntrada && (
             <div style={{ fontSize: 10, fontWeight: 700, opacity: 0.85, marginTop: 2 }}>
-              +{fmtBRL(entradasDisponiveis, ocultar)} {t("entradas")}
+              +{fmtBRL(entradasDisponiveis)} {t("entradas")}
             </div>
           )}
           {entradasGuardadas > 0.005 && (
             <div style={{ fontSize: 10, fontWeight: 600, opacity: 0.7, marginTop: 2 }}>
-              {fmtBRL(entradasGuardadas, ocultar)} {t("guardado em caixinhas")}
+              {fmtBRL(entradasGuardadas)} {t("guardado em caixinhas")}
             </div>
           )}
           {carryover !== 0 && (
             <div style={{ fontSize: 10, fontWeight: 600, opacity: 0.7, marginTop: 2 }}>
               {t("Diferença de {mes}", { mes: nomeMesAnt })}:{" "}
               {carryover > 0 ? "+" : "−"}
-              {fmtBRL(Math.abs(carryover), ocultar)}
+              {fmtBRL(Math.abs(carryover))}
             </div>
           )}
         </div>
@@ -215,7 +214,7 @@ function CardSaldoBase({
               color: restante >= 0 ? "#D9F5C8" : "#FFD0D9",
             }}
           >
-            {fmtBRL(Math.abs(restante), ocultar)}
+            {fmtBRL(Math.abs(restante))}
           </div>
         </div>
       </div>
@@ -243,7 +242,7 @@ function CardSaldoBase({
           >
             <span>{partnerNome || t("Parceiro")}</span>
             <span style={{ opacity: 0.85 }}>
-              {fmtBRLCompacto(totalParceiro, ocultar)} {t("gasto")}
+              {fmtBRLCompacto(totalParceiro)} {t("gasto")}
             </span>
           </div>
           <div
@@ -256,7 +255,7 @@ function CardSaldoBase({
               opacity: 0.85,
             }}
           >
-            <span>{t("Orçamento")} {fmtBRLCompacto(orcTotalParceiro, ocultar)}</span>
+            <span>{t("Orçamento")} {fmtBRLCompacto(orcTotalParceiro)}</span>
             <span
               style={{
                 color: restanteParceiro >= 0 ? "#D9F5C8" : "#FFD0D9",
@@ -264,7 +263,7 @@ function CardSaldoBase({
               }}
             >
               {restanteParceiro >= 0 ? t("Resta ") : t("Acima ")}
-              {fmtBRLCompacto(Math.abs(restanteParceiro), ocultar)}
+              {fmtBRLCompacto(Math.abs(restanteParceiro))}
             </span>
           </div>
 
@@ -298,7 +297,7 @@ function CardSaldoBase({
                 letterSpacing: "-0.01em",
               }}
             >
-              {fmtBRL(Math.abs(disponivelConjunto), ocultar)}
+              {fmtBRL(Math.abs(disponivelConjunto))}
             </span>
           </div>
         </div>
