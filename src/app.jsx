@@ -94,6 +94,11 @@ const ITENS_TAB = [
   { id: "perfil", icon: "user", label: "Perfil" },
 ];
 
+// As telas que a tab bar alcança (o "add" é modal, não é tela). Qualquer outra
+// é secundária: entra por cima, e no mobile a barra desce pra fora da tela —
+// sem aba pra acender embaixo, quem leva de volta é só o botão do topo.
+const ABAS = ITENS_TAB.filter((it) => !it.destaque).map((it) => it.id);
+
 // Mede o botão ativo da tab bar e devolve onde o indicador (a "gota" de fundo)
 // precisa parar. Como o indicador é um único elemento que se move, ele desliza
 // de uma aba pra outra em vez de piscar de lugar.
@@ -272,8 +277,14 @@ function TabBar({ tela, irPara, abrirAdd }) {
   };
 
   const itens = ITENS_TAB.map((it) => ({ ...it, label: t(it.label) }));
+  // Tela secundária: a barra sai de cena (desce e apaga, ver .nav-dock). Ela
+  // continua montada pra descer e voltar animada — e por isso some também dos
+  // leitores de tela e da ordem de tabulação enquanto está fora.
+  const visivel = ABAS.includes(tela);
   return (
     <div
+      className={`nav-dock${visivel ? "" : " is-oculta"}`}
+      aria-hidden={visivel ? undefined : true}
       style={{
         position: "fixed",
         bottom: 0,
@@ -334,6 +345,7 @@ function TabBar({ tela, irPara, abrirAdd }) {
                 key={it.id}
                 onClick={abrirAdd}
                 aria-label={t("Nova transação")}
+                tabIndex={visivel ? undefined : -1}
                 className="nav-fab"
                 style={{
                   width: 52,
@@ -369,6 +381,7 @@ function TabBar({ tela, irPara, abrirAdd }) {
               }}
               aria-label={it.label}
               aria-current={ativo ? "page" : undefined}
+              tabIndex={visivel ? undefined : -1}
               className="nav-btn"
               data-aba={it.id}
               ref={(el) => { itemRefs.current[it.id] = el; }}
@@ -1001,10 +1014,9 @@ export function App() {
     cloud.setPreferences({ orcBaseAt: novosSnaps });
   }, [cloud.ready, cloud.preferences, cloud.orcamentos, todosMeses]);
 
-  const TABS = ["inicio", "gastos", "analise", "perfil"];
   const irPara = (t, p = {}) => {
     vibrar();
-    if (TABS.includes(t)) {
+    if (ABAS.includes(t)) {
       // Início e Transações sempre abrem no mês atual, salvo quando um mês
       // específico é passado (ex.: clicar num mês no Histórico).
       if (t === "inicio" || t === "gastos") {
@@ -1602,6 +1614,9 @@ export function App() {
       <EspacoBarraOffline offline={offline} />
       <main
         role="main"
+        // Sem a tab bar embaixo (tela secundária), o espaço reservado pra ela no
+        // fim das telas vira um vão vazio — a classe encolhe o --pad-bottom.
+        className={ABAS.includes(tela) ? undefined : "sem-tab-bar"}
         style={{ maxWidth: 480, margin: "0 auto", minHeight: "100vh" }}
       >
         <AreaDeTelas

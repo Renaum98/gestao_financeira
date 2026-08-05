@@ -22,6 +22,12 @@
   --pad-bottom: 32px;
 }
 
+/* Telas secundárias no mobile: a tab bar sai de cena, então o rodapé só precisa
+   respirar e livrar a área de gestos do sistema. */
+.sem-tab-bar {
+  --pad-bottom: calc(32px + env(safe-area-inset-bottom));
+}
+
 * { box-sizing: border-box; }
 
 html, body {

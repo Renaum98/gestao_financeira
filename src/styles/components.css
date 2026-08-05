@@ -17,6 +17,27 @@
 /* Primeira opção de cada card de configuração não tem linha em cima */
 .config-item:first-child { border-top: none !important; }
 
+/* Doca da tab bar (mobile): telas secundárias — as que não têm aba na barra —
+   abrem com a barra fora de cena, deslizando pra baixo. Lá o botão de voltar no
+   topo é o único caminho, então nada embaixo compete com ele. A barra continua
+   montada pra a saída e a volta serem animadas; o pointer-events some junto pra
+   não sobrar alvo invisível no rodapé. */
+.nav-dock {
+  transition:
+    transform .3s cubic-bezier(.32, .96, .36, 1),
+    opacity .22s ease;
+}
+.nav-dock.is-oculta {
+  transform: translateY(105%);
+  opacity: 0;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nav-dock { transition: opacity .22s ease; }
+  .nav-dock.is-oculta { transform: none; }
+}
+
 /* Indicador da tab bar (só no layout mobile): uma "gota" única na cor de
    destaque que desliza até a aba ativa em vez de piscar de lugar. A posição e o
    tamanho vêm de style inline (medidos do botão); aqui ficam a aparência e o
