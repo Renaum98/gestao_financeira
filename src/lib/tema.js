@@ -7,6 +7,36 @@
 
 import React from "react";
 
+// A aparência escolhida vive em `preferences` (nuvem), que só chega depois do
+// login e da primeira leitura do Firestore. Até lá o app já está na tela — hoje
+// mais do que antes, porque o splash da abertura segura a animação do logo — e
+// pintaria tudo na paleta padrão pra só então trocar de cor na frente do
+// usuário. O espelho no localStorage evita isso: a última aparência conhecida
+// deste aparelho vale desde o primeiro quadro. Mesma ideia do idioma (i18n.jsx)
+// e da moeda (moeda.js).
+const CHAVE_PALETA = "paleta";
+const CHAVE_MODO = "modo";
+
+export function lerAparenciaSalva() {
+  try {
+    return {
+      paleta: localStorage.getItem(CHAVE_PALETA),
+      modo: localStorage.getItem(CHAVE_MODO),
+    };
+  } catch {
+    return { paleta: null, modo: null }; // localStorage indisponível (modo privado)
+  }
+}
+
+export function salvarAparencia(paleta, modo) {
+  try {
+    if (paleta) localStorage.setItem(CHAVE_PALETA, paleta);
+    if (modo) localStorage.setItem(CHAVE_MODO, modo);
+  } catch {
+    /* localStorage indisponível (modo privado) — ignora */
+  }
+}
+
 export function sistemaPrefereDark() {
   return (
     typeof window !== "undefined" &&

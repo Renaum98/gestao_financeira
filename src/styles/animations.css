@@ -52,3 +52,18 @@
 @media (prefers-reduced-motion: reduce) {
   .page-transition { animation: none; }
 }
+
+/* Modo leve (lib/leve.js): as animações que existem só pra suavizar a troca de
+   tela saem de cena. Numa GPU fraca elas competem justamente com a montagem da
+   tela nova — o quadro em que o app tem menos folga. O `will-change` some
+   junto: ele promove a página a camada de composição, e uma camada do tamanho
+   da tela custa memória de vídeo que esses aparelhos não têm sobrando.
+
+   O logo do splash e o shimmer dos skeletons ficam: o primeiro é a abertura do
+   app, o segundo é o que diz que algo está carregando — sem ele, o modo leve
+   viraria telas em branco. */
+:root[data-leve] .page-transition,
+:root[data-leve] .insight-fade {
+  animation: none;
+  will-change: auto;
+}

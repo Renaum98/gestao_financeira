@@ -20,7 +20,11 @@
   <link rel="manifest" href="/manifest.webmanifest" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- Faixa de pesos (400..800) e não a lista (400;500;600;700;800): a lista faz
+       o Google servir cinco fontes estáticas, a faixa serve UMA fonte variável
+       que cobre os cinco. Todos são usados de verdade na UI, então o caminho não
+       é cortar peso — é parar de baixar cinco arquivos numa conexão ruim. -->
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400..800&display=swap" rel="stylesheet">
 </head>
 <body>
   <div id="root"></div>

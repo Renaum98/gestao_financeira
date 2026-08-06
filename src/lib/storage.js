@@ -51,6 +51,7 @@ const DEFAULT_STATE = {
   preferences: {
     paleta: "#6E4FF6",
     modo: "sistema",
+    leve: "auto", // modo leve: auto | sim | nao (lib/leve.js)
     idioma: "pt",
     moeda: "BRL",
     nome: "",

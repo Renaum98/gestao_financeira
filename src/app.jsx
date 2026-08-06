@@ -6,6 +6,7 @@ import {
   ORDEM_CATS,
   PALETAS,
   coresDaPaleta,
+  coresDoLogo,
   chaveMes,
   listarMeses,
   aplicarCategoriasCustom,
@@ -15,6 +16,7 @@ import {
 import { Icon } from "./ui/icons.jsx";
 import { IconeTab } from "./ui/icones-tab.jsx";
 import { escutarAuth, sair as sairFirebase } from "./lib/firebase.js";
+import { haviaSessao, lembrarSessao } from "./lib/sessao.js";
 import { useCloudState } from "./lib/storage.js";
 import {
   useConvitesRecebidos,
@@ -26,11 +28,12 @@ import {
   desfazerParceria as desfazerParceriaFn,
 } from "./lib/partnership.js";
 import { vibrar } from "./lib/haptics.js";
-import { ehTemaEscuro } from "./lib/tema.js";
+import { ehTemaEscuro, lerAparenciaSalva, salvarAparencia } from "./lib/tema.js";
+import { ehLeve, lerLeveSalvo, salvarLeve, AUTO } from "./lib/leve.js";
 import { estaOffline, useEstaOffline } from "./lib/conexao.js";
 import { BarraOffline, EspacoBarraOffline } from "./ui/barra-offline.jsx";
 import { useInstallPrompt, InstallPromptModal } from "./ui/install-prompt.jsx";
-import { LoaderTela } from "./ui/loader.jsx";
+import { LoaderTela, SplashLogo, useSplashInteiro } from "./ui/loader.jsx";
 import { calcOrcBaseAtual, mesCorrente, mesAnteriorDe } from "./lib/orcamento.js";
 import { rendimentoRealizadoAoResgatar } from "./lib/selic.js";
 import { ajustarGuardado } from "./lib/guardado-entradas.js";
@@ -446,6 +449,13 @@ function Congelada({ congelar, children }) {
 function AreaDeTelas({ tela, params, ctx, secundaria }) {
   const vivas = React.useRef(new Set());
   const ehAba = Object.hasOwn(ABAS_VIVAS, tela);
+  // No modo leve o conjunto guarda no máximo a aba atual: as outras saem do DOM
+  // em vez de ficarem montadas e escondidas. É o item mais caro do modo em
+  // termos de sensação — voltar numa aba passa a custar montagem — e o mais
+  // valioso em aparelho de 1–2 GB, onde é a memória que faz o navegador matar a
+  // página em segundo plano. Limpar aqui (e não só ignorar o conjunto) mantém o
+  // estado honesto: desligar o modo não faz quatro abas nascerem de uma vez.
+  if (ctx.leve) vivas.current.clear();
   if (ehAba) vivas.current.add(tela);
 
   // Sem a `key` que remontava tudo, a animação de entrada não reinicia sozinha:
@@ -454,15 +464,18 @@ function AreaDeTelas({ tela, params, ctx, secundaria }) {
   const assinatura = tela + JSON.stringify(params || {});
   React.useLayoutEffect(() => {
     const el = palco.current;
-    if (!el) return;
+    // No modo leve não há animação pra reiniciar, e o `offsetWidth` abaixo é um
+    // layout síncrono a cada navegação — justamente o que não se paga à toa num
+    // aparelho fraco.
+    if (!el || ctx.leve) return;
     el.classList.remove("page-transition");
     void el.offsetWidth; // força o reflow pra o navegador reiniciar a animação
     el.classList.add("page-transition");
-  }, [assinatura]);
+  }, [assinatura, ctx.leve]);
 
   return (
     <div ref={palco} className="page-transition">
-      <React.Suspense fallback={<Splash />}>
+      <React.Suspense fallback={<LoaderTela />}>
         {[...vivas.current].map((id) => {
           const Tela = ABAS_VIVAS[id];
           const visivel = id === tela;
@@ -697,6 +710,12 @@ function aplicarTema(paleta, modo) {
   const { primary, primary2 } = coresDaPaleta(pal, ehEscuro);
   root.style.setProperty("--primary", primary);
   root.style.setProperty("--primary-2", primary2);
+  // O logo acompanha a cor de destaque. Não é o mesmo par: o logo mora num
+  // azulejo branco e tem três tons próprios — ver `coresDoLogo` (data.js).
+  const logo = coresDoLogo(pal);
+  root.style.setProperty("--logo-de", logo.de);
+  root.style.setProperty("--logo-ate", logo.ate);
+  root.style.setProperty("--logo-barra", logo.barra);
   if (ehEscuro) {
     // Paleta dark calibrada para contraste WCAG AA:
     // - bg → card → card-2 formam uma escada clara de elevação
@@ -728,13 +747,48 @@ export function App() {
   // Auth: undefined = carregando, null = deslogado, objeto = usuário (verificado ou não)
   const [usuario, setUsuario] = React.useState(undefined);
   const [, forcarRender] = React.useReducer((n) => n + 1, 0); // re-renderiza após user.reload()
-  React.useEffect(() => escutarAuth(setUsuario), []);
+  // O palpite de sessão é gravado aqui, na única fonte que sabe a verdade — ver
+  // lib/sessao.js pra o que ele serve e o quanto vale.
+  React.useEffect(
+    () =>
+      escutarAuth((u) => {
+        lembrarSessao(!!u);
+        setUsuario(u);
+      }),
+    [],
+  );
 
   // Só conecta ao Firestore quando o usuário existe E confirmou o e-mail
   // (não criamos os dados de quem ainda não verificou a conta).
   const verificado = !!usuario?.emailVerified;
   const uid = verificado ? usuario.uid : null;
   const cloud = useCloudState(uid);
+
+  // Modo leve (lib/leve.js). Mesmo arranjo do tema, e pelo mesmo motivo: precisa
+  // valer no primeiro quadro, antes da nuvem responder — a tela de login já tem
+  // vidro e animação. Fica aqui em cima porque o splash logo abaixo já depende
+  // dele.
+  const leveEscolha = (cloud.ready && cloud.preferences.leve) || lerLeveSalvo() || AUTO;
+  const leve = ehLeve(leveEscolha);
+
+  // O splash da abertura, pedido em duas esperas seguidas: o auth decidindo se
+  // há sessão e os dados de quem está logado chegando. Como o logo não remonta
+  // entre uma e outra, as duas viram uma animação só.
+  //
+  // A primeira espera tem um problema de ovo e galinha: quem já estava logado
+  // está vendo o app abrir e merece o splash, quem não estava vai direto pro
+  // login — um splash antes dele seria só um flash a mais no caminho —, e é
+  // justamente a resposta que falta que diz qual dos dois é. Daí o palpite do
+  // `haviaSessao`. Quando ele erra (sessão expirada desde a última visita), o
+  // splash dá lugar ao login assim que o auth responde.
+  //
+  // O `useSplashInteiro` é quem segura o splash até a animação do logo acabar,
+  // mesmo que as duas esperas terminem antes disso — quase sempre terminam. No
+  // modo leve ele não segura nada: ali o pedido é abrir logo, e num aparelho
+  // fraco a abertura costuma passar de 1,8s por conta própria mesmo.
+  const precisaSplash =
+    (usuario === undefined && haviaSessao()) || (verificado && !cloud.ready);
+  const mostrarSplash = useSplashInteiro(precisaSplash, leve);
 
   // Idioma ativo. Vem de preferences.idioma (sincronizado na nuvem); antes dos
   // dados carregarem — login, onboarding — usamos o último valor salvo no
@@ -855,17 +909,45 @@ export function App() {
     [cloud.setCategoriasCustom, cloud.setTxs, cloud.setOrcamentos],
   );
 
+  // Aparência ativa. Mesmo arranjo do idioma e da moeda: manda a nuvem, e antes
+  // dela chegar vale o espelho do localStorage — só que aqui o espelho pesa
+  // mais, porque é ele que dá ao splash da abertura o fundo e o logo na cor
+  // certa em vez de 1,8s na paleta padrão.
+  //
+  // O useMemo é pra ler o localStorage uma vez só: o espelho não muda por fora,
+  // e este componente re-renderiza a cada mexida no app.
+  const salva = React.useMemo(lerAparenciaSalva, []);
+  const paleta =
+    (cloud.ready && cloud.preferences.paleta) || salva.paleta || PALETAS[0].primary;
+  const modo = (cloud.ready && cloud.preferences.modo) || salva.modo || "sistema";
+  React.useEffect(() => {
+    if (cloud.ready) salvarAparencia(paleta, modo);
+  }, [cloud.ready, paleta, modo]);
+
   // Tema reativo às preferências. Quando modo === 'sistema', também escuta
   // mudanças do prefers-color-scheme do SO pra trocar light/dark on the fly.
-  React.useEffect(() => {
-    aplicarTema(cloud.preferences.paleta, cloud.preferences.modo);
-    if (cloud.preferences.modo !== "sistema") return;
+  //
+  // useLayoutEffect, e não useEffect, porque isto pinta a tela inteira: com o
+  // efeito depois do paint dava pra ver um quadro na paleta padrão antes da
+  // troca — de novo, algo que só o splash tornou visível.
+  React.useLayoutEffect(() => {
+    aplicarTema(paleta, modo);
+    if (modo !== "sistema") return;
     const mq = window.matchMedia("(prefers-color-scheme: dark)");
-    const handler = () =>
-      aplicarTema(cloud.preferences.paleta, cloud.preferences.modo);
+    const handler = () => aplicarTema(paleta, modo);
     mq.addEventListener("change", handler);
     return () => mq.removeEventListener("change", handler);
-  }, [cloud.preferences.paleta, cloud.preferences.modo]);
+  }, [paleta, modo]);
+
+  // O atributo no <html> é o que liga as regras `[data-leve]` do CSS (o vidro e
+  // as animações de transição). Do lado do JS o modo decide o carrossel, o
+  // prefetch e quantas abas ficam montadas.
+  React.useLayoutEffect(() => {
+    document.documentElement.toggleAttribute("data-leve", leve);
+  }, [leve]);
+  React.useEffect(() => {
+    if (cloud.ready) salvarLeve(leveEscolha);
+  }, [cloud.ready, leveEscolha]);
 
   // Gerador de recorrentes: roda 1× quando o storage está pronto.
   // Para cada recorrência, gera as txs dos meses pulados entre ultimoMesGerado e hoje.
@@ -930,11 +1012,16 @@ export function App() {
 
   // Prefetch dos chunks das telas quando o browser estiver ocioso. Como as
   // telas são carregadas com React.lazy (code-splitting), a PRIMEIRA visita a
-  // cada aba precisaria baixar+parsear o chunk e parava no Splash no meio da
+  // cada aba precisaria baixar+parsear o chunk e parava no skeleton no meio da
   // navegação — a "engasgada" que só acontece na primeira vez. Aquecendo o
   // cache de módulos em idle, a navegação resolve na hora, sem flash.
+  //
+  // No modo leve não roda: são ~258 kB pra baixar e compilar, e a fatia de
+  // ocioso que o `requestIdleCallback` dá num aparelho fraco é curta demais pra
+  // isso caber sem disputar CPU com os primeiros toques do usuário. Lá cada aba
+  // baixa a sua na primeira visita — depois o service worker já tem em cache.
   React.useEffect(() => {
-    if (!cloud.ready) return;
+    if (!cloud.ready || leve) return;
     const agendar =
       window.requestIdleCallback || ((fn) => setTimeout(fn, 200));
     const cancelar = window.cancelIdleCallback || clearTimeout;
@@ -951,7 +1038,7 @@ export function App() {
       import("./modals/add-expense.jsx");
     });
     return () => cancelar(id);
-  }, [cloud.ready]);
+  }, [cloud.ready, leve]);
 
   // Navegação local
   const [mes, setMes] = React.useState(chaveMes(new Date()));
@@ -1440,26 +1527,29 @@ export function App() {
     );
   };
 
-  // Estados de carga e gateamento
-  if (usuario === undefined) return <Splash />; // ainda decidindo se há sessão
-  if (usuario === null)
-    return (
-      <I18nProvider lang={idioma}>
-        <LoginScreen />
-      </I18nProvider>
-    ); // deslogado
+  // Estados de carga e gateamento — o splash e o palpite de sessão estão
+  // explicados lá em cima, no `precisaSplash`.
+  const telaDeLogin = (
+    <I18nProvider lang={idioma}>
+      <LoginScreen />
+    </I18nProvider>
+  );
+  if (mostrarSplash) return <SplashLogo />;
+  // Sem splash, `undefined` só chega aqui quando não havia palpite de sessão —
+  // e aí a aposta é a mesma do `null`: a tela de login. Um usuário verificado
+  // também só passa daqui com `cloud.ready`, senão o splash teria segurado.
+  if (!usuario) return telaDeLogin;
   if (!usuario.emailVerified)
     return (
       <I18nProvider lang={idioma}>
         <VerifyEmailScreen email={usuario.email} onAtualizar={forcarRender} />
       </I18nProvider>
     );
-  if (!cloud.ready) return <Splash />; // logado e verificado, carregando dados
 
   if (onboarding)
     return (
       <I18nProvider lang={idioma}>
-        <React.Suspense fallback={<Splash />}>
+        <React.Suspense fallback={<LoaderTela />}>
           <Onboarding onFim={finalizarOnboarding} />
         </React.Suspense>
       </I18nProvider>
@@ -1513,6 +1603,7 @@ export function App() {
     usuario,
     sair: sairFirebase,
     ehDesktop,
+    leve,
     fechar: () => setAddModal(null),
     setOnboarding: (v) => {
       if (!v) localStorage.setItem(ONBOARDING_KEY, "1");
@@ -1644,9 +1735,4 @@ export function App() {
     </div>
     </I18nProvider>
   );
-}
-
-// Splash agora é um alias do LoaderTela oficial — mantido pelos calls existentes.
-function Splash() {
-  return <LoaderTela />;
 }

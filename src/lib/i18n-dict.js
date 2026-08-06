@@ -54,6 +54,22 @@ export const EN = {
   "Escuro": "Dark",
   "Cor de destaque": "Accent color",
 
+  // ─── Desempenho / Modo leve ───
+  "Desempenho": "Performance",
+  "Modo leve": "Lite mode",
+  "Deixa o app mais ágil em celulares menos potentes, abrindo mão de efeitos visuais.":
+    "Makes the app snappier on less powerful phones, giving up visual effects.",
+  "Automático": "Automatic",
+  "Ligado": "On",
+  "Desligado": "Off",
+  "Ligado: este aparelho foi detectado como mais modesto.":
+    "On: this device was detected as a modest one.",
+  "Desligado: este aparelho dá conta dos efeitos completos.":
+    "Off: this device handles the full effects.",
+  "Menos efeitos, mais fluidez. Sem vidro, sem animações de transição e sem deslizar entre meses no card de saldo.":
+    "Fewer effects, more fluidity. No glass, no transition animations, and no swiping between months on the balance card.",
+  "Todos os efeitos ligados.": "All effects on.",
+
   // ─── Cabeçalho do perfil ───
   "Você": "You",
   "Remover foto": "Remove photo",

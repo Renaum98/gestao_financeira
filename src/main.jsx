@@ -47,9 +47,19 @@ const updateSW = registerSW({
   document.addEventListener(evt, (e) => e.preventDefault(), { passive: false });
 });
 document.addEventListener('dblclick', (e) => e.preventDefault(), { passive: false });
-document.addEventListener('touchmove', (e) => {
-  if (e.touches.length > 1) e.preventDefault();
-}, { passive: false });
+// Aqui havia um terceiro guarda: um `touchmove` não-passivo no documento que
+// cancelava o gesto com dois dedos. Ele saiu porque cobrava caro e não cobria
+// nada de novo.
+//
+// O caro: um listener não-passivo de touchmove no documento desliga a rolagem
+// em thread separada. A cada movimento do dedo, em QUALQUER tela, o compositor
+// tinha que esperar o JavaScript decidir se ia cancelar antes de rolar um
+// pixel — a rolagem "grudenta" que aparece primeiro em aparelho fraco.
+//
+// O que não cobria: o pinch já é barrado duas vezes. No Android/Chrome pelo
+// `touch-action: pan-x pan-y` do html/body (base.css), e no Safari iOS — o que
+// ignora o user-scalable=no — pelos três `gesture*` logo acima, que são
+// justamente os eventos que a Apple dispara no pinch.
 // Ctrl/⌘ + roda do mouse no desktop também ativa zoom — bloqueia.
 document.addEventListener('wheel', (e) => {
   if (e.ctrlKey) e.preventDefault();

@@ -19,6 +19,21 @@ import {
   LADO, HASTE, PONTA, ESPESSURA, RAIO, COR_BARRA, GRADIENTE, BARRAS, MASCARA,
 } from './logo-geometria.js';
 
+// As cores vêm da paleta do usuário por variável CSS — quem as calcula é o
+// `coresDoLogo` (data.js), e quem as escreve no :root é o `aplicarTema`
+// (app.jsx). O fallback é a cor da marca, que é o que a paleta padrão devolve:
+// assim o logo sai certo mesmo antes do tema ser aplicado, e continua certo se
+// alguém desenhar este componente fora do app.
+//
+// Vão no `style` e não como atributo de apresentação (`fill="…"`) porque só o
+// style é, sem discussão, uma declaração CSS em todo navegador — `var()` dentro
+// de atributo de apresentação já teve suporte irregular.
+const CORES = {
+  barra: { fill: `var(--logo-barra, ${COR_BARRA})` },
+  de: { stopColor: `var(--logo-de, ${GRADIENTE.de})` },
+  ate: { stopColor: `var(--logo-ate, ${GRADIENTE.ate})` },
+};
+
 export function LogoAnimado({ animar = true, titulo }) {
   // O useId do React 18 devolve algo como ":r0:", e dois-pontos em `url(#...)`
   // não é referência válida — some com eles antes de usar como id.
@@ -41,8 +56,8 @@ export function LogoAnimado({ animar = true, titulo }) {
           gradientUnits="userSpaceOnUse"
           x1={GRADIENTE.x1} y1={GRADIENTE.y1} x2={GRADIENTE.x2} y2={GRADIENTE.y2}
         >
-          <stop offset="0" stopColor={GRADIENTE.de} />
-          <stop offset="1" stopColor={GRADIENTE.ate} />
+          <stop offset="0" style={CORES.de} />
+          <stop offset="1" style={CORES.ate} />
         </linearGradient>
 
         <mask id={corte}>
@@ -56,7 +71,7 @@ export function LogoAnimado({ animar = true, titulo }) {
 
       {/* O rx arredonda os quatro cantos das barras, mas só os de cima
           aparecem: os de baixo ficam muito depois do corte da máscara. */}
-      <g mask={`url(#${corte})`} fill={COR_BARRA}>
+      <g mask={`url(#${corte})`} style={CORES.barra}>
         {BARRAS.map((b, i) => (
           <rect
             key={b.x}
@@ -83,5 +98,22 @@ export function LogoAnimado({ animar = true, titulo }) {
       />
       <path className={cls('logo-ponta')} d={PONTA} fill={`url(#${grad})`} />
     </svg>
+  );
+}
+
+// O azulejo branco em que o logo mora — o mesmo no login e no splash da
+// abertura. Sombra e movimento (o estouro no fim da entrada e o flutuar que vem
+// depois) estão em components.css, junto da coreografia do próprio logo: os
+// tempos de um dependem dos do outro. Aqui fica só o que depende do `size`.
+export function LogoAzulejo({ size = 100 }) {
+  return (
+    <div className="logo-azulejo" style={{
+      width: size, height: size, borderRadius: size * 0.28,
+      background: '#fff',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      position: 'relative', overflow: 'hidden', flexShrink: 0,
+    }}>
+      <LogoAnimado titulo="MyCounts" />
+    </div>
   );
 }

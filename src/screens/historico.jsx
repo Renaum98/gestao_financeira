@@ -1,11 +1,10 @@
 // historico.jsx — Tela Histórico (comparativo de meses)
 
+import { useMemo } from "react";
 import {
   MESES_CURTO,
   fmtBRLCompacto,
   rotuloMesT,
-  totalGeral,
-  txDoMes,
 } from "../data.js";
 import { Icon } from "../ui/icons.jsx";
 import { Card, TopBar } from "../ui/common.jsx";
@@ -14,10 +13,21 @@ import { useT } from "../lib/i18n.jsx";
 export function HistoricoScreen({ ctx }) {
   const { txs, todosMeses, voltar, irPara, mes, ehDesktop } = ctx;
   const t = useT();
-  const dadosMeses = todosMeses.map((m) => {
-    const tot = totalGeral(txDoMes(txs, m));
-    return { mes: m, total: tot, count: txDoMes(txs, m).length };
-  });
+  // Uma passada pela lista inteira, agrupando por mês, em vez de varrer todas as
+  // transações duas vezes para cada mês da lista. Com três anos de uso e alguns
+  // milhares de lançamentos, a diferença entre O(meses × txs) e O(txs) sai da
+  // casa das centenas de milhares de iterações — a cada render, porque isto
+  // rodava solto no corpo do componente.
+  const dadosMeses = useMemo(() => {
+    const porMes = new Map(todosMeses.map((m) => [m, { mes: m, total: 0, count: 0 }]));
+    for (const t of txs) {
+      const d = porMes.get(t.data.slice(0, 7));
+      if (!d) continue; // mês fora da lista (não deve acontecer, mas não custa)
+      d.count += 1;
+      if (t.tipo !== "entrada") d.total += t.valor;
+    }
+    return todosMeses.map((m) => porMes.get(m));
+  }, [txs, todosMeses]);
 
   return (
     <div style={{ paddingBottom: "var(--pad-bottom)" }}>

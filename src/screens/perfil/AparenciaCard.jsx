@@ -2,6 +2,7 @@
 
 import { PALETAS, coresDaPaleta } from "../../data.js";
 import { Card } from "../../ui/common.jsx";
+import { Segmentado } from "./parts.jsx";
 import { vibrar } from "../../lib/haptics.js";
 import { useTemaEscuro } from "../../lib/tema.js";
 import { useT } from "../../lib/i18n.jsx";
@@ -28,49 +29,16 @@ export function AparenciaCard({ preferences, setPreferences }) {
       </div>
       <div style={{ padding: "8px 0 4px" }}>
         <div style={{ fontSize: 14, fontWeight: 600, color: "var(--ink)", marginBottom: 10 }}>{t("Tema")}</div>
-        <div
-          style={{
-            display: "flex",
-            gap: 6,
-            padding: 4,
-            borderRadius: 12,
-            background: "var(--card-2)",
-            boxShadow: "0 1px 2px rgba(0,0,0,0.06)",
-          }}
-        >
-          {[
+        <Segmentado
+          ariaLabel={t("Tema")}
+          valor={preferences.modo || "sistema"}
+          onChange={(id) => setPreferences({ modo: id })}
+          opcoes={[
             { id: "sistema", label: t("Sistema") },
             { id: "claro", label: t("Claro") },
             { id: "escuro", label: t("Escuro") },
-          ].map((opt) => {
-            const sel = (preferences.modo || "sistema") === opt.id;
-            return (
-              <button
-                key={opt.id}
-                onClick={() => {
-                  vibrar();
-                  setPreferences({ modo: opt.id });
-                }}
-                style={{
-                  flex: 1,
-                  padding: "8px 8px",
-                  borderRadius: 10,
-                  border: "none",
-                  background: sel ? "var(--card)" : "transparent",
-                  color: sel ? "var(--ink)" : "var(--muted)",
-                  fontSize: 13,
-                  fontWeight: 800,
-                  cursor: "pointer",
-                  fontFamily: "inherit",
-                  boxShadow: sel ? "0 1px 2px rgba(0,0,0,0.08)" : "none",
-                  transition: "background .15s",
-                }}
-              >
-                {opt.label}
-              </button>
-            );
-          })}
-        </div>
+          ]}
+        />
       </div>
       <div style={{ padding: "12px 0 4px" }}>
         <div style={{ fontSize: 14, fontWeight: 600, color: "var(--ink)", marginBottom: 10 }}>

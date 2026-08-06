@@ -17,6 +17,7 @@ import { CabecalhoPerfil } from "./perfil/CabecalhoPerfil.jsx";
 import { IdiomaCard } from "./perfil/IdiomaCard.jsx";
 import { MoedaCard } from "./perfil/MoedaCard.jsx";
 import { AparenciaCard } from "./perfil/AparenciaCard.jsx";
+import { DesempenhoCard } from "./perfil/DesempenhoCard.jsx";
 import { ContaCompartilhadaCard } from "./perfil/ContaCompartilhadaCard.jsx";
 import { ConvidarParceiroModal } from "./perfil/ConvidarParceiroModal.jsx";
 import { ExcluirContaModal } from "./perfil/ExcluirContaModal.jsx";
@@ -94,6 +95,9 @@ export function PerfilScreen({ ctx }) {
 
       <div style={{ padding: "24px 20px 0" }}>
         <AparenciaCard preferences={preferences} setPreferences={setPreferences} />
+
+        <div style={{ height: 14 }} />
+        <DesempenhoCard preferences={preferences} setPreferences={setPreferences} />
 
         <div style={{ height: 14 }} />
         <ContaCompartilhadaCard

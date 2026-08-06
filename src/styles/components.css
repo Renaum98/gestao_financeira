@@ -14,6 +14,16 @@
   .glass-surface { background: var(--card); }
 }
 
+/* Modo leve (lib/leve.js): o mesmo sólido, agora por escolha e não por falta de
+   suporte. O caso caro é justamente o aparelho que SUPORTA: a tab bar de vidro
+   fica na tela o tempo todo e o compositor refaz o desfoque a cada quadro em
+   que algo rola por baixo dela. Tirar o filtro devolve a rolagem inteira. */
+:root[data-leve] .glass-surface {
+  background: var(--card);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
 /* Primeira opção de cada card de configuração não tem linha em cima */
 .config-item:first-child { border-top: none !important; }
 
@@ -284,9 +294,9 @@
    tamanho: com uma camada de um lado e duas do outro, o glow entraria de
    estalo em vez de crescer.
 
-   Mora aqui, e não no login, porque esses números só fazem sentido ao lado da
-   coreografia acima. */
-.login-logo-float {
+   Mora aqui, e não junto do azulejo, porque esses números só fazem sentido ao
+   lado da coreografia acima. */
+.logo-azulejo {
   box-shadow:
     0 16px 36px color-mix(in oklab, var(--primary) 30%, transparent),
     0 0 0 color-mix(in oklab, var(--primary) 0%, transparent);
@@ -319,7 +329,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   .logo-haste, .logo-barra, .logo-ponta { animation: none; }
-  .login-logo-float { animation: none; transform: none; }
+  .logo-azulejo { animation: none; transform: none; }
 }
 
 /* Botão "swatch" de cor de destaque — efeito de alto relevo (convexo) */

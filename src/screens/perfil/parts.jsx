@@ -37,6 +37,57 @@ export function Toggle({ ativo, onChange }) {
   );
 }
 
+// Controle segmentado — as opções lado a lado, uma acesa. Usado pelo Tema e
+// pelo Modo leve; nasceu dentro do AparenciaCard e saiu de lá quando o segundo
+// apareceu, pra os dois não divergirem de aparência com o tempo.
+export function Segmentado({ valor, onChange, opcoes, ariaLabel }) {
+  return (
+    <div
+      role="radiogroup"
+      aria-label={ariaLabel}
+      style={{
+        display: "flex",
+        gap: 6,
+        padding: 4,
+        borderRadius: 12,
+        background: "var(--card-2)",
+        boxShadow: "0 1px 2px rgba(0,0,0,0.06)",
+      }}
+    >
+      {opcoes.map((opt) => {
+        const sel = valor === opt.id;
+        return (
+          <button
+            key={opt.id}
+            role="radio"
+            aria-checked={sel}
+            onClick={() => {
+              vibrar();
+              onChange(opt.id);
+            }}
+            style={{
+              flex: 1,
+              padding: "8px 8px",
+              borderRadius: 10,
+              border: "none",
+              background: sel ? "var(--card)" : "transparent",
+              color: sel ? "var(--ink)" : "var(--muted)",
+              fontSize: 13,
+              fontWeight: 800,
+              cursor: "pointer",
+              fontFamily: "inherit",
+              boxShadow: sel ? "0 1px 2px rgba(0,0,0,0.08)" : "none",
+              transition: "background .15s",
+            }}
+          >
+            {opt.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
 // Select padronizado da tela de Perfil (idioma, moeda). Native <select> com
 // aparência custom + chevron, pra ficar consistente entre os cards.
 export function SelectPerfil({ value, onChange, options, ariaLabel }) {

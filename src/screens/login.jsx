@@ -10,7 +10,7 @@ import {
   sair as sairFirebase,
 } from '../lib/firebase.js';
 import { Icon } from '../ui/icons.jsx';
-import { LogoAnimado } from '../ui/logo-animado.jsx';
+import { LogoAzulejo } from '../ui/logo-animado.jsx';
 import { vibrar } from '../lib/haptics.js';
 import { COR_POS, COR_NEG } from '../lib/colors.js';
 import { useT } from '../lib/i18n.jsx';
@@ -131,22 +131,6 @@ function CampoSenha({ label, value, onChange, ...props }) {
         </button>
       </div>
     </label>
-  );
-}
-
-// O azulejo. Sombra e movimento (o estouro no fim da entrada e o flutuar que
-// vem depois) estão em components.css, junto da coreografia do próprio logo —
-// os tempos de um dependem dos do outro. Aqui fica só o que depende do `size`.
-function Logo({ size = 100 }) {
-  return (
-    <div className="login-logo-float" style={{
-      width: size, height: size, borderRadius: size * 0.28,
-      background: '#fff',
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      position: 'relative', overflow: 'hidden', flexShrink: 0,
-    }}>
-      <LogoAnimado titulo="MyCounts" />
-    </div>
   );
 }
 
@@ -301,7 +285,7 @@ export function LoginScreen() {
   return (
     <Casca>
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', gap: 14 }}>
-        <Logo />
+        <LogoAzulejo />
         <div>
           <div style={{ fontSize: 26, fontWeight: 800, color: 'var(--ink)', letterSpacing: '-0.03em' }}>{t(titulo)}</div>
           <div style={{ fontSize: 14, color: 'var(--muted)', fontWeight: 500, marginTop: 6, lineHeight: 1.45, maxWidth: 300 }}>{t(subtitulo)}</div>

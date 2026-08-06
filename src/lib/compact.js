@@ -15,6 +15,7 @@ import { deleteField } from "./firebase.js";
 
 const PALETA_PADRAO = "#6E4FF6";
 const MODO_PADRAO = "sistema";
+const LEVE_PADRAO = "auto";
 const IDIOMA_PADRAO = "pt";
 const MOEDA_PADRAO = "BRL";
 
@@ -73,6 +74,7 @@ function compactarPreferences(p) {
   const out = {};
   if (p.paleta && p.paleta !== PALETA_PADRAO) out.paleta = p.paleta;
   if (p.modo && p.modo !== MODO_PADRAO) out.modo = p.modo;
+  if (p.leve && p.leve !== LEVE_PADRAO) out.leve = p.leve;
   // Idioma e moeda: sem eles aqui, qualquer troca de preferência (ex.: tema)
   // reescrevia o doc sem esses campos e o app voltava pro padrão (pt/BRL).
   if (p.idioma && p.idioma !== IDIOMA_PADRAO) out.idioma = p.idioma;

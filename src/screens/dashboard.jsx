@@ -37,6 +37,7 @@ export function DashboardScreen({ ctx }) {
     marcarTxPago,
     usuario,
     ehDesktop,
+    leve,
     convitesRecebidos = [],
     notificacoesParceria = [],
     partnerTxs = [],
@@ -251,9 +252,16 @@ export function DashboardScreen({ ctx }) {
 
       {/* Card principal — saldo do mês.
           Mobile: carrossel horizontal com um slide por mês, swipe troca o ativo.
-          Desktop: card único do mês selecionado. */}
-      {ehDesktop ? (
-        <div className="col-span-all" style={{ padding: "4px 20px 0" }}>
+          Desktop e modo leve: card único do mês selecionado.
+
+          O modo leve cai no mesmo caminho do desktop porque o carrossel é a
+          coisa mais cara da tela: um laço de animação por quadro enquanto o dedo
+          rola, camadas 3D nos slides vizinhos e um CardSaldo montado por mês de
+          histórico. O card único não tem nada disso — e a troca de mês continua
+          inteira, porque o seletor com as setas mora dentro do próprio card. O
+          que se perde é o swipe entre meses. */}
+      {ehDesktop || leve ? (
+        <div className={ehDesktop ? "col-span-all" : undefined} style={{ padding: "4px 20px 0" }}>
           {renderCardSaldo(mes)}
         </div>
       ) : (

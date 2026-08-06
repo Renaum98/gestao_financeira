@@ -12,10 +12,69 @@
 // Estilos vivem em `styles.css` (procure por `.skeleton` e `.spinner`)
 // pra que o CSS não seja re-injetado a cada render.
 //
+// A abertura do app é o caso em que nem skeleton nem spinner servem: ali não há
+// interface anterior pra prometer nem ação em curso pra acompanhar — o app está
+// nascendo. Pra isso existe o `<SplashLogo />`, o logo do app se desenhando.
+//
 // API:
-//   <LoaderTela />      — skeleton de tela cheia (Splash, Suspense, auth pendente)
+//   <SplashLogo />      — splash da abertura (ver app.jsx)
+//   <LoaderTela />      — skeleton de tela cheia (Suspense, troca de tela)
 //   <Loader size={32} /> — spinner inline (botões, ações)
 //   <Skeleton w h r />  — bloco primitivo, para compor skeletons custom
+
+import { useEffect, useState } from 'react';
+import { LogoAzulejo } from './logo-animado.jsx';
+
+// Quanto dura a entrada do logo, do primeiro traço até o fim do estouro. A
+// linha do tempo inteira está em components.css, ao lado das animações; se ela
+// mudar lá, este número muda aqui.
+const ENTRADA_MS = 1800;
+
+// Com "prefers-reduced-motion" as animações do logo não rodam (components.css),
+// e segurar a tela 1.8s num desenho parado seria atraso puro.
+const semMovimento =
+  typeof window !== 'undefined' &&
+  window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+
+// Segura o splash até a entrada do logo terminar.
+//
+// Sem isso a animação quase nunca chega ao fim: a sessão e os dados costumam
+// voltar antes de 1.8s, e o logo some no meio do traço — o que se vê é um
+// pisca-pisca, não uma abertura. `pedido` diz se o app ainda precisa do splash;
+// o retorno diz se ele continua na tela.
+//
+// A trava vale pra primeira aparição do splash, que é a abertura do app. Sair e
+// entrar de novo na mesma sessão não espera: ali o splash é a espera dos dados,
+// não a abertura, e prender a tela seria inventar demora.
+//
+// `semTrava` desliga a espera sem tirar a animação — é o que o modo leve passa.
+export function useSplashInteiro(pedido, semTrava = false) {
+  const solto = semMovimento || semTrava;
+  const [apareceu, setApareceu] = useState(false);
+  const [terminou, setTerminou] = useState(solto);
+
+  useEffect(() => {
+    if (pedido) setApareceu(true);
+  }, [pedido]);
+
+  // Este depende só do `apareceu`, que sobe uma vez e não desce. Se dependesse
+  // do `pedido`, o fim da carga faria a limpeza cancelar o timer antes dele
+  // disparar — e o splash ficaria na tela pra sempre.
+  useEffect(() => {
+    if (!apareceu) return;
+    // Solto no meio da espera (o modo leve pode ser ligado com o app aberto):
+    // libera em vez de sair sem fazer nada, senão a trava ficaria de pé sem
+    // ninguém pra derrubá-la.
+    if (solto) {
+      setTerminou(true);
+      return;
+    }
+    const id = setTimeout(() => setTerminou(true), ENTRADA_MS);
+    return () => clearTimeout(id);
+  }, [apareceu, solto]);
+
+  return pedido || (apareceu && !terminou);
+}
 
 
 // Bloco primitivo. width/height aceitam número (px) ou string (CSS).
@@ -51,8 +110,35 @@ export function Loader({ size = 24, label = 'Carregando' }) {
   );
 }
 
+// Splash da abertura: o logo sozinho no meio da tela, se desenhando com a mesma
+// animação da entrada do login. Fica no ar enquanto o app decide a sessão e
+// carrega os dados de quem já estava logado — quem não estava vai direto pro
+// login, sem passar por aqui (o porquê está em app.jsx).
+//
+// A entrada nunca é cortada: quem monta o splash usa o `useSplashInteiro` pra
+// mantê-lo na tela até ela acabar. Depois disso o logo entra no flutuar, que
+// repete sozinho — uma espera mais longa não deixa quadro parado.
+export function SplashLogo({ label = 'Carregando' }) {
+  return (
+    <div
+      role="status"
+      aria-label={label}
+      aria-busy="true"
+      style={{
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: 'var(--bg)',
+      }}
+    >
+      <LogoAzulejo size={104} />
+    </div>
+  );
+}
+
 // Skeleton "tela cheia": imita topo + card grande + linhas de lista.
-// Usado como Splash e como fallback de Suspense pra qualquer screen.
+// Usado como fallback de Suspense pra qualquer screen.
 export function LoaderTela({ label = 'Carregando' }) {
   return (
     <div

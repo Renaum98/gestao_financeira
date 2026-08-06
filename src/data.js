@@ -1,6 +1,7 @@
 // data.js — categorias, pagamentos, helpers de formatação e agregação.
 
 import { getMoeda } from './lib/moeda.js';
+import { COR_BARRA, GRADIENTE } from './ui/logo-geometria.js';
 
 export const CATEGORIAS = {
   alimentacao: { id: 'alimentacao', nome: 'Alimentação', cor: '#FF9B6E', corFundo: '#FFEEDF', emoji: 'A' },
@@ -176,6 +177,35 @@ export function coresDaPaleta(pal, ehEscuro) {
   return {
     primary: (ehEscuro && pal.primaryDark) || pal.primary,
     primary2: (ehEscuro && pal.primary2Dark) || pal.primary2,
+  };
+}
+
+// As três cores do logo (ui/logo-animado.jsx) na paleta escolhida: o começo e o
+// fim do gradiente da seta, e as barras.
+//
+// A paleta padrão devolve as cores da marca sem tocar em nada. Ela é a única com
+// um desenho por trás — o logo.png original, de onde saíram esses três valores e
+// os PNGs do PWA. Trocar o roxo-magenta dela por um roxo derivado só faria o logo
+// da tela discordar do ícone na tela inicial, sem ninguém ter pedido.
+//
+// Nas outras, as três cores saem do par da paleta escurecendo em oklab, que
+// preserva o matiz e só desce a luminância. Os fatores não são gosto: 0.60, 0.72
+// e 0.83 caem em L=0.336, 0.404 e 0.536, e o logo original tem L=0.331, 0.408 e
+// 0.539. É a mesma relação entre as três, transposta pra outra cor — as barras
+// como massa mais escura, a seta abrindo do fundo pro claro por cima delas.
+//
+// Sempre as variantes claras da paleta (`pal.primary`, não `coresDaPaleta`): o
+// logo mora num azulejo branco nos dois temas, então quem manda no contraste é o
+// branco, não o fundo do app.
+export function coresDoLogo(pal) {
+  if (pal === PALETAS[0]) {
+    return { de: GRADIENTE.de, ate: GRADIENTE.ate, barra: COR_BARRA };
+  }
+  const escuro = (cor, parte) => `color-mix(in oklab, ${cor} ${parte}%, #000)`;
+  return {
+    de: escuro(pal.primary, 60),
+    ate: escuro(pal.primary2, 83),
+    barra: escuro(pal.primary, 72),
   };
 }
 
