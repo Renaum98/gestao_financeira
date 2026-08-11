@@ -52,10 +52,13 @@ const PADDING_LATERAL = ESPIADA + ESPACO;
 // calibrar a força do efeito — em 1, cada um desliga a sua parte.
 // Escala: como é uniforme, o vizinho encolhe também na altura.
 const ESCALA_MIN = 0.88;
-// Opacidade: só um véu pra empurrar o vizinho pro segundo plano, não um
-// apagamento. Abaixo de ~0.6 o card lateral vira fantasma e a espiada perde
-// contraste contra o fundo — que é justamente a dica de swipe.
-const OPACIDADE_MIN = 0.75;
+// Opacidade: empurra o vizinho pro segundo plano e deixa o centro mandar na
+// tela. Escolhido em 0.55 depois de testar 0.75, que ficou tímido demais.
+// O custo de descer aqui é a ESPIADA: quanto mais fraco o card lateral, menos
+// a beirada dele contrasta com o fundo — e ela é a única dica de que dá pra
+// arrastar. Se a dica ficar fraca, o conserto é subir a espiada, não voltar a
+// opacidade.
+const OPACIDADE_MIN = 0.55;
 
 // Esqueleto do CardSaldo, exibido nos slides fora da janela. Repete o desenho do
 // card — cabeçalho, valor grande, chip de variação e o rodapé em duas colunas —
