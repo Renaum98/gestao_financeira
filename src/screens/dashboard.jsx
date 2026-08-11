@@ -13,12 +13,15 @@ import { computeInsights } from "../lib/insights.jsx";
 import { calcularSaldoMes } from "../lib/saldo-mes.js";
 import { guardadoPorTx } from "../lib/guardado-entradas.js";
 import { mesAnteriorDe } from "../lib/orcamento.js";
+import { faturasEmAberto } from "../lib/fatura.js";
+import { hojeISO } from "./caixinhas/utils.js";
 import { DiferencaMesModal } from "./dashboard/DiferencaMesModal.jsx";
 import { CabecalhoDashboard } from "./dashboard/CabecalhoDashboard.jsx";
 import { CardSaldo } from "./dashboard/CardSaldo.jsx";
 import { CarrosselSaldoMes } from "./dashboard/CarrosselSaldoMes.jsx";
 import { InsightsCard } from "./dashboard/InsightsCard.jsx";
 import { ProximasVencer } from "./dashboard/ProximasVencer.jsx";
+import { FaturaCartao } from "./dashboard/FaturaCartao.jsx";
 import { UltimosGastos } from "./dashboard/UltimosGastos.jsx";
 import { CaixinhasPreview } from "./dashboard/CaixinhasPreview.jsx";
 import { ContaProximaModal } from "./dashboard/ContaProximaModal.jsx";
@@ -181,6 +184,14 @@ export function DashboardScreen({ ctx }) {
     return candidatas.slice(0, 3);
   }, [txs]);
 
+  // Ciclo da fatura do cartão: a que está aberta e a que já fechou e vence.
+  // Independe do mês navegado no carrossel — é sempre "onde estou hoje", igual
+  // ao app do banco. Não entra em nenhuma conta de saldo (ver lib/fatura.js).
+  const faturas = React.useMemo(
+    () => faturasEmAberto(txs, preferences?.diaFechamentoCartao, hojeISO()),
+    [txs, preferences?.diaFechamentoCartao],
+  );
+
   // Top categorias com orçamento estourando ou perto do limite.
   const orcCategorias = React.useMemo(() => {
     const porCat = totalPorCategoria(txMes);
@@ -306,6 +317,8 @@ export function DashboardScreen({ ctx }) {
         onSelecionar={setContaSelecionada}
         ehDesktop={ehDesktop}
       />
+
+      <FaturaCartao faturas={faturas} irPara={irPara} ehDesktop={ehDesktop} />
 
       <UltimosGastos recentes={recentes} irPara={irPara} guardadoTx={guardadoTx} />
 

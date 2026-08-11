@@ -66,6 +66,9 @@ export function OrcamentosScreen({ ctx }) {
   const [editandoCartao, setEditandoCartao] = React.useState(false);
   const [tempCartao, setTempCartao] = React.useState(valorZero());
 
+  const [editandoFech, setEditandoFech] = React.useState(false);
+  const [tempFech, setTempFech] = React.useState('');
+
   // Limite só para o cartão de crédito — não faz sentido limitar Pix/dinheiro.
   const gastoCartao = txMes.reduce(
     (s, t) => (t.tipo !== 'entrada' && t.pagamento === 'Cartão de crédito' ? s + t.valor : s),
@@ -84,6 +87,17 @@ export function OrcamentosScreen({ ctx }) {
   const salvarCartao = () => {
     setPreferences({ orcamentoCartaoCredito: Math.max(0, parseValorBR(tempCartao)) });
     setEditandoCartao(false);
+  };
+
+  // Dia em que a fatura fecha. 0 = último dia do mês (padrão), o caso "fatura
+  // de agosto = compras de agosto". Só muda o que o app MOSTRA sobre o ciclo
+  // da fatura — o saldo do mês continua abatendo pela data da compra.
+  const diaFech = preferences.diaFechamentoCartao > 0 ? preferences.diaFechamentoCartao : 0;
+
+  const salvarFech = () => {
+    const n = Math.trunc(Number(String(tempFech).replace(/[^0-9]/g, '')) || 0);
+    setPreferences({ diaFechamentoCartao: n >= 1 && n <= 31 ? n : 0 });
+    setEditandoFech(false);
   };
 
   const salvarCat = (catId) => {
@@ -245,6 +259,59 @@ export function OrcamentosScreen({ ctx }) {
               </div>
             </div>
           )}
+
+          {/* Fechamento da fatura — define em qual fatura cada compra cai.
+              Não altera o saldo do mês, só o ciclo mostrado (lib/fatura.js). */}
+          <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid var(--linha)', display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div style={{
+              width: 36, height: 36, borderRadius: 12, background: 'var(--surface-sunken)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+            }}>
+              <Icon name="calendar" size={18} color="var(--muted)" strokeWidth={2} />
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--ink)' }}>{t("Fechamento da fatura")}</div>
+              <div style={{ fontSize: 11, color: 'var(--muted)', fontWeight: 600, marginTop: 1 }}>
+                {diaFech > 0
+                  ? t("Fecha dia {dia} · vence no mês seguinte", { dia: diaFech })
+                  : t("Fecha no último dia do mês · vence no mês seguinte")}
+              </div>
+            </div>
+            {editandoFech ? (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <input
+                  autoFocus
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  value={tempFech}
+                  placeholder={t("Último")}
+                  aria-label={t("Dia de fechamento da fatura")}
+                  onChange={(e) => setTempFech(e.target.value.replace(/[^0-9]/g, '').slice(0, 2))}
+                  onKeyDown={(e) => { if (e.key === 'Enter') salvarFech(); if (e.key === 'Escape') setEditandoFech(false); }}
+                  style={{
+                    width: 62, padding: '6px 10px', borderRadius: 10,
+                    border: '1.5px solid var(--primary)', background: 'var(--card)',
+                    fontSize: 13, fontWeight: 700, color: 'var(--ink)', outline: 'none',
+                    fontFamily: 'inherit', textAlign: 'right',
+                  }}
+                />
+                <button onClick={salvarFech} style={{
+                  width: 30, height: 30, borderRadius: 15, border: 'none',
+                  background: 'var(--primary)', color: '#fff', cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}>
+                  <Icon name="check" size={14} strokeWidth={2.6} />
+                </button>
+              </div>
+            ) : (
+              <button onClick={() => { setEditandoFech(true); setTempFech(diaFech > 0 ? String(diaFech) : ''); }} style={{
+                background: 'transparent', border: 'none', cursor: 'pointer', padding: 4, color: 'var(--muted)',
+              }}>
+                <Icon name="edit" size={16} strokeWidth={2} />
+              </button>
+            )}
+          </div>
         </Card>
       </div>
 

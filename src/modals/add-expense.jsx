@@ -19,6 +19,7 @@ import { COR_POS, COR_AVISO, COR_NEG } from "../lib/colors.js";
 import { formatarValorDigitado, formatarValorInicial, parseValorBR, valorZero } from "../lib/money-input.js";
 import { simboloMoeda } from "../lib/moeda.js";
 import { ajustarGuardado } from "../lib/guardado-entradas.js";
+import { faturaDaCompra, mesPagamentoDaFatura, PAG_CARTAO } from "../lib/fatura.js";
 import { useT } from "../lib/i18n.jsx";
 
 function hojeISO() {
@@ -136,6 +137,16 @@ export function AddExpenseModal({ ctx, params }) {
     if (pct < 80) return null;
     return { pct, excedeu: projetado > limite, limite, projetado };
   }, [ehEntrada, pagamento, preferences, txs, mes, valorNum, editar]);
+
+  // Em qual fatura essa compra cai e quando ela vai ser paga. Depende da data
+  // digitada: comprar depois do fechamento já joga pra fatura do mês seguinte.
+  // Puramente informativo — o saldo do mês continua abatendo pela data da
+  // compra, não pela data do pagamento (ver lib/fatura.js).
+  const infoFatura = React.useMemo(() => {
+    if (ehEntrada || pagamento !== PAG_CARTAO || !data) return null;
+    const fatura = faturaDaCompra(data, preferences?.diaFechamentoCartao);
+    return { fatura, vence: mesPagamentoDaFatura(fatura) };
+  }, [ehEntrada, pagamento, data, preferences?.diaFechamentoCartao]);
 
   // Aviso de caixinha: editar uma entrada que já foi guardada pode deixar o
   // depósito sem lastro (valor menor que o guardado, ou descrição/data que tira
@@ -762,6 +773,29 @@ export function AddExpenseModal({ ctx, params }) {
             );
           })}
         </div>
+        )}
+
+        {/* Em que fatura essa compra cai — só leitura, não muda a conta do mês */}
+        {infoFatura && (
+          <div
+            style={{
+              marginTop: 10,
+              padding: "9px 12px",
+              borderRadius: 12,
+              background: "var(--surface-sunken)",
+              display: "flex",
+              alignItems: "center",
+              gap: 9,
+            }}
+          >
+            <Icon name="card" size={15} color="var(--muted)" strokeWidth={2.2} />
+            <div style={{ fontSize: 11.5, fontWeight: 600, color: "var(--muted)", lineHeight: 1.45 }}>
+              {t("Entra na fatura de {fatura} · você paga em {vence}", {
+                fatura: t(MESES[Number(infoFatura.fatura.slice(5, 7)) - 1]),
+                vence: t(MESES[Number(infoFatura.vence.slice(5, 7)) - 1]),
+              })}
+            </div>
+          </div>
         )}
 
         {/* Aviso de limite do cartão de crédito */}

@@ -58,6 +58,9 @@ const DEFAULT_STATE = {
     fotoUrl: "",
     orcamentoMensal: 0,
     orcamentoCartaoCredito: 0,
+    // Dia em que a fatura do cartão fecha. 0 = último dia do mês (ver
+    // lib/fatura.js) — "fatura de agosto = compras de agosto".
+    diaFechamentoCartao: 0,
     notifLidas: [],
   },
   // ─── Conta compartilhada (Etapa 1: campos existem mas ficam null) ───
