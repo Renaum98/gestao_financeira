@@ -4,9 +4,9 @@
 //   • o vidro da tab bar vira superfície sólida — o blur é refeito pela GPU a
 //     cada quadro em que algo rola por baixo dele, e é o efeito mais caro que
 //     temos ligado o tempo todo;
-//   • o carrossel de meses vira o card único do desktop — some o laço de
-//     animação por quadro, as camadas 3D e a montagem de um card por mês; a
-//     troca de mês continua pelo seletor dentro do card, sem o swipe;
+//   • o carrossel de meses vira o card único do desktop — some a montagem de um
+//     card por mês; a troca de mês continua pelo seletor dentro do card, sem o
+//     swipe;
 //   • as transições de tela e a trava do splash encurtam;
 //   • o prefetch dos chunks em idle não roda — cada aba baixa o seu na primeira
 //     visita, com skeleton no meio do caminho;
