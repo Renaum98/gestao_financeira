@@ -785,7 +785,7 @@ export function App() {
   // O `useSplashInteiro` é quem segura o splash até a animação do logo acabar,
   // mesmo que as duas esperas terminem antes disso — quase sempre terminam. No
   // modo leve ele não segura nada: ali o pedido é abrir logo, e num aparelho
-  // fraco a abertura costuma passar de 1,8s por conta própria mesmo.
+  // fraco a abertura costuma passar de 1,3s por conta própria mesmo.
   const precisaSplash =
     (usuario === undefined && haviaSessao()) || (verificado && !cloud.ready);
   const mostrarSplash = useSplashInteiro(precisaSplash, leve);
@@ -912,7 +912,7 @@ export function App() {
   // Aparência ativa. Mesmo arranjo do idioma e da moeda: manda a nuvem, e antes
   // dela chegar vale o espelho do localStorage — só que aqui o espelho pesa
   // mais, porque é ele que dá ao splash da abertura o fundo e o logo na cor
-  // certa em vez de 1,8s na paleta padrão.
+  // certa em vez de 1,3s na paleta padrão.
   //
   // O useMemo é pra ler o localStorage uma vez só: o espelho não muda por fora,
   // e este componente re-renderiza a cada mexida no app.

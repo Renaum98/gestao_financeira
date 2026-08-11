@@ -28,10 +28,10 @@ import { LogoAzulejo } from './logo-animado.jsx';
 // Quanto dura a entrada do logo, do primeiro traço até o fim do estouro. A
 // linha do tempo inteira está em components.css, ao lado das animações; se ela
 // mudar lá, este número muda aqui.
-const ENTRADA_MS = 1800;
+const ENTRADA_MS = 1300;
 
 // Com "prefers-reduced-motion" as animações do logo não rodam (components.css),
-// e segurar a tela 1.8s num desenho parado seria atraso puro.
+// e segurar a tela 1.3s num desenho parado seria atraso puro.
 const semMovimento =
   typeof window !== 'undefined' &&
   window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
@@ -39,7 +39,7 @@ const semMovimento =
 // Segura o splash até a entrada do logo terminar.
 //
 // Sem isso a animação quase nunca chega ao fim: a sessão e os dados costumam
-// voltar antes de 1.8s, e o logo some no meio do traço — o que se vê é um
+// voltar antes de 1.3s, e o logo some no meio do traço — o que se vê é um
 // pisca-pisca, não uma abertura. `pedido` diz se o app ainda precisa do splash;
 // o retorno diz se ele continua na tela.
 //
@@ -118,6 +118,19 @@ export function Loader({ size = 24, label = 'Carregando' }) {
 // A entrada nunca é cortada: quem monta o splash usa o `useSplashInteiro` pra
 // mantê-lo na tela até ela acabar. Depois disso o logo entra no flutuar, que
 // repete sozinho — uma espera mais longa não deixa quadro parado.
+//
+// O centro é o da área visível, não o da tela física. São duas correções, e a
+// segunda é a que aparece no PWA instalado:
+//
+//   - `dvh` no lugar de `vh`: no navegador, 100vh mede a tela com as barras do
+//     Chrome/Safari recolhidas, ou seja, mais alto do que se enxerga — o centro
+//     de uma caixa dessas cai abaixo do centro do que está à vista;
+//   - o recuo pelas `safe-area`: com `viewport-fit=cover` (index.html) a tela
+//     do app instalado passa por baixo da barra de status e da barra de gestos,
+//     e elas não têm a mesma altura. Centralizar na caixa inteira encosta o
+//     logo pro lado da menor. Com `box-sizing: border-box` (base.css) o recuo
+//     sai de dentro dos 100dvh, e o flex centraliza no que sobra — o miolo que
+//     o usuário realmente vê.
 export function SplashLogo({ label = 'Carregando' }) {
   return (
     <div
@@ -125,7 +138,9 @@ export function SplashLogo({ label = 'Carregando' }) {
       aria-label={label}
       aria-busy="true"
       style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
+        paddingTop: 'env(safe-area-inset-top)',
+        paddingBottom: 'env(safe-area-inset-bottom)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
