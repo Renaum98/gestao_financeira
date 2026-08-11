@@ -27,8 +27,10 @@ const JANELA = 3;
 const ESPIADA = 30;
 // Respiro entre um card e o outro. Sai da largura do card ativo, não da
 // espiada: PADDING_LATERAL cresce junto pra a beirada do vizinho continuar
-// aparecendo os mesmos ESPIADA px.
-const ESPACO = 24;
+// aparecendo os mesmos ESPIADA px. Ou seja, é este número que decide a largura
+// do card — cada px a menos aqui são 2px a mais no card ativo, sem tocar na
+// dica de swipe. Estava em 24; abaixado pra 14 pra o card respirar mais.
+const ESPACO = 14;
 // Padding lateral do scroller = espiada + espaço. Precisa bater com o
 // flex-basis dos slides (100vw - 2×), senão o primeiro e o último slide não
 // conseguem parar centralizados no snap.
