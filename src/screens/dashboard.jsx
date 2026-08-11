@@ -216,7 +216,6 @@ export function DashboardScreen({ ctx }) {
         total,
         totalAnt,
         delta,
-        mes,
         orcTotal,
         restante,
         // Só o que ainda dá pra gastar — o que foi pra caixinha não conta.
@@ -226,7 +225,7 @@ export function DashboardScreen({ ctx }) {
         orcCategorias,
         t,
       }),
-    [txMes, txMesAnt, total, totalAnt, delta, mes, orcTotal, restante, entradasDisponiveis, caixinhas, proximas, orcCategorias, t],
+    [txMes, txMesAnt, total, totalAnt, delta, orcTotal, restante, entradasDisponiveis, caixinhas, proximas, orcCategorias, t],
   );
 
   const [simularAberto, setSimularAberto] = React.useState(false);

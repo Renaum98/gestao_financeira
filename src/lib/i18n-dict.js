@@ -682,16 +682,6 @@ export const EN = {
   "Você economizou ": "You saved ",
   " em ": " on ",
   " vs. o mês passado.": " vs. last month.",
-  "Sua maior categoria este mês é ": "Your biggest category this month is ",
-  " — {pct}% dos gastos.": " — {pct}% of spending.",
-  "No ritmo atual ({x}/dia), você vai fechar o mês em ":
-    "At the current pace ({x}/day), you'll end the month at ",
-  "Restam {n} dias no mês — dá pra gastar até ":
-    "{n} days left in the month — you can spend up to ",
-  "Restam {n} dia no mês — dá pra gastar até ":
-    "{n} day left in the month — you can spend up to ",
-  "{x}/dia": "{x}/day",
-  " sem estourar o orçamento.": " without going over budget.",
   "Você passou ": "You went ",
   " do orçamento deste mês.": " over this month's budget.",
   "Seu maior gasto foi ": "Your biggest expense was ",

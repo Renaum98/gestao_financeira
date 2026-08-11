@@ -26,7 +26,6 @@ export function computeInsights({
   total,
   totalAnt,
   delta,
-  mes,
   orcTotal,
   restante,
   entradas,
@@ -137,93 +136,27 @@ export function computeInsights({
     }
   }
 
-  // ─── 5) Top categoria atual (peso no mês) ───
-  const topAtual = topCat(porCatAtual);
-  if (topAtual && total > 0) {
-    const pct = Math.round((topAtual.valor / total) * 100);
+  // ─── 5) Estouro do orçamento ───
+  // O aviso de "dá pra gastar X por dia" e a projeção de fim de mês foram
+  // removidos de propósito: sugeriam um teto diário e um número futuro que
+  // não são decisão do app. Aqui só sobra o fato consumado.
+  if (orcTotal > 0 && restante < 0) {
     out.push({
-      icon: 'chart',
-      cor: topAtual.cor,
+      icon: 'bell',
+      cor: COR_NEG,
       texto: (
         <>
-          {t('Sua maior categoria este mês é ')}
-          <strong style={{ color: 'var(--ink)' }}>{t(topAtual.nome)}</strong>
-          {t(' — {pct}% dos gastos.', { pct })}
+          {t('Você passou ')}
+          <strong style={{ color: COR_NEG }}>
+            {fmtBRLCompacto(Math.abs(restante))}
+          </strong>
+          {t(' do orçamento deste mês.')}
         </>
       ),
     });
   }
 
-  // ─── 6) Ritmo + projeção de fim de mês ───
-  // Só faz sentido quando o mês exibido é o atual (não tem como projetar
-  // mês passado), e quando já passou pelo menos 1 dia.
-  {
-    const hoje = new Date();
-    const mesAtualKey = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, '0')}`;
-    const ehMesCorrente = mes === mesAtualKey;
-    if (ehMesCorrente && total > 0) {
-      const diaHoje = hoje.getDate();
-      const diasNoMes = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0).getDate();
-      const mediaDia = total / diaHoje;
-      const projecao = mediaDia * diasNoMes;
-      out.push({
-        icon: 'chart',
-        cor: 'var(--primary)',
-        texto: (
-          <>
-            {t('No ritmo atual ({x}/dia), você vai fechar o mês em ', { x: fmtBRLCompacto(mediaDia) })}
-            <strong style={{ color: 'var(--ink)' }}>
-              {fmtBRLCompacto(projecao)}
-            </strong>
-            .
-          </>
-        ),
-      });
-    }
-  }
-
-  // ─── 7) Restante do orçamento por dia ───
-  {
-    const hoje = new Date();
-    const mesAtualKey = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, '0')}`;
-    const ehMesCorrente = mes === mesAtualKey;
-    if (ehMesCorrente && orcTotal > 0 && restante > 0) {
-      const diasNoMes = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0).getDate();
-      const diasRest = Math.max(1, diasNoMes - hoje.getDate() + 1);
-      const porDia = restante / diasRest;
-      out.push({
-        icon: 'target',
-        cor: COR_POS,
-        texto: (
-          <>
-            {diasRest === 1
-              ? t('Restam {n} dia no mês — dá pra gastar até ', { n: diasRest })
-              : t('Restam {n} dias no mês — dá pra gastar até ', { n: diasRest })}
-            <strong style={{ color: COR_POS }}>
-              {t('{x}/dia', { x: fmtBRLCompacto(porDia) })}
-            </strong>
-            {t(' sem estourar o orçamento.')}
-          </>
-        ),
-      });
-    } else if (orcTotal > 0 && restante < 0) {
-      out.push({
-        icon: 'bell',
-        cor: COR_NEG,
-        texto: (
-          <>
-            {t('Você passou ')}
-            <strong style={{ color: COR_NEG }}>
-              {fmtBRLCompacto(Math.abs(restante))}
-            </strong>
-            {t(' do orçamento deste mês.')}
-          </>
-        ),
-      });
-    }
-  }
-
-  // ─── 8) Maior gasto único do mês ───
+  // ─── 6) Maior gasto único do mês ───
   {
     const maior = txMes.reduce(
       (a, t) => (t.tipo === 'entrada' ? a : !a || t.valor > a.valor ? t : a),
@@ -247,7 +180,7 @@ export function computeInsights({
     }
   }
 
-  // ─── 9) Caixinhas: total guardado ou progresso de meta ───
+  // ─── 7) Caixinhas: total guardado ou progresso de meta ───
   if (caixinhas && caixinhas.length > 0) {
     const guardadoTotal = caixinhas.reduce(
       (s, c) =>
@@ -299,7 +232,7 @@ export function computeInsights({
     }
   }
 
-  // ─── 10) Saúde financeira: entradas vs gastos ───
+  // ─── 8) Saúde financeira: entradas vs gastos ───
   if (entradas > 0 && total > 0) {
     const saldo = entradas - total;
     const taxaPoupanca = Math.round((saldo / entradas) * 100);
@@ -332,7 +265,7 @@ export function computeInsights({
     }
   }
 
-  // ─── 11) Próximas a vencer (próximos 7 dias) ───
+  // ─── 9) Próximas a vencer (próximos 7 dias) ───
   if (proximas.length > 0) {
     const hoje = new Date();
     hoje.setHours(0, 0, 0, 0);
@@ -359,7 +292,7 @@ export function computeInsights({
     }
   }
 
-  // ─── 12) Categoria estourando o orçamento ───
+  // ─── 10) Categoria estourando o orçamento ───
   if (orcCategorias.length > 0) {
     const estourada = orcCategorias.find((c) => c.pct > 100);
     if (estourada) {
@@ -398,7 +331,7 @@ export function computeInsights({
     }
   }
 
-  // ─── 13) Volume de transações ───
+  // ─── 11) Volume de transações ───
   {
     const qtdGastos = txMes.filter((t) => t.tipo !== 'entrada').length;
     const qtdAnt = txMesAnt.filter((t) => t.tipo !== 'entrada').length;
