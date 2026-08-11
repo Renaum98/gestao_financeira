@@ -4,13 +4,13 @@
 // direita volta no tempo, swipe pra esquerda avança. Quando `mes` muda por fora
 // (ex: SeletorMes dentro do card), o carrossel rola para o slide certo.
 //
-// Os slides laterais entram menores e vão crescendo até assumir o centro. É um
-// efeito de POSIÇÃO e só: escala pura, sem giro 3D, sem profundidade e sem a
-// inércia que lia a velocidade do gesto — isso tudo existiu aqui e saiu (ver
-// 19a5fcd no histórico, se um dia voltar a fazer falta).
+// Os slides laterais entram menores e mais apagados, e vão crescendo até
+// assumir o centro. É um efeito de POSIÇÃO e só — escala e opacidade, sem giro
+// 3D, sem profundidade e sem a inércia que lia a velocidade do gesto; isso tudo
+// existiu aqui e saiu (ver 19a5fcd no histórico, se voltar a fazer falta).
 //
 // A escala é ancorada na borda virada pro centro, não no meio do card (ver
-// `origemX` em aplicarEscala). Ancorada no meio, encolher o vizinho puxaria a
+// `origemX` em aplicarEfeitos). Ancorada no meio, encolher o vizinho puxaria a
 // borda interna pra dentro e comeria a ESPIADA — justo a única coisa que avisa
 // que dá pra arrastar. Ancorada na borda interna, o card encolhe pro lado de
 // fora: a espiada fica intacta e a leitura vira "cresce vindo pro centro".
@@ -48,10 +48,14 @@ const ESPACO = 18;
 // centralizados no snap.
 const PADDING_LATERAL = ESPIADA + ESPACO;
 
-// Tamanho do slide totalmente deslocado, em fração do slide central. É a força
-// do efeito e o único número a mexer pra calibrar: 1 desliga, quanto menor mais
-// dramático. Como a escala é uniforme, o vizinho encolhe também na altura.
+// Estado do slide totalmente deslocado. São os dois números a mexer pra
+// calibrar a força do efeito — em 1, cada um desliga a sua parte.
+// Escala: como é uniforme, o vizinho encolhe também na altura.
 const ESCALA_MIN = 0.88;
+// Opacidade: só um véu pra empurrar o vizinho pro segundo plano, não um
+// apagamento. Abaixo de ~0.6 o card lateral vira fantasma e a espiada perde
+// contraste contra o fundo — que é justamente a dica de swipe.
+const OPACIDADE_MIN = 0.75;
 
 // Esqueleto do CardSaldo, exibido nos slides fora da janela. Repete o desenho do
 // card — cabeçalho, valor grande, chip de variação e o rodapé em duas colunas —
@@ -130,14 +134,14 @@ export function CarrosselSaldoMes({ todosMeses, mes, setMes, renderCard }) {
   React.useLayoutEffect(() => {
     const face = slideRefs.current[idxAtivo]?.firstElementChild;
     if (!face) return;
-    // offsetHeight ignora o transform aplicado por aplicarEscala — é a caixa
+    // offsetHeight ignora o transform aplicado por aplicarEfeitos — é a caixa
     // real, então a altura medida não encolhe junto com o efeito.
     const h = face.offsetHeight;
     if (h > alturaSlide) setAlturaSlide(h);
   });
 
-  // Escala de cada slide conforme a distância até o centro da tela.
-  const aplicarEscala = React.useCallback(() => {
+  // Escala e opacidade de cada slide conforme a distância até o centro da tela.
+  const aplicarEfeitos = React.useCallback(() => {
     const el = ref.current;
     if (!el) return;
     const centro = el.scrollLeft + el.clientWidth / 2;
@@ -162,12 +166,16 @@ export function CarrosselSaldoMes({ todosMeses, mes, setMes, renderCard }) {
       // persiana andando em passo constante.
       const q = d * d * (3 - 2 * d);
       const escala = 1 - q * (1 - ESCALA_MIN);
+      // Mesma curva da escala: as duas andam juntas, então o card não some
+      // antes de encolher nem o contrário.
+      const op = 1 - q * (1 - OPACIDADE_MIN);
       // A âncora CAMINHA com o card: 50% quando centrado, indo até a borda
       // virada pro centro conforme ele se afasta (pos=+1, card à direita → 0%,
       // que é a borda esquerda dele). Assim o card encolhe pro lado de fora e a
       // espiada sobrevive. Interpolada em vez de fixa nas bordas, não há salto
       // ao cruzar o centro.
       const origemX = 50 - 50 * pos;
+      face.style.opacity = op.toFixed(3);
       face.style.transformOrigin = `${origemX.toFixed(1)}% center`;
       face.style.transform = `scale(${escala.toFixed(4)})`;
     }
@@ -189,7 +197,7 @@ export function CarrosselSaldoMes({ todosMeses, mes, setMes, renderCard }) {
     if (mudouPorSwipeRef.current) {
       mudouPorSwipeRef.current = false;
       primeiraVezRef.current = false;
-      aplicarEscala();
+      aplicarEfeitos();
       return;
     }
     const slide = slideRefs.current[idxAtivo];
@@ -208,14 +216,14 @@ export function CarrosselSaldoMes({ todosMeses, mes, setMes, renderCard }) {
       primeiraVezRef.current = false;
       const t = setTimeout(() => {
         rolandoProgRef.current = false;
-        aplicarEscala();
+        aplicarEfeitos();
       }, 500);
-      aplicarEscala();
+      aplicarEfeitos();
       return () => clearTimeout(t);
     }
     primeiraVezRef.current = false;
-    aplicarEscala();
-  }, [idxAtivo, mesesAsc, aplicarEscala]);
+    aplicarEfeitos();
+  }, [idxAtivo, mesesAsc, aplicarEfeitos]);
 
   // Qual slide está mais perto do centro agora — é ele quem define o mês ativo.
   const sincronizarMes = React.useCallback(() => {
@@ -246,9 +254,9 @@ export function CarrosselSaldoMes({ todosMeses, mes, setMes, renderCard }) {
   // só — e ela acontece no momento certo, junto do paint.
   const passo = React.useCallback(() => {
     pendenteRef.current = false;
-    aplicarEscala();
+    aplicarEfeitos();
     sincronizarMes();
-  }, [aplicarEscala, sincronizarMes]);
+  }, [aplicarEfeitos, sincronizarMes]);
 
   const onScroll = React.useCallback(() => {
     if (pendenteRef.current) return;
@@ -274,10 +282,10 @@ export function CarrosselSaldoMes({ todosMeses, mes, setMes, renderCard }) {
   React.useEffect(() => {
     const el = ref.current;
     if (!el || typeof ResizeObserver === "undefined") return;
-    const ro = new ResizeObserver(() => aplicarEscala());
+    const ro = new ResizeObserver(() => aplicarEfeitos());
     ro.observe(el);
     return () => ro.disconnect();
-  }, [aplicarEscala]);
+  }, [aplicarEfeitos]);
 
   return (
     <div
@@ -344,10 +352,10 @@ export function CarrosselSaldoMes({ todosMeses, mes, setMes, renderCard }) {
               className="carrossel-saldo__face"
               style={{
                 height: "100%",
-                willChange: perto ? "transform" : "auto",
-                // transform/transformOrigin ficam por conta de aplicarEscala —
-                // não declarar aqui pra o React não reescrever por cima do que
-                // o rAF acabou de calcular.
+                willChange: perto ? "opacity, transform" : "auto",
+                // opacity/transform/transformOrigin ficam por conta de
+                // aplicarEfeitos — não declarar aqui pra o React não reescrever
+                // por cima do que o rAF acabou de calcular.
                 // Sem transition: são reescritos a cada frame do scroll, então
                 // o efeito acompanha o dedo 1:1. Uma transition aqui só criaria
                 // lag perseguindo o gesto; o snap nativo continua emitindo
