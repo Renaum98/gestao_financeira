@@ -411,6 +411,23 @@ export const EN = {
   "Por categoria": "By category",
   "{gasto} de {orc}": "{gasto} of {orc}",
 
+  // ─── Ciclo da fatura do cartão ───
+  "Fechamento da fatura": "Statement closing",
+  "Fecha dia {dia} · vence no mês seguinte": "Closes on the {dia}th · due the following month",
+  "Fecha no último dia do mês · vence no mês seguinte":
+    "Closes on the last day of the month · due the following month",
+  "Dia de fechamento da fatura": "Statement closing day",
+  "Último": "Last",
+  "Fatura do cartão": "Card statement",
+  "Ajustar →": "Adjust →",
+  "Fatura de {mes}": "{mes} statement",
+  "Fechada · vence em {mes}": "Closed · due in {mes}",
+  "Aberta · fecha {data} · vence em {mes}": "Open · closes {data} · due in {mes}",
+  "Não entra no saldo do mês: cada compra já abateu o mês em que foi feita.":
+    "Not counted in the month's balance: each purchase already reduced the month it was made in.",
+  "Entra na fatura de {fatura} · você paga em {vence}":
+    "Goes on the {fatura} statement · you pay in {vence}",
+
   // ─── Recorrentes ───
   "Esses gastos são adicionados automaticamente todo mês. Edite para atualizar do mês atual em diante ou cancele se a cobrança parar.":
     "These expenses are added automatically every month. Edit to update from the current month onward, or cancel if the charge stops.",
@@ -665,16 +682,6 @@ export const EN = {
   "Você economizou ": "You saved ",
   " em ": " on ",
   " vs. o mês passado.": " vs. last month.",
-  "Sua maior categoria este mês é ": "Your biggest category this month is ",
-  " — {pct}% dos gastos.": " — {pct}% of spending.",
-  "No ritmo atual ({x}/dia), você vai fechar o mês em ":
-    "At the current pace ({x}/day), you'll end the month at ",
-  "Restam {n} dias no mês — dá pra gastar até ":
-    "{n} days left in the month — you can spend up to ",
-  "Restam {n} dia no mês — dá pra gastar até ":
-    "{n} day left in the month — you can spend up to ",
-  "{x}/dia": "{x}/day",
-  " sem estourar o orçamento.": " without going over budget.",
   "Você passou ": "You went ",
   " do orçamento deste mês.": " over this month's budget.",
   "Seu maior gasto foi ": "Your biggest expense was ",
