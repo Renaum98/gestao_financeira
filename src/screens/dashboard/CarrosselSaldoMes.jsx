@@ -4,11 +4,16 @@
 // direita volta no tempo, swipe pra esquerda avança. Quando `mes` muda por fora
 // (ex: SeletorMes dentro do card), o carrossel rola para o slide certo.
 //
-// Os slides são planos: sem giro 3D, sem profundidade e sem inércia. O que
-// existia aqui (roda em Y com dobradiça migrante e um laço de rAF medindo a
-// velocidade do gesto) foi removido a pedido — se um dia voltar, o histórico
-// tem em 19a5fcd. O que sobrou do laço é só a leitura de qual slide está no
-// centro, que é o que decide o mês ativo.
+// Os slides laterais entram menores e vão crescendo até assumir o centro. É um
+// efeito de POSIÇÃO e só: escala pura, sem giro 3D, sem profundidade e sem a
+// inércia que lia a velocidade do gesto — isso tudo existiu aqui e saiu (ver
+// 19a5fcd no histórico, se um dia voltar a fazer falta).
+//
+// A escala é ancorada na borda virada pro centro, não no meio do card (ver
+// `origemX` em aplicarEscala). Ancorada no meio, encolher o vizinho puxaria a
+// borda interna pra dentro e comeria a ESPIADA — justo a única coisa que avisa
+// que dá pra arrastar. Ancorada na borda interna, o card encolhe pro lado de
+// fora: a espiada fica intacta e a leitura vira "cresce vindo pro centro".
 //
 // A borda dos cards vizinhos fica de fora de propósito (ver ESPIADA): é o que
 // avisa, sem texto nenhum, que dá pra arrastar pro lado — e por isso aqui não
@@ -42,6 +47,11 @@ const ESPACO = 18;
 // (100vw - 2×), senão o primeiro e o último slide não conseguem parar
 // centralizados no snap.
 const PADDING_LATERAL = ESPIADA + ESPACO;
+
+// Tamanho do slide totalmente deslocado, em fração do slide central. É a força
+// do efeito e o único número a mexer pra calibrar: 1 desliga, quanto menor mais
+// dramático. Como a escala é uniforme, o vizinho encolhe também na altura.
+const ESCALA_MIN = 0.88;
 
 // Esqueleto do CardSaldo, exibido nos slides fora da janela. Repete o desenho do
 // card — cabeçalho, valor grande, chip de variação e o rodapé em duas colunas —
@@ -120,9 +130,48 @@ export function CarrosselSaldoMes({ todosMeses, mes, setMes, renderCard }) {
   React.useLayoutEffect(() => {
     const face = slideRefs.current[idxAtivo]?.firstElementChild;
     if (!face) return;
+    // offsetHeight ignora o transform aplicado por aplicarEscala — é a caixa
+    // real, então a altura medida não encolhe junto com o efeito.
     const h = face.offsetHeight;
     if (h > alturaSlide) setAlturaSlide(h);
   });
+
+  // Escala de cada slide conforme a distância até o centro da tela.
+  const aplicarEscala = React.useCallback(() => {
+    const el = ref.current;
+    if (!el) return;
+    const centro = el.scrollLeft + el.clientWidth / 2;
+    // Lê TODA a geometria antes de escrever qualquer estilo. Intercalado, cada
+    // leitura de offsetLeft depois de um write força o navegador a recalcular o
+    // layout — um reflow síncrono por slide, e a conta cresce com o número de
+    // meses. Separado em duas passadas, é um layout só.
+    // Mede o slide (caixa de layout, nunca transformada) e escreve na face
+    // (filha única, é ela que escala).
+    const medidas = [];
+    for (const s of slideRefs.current) {
+      const face = s?.firstElementChild;
+      if (!face) continue;
+      medidas.push({ face, centroSlide: s.offsetLeft + s.clientWidth / 2, largura: s.clientWidth });
+    }
+    for (const { face, centroSlide, largura } of medidas) {
+      // com sinal: -1 = encostado à esquerda, 0 = centrado, +1 = à direita
+      const pos = Math.max(-1, Math.min(1, (centroSlide - centro) / largura));
+      const d = Math.abs(pos);
+      // Smoothstep em vez de rampa reta: perto do centro o card quase não reage
+      // e o encolhimento acelera no meio do caminho. A rampa linear dá o ar de
+      // persiana andando em passo constante.
+      const q = d * d * (3 - 2 * d);
+      const escala = 1 - q * (1 - ESCALA_MIN);
+      // A âncora CAMINHA com o card: 50% quando centrado, indo até a borda
+      // virada pro centro conforme ele se afasta (pos=+1, card à direita → 0%,
+      // que é a borda esquerda dele). Assim o card encolhe pro lado de fora e a
+      // espiada sobrevive. Interpolada em vez de fixa nas bordas, não há salto
+      // ao cruzar o centro.
+      const origemX = 50 - 50 * pos;
+      face.style.transformOrigin = `${origemX.toFixed(1)}% center`;
+      face.style.transform = `scale(${escala.toFixed(4)})`;
+    }
+  }, []);
 
   // Centraliza o slide ativo. Em primeiro render usa "instant" pra evitar flash;
   // depois usa "smooth" pra acompanhar mudanças via SeletorMes.
@@ -140,6 +189,7 @@ export function CarrosselSaldoMes({ todosMeses, mes, setMes, renderCard }) {
     if (mudouPorSwipeRef.current) {
       mudouPorSwipeRef.current = false;
       primeiraVezRef.current = false;
+      aplicarEscala();
       return;
     }
     const slide = slideRefs.current[idxAtivo];
@@ -158,17 +208,17 @@ export function CarrosselSaldoMes({ todosMeses, mes, setMes, renderCard }) {
       primeiraVezRef.current = false;
       const t = setTimeout(() => {
         rolandoProgRef.current = false;
+        aplicarEscala();
       }, 500);
+      aplicarEscala();
       return () => clearTimeout(t);
     }
     primeiraVezRef.current = false;
-  }, [idxAtivo, mesesAsc]);
+    aplicarEscala();
+  }, [idxAtivo, mesesAsc, aplicarEscala]);
 
   // Qual slide está mais perto do centro agora — é ele quem define o mês ativo.
-  // Roda no máximo uma vez por frame; sem transform em jogo, é só leitura de
-  // offsetLeft/clientWidth (uma passada de layout, sem escrita nenhuma).
   const sincronizarMes = React.useCallback(() => {
-    pendenteRef.current = false;
     const el = ref.current;
     if (!el || rolandoProgRef.current) return;
     const centro = el.scrollLeft + el.clientWidth / 2;
@@ -191,11 +241,20 @@ export function CarrosselSaldoMes({ todosMeses, mes, setMes, renderCard }) {
     }
   }, [idxAtivo, mesesAsc, setMes]);
 
+  // Um frame do gesto: repinta a escala e vê se o mês ativo mudou. Os eventos
+  // de scroll chegam vários por frame, então o rAF é o que garante uma passada
+  // só — e ela acontece no momento certo, junto do paint.
+  const passo = React.useCallback(() => {
+    pendenteRef.current = false;
+    aplicarEscala();
+    sincronizarMes();
+  }, [aplicarEscala, sincronizarMes]);
+
   const onScroll = React.useCallback(() => {
     if (pendenteRef.current) return;
     pendenteRef.current = true;
-    rafRef.current = requestAnimationFrame(sincronizarMes);
-  }, [sincronizarMes]);
+    rafRef.current = requestAnimationFrame(passo);
+  }, [passo]);
 
   React.useEffect(
     () => () => {
@@ -203,6 +262,22 @@ export function CarrosselSaldoMes({ todosMeses, mes, setMes, renderCard }) {
     },
     [],
   );
+
+  // O scroll é o único gatilho do efeito, então uma mudança de layout sem gesto
+  // nenhum — girar o aparelho, a barra do navegador sumindo (muda 100vw), o
+  // teclado abrindo — deixaria os cards com a escala da largura antiga até o
+  // usuário tocar na tela.
+  //
+  // Escreve só na face (filha), e transform não altera layout, então o callback
+  // não consegue mudar o tamanho do que está sendo observado: sem risco do loop
+  // de ResizeObserver.
+  React.useEffect(() => {
+    const el = ref.current;
+    if (!el || typeof ResizeObserver === "undefined") return;
+    const ro = new ResizeObserver(() => aplicarEscala());
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [aplicarEscala]);
 
   return (
     <div
@@ -228,6 +303,12 @@ export function CarrosselSaldoMes({ todosMeses, mes, setMes, renderCard }) {
     >
       {mesesAsc.map((m, i) => {
         const dist = Math.abs(i - idxAtivo);
+        // `will-change` promove a face a camada de composição própria. Em todas
+        // elas isso significaria uma camada por mês de histórico (e
+        // parcelamentos jogam meses futuros na lista), todas recriadas quando a
+        // aba volta a ficar visível. Só as vizinhas da ativa chegam a se mexer
+        // durante o gesto, então só elas precisam da promoção.
+        const perto = dist <= 1;
         // Fora da janela o slide continua existindo, com a mesma largura e
         // altura, mostrando o esqueleto no lugar do card. Assim o card caro (que
         // varre a lista de transações e rende ~300 linhas de markup) some da
@@ -255,9 +336,24 @@ export function CarrosselSaldoMes({ todosMeses, mes, setMes, renderCard }) {
               // atravessarem mais de um slide sem travar
             }}
           >
-            {/* Esticar o card até a altura da fileira: como minHeight vale pro
-                slide, sem isto o card mais baixo flutuaria numa caixa alta. */}
-            <div className="carrossel-saldo__face" style={{ height: "100%" }}>
+            {/* A face existe por dois motivos: estica o card até a altura da
+                fileira (minHeight vale pro slide, então sem isto o card mais
+                baixo flutuaria numa caixa alta) e é ela que recebe o transform
+                — nunca o slide, que é o alvo do snap. */}
+            <div
+              className="carrossel-saldo__face"
+              style={{
+                height: "100%",
+                willChange: perto ? "transform" : "auto",
+                // transform/transformOrigin ficam por conta de aplicarEscala —
+                // não declarar aqui pra o React não reescrever por cima do que
+                // o rAF acabou de calcular.
+                // Sem transition: são reescritos a cada frame do scroll, então
+                // o efeito acompanha o dedo 1:1. Uma transition aqui só criaria
+                // lag perseguindo o gesto; o snap nativo continua emitindo
+                // scroll até assentar, então o final também fica suave.
+              }}
+            >
               {naJanela ? renderCard(m) : comEsqueleto ? <EsqueletoCard /> : null}
             </div>
           </div>
