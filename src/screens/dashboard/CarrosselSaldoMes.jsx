@@ -21,19 +21,26 @@ import React from "react";
 // folga pra swipes rápidos não cruzarem slide sem card.
 const JANELA = 3;
 
+// Os três números abaixo são um sistema fechado — mexer num mexe nos outros:
+//
+//     PADDING_LATERAL = ESPIADA + ESPACO
+//     largura do card ativo = 100vw − 2 × PADDING_LATERAL
+//
+// Quem manda na largura do card é a SOMA, não cada parcela. Então:
+//   • crescer o gap sem tocar na espiada → o card encolhe 2px por px;
+//   • manter a largura e crescer o gap → sai da espiada, px por px.
+// A soma está em 44 (card = 100vw − 88px), que é a largura aprovada.
+
 // Quanto do card vizinho fica de fora de cada lado, em px. É a "alça" visual do
-// carrossel: sem ela o card ativo parece uma tela estática. Sobe isso e o card
-// ativo aperta o conteúdo; abaixa e a dica de swipe some.
-const ESPIADA = 30;
-// Respiro entre um card e o outro. Sai da largura do card ativo, não da
-// espiada: PADDING_LATERAL cresce junto pra a beirada do vizinho continuar
-// aparecendo os mesmos ESPIADA px. Ou seja, é este número que decide a largura
-// do card — cada px a menos aqui são 2px a mais no card ativo, sem tocar na
-// dica de swipe. Estava em 24; abaixado pra 14 pra o card respirar mais.
-const ESPACO = 14;
-// Padding lateral do scroller = espiada + espaço. Precisa bater com o
-// flex-basis dos slides (100vw - 2×), senão o primeiro e o último slide não
-// conseguem parar centralizados no snap.
+// carrossel: sem ela o card ativo parece uma tela estática, e como aqui não tem
+// pontinho de paginação, é a única coisa que avisa que dá pra arrastar. Abaixo
+// de ~20px esse aviso começa a sumir.
+const ESPIADA = 26;
+// Respiro entre um card e o outro.
+const ESPACO = 18;
+// Padding lateral do scroller. Precisa bater com o flex-basis dos slides
+// (100vw - 2×), senão o primeiro e o último slide não conseguem parar
+// centralizados no snap.
 const PADDING_LATERAL = ESPIADA + ESPACO;
 
 // Esqueleto do CardSaldo, exibido nos slides fora da janela. Repete o desenho do
