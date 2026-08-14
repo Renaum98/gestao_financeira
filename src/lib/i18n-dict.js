@@ -498,6 +498,8 @@ export const EN = {
   // ─── Histórico ───
   "Meses": "Months",
   "{count} transações": "{count} transactions",
+  "1 mês · {count} transações": "1 month · {count} transactions",
+  "{n} meses · {count} transações": "{n} months · {count} transactions",
 
   // ─── Detalhe da categoria ───
   "Gasto neste mês": "Spent this month",
