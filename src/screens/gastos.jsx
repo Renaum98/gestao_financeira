@@ -15,13 +15,16 @@ import { Card, ItemTransacao, SeletorMes, TopBar } from "../ui/common.jsx";
 import { ConfirmModal } from "../ui/confirm-modal.jsx";
 import { COR_NEG, COR_NEG_FUNDO, COR_POS } from "../lib/colors.js";
 import { guardadoPorTx, ajustarGuardado } from "../lib/guardado-entradas.js";
+import { PAG_CARTAO } from "../lib/fatura.js";
+import { corDoCartao, corTextoSobre } from "../lib/cartoes.js";
 import { useT } from "../lib/i18n.jsx";
 
 export function GastosScreen({ ctx }) {
-  const { txs, mes, setMes, todosMeses, irPara, excluirTx, caixinhas } = ctx;
+  const { txs, mes, setMes, todosMeses, irPara, excluirTx, caixinhas, cartoes = [] } = ctx;
   const t = useT();
   const [filtro, setFiltro] = React.useState("todas");
   const [filtroPag, setFiltroPag] = React.useState("todos");
+  const [filtroCartao, setFiltroCartao] = React.useState("todos");
   const [busca, setBusca] = React.useState("");
   const [acaoAberta, setAcaoAberta] = React.useState(null);
   const [confirmarExclusao, setConfirmarExclusao] = React.useState(null); // tx pendente de confirmação
@@ -42,6 +45,19 @@ export function GastosScreen({ ctx }) {
     const set = new Set();
     for (const t of txMesBruto) {
       if (t.tipo !== "entrada" && t.pagamento) set.add(t.pagamento);
+    }
+    return set;
+  }, [txMesBruto]);
+
+  // Cartões que aparecem no mês. Serve pra saber se existe compra órfã (crédito
+  // sem cartão, sobra de cartão apagado) — os chips em si saem da lista de
+  // cartões CADASTRADOS, não desta: um cartão sem gasto no mês continua
+  // filtrável, e a lista vazia é a resposta certa pra ele.
+  const cartoesComTx = React.useMemo(() => {
+    const set = new Set();
+    for (const t of txMesBruto) {
+      if (t.tipo === "entrada" || t.pagamento !== PAG_CARTAO) continue;
+      set.add(t.cartaoId || "sem");
     }
     return set;
   }, [txMesBruto]);
@@ -82,6 +98,17 @@ export function GastosScreen({ ctx }) {
   React.useEffect(() => {
     if (filtroPag !== "todos" && !pagsComTx.has(filtroPag)) setFiltroPag("todos");
   }, [filtroPag, pagsComTx]);
+  // Volta pra "todos" só quando o cartão selecionado deixa de ser uma opção —
+  // apagado, ou "sem cartão" sem nenhuma órfã no mês. Cartão cadastrado que não
+  // teve gasto no mês continua selecionável: a lista vazia é a resposta.
+  React.useEffect(() => {
+    if (filtroCartao === "todos") return;
+    const existe =
+      filtroCartao === "sem"
+        ? cartoesComTx.has("sem")
+        : cartoes.some((c) => c.id === filtroCartao);
+    if (!existe) setFiltroCartao("todos");
+  }, [filtroCartao, cartoesComTx, cartoes]);
 
   let txMes = txMesBruto;
   if (ehFiltroEntradas) {
@@ -91,6 +118,8 @@ export function GastosScreen({ ctx }) {
     if (filtro !== "todas") txMes = txMes.filter((t) => t.categoria === filtro);
     if (filtroPag !== "todos")
       txMes = txMes.filter((t) => t.pagamento === filtroPag);
+    if (filtroPag === PAG_CARTAO && filtroCartao !== "todos")
+      txMes = txMes.filter((t) => (t.cartaoId || "sem") === filtroCartao);
   }
   if (busca)
     txMes = txMes.filter((t) =>
@@ -121,6 +150,23 @@ export function GastosScreen({ ctx }) {
 
   const rotuloPag = (p) =>
     p === "todos" ? t("Todas") : t(p.replace("Cartão de ", ""));
+
+  // Segunda linha de chips: aparece dentro do filtro de crédito quando há mais
+  // de um cartão cadastrado — ou quando um cartão só convive com compras órfãs,
+  // que também são dois grupos pra separar.
+  const temOrfa = cartoesComTx.has("sem");
+  const valeFiltrarCartao =
+    cartoes.length > 1 || (cartoes.length >= 1 && temOrfa) || cartoesComTx.size > 1;
+  const filtrosCartao =
+    filtroPag === PAG_CARTAO && valeFiltrarCartao
+      ? ["todos", ...cartoes.map((c) => c.id), ...(temOrfa ? ["sem"] : [])]
+      : [];
+
+  const rotuloCartao = (id) => {
+    if (id === "todos") return t("Todos");
+    if (id === "sem") return t("Sem cartão");
+    return cartoes.find((c) => c.id === id)?.nome || t("Sem cartão");
+  };
 
   return (
     <div style={{ paddingBottom: "var(--pad-bottom)" }}>
@@ -345,6 +391,68 @@ export function GastosScreen({ ctx }) {
                     />
                   )}
                   {rotuloPag(p)}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Filtro por cartão — segunda linha, dentro do crédito */}
+      {filtrosCartao.length > 0 && !ehFiltroEntradas && (
+        <div style={{ padding: "6px 0 0" }}>
+          <div
+            className="carrossel"
+            style={{
+              display: "flex",
+              gap: 6,
+              overflowX: "auto",
+              padding: "2px 20px 4px",
+              scrollbarWidth: "none",
+            }}
+          >
+            {filtrosCartao.map((id) => {
+              const sel = filtroCartao === id;
+              const cartao = cartoes.find((c) => c.id === id);
+              return (
+                <button
+                  key={id}
+                  onClick={() => setFiltroCartao(id)}
+                  style={{
+                    padding: "6px 14px",
+                    borderRadius: 999,
+                    border: "none",
+                    background: sel
+                      ? cartao ? corDoCartao(cartao) : "var(--ink)"
+                      : "var(--card)",
+                    color: sel
+                      ? cartao ? corTextoSobre(corDoCartao(cartao)) : "var(--bg)"
+                      : "var(--ink)",
+                    fontSize: 12,
+                    fontWeight: 700,
+                    whiteSpace: "nowrap",
+                    cursor: "pointer",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 6,
+                    flexShrink: 0,
+                    boxShadow: sel ? "none" : "0 1px 2px rgba(0,0,0,0.04)",
+                  }}
+                >
+                  {/* Bolinha da cor: sem ela, os chips não selecionados são
+                      todos iguais e o cartão só se distingue pelo nome. */}
+                  {cartao && !sel && (
+                    <span
+                      style={{
+                        width: 8,
+                        height: 8,
+                        borderRadius: 4,
+                        background: corDoCartao(cartao),
+                        flexShrink: 0,
+                      }}
+                    />
+                  )}
+                  {rotuloCartao(id)}
                 </button>
               );
             })}

@@ -59,6 +59,19 @@ export function compactarCaixinhas(lista) {
   return (lista || []).map(compactarCaixinha);
 }
 
+// ─── Cartão de crédito ─────────────────────────────────────────────────────
+
+// `diaFechamento` 0 é o padrão (último dia do mês, ver lib/fatura.js), então só
+// vale gravar quando o usuário escolheu um dia. Nunca há número nem bandeira de
+// cartão aqui: o cadastro não coleta nenhum dos dois (ver lib/cartoes.js).
+function compactarCartao(c) {
+  const out = { id: c.id, nome: c.nome, cor: c.cor };
+  if (c.diaFechamento > 0) out.diaFechamento = c.diaFechamento;
+  if (c.limite > 0) out.limite = c.limite;
+  if (c.criadoEm) out.criadoEm = c.criadoEm;
+  return out;
+}
+
 // ─── Por chave do user doc ─────────────────────────────────────────────────
 
 function compactarOrcamentos(orcamentos) {
@@ -116,6 +129,8 @@ export function compactarPorChave(key, value) {
     case "categoriasCustom":
     case "notificacoesParceria":
       return compactarArray(value);
+    case "cartoes":
+      return value && value.length > 0 ? value.map(compactarCartao) : deleteField();
     default:
       return value;
   }

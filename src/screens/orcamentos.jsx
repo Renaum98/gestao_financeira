@@ -17,7 +17,7 @@ import { mesCorrente } from '../lib/orcamento.js';
 import { useT } from '../lib/i18n.jsx';
 
 export function OrcamentosScreen({ ctx }) {
-  const { txs, voltar, orcamentos, setOrcamentos, preferences, setPreferences, ehDesktop, caixinhas, usuario } = ctx;
+  const { txs, voltar, orcamentos, setOrcamentos, preferences, setPreferences, ehDesktop, caixinhas, usuario, cartoes = [], irPara } = ctx;
   const t = useT();
 
   // Orçamento é sempre do mês corrente — não do mês navegável do dashboard.
@@ -260,8 +260,31 @@ export function OrcamentosScreen({ ctx }) {
             </div>
           )}
 
-          {/* Fechamento da fatura — define em qual fatura cada compra cai.
-              Não altera o saldo do mês, só o ciclo mostrado (lib/fatura.js). */}
+          {/* Com cartão cadastrado, o fechamento é de cada cartão — o campo
+              global sai daqui pra não existirem dois lugares dizendo quando a
+              fatura fecha. A linha vira o atalho pro cadastro. */}
+          {cartoes.length > 0 ? (
+            <div
+              onClick={() => irPara('cartoes')}
+              style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid var(--linha)', display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer' }}
+            >
+              <div style={{
+                width: 36, height: 36, borderRadius: 12, background: 'var(--surface-sunken)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+              }}>
+                <Icon name="card" size={18} color="var(--muted)" strokeWidth={2} />
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--ink)' }}>{t("Meus cartões")}</div>
+                <div style={{ fontSize: 11, color: 'var(--muted)', fontWeight: 600, marginTop: 1 }}>
+                  {t("{n} cadastrados · cada um com seu fechamento", { n: cartoes.length })}
+                </div>
+              </div>
+              <Icon name="chevron-right" size={18} color="var(--muted)" strokeWidth={2} />
+            </div>
+          ) : (
+          /* Fechamento da fatura — define em qual fatura cada compra cai.
+             Não altera o saldo do mês, só o ciclo mostrado (lib/fatura.js). */
           <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid var(--linha)', display: 'flex', alignItems: 'center', gap: 12 }}>
             <div style={{
               width: 36, height: 36, borderRadius: 12, background: 'var(--surface-sunken)',
@@ -312,6 +335,7 @@ export function OrcamentosScreen({ ctx }) {
               </button>
             )}
           </div>
+          )}
         </Card>
       </div>
 

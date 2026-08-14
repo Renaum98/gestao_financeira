@@ -1,65 +1,90 @@
-# Plano — cadastro de cartões
+# Cadastro de cartões
 
-Status: **não implementado**. Anotado em 2026-08-11, depois do ciclo de fatura
-(branch `fatura-cartao`). Este doc é o ponto de partida da próxima sessão.
+Status: **implementado** em 2026-08-14. O desenho foi anotado em 2026-08-11,
+depois do ciclo de fatura (branch `fatura-cartao`).
 
-## O que se quer
+## O que existe
 
-Cadastrar mais de um cartão de crédito, cada um com **nome** e **bandeira**.
-Hoje só existe uma etiqueta genérica `"Cartão de crédito"` e um único dia de
-fechamento global.
+Cadastro de mais de um cartão de crédito, cada um com **nome**, **cor**, **dia
+de fechamento** e **limite** próprios. Tela em `src/screens/cartoes/`, chegando
+por Perfil → Cartões (e pela sidebar, no desktop).
 
-**Não guardar o número do cartão.** Decisão explícita do usuário. A bandeira é
-escolhida de uma lista, não deduzida de dígito nenhum — assim não passa número
-de cartão pelo app nem pelo Firestore em momento algum. Se um dia fizer falta
-distinguir dois cartões da mesma bandeira, um apelido resolve; os 4 últimos
-dígitos só entram se o usuário pedir.
+**Não guardamos número nem bandeira do cartão.** Decisão explícita do usuário: o
+que identifica um cartão aqui é o nome que ele deu e a cor que ele escolheu.
+Nenhum dado do plástico passa pelo app ou pelo Firestore.
 
 ## Modelo de dados
 
-Novo array no state, sincronizado igual a `caixinhas`/`recorrentes`:
-
 ```js
-cartoes: [
-  { id, nome: "Nubank", bandeira: "master", diaFechamento: 25, cor?: "#..." }
-]
+cartoes: [ { id, nome, cor, diaFechamento, limite, criadoEm } ]
 ```
 
-- `bandeira`: id de uma lista fixa (`visa`, `master`, `elo`, `amex`, `hipercard`,
-  `outra`), com ícone/cor próprios — mesmo padrão de `CATEGORIAS` em `data.js`.
+- `cor`: hex. Os presets em `CORES_CARTAO` (`src/lib/cartoes.js`) são as cores
+  dos bancos mais conhecidos por aqui — é paleta de reconhecimento, não
+  integração nem vínculo com banco nenhum.
 - `diaFechamento`: generaliza `preferences.diaFechamentoCartao` (0 = último dia
-  do mês). A preferência global vira o padrão de quem não tem cartão cadastrado.
+  do mês). O global continua valendo pra quem não cadastrou cartão nenhum.
+- `limite`: teto do banco (0 = não informado). **Não** se confunde com
+  `preferences.orcamentoCartaoCredito`, que é meta mensal de gasto. O que ocupa
+  o limite é a fatura aberta + a fechada que ainda vai vencer (`usoDoCartao`).
 
-Na transação, um campo novo e **opcional**:
+Cor clara (o amarelo do BB, por exemplo) quebraria o texto branco por cima, então
+`corTextoSobre()` decide entre branco e escuro por luminância — quem pinta com a
+cor do cartão passa por lá.
+
+Na transação e na recorrência, um campo novo e **opcional**:
 
 ```js
-{ ..., pagamento: "Cartão de crédito", cartaoId: "abc" | null }
+{ ..., pagamento: "Cartão de crédito", cartaoId: "ct-…" }
 ```
 
-## Migração — o ponto sensível
+## A regra de convivência com o que já existia
 
-`pagamento` é uma string solta (`PAGAMENTOS` em `src/data.js`), usada como
-etiqueta no modal de gasto, como filtro em Transações e como chave do limite do
-cartão em Orçamentos. Tudo que já foi lançado fica sem `cartaoId`.
+Combinada em 2026-08-14. Está escrita por extenso no cabeçalho de
+`src/lib/cartoes.js` — este resumo é o mapa.
 
-Regra: **`cartaoId` ausente continua funcionando como hoje.** Nada de migração
-destrutiva nem de backfill adivinhando cartão. Na prática:
+- **Zero cartões** → nada muda. `"Cartão de crédito"` segue etiqueta solta,
+  fatura única, fechamento global. É o app de antes, intacto.
+- **Ao criar o primeiro cartão** → backfill: toda tx e toda recorrência no
+  crédito ganha `cartaoId` dele. Roda uma vez só, na criação. Custa uma escrita
+  (`txs` é um campo único do doc do usuário).
+- **Do segundo em diante** → nada é tocado. Mudar um gasto de cartão é manual,
+  pelo seletor no modal de gasto.
 
-- `pagamento === "Cartão de crédito"` segue sendo o que define "isso é cartão".
-- `cartaoId` só refina *qual* cartão.
-- Telas que agrupam por cartão mostram um grupo "Sem cartão" para as antigas.
+Escolhemos o backfill em vez do "cartão padrão implícito" (tx sem `cartaoId` =
+primeiro cartão, resolvido na leitura) porque o implícito obriga toda tela que
+agrupa por cartão a repetir a regra, e faz o histórico inteiro trocar de dono
+sozinho no dia em que o primeiro cartão for apagado.
 
-## O que muda em cada lugar
+O cartão novo **herda o fechamento global** ao ser criado. Sem isso, quem tinha
+configurado "fecha dia 20" veria todas as faturas passadas se reagruparem
+sozinhas ao cadastrar o primeiro cartão.
+
+### Apagar cartão
+
+Único jeito de gerar tx órfã. O modal de exclusão mostra quantos lançamentos
+estão presos e pergunta o destino: outro cartão, ou "sem cartão" (volta ao
+crédito genérico). Com um cartão só não há o que perguntar — os lançamentos
+voltam a ser crédito sem cartão, que é exatamente o app de antes do cadastro.
+Nada é apagado e nenhum valor muda.
+
+Tx órfã aparece como grupo "Sem cartão" no Dashboard e como chip no filtro de
+Transações.
+
+## Onde isso encostou
 
 | Arquivo | Mudança |
 |---|---|
-| `src/lib/fatura.js` | `totalFatura`/`faturasEmAberto` passam a receber um cartão (ou `null` = todos). O ciclo em si não muda. |
-| `src/modals/add-expense.jsx` | Ao escolher "Cartão de crédito", seletor de qual cartão. Com 0 cartões cadastrados, some (comportamento de hoje). O aviso "entra na fatura de X" usa o fechamento do cartão escolhido. |
-| `src/screens/dashboard/FaturaCartao.jsx` | Uma linha de fatura por cartão em vez de uma só. Com 1 cartão, idêntico a hoje. |
-| `src/screens/orcamentos.jsx` | O campo de fechamento global sai daqui e vai pro cadastro de cada cartão. O limite do cartão pode virar por cartão — **decidir na hora**, talvez continue global. |
-| `src/screens/gastos.jsx` | Filtro por cartão além do filtro por forma de pagamento. |
-| `src/lib/compact.js`, `src/lib/storage.js` | `cartoes` entra em `SYNCED_KEYS` + compactação; `cartaoId` preservado no compactar de tx. |
-| Tela nova | CRUD de cartões (espelhar a de Caixinhas, que é o CRUD mais próximo). |
+| `src/lib/cartoes.js` | **Novo.** Paleta, uso do limite, backfill, contagem e movimentação de lançamentos. |
+| `src/lib/fatura.js` | `totalFatura`/`faturasEmAberto` aceitam `cartaoId`; `faturasPorCartao` monta um grupo por cartão. O ciclo em si não mudou. |
+| `src/lib/storage.js`, `src/lib/compact.js` | `cartoes` em `SYNCED_KEYS` + compactação (`diaFechamento` 0 não é gravado). |
+| `src/app.jsx` | `salvarCartao` (com o backfill do primeiro), `excluirCartao` (com destino); `cartaoId` propagado em parcelas, recorrências geradas e `editarRecorrente`. |
+| `src/screens/cartoes/` | **Novo.** Lista, modal de cadastro, modal de exclusão. |
+| `src/modals/add-expense.jsx` | Seletor de cartão no crédito; o aviso de fatura usa o fechamento do cartão escolhido. |
+| `src/screens/dashboard/FaturaCartao.jsx` | Uma linha de fatura por cartão. Com 1 cartão, igual a antes. |
+| `src/screens/orcamentos.jsx` | Com cartão cadastrado, o campo de fechamento global vira atalho pro cadastro. |
+| `src/screens/gastos.jsx` | Segunda linha de chips filtrando por cartão, dentro do filtro de crédito. |
+| `src/screens/recorrentes.jsx` | Seletor de cartão ao editar uma recorrência no crédito. |
 
 ## O que continua valendo
 
@@ -67,9 +92,17 @@ O saldo do mês **não muda**: segue por competência, a compra abate o mês em 
 foi feita. Cartão é organização e leitura, não uma nova conta de saldo. Ver o
 cabeçalho de `src/lib/fatura.js`.
 
-## Decisões que ficaram em aberto
+## Ficou de fora, de propósito
 
-1. Limite de gasto: continua global (`orcamentoCartaoCredito`) ou vira por cartão?
-2. Dia de **vencimento** separado do fechamento? Hoje o app assume "vence no mês
-   seguinte" sem dia exato. Só vale a pena se for mostrar contagem de dias.
-3. Cartão de débito também vira cadastro, ou só crédito (que é quem tem fatura)?
+1. **A meta mensal de gasto continua global** (`preferences.orcamentoCartaoCredito`,
+   em Orçamentos). É um teto de quanto o usuário quer gastar no crédito no mês, e
+   essa pergunta não muda por cartão — diferente do `limite`, que é o teto do
+   banco e é por cartão.
+2. **Cartão de débito não entra no cadastro.** Cartão cadastrado é quem tem
+   fatura e ciclo; `"Cartão de débito"` segue etiqueta em `PAGAMENTOS`.
+3. **Dia de vencimento separado do fechamento.** O app continua dizendo "vence
+   no mês seguinte" sem dia exato. Só vale a pena com contagem de dias.
+4. **A tela não entra no prefetch ocioso** do `app.jsx` — é secundária e o
+   prefetch já carrega ~258 kB.
+5. **Aviso de fatura grande perto da renda** — o buraco de caixa que a
+   competência esconde. Continua pendente desde 2026-08-11.

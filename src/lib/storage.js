@@ -48,6 +48,9 @@ const DEFAULT_STATE = {
   caixinhas: [],
   recorrentes: [],
   categoriasCustom: [],
+  // Cartões de crédito cadastrados (lib/cartoes.js). Lista vazia = o app de
+  // antes: "Cartão de crédito" é etiqueta solta e a fatura é uma só.
+  cartoes: [],
   preferences: {
     paleta: "#6E4FF6",
     modo: "sistema",
@@ -82,6 +85,7 @@ const SYNCED_KEYS = [
   "caixinhas",
   "recorrentes",
   "categoriasCustom",
+  "cartoes",
   "preferences",
   "notificacoesParceria",
 ];
@@ -158,6 +162,7 @@ export function useCloudState(uid) {
           caixinhas: data.caixinhas ?? [],
           recorrentes: data.recorrentes ?? [],
           categoriasCustom: data.categoriasCustom ?? [],
+          cartoes: data.cartoes ?? [],
           preferences: {
             ...DEFAULT_STATE.preferences,
             ...(data.preferences ?? {}),
@@ -219,6 +224,7 @@ export function useCloudState(uid) {
   const setCaixinhas = (v) => patchKey("caixinhas", v);
   const setRecorrentes = (v) => patchKey("recorrentes", v);
   const setCategoriasCustom = (v) => patchKey("categoriasCustom", v);
+  const setCartoes = (v) => patchKey("cartoes", v);
   const setNotificacoesParceria = (v) => patchKey("notificacoesParceria", v);
   const setPreferences = (patch) => {
     if (estaOffline()) return false;
@@ -239,6 +245,8 @@ export function useCloudState(uid) {
     setRecorrentes,
     categoriasCustom: state.categoriasCustom,
     setCategoriasCustom,
+    cartoes: state.cartoes,
+    setCartoes,
     preferences: state.preferences,
     setPreferences,
     // Campos novos da Etapa 1 — read-only por enquanto:

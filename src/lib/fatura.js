@@ -57,10 +57,15 @@ export function mesPagamentoDaFatura(faturaMes) {
 
 // Soma das compras no cartão que compõem uma fatura. Usa `valor` (o valor do
 // mês), igual ao resto dos agregados — parcelas já vêm lançadas mês a mês.
-export function totalFatura(txs, faturaMes, diaFechamento) {
+//
+// `cartaoId` recorta por cartão: `undefined` soma todos (o comportamento de
+// quem não cadastrou cartão nenhum), um id soma só o dele, e `null` soma as
+// órfãs — as que ficaram sem cartão depois que um cartão foi apagado.
+export function totalFatura(txs, faturaMes, diaFechamento, cartaoId) {
   let total = 0;
   for (const tx of txs || []) {
     if (tx.tipo === "entrada" || tx.pagamento !== PAG_CARTAO) continue;
+    if (cartaoId !== undefined && (tx.cartaoId || null) !== cartaoId) continue;
     if (faturaDaCompra(tx.data, diaFechamento) === faturaMes) total += tx.valor || 0;
   }
   return total;
@@ -71,23 +76,47 @@ export function totalFatura(txs, faturaMes, diaFechamento) {
 //   fechada — já fechou e ainda vai ser paga (null quando não há)
 // A fechada some quando o mês de vencimento dela já passou: aí ela não é mais
 // "a pagar", virou histórico.
-export function faturasEmAberto(txs, diaFechamento, hojeISO) {
+//
+// `cartaoId` segue a convenção de totalFatura: ausente = todos os cartões.
+export function faturasEmAberto(txs, diaFechamento, hojeISO, cartaoId) {
   const mesAtual = hojeISO.slice(0, 7);
   const mesAberta = faturaDaCompra(hojeISO, diaFechamento);
   const aberta = {
     mes: mesAberta,
-    total: totalFatura(txs, mesAberta, diaFechamento),
+    total: totalFatura(txs, mesAberta, diaFechamento, cartaoId),
     fecha: dataFechamento(mesAberta, diaFechamento),
     vence: mesPagamentoDaFatura(mesAberta),
   };
 
   const mesFechada = mesAnteriorDe(mesAberta);
   const venceFechada = mesPagamentoDaFatura(mesFechada);
-  const totalFechada = totalFatura(txs, mesFechada, diaFechamento);
+  const totalFechada = totalFatura(txs, mesFechada, diaFechamento, cartaoId);
   const fechada =
     venceFechada >= mesAtual && totalFechada > 0
       ? { mes: mesFechada, total: totalFechada, vence: venceFechada }
       : null;
 
   return { aberta, fechada };
+}
+
+// As faturas de cada cartão cadastrado, na ordem da lista. Com zero cartões,
+// devolve um grupo único sem cartão — o card do Dashboard de antes. Um grupo
+// "sem cartão" também aparece no fim quando sobrou tx órfã (cartão apagado com
+// "deixar sem cartão") e ainda existe algum cartão cadastrado.
+export function faturasPorCartao(txs, cartoes, diaFechamentoGlobal, hojeISO) {
+  const lista = cartoes || [];
+  if (lista.length === 0) {
+    return [{ cartao: null, faturas: faturasEmAberto(txs, diaFechamentoGlobal, hojeISO) }];
+  }
+
+  const grupos = lista.map((cartao) => ({
+    cartao,
+    faturas: faturasEmAberto(txs, cartao.diaFechamento || 0, hojeISO, cartao.id),
+  }));
+
+  const orfas = faturasEmAberto(txs, diaFechamentoGlobal, hojeISO, null);
+  if (orfas.fechada || orfas.aberta.total > 0) {
+    grupos.push({ cartao: null, faturas: orfas });
+  }
+  return grupos;
 }

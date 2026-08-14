@@ -123,6 +123,7 @@ export function PerfilScreen({ ctx }) {
         <div style={{ height: 14 }} />
         <Card style={{ padding: "4px 16px" }}>
           <ConfigItem icon="piggy" label={t("Caixinhas")} onClick={() => irPara("caixinhas")} />
+          <ConfigItem icon="card" label={t("Cartões")} onClick={() => irPara("cartoes")} />
           <ConfigItem icon="target" label={t("Orçamentos")} onClick={() => irPara("orcamentos")} />
           <ConfigItem icon="history" label={t("Recorrentes")} onClick={() => irPara("recorrentes")} />
           <ConfigItem icon="calendar" label={t("Histórico")} onClick={() => irPara("historico")} />

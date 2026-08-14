@@ -428,6 +428,56 @@ export const EN = {
   "Entra na fatura de {fatura} · você paga em {vence}":
     "Goes on the {fatura} statement · you pay in {vence}",
 
+  // ─── Cartões ───
+  "Cartões": "Cards",
+  "Faturas dos cartões": "Card statements",
+  "Sem cartão": "No card",
+  "Todos": "All",
+  "Nenhum cartão cadastrado": "No cards added yet",
+  "Cadastre seus cartões para separar as faturas, cada um com seu dia de fechamento. Não pedimos o número do cartão.":
+    "Add your cards to keep statements apart, each with its own closing day. We never ask for the card number.",
+  "Novo cartão": "New card",
+  "Editar cartão": "Edit card",
+  "Apagar cartão": "Delete card",
+  "Ex: Nubank": "e.g. Nubank",
+  "Personalizada": "Custom",
+  "Dia em que a fatura fecha": "Statement closing day",
+  "Último dia do mês": "Last day of the month",
+  "Compras a partir do dia {dia} já entram na fatura seguinte. Não muda o saldo do mês.":
+    "Purchases from the {dia}th on go to the next statement. Doesn't change the month's balance.",
+  "Em branco, a fatura fecha no último dia do mês. Não muda o saldo do mês.":
+    "Left blank, the statement closes on the last day of the month. Doesn't change the month's balance.",
+  "Tudo que você já lançou no crédito passa a ser deste cartão. Se cadastrar outro depois, os gastos ficam aqui até você mudar um por um.":
+    "Everything you've already logged on credit becomes this card's. If you add another later, the expenses stay here until you move them one by one.",
+  "Fecha dia {dia}": "Closes on the {dia}th",
+  "Fecha no último dia do mês": "Closes on the last day of the month",
+  "Limite do cartão (opcional)": "Card limit (optional)",
+  "É o teto que o banco liberou. Serve pra mostrar quanto do cartão já está comprometido — não é o mesmo que o limite de gasto mensal em Orçamentos.":
+    "This is the ceiling your bank set. It shows how much of the card is already committed — not the same as the monthly spending cap in Budgets.",
+  "{disponivel} livres de {limite}": "{disponivel} left of {limite}",
+  "Sem limite informado": "No limit set",
+  "1 cartão": "1 card",
+  "{n} cartões": "{n} cards",
+  "Estourado": "Over limit",
+  "No limite": "Near limit",
+  "Em uso": "In use",
+  "Folgado": "Plenty left",
+  "{nome} passou do limite.": "{nome} is over its limit.",
+  "{nome} já usou {pct}% do limite.": "{nome} has used {pct}% of its limit.",
+  "A fatura é só uma forma de ver o ciclo do cartão: cada compra já abateu o mês em que foi feita.":
+    "The statement is just a way to see the card's cycle: each purchase already reduced the month it was made in.",
+  "Apagar {nome}?": "Delete {nome}?",
+  "Nenhum lançamento está preso a este cartão.": "No entries are tied to this card.",
+  "{n} lançamentos estão neste cartão. Eles continuam no histórico como crédito, sem cartão — nada é apagado e nenhum valor muda.":
+    "{n} entries are on this card. They stay in your history as credit with no card — nothing is deleted and no amount changes.",
+  "{n} lançamentos estão neste cartão. Escolha pra onde eles vão — nada é apagado e nenhum valor muda.":
+    "{n} entries are on this card. Choose where they go — nothing is deleted and no amount changes.",
+  "Mover para {nome}": "Move to {nome}",
+  "Deixar sem cartão": "Leave with no card",
+  "Continuam como crédito, sem cartão definido": "They stay as credit, with no card set",
+  "Meus cartões": "My cards",
+  "{n} cadastrados · cada um com seu fechamento": "{n} added · each with its own closing day",
+
   // ─── Recorrentes ───
   "Esses gastos são adicionados automaticamente todo mês. Edite para atualizar do mês atual em diante ou cancele se a cobrança parar.":
     "These expenses are added automatically every month. Edit to update from the current month onward, or cancel if the charge stops.",

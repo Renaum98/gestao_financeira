@@ -20,6 +20,7 @@ import { formatarValorDigitado, formatarValorInicial, parseValorBR, valorZero } 
 import { simboloMoeda } from "../lib/moeda.js";
 import { ajustarGuardado } from "../lib/guardado-entradas.js";
 import { faturaDaCompra, mesPagamentoDaFatura, PAG_CARTAO } from "../lib/fatura.js";
+import { corDoCartao, corTextoSobre, fechamentoDe } from "../lib/cartoes.js";
 import { useT } from "../lib/i18n.jsx";
 
 function hojeISO() {
@@ -33,7 +34,7 @@ const CORES_CAT = [
 ];
 
 export function AddExpenseModal({ ctx, params }) {
-  const { fechar, salvarTx, adicionarCategoria, excluirCategoria, ehDesktop, txs, mes, orcamentos, preferences, caixinhas } = ctx;
+  const { fechar, salvarTx, adicionarCategoria, excluirCategoria, ehDesktop, txs, mes, orcamentos, preferences, caixinhas, cartoes = [] } = ctx;
   const t = useT();
   const editar = params && params.editar;
   // Estado da confirmação de exclusão de categoria personalizada.
@@ -56,6 +57,22 @@ export function AddExpenseModal({ ctx, params }) {
   const [pagamento, setPagamento] = React.useState(
     editar?.pagamento || "Cartão de crédito",
   );
+  // Em qual cartão a compra entra. Gasto novo já nasce no primeiro cartão da
+  // lista — com um cartão só, o usuário nunca precisa escolher. Ao editar,
+  // mantém o que a tx tem: `null` aqui é uma tx órfã (sobra de cartão apagado),
+  // e mexer nela sem o usuário pedir seria reescrever histórico às escondidas.
+  const [cartaoId, setCartaoId] = React.useState(
+    editar ? editar.cartaoId || null : cartoes[0]?.id || null,
+  );
+  // Ao trocar a forma de pagamento pra crédito, cai no primeiro cartão. A tx
+  // que JÁ era do crédito sem cartão fica como está: ela é órfã de verdade
+  // (sobra de cartão apagado) e adotá-la sozinho seria reescrever histórico.
+  React.useEffect(() => {
+    if (tipo === "entrada" || pagamento !== PAG_CARTAO || cartaoId) return;
+    if (editar && editar.pagamento === PAG_CARTAO) return;
+    setCartaoId(cartoes[0]?.id || null);
+  }, [tipo, pagamento]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const [data, setData] = React.useState(editar ? editar.data : hojeISO());
   const [ehRecorrente, setEhRecorrente] = React.useState(false);
   // Campos extras quando recorrente: dia de vencimento + até qual mês/ano.
@@ -142,11 +159,12 @@ export function AddExpenseModal({ ctx, params }) {
   // digitada: comprar depois do fechamento já joga pra fatura do mês seguinte.
   // Puramente informativo — o saldo do mês continua abatendo pela data da
   // compra, não pela data do pagamento (ver lib/fatura.js).
+  // O fechamento é o do cartão escolhido; sem cartão, o global de antes.
   const infoFatura = React.useMemo(() => {
     if (ehEntrada || pagamento !== PAG_CARTAO || !data) return null;
-    const fatura = faturaDaCompra(data, preferences?.diaFechamentoCartao);
+    const fatura = faturaDaCompra(data, fechamentoDe(cartoes, cartaoId, preferences));
     return { fatura, vence: mesPagamentoDaFatura(fatura) };
-  }, [ehEntrada, pagamento, data, preferences?.diaFechamentoCartao]);
+  }, [ehEntrada, pagamento, data, cartoes, cartaoId, preferences?.diaFechamentoCartao]);
 
   // Aviso de caixinha: editar uma entrada que já foi guardada pode deixar o
   // depósito sem lastro (valor menor que o guardado, ou descrição/data que tira
@@ -182,6 +200,9 @@ export function AddExpenseModal({ ctx, params }) {
       categoria: ehEntrada ? null : categoria,
       descricao: descFinal,
       pagamento: ehEntrada ? null : pagamento,
+      // Só existe em compra no crédito com cartão escolhido. Ausente = crédito
+      // sem cartão definido, que é o app inteiro antes do cadastro.
+      ...(!ehEntrada && pagamento === PAG_CARTAO && cartaoId ? { cartaoId } : {}),
       data: dataFinal,
       // Parcelamento não é mais criável; ao editar uma tx parcelada antiga,
       // preservamos o parcelamento existente (atualizando o valor total).
@@ -773,6 +794,66 @@ export function AddExpenseModal({ ctx, params }) {
             );
           })}
         </div>
+        )}
+
+        {/* Qual cartão. Só aparece com cartão cadastrado — sem nenhum, o app
+            segue como antes, com "Cartão de crédito" solto. A opção "Sem
+            cartão" só existe pra tx que já está órfã (sobra de cartão apagado),
+            pra não virar um jeito fácil de criar órfã nova. */}
+        {!ehEntrada && pagamento === PAG_CARTAO && cartoes.length > 0 && (
+          <div style={{ marginTop: 10, display: "flex", gap: 8, flexWrap: "wrap" }}>
+            {cartoes.map((c) => {
+              const sel = cartaoId === c.id;
+              const cor = corDoCartao(c);
+              const tinta = sel ? corTextoSobre(cor) : "var(--ink)";
+              return (
+                <button
+                  key={c.id}
+                  onClick={() => { vibrar(); setCartaoId(c.id); }}
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 6,
+                    padding: "8px 12px",
+                    borderRadius: 999,
+                    border: "none",
+                    background: sel ? cor : "var(--card-2)",
+                    color: tinta,
+                    fontSize: 11.5,
+                    fontWeight: 700,
+                    cursor: "pointer",
+                    fontFamily: "inherit",
+                    boxShadow: sel ? "none" : "0 1px 2px rgba(0,0,0,0.06)",
+                  }}
+                >
+                  <Icon name="card" size={14} color={tinta} strokeWidth={2.2} />
+                  {c.nome}
+                </button>
+              );
+            })}
+            {editar && editar.pagamento === PAG_CARTAO && !editar.cartaoId && (
+              <button
+                onClick={() => { vibrar(); setCartaoId(null); }}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 6,
+                  padding: "8px 12px",
+                  borderRadius: 999,
+                  border: "none",
+                  background: cartaoId === null ? "var(--ink)" : "var(--card-2)",
+                  color: cartaoId === null ? "var(--bg)" : "var(--muted)",
+                  fontSize: 11.5,
+                  fontWeight: 700,
+                  cursor: "pointer",
+                  fontFamily: "inherit",
+                  boxShadow: cartaoId === null ? "none" : "0 1px 2px rgba(0,0,0,0.06)",
+                }}
+              >
+                {t("Sem cartão")}
+              </button>
+            )}
+          </div>
         )}
 
         {/* Em que fatura essa compra cai — só leitura, não muda a conta do mês */}

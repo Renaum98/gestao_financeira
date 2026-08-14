@@ -5,7 +5,9 @@ import { createPortal } from "react-dom";
 import { Z_MODAL } from "../../ui/modal-base.jsx";
 import { useT } from "../../lib/i18n.jsx";
 
-export function ModalShell({ titulo, onFechar, onSalvar, salvarAtivo, corAcento, children }) {
+// `corAcentoTexto` existe porque um acento claro (cartão amarelo, por exemplo)
+// engole o branco. Só quem passa uma cor clara precisa informar.
+export function ModalShell({ titulo, onFechar, onSalvar, salvarAtivo, corAcento, corAcentoTexto, children }) {
   const t = useT();
   return createPortal(
     <div
@@ -69,7 +71,7 @@ export function ModalShell({ titulo, onFechar, onSalvar, salvarAtivo, corAcento,
             disabled={!salvarAtivo}
             style={{
               background: salvarAtivo ? corAcento || "var(--primary)" : "var(--linha)",
-              color: salvarAtivo ? "#fff" : "var(--muted)",
+              color: salvarAtivo ? corAcentoTexto || "#fff" : "var(--muted)",
               border: "none",
               padding: "6px 14px",
               borderRadius: 999,

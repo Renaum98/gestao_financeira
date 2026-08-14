@@ -10,10 +10,12 @@ import { COR_NEG } from '../lib/colors.js';
 import { vibrar } from '../lib/haptics.js';
 import { formatarValorDigitado, formatarValorInicial, parseValorBR } from '../lib/money-input.js';
 import { simboloMoeda } from '../lib/moeda.js';
+import { PAG_CARTAO } from '../lib/fatura.js';
+import { corDoCartao, corTextoSobre } from '../lib/cartoes.js';
 import { useT } from '../lib/i18n.jsx';
 
 export function RecorrentesScreen({ ctx }) {
-  const { recorrentes, cancelarRecorrente, editarRecorrente, voltar, ehDesktop } = ctx;
+  const { recorrentes, cancelarRecorrente, editarRecorrente, voltar, ehDesktop, cartoes = [] } = ctx;
   const t = useT();
   const [confirmar, setConfirmar] = React.useState(null);
   const [editando, setEditando] = React.useState(null);
@@ -101,6 +103,7 @@ export function RecorrentesScreen({ ctx }) {
       {editando && (
         <EditarRecorrenteModal
           rec={editando}
+          cartoes={cartoes}
           onFechar={() => setEditando(null)}
           onSalvar={(dados) => {
             editarRecorrente(editando.id, dados);
@@ -112,14 +115,24 @@ export function RecorrentesScreen({ ctx }) {
   );
 }
 
-function EditarRecorrenteModal({ rec, onFechar, onSalvar }) {
+function EditarRecorrenteModal({ rec, cartoes = [], onFechar, onSalvar }) {
   const t = useT();
   const ehEntrada = rec.tipo === 'entrada';
   const [descricao, setDescricao] = React.useState(rec.descricao || '');
   const [valor, setValor] = React.useState(formatarValorInicial(rec.valor));
   const [categoria, setCategoria] = React.useState(rec.categoria || 'outros');
   const [pagamento, setPagamento] = React.useState(rec.pagamento || 'Pix');
+  const [cartaoId, setCartaoId] = React.useState(rec.cartaoId || null);
   const [dia, setDia] = React.useState(rec.dia || 1);
+
+  // Virou crédito agora? Cai no primeiro cartão. Uma recorrência que já era do
+  // crédito sem cartão é órfã de verdade (sobra de cartão apagado) e fica como
+  // está até o usuário escolher.
+  React.useEffect(() => {
+    if (ehEntrada || pagamento !== PAG_CARTAO || cartaoId) return;
+    if (rec.pagamento === PAG_CARTAO) return;
+    setCartaoId(cartoes[0]?.id || null);
+  }, [pagamento]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const valorNum = parseValorBR(valor);
   const aoDigitar = (texto) => setValor(formatarValorDigitado(texto));
@@ -136,6 +149,9 @@ function EditarRecorrenteModal({ rec, onFechar, onSalvar }) {
     if (!ehEntrada) {
       dados.categoria = categoria;
       dados.pagamento = pagamento;
+      // `null` limpa o cartão nas txs futuras — é o que precisa acontecer
+      // quando a conta deixa de ser no crédito.
+      dados.cartaoId = pagamento === PAG_CARTAO ? cartaoId : null;
     }
     onSalvar(dados);
   };
@@ -287,6 +303,34 @@ function EditarRecorrenteModal({ rec, onFechar, onSalvar }) {
                   strokeWidth={2}
                 />
                 {t(p.replace('Cartão de ', ''))}
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Em qual cartão. Só com cartão cadastrado (ver lib/cartoes.js). */}
+      {!ehEntrada && pagamento === PAG_CARTAO && cartoes.length > 0 && (
+        <div style={{ marginTop: 10, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          {cartoes.map((c) => {
+            const sel = cartaoId === c.id;
+            const cor = corDoCartao(c);
+            const tinta = sel ? corTextoSobre(cor) : 'var(--ink)';
+            return (
+              <button
+                key={c.id}
+                onClick={() => { vibrar(); setCartaoId(c.id); }}
+                style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 6,
+                  padding: '8px 12px', borderRadius: 999, border: 'none',
+                  background: sel ? cor : 'var(--card-2)',
+                  color: tinta,
+                  fontSize: 11.5, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
+                  boxShadow: sel ? 'none' : '0 1px 2px rgba(0,0,0,0.06)',
+                }}
+              >
+                <Icon name="card" size={14} color={tinta} strokeWidth={2.2} />
+                {c.nome}
               </button>
             );
           })}

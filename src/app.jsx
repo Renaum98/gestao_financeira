@@ -37,6 +37,15 @@ import { LoaderTela, SplashLogo, useSplashInteiro } from "./ui/loader.jsx";
 import { calcOrcBaseAtual, mesCorrente, mesAnteriorDe } from "./lib/orcamento.js";
 import { rendimentoRealizadoAoResgatar } from "./lib/selic.js";
 import { ajustarGuardado } from "./lib/guardado-entradas.js";
+import {
+  novoCartao,
+  aplicarPrimeiroCartaoEmTxs,
+  aplicarPrimeiroCartaoEmRecorrentes,
+  moverLancamentos,
+  contarNoCartao,
+  ehGastoNoCartao,
+  ehRecorrenteNoCartao,
+} from "./lib/cartoes.js";
 import { I18nProvider, useT, lerIdiomaSalvo, salvarIdioma } from "./lib/i18n.jsx";
 import { setMoedaAtiva, lerMoedaSalva, salvarMoeda } from "./lib/moeda.js";
 
@@ -58,6 +67,7 @@ const PerfilScreen      = lazyNamed(() => import("./screens/perfil.jsx"), "Perfi
 const CaixinhasScreen   = lazyNamed(() => import("./screens/caixinhas.jsx"), "CaixinhasScreen");
 const CaixinhaScreen    = lazyNamed(() => import("./screens/caixinhas.jsx"), "CaixinhaScreen");
 const RecorrentesScreen = lazyNamed(() => import("./screens/recorrentes.jsx"), "RecorrentesScreen");
+const CartoesScreen     = lazyNamed(() => import("./screens/cartoes.jsx"), "CartoesScreen");
 const NotificacoesScreen= lazyNamed(() => import("./screens/notificacoes.jsx"), "NotificacoesScreen");
 const AddExpenseModal   = lazyNamed(() => import("./modals/add-expense.jsx"), "AddExpenseModal");
 
@@ -74,6 +84,8 @@ const ACOES_QUE_ESCREVEM = [
   "setOrcamentos",
   "salvarCaixinha",
   "excluirCaixinha",
+  "salvarCartao",
+  "excluirCartao",
   "depositarCaixinha",
   "resgatarCaixinha",
   "cancelarRecorrente",
@@ -500,6 +512,7 @@ const NAV_DESKTOP = [
   { id: "analise", icon: "chart", label: "Análise" },
   { id: "orcamentos", icon: "target", label: "Orçamentos" },
   { id: "caixinhas", icon: "piggy", label: "Caixinhas" },
+  { id: "cartoes", icon: "card", label: "Cartões" },
   { id: "recorrentes", icon: "history", label: "Recorrentes" },
   { id: "historico", icon: "calendar", label: "Histórico" },
   { id: "perfil", icon: "user", label: "Perfil" },
@@ -1163,6 +1176,7 @@ export function App() {
           descricao: base.descricao,
           categoria: base.categoria,
           pagamento: base.pagamento,
+          ...(base.cartaoId && { cartaoId: base.cartaoId }),
           valor: valorPP,
           data: yyyymmdd,
           parcelas: { total, atual: i + 1, grupoId, valorTotal },
@@ -1214,6 +1228,7 @@ export function App() {
                 descricao: tx.descricao,
                 categoria: tx.categoria,
                 pagamento: tx.pagamento,
+                ...(tx.cartaoId && { cartaoId: tx.cartaoId }),
                 valor: valorMes,
                 data,
                 recorrenteId: recId,
@@ -1230,6 +1245,7 @@ export function App() {
           descricao: tx.descricao,
           categoria: tx.categoria,
           pagamento: tx.pagamento,
+          ...(tx.cartaoId && { cartaoId: tx.cartaoId }),
           valor: tx.valor,
           dia: diaCfg,
           inicio: inicioYYMM,
@@ -1308,7 +1324,13 @@ export function App() {
       : dados;
     const recNova = recAntiga ? { ...recAntiga, ...dadosFinais } : null;
     cloud.setRecorrentes((atual) =>
-      atual.map((r) => (r.id === recId ? { ...r, ...dadosFinais } : r)),
+      atual.map((r) => {
+        if (r.id !== recId) return r;
+        const nova = { ...r, ...dadosFinais };
+        // cartaoId null é "tirar o cartão", não um valor a guardar.
+        if (!nova.cartaoId) delete nova.cartaoId;
+        return nova;
+      }),
     );
     cloud.setTxs((atual) => {
       const novos = atual.map((t) => {
@@ -1318,6 +1340,11 @@ export function App() {
         if (dados.descricao !== undefined) nova.descricao = dados.descricao;
         if (dados.categoria !== undefined) nova.categoria = dados.categoria;
         if (dados.pagamento !== undefined) nova.pagamento = dados.pagamento;
+        // null limpa o campo: a conta saiu do crédito, ou do cartão.
+        if (dados.cartaoId !== undefined) {
+          if (dados.cartaoId) nova.cartaoId = dados.cartaoId;
+          else delete nova.cartaoId;
+        }
         if (dados.valor !== undefined) {
           nova.valor =
             recNova && recNova.crescimento
@@ -1509,6 +1536,52 @@ export function App() {
     });
   };
 
+  // ─── Cartões de crédito ───
+  // Cartões são pessoais: ficam no user doc mesmo havendo parceria (diferente
+  // das caixinhas). Ninguém reescreve lançamento do parceiro.
+  //
+  // A criação do PRIMEIRO cartão adota tudo que já foi lançado no crédito — a
+  // regra combinada, ver o cabeçalho de lib/cartoes.js. O React agrupa os três
+  // patches num render só, então cartões + txs + recorrentes saem numa escrita
+  // única (ver o efeito de persistência em lib/storage.js).
+  const salvarCartao = (dados) => {
+    vibrar(14);
+    if (dados.id) {
+      cloud.setCartoes((atual) =>
+        atual.map((c) => (c.id === dados.id ? { ...c, ...dados } : c)),
+      );
+      return;
+    }
+    const ehPrimeiro = (cloud.cartoes || []).length === 0;
+    const cartao = novoCartao(dados);
+    cloud.setCartoes((atual) => [...atual, cartao]);
+    if (!ehPrimeiro) return;
+
+    const txsNovas = aplicarPrimeiroCartaoEmTxs(cloud.txs, cartao.id);
+    if (txsNovas) cloud.setTxs(txsNovas);
+    const recNovas = aplicarPrimeiroCartaoEmRecorrentes(cloud.recorrentes, cartao.id);
+    if (recNovas) cloud.setRecorrentes(recNovas);
+  };
+
+  // `destinoId` é o cartão pra onde vão os lançamentos do que está sendo
+  // apagado; null solta pra "sem cartão", que devolve a tx ao estado genérico
+  // de antes dos cartões. Quem pergunta é a tela (ModalApagarCartao).
+  const excluirCartao = (id, destinoId = null) => {
+    vibrar(14);
+    cloud.setCartoes((atual) => atual.filter((c) => c.id !== id));
+    // Só reescreve as listas que realmente têm lançamento nesse cartão — apagar
+    // um cartão vazio não deve custar uma regravação de todo o histórico.
+    const { txs: nTxs, recorrentes: nRec } = contarNoCartao(cloud.txs, cloud.recorrentes, id);
+    if (nTxs > 0) {
+      cloud.setTxs((atual) => moverLancamentos(atual, ehGastoNoCartao, id, destinoId));
+    }
+    if (nRec > 0) {
+      cloud.setRecorrentes((atual) =>
+        moverLancamentos(atual, ehRecorrenteNoCartao, id, destinoId),
+      );
+    }
+  };
+
   // Desfazer parceria — quem clica leva as caixinhas (combinado na Etapa 1).
   const desfazerParceria = async () => {
     if (!cloud.partnershipId) return;
@@ -1576,6 +1649,9 @@ export function App() {
     recorrentes: cloud.recorrentes,
     cancelarRecorrente,
     editarRecorrente,
+    cartoes: cloud.cartoes || [],
+    salvarCartao,
+    excluirCartao,
     marcarTxPago,
     categoriasCustom: cloud.categoriasCustom,
     adicionarCategoria,
@@ -1640,6 +1716,7 @@ export function App() {
   else if (tela === "caixinha")
     conteudo = <CaixinhaScreen ctx={ctx} params={params} />;
   else if (tela === "recorrentes") conteudo = <RecorrentesScreen ctx={ctx} />;
+  else if (tela === "cartoes") conteudo = <CartoesScreen ctx={ctx} />;
   else if (tela === "notificacoes") conteudo = <NotificacoesScreen ctx={ctx} />;
 
   if (ehDesktop) {
