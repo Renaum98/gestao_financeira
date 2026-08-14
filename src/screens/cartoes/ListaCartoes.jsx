@@ -31,8 +31,8 @@ export function CartoesScreen({ ctx }) {
   const [modal, setModal] = React.useState(null); // null | 'novo' | { editando }
   const [apagando, setApagando] = React.useState(null); // null | cartao
 
-  // Quanto de cada cartão está comprometido: a fatura aberta mais a que já
-  // fechou e ainda vai vencer (ver usoDoCartao).
+  // Quanto de cada cartão já foi no ciclo em que ele está agora — a fatura
+  // aberta (ver usoDoCartao).
   const usos = React.useMemo(() => {
     const hoje = hojeISO();
     const mapa = {};
@@ -112,9 +112,11 @@ export function CartoesScreen({ ctx }) {
                   {fmtBRL(totalUsado)}
                 </div>
                 <div style={{ fontSize: 13, fontWeight: 600, color: "var(--muted)", marginTop: 4 }}>
+                  {/* Dizer de que número se trata: agora ele é só o ciclo
+                      aberto, não a dívida toda do cartão. */}
                   {cartoes.length === 1
-                    ? t("1 cartão")
-                    : t("{n} cartões", { n: cartoes.length })}
+                    ? t("1 cartão · fatura aberta")
+                    : t("{n} cartões · faturas abertas", { n: cartoes.length })}
                 </div>
               </div>
               {pior && (

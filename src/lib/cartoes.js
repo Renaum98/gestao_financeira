@@ -150,12 +150,21 @@ export function contarNoCartao(txs, recorrentes, cartaoId) {
 // `preferences.orcamentoCartaoCredito`, que é quanto o usuário quer gastar no
 // crédito no mês. Um é do banco, o outro é meta pessoal.
 //
-// O que ocupa o limite é a dívida ainda não paga: a fatura aberta mais a que já
-// fechou e ainda vai vencer. Fatura de mês vencido não entra — ela já foi paga
-// (o app não tem baixa de pagamento de fatura, então "vencida" é o mais perto
-// de "quitada" que dá pra afirmar sem inventar).
+// O que ocupa o limite é só a FATURA ABERTA — o ciclo em que o usuário está
+// gastando agora. É o que responde "quanto ainda dá pra passar neste cartão
+// antes de estourar", que é a pergunta da barra.
+//
+// A fatura que já fechou fica de fora de propósito. Somar as duas transforma a
+// barra num acumulado que só cresce até a virada do ciclo e nunca reflete o
+// mês corrente — com um gasto grande em julho, o cartão aparecia no vermelho em
+// agosto sem o usuário ter gasto nada em agosto. Quem quiser ver a fatura
+// fechada tem o card do Dashboard, que mostra as duas separadas.
+//
+// Com o fechamento padrão (último dia do mês), fatura aberta = mês corrente.
+// Com fechamento no dia 25, o ciclo atravessa a virada — e é esse ciclo que
+// vale, porque é dele que o limite está sendo consumido.
 export function usoDoCartao(cartao, faturas) {
-  const usado = (faturas?.aberta?.total || 0) + (faturas?.fechada?.total || 0);
+  const usado = faturas?.aberta?.total || 0;
   const limite = cartao?.limite > 0 ? cartao.limite : 0;
   return {
     usado,

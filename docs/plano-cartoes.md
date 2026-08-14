@@ -26,7 +26,10 @@ cartoes: [ { id, nome, cor, diaFechamento, limite, criadoEm } ]
   do mês). O global continua valendo pra quem não cadastrou cartão nenhum.
 - `limite`: teto do banco (0 = não informado). **Não** se confunde com
   `preferences.orcamentoCartaoCredito`, que é meta mensal de gasto. O que ocupa
-  o limite é a fatura aberta + a fechada que ainda vai vencer (`usoDoCartao`).
+  o limite é **só a fatura aberta** (`usoDoCartao`) — o ciclo em que o usuário
+  está gastando agora. Somar a fatura já fechada faria a barra virar um
+  acumulado que nunca reflete o mês corrente: um gasto grande em julho deixaria
+  o cartão no vermelho em agosto sem nada ter sido gasto em agosto.
 
 Cor clara (o amarelo do BB, por exemplo) quebraria o texto branco por cima, então
 `corTextoSobre()` decide entre branco e escuro por luminância — quem pinta com a
