@@ -372,3 +372,37 @@
   .swatch-raised { transition: none; }
   .swatch-raised:hover, .swatch-raised:active { transform: none; }
 }
+
+/* ── Botão de voltar flutuante ─────────────────────────────────────────────
+   Sai do fluxo pra continuar alcançável depois de descer a tela (o vão dele
+   fica reservado dentro da TopBar). A coluna espelha a do shell mobile
+   (max-width 480 + 20px de padding) pra o botão cair exatamente onde caía
+   quando estava no fluxo — fixo é relativo à viewport, não ao <main>.
+
+   Só existe no mobile: no desktop as telas não recebem `voltar` (a sidebar faz
+   esse papel), então o elemento nem chega a ser renderizado.
+
+   z-index 30: acima do conteúdo, abaixo da tab bar (40) e da faixa de
+   offline (60). */
+.voltar-fixo {
+  position: fixed;
+  top: calc(var(--pad-top) + var(--offset-topo, 0px));
+  left: 0;
+  right: 0;
+  z-index: 30;
+  display: flex;
+  justify-content: center;
+  /* o wrapper cobre a largura toda; só o botão recebe cliques */
+  pointer-events: none;
+}
+.voltar-fixo-coluna {
+  width: 100%;
+  max-width: 480px;
+  padding: 0 20px;
+}
+.voltar-fixo button {
+  pointer-events: auto;
+}
+@media (prefers-reduced-motion: reduce) {
+  .voltar-fixo button { transition: none; }
+}

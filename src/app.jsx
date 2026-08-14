@@ -31,7 +31,7 @@ import { vibrar } from "./lib/haptics.js";
 import { ehTemaEscuro, lerAparenciaSalva, salvarAparencia } from "./lib/tema.js";
 import { ehLeve, lerLeveSalvo, salvarLeve, AUTO } from "./lib/leve.js";
 import { estaOffline, useEstaOffline } from "./lib/conexao.js";
-import { BarraOffline, EspacoBarraOffline } from "./ui/barra-offline.jsx";
+import { BarraOffline, EspacoBarraOffline, ALTURA_FAIXA } from "./ui/barra-offline.jsx";
 import { useInstallPrompt, InstallPromptModal } from "./ui/install-prompt.jsx";
 import { LoaderTela, SplashLogo, useSplashInteiro } from "./ui/loader.jsx";
 import { calcOrcBaseAtual, mesCorrente, mesAnteriorDe } from "./lib/orcamento.js";
@@ -1785,7 +1785,17 @@ export function App() {
         // Sem a tab bar embaixo (tela secundária), o espaço reservado pra ela no
         // fim das telas vira um vão vazio — a classe encolhe o --pad-bottom.
         className={ABAS.includes(tela) ? undefined : "sem-tab-bar"}
-        style={{ maxWidth: 480, margin: "0 auto", minHeight: "100vh" }}
+        style={{
+          maxWidth: 480,
+          margin: "0 auto",
+          minHeight: "100vh",
+          // O botão de voltar é fixo na viewport, então não acompanha o empurrão
+          // que a faixa de offline dá no conteúdo — sem este offset ele ficaria
+          // escondido atrás dela justo quando não dá pra gravar nada.
+          "--offset-topo": offline
+            ? `calc(${ALTURA_FAIXA}px + env(safe-area-inset-top))`
+            : "0px",
+        }}
       >
         <AreaDeTelas
           tela={tela}

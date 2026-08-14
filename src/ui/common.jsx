@@ -1,34 +1,84 @@
 // common.jsx — componentes visuais compartilhados (TopBar, SeletorMes, Card, ItemTransacao)
 
+import React from 'react';
 import { CATEGORIAS, MESES_CURTO, fmtBRL, fmtBRLCompacto, rotuloMesT } from '../data.js';
 import { Icon, CatChip, iconePagamento } from './icons.jsx';
 import { COR_POS, COR_POS_FUNDO } from '../lib/colors.js';
 import { useT } from '../lib/i18n.jsx';
 
+// Quanto a página precisa descer pra o botão de voltar encolher. Baixo de
+// propósito: o gesto de descer já começou, o botão sai da frente junto.
+const LIMIAR_SCROLL = 24;
+
+// `true` depois que a página desceu do limiar. O estado só troca ao CRUZAR o
+// limiar, não a cada pixel — quem redesenha por scroll aqui é o CSS, via
+// transform, e não o React.
+function useRolou(ativo) {
+  const [rolou, setRolou] = React.useState(false);
+  React.useEffect(() => {
+    if (!ativo) return;
+    let agendado = false;
+    const aoRolar = () => {
+      if (agendado) return;
+      agendado = true;
+      requestAnimationFrame(() => {
+        agendado = false;
+        setRolou(window.scrollY > LIMIAR_SCROLL);
+      });
+    };
+    aoRolar(); // a tela pode abrir já rolada (voltar pra uma lista longa)
+    window.addEventListener('scroll', aoRolar, { passive: true });
+    return () => window.removeEventListener('scroll', aoRolar);
+  }, [ativo]);
+  // Sem botão não há o que encolher — e o listener nem chega a existir.
+  return ativo && rolou;
+}
+
 export function TopBar({ titulo, voltar, acao, subtitulo }) {
   const t = useT();
+  const rolou = useRolou(!!voltar);
   return (
     <div style={{
       padding: 'var(--pad-top) 20px 12px', display: 'flex',
       flexDirection: 'column', gap: 4,
     }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', minHeight: 32 }}>
-        {voltar ? (
-          <button onClick={voltar} aria-label={t("Voltar")} style={{
-            width: 36, height: 36, borderRadius: 18,
-            background: 'var(--card)', border: 'none', display: 'flex',
-            alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
-            boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
-          }}>
-            <Icon name="arrow-left" size={18} color="var(--ink)" strokeWidth={2.2} />
-          </button>
-        ) : <div style={{ width: 36 }} />}
+        {/* O botão sai do fluxo (é fixo na viewport); este vão guarda o lugar
+            dele pra o título e a ação não escorregarem pra esquerda. */}
+        <div style={{ width: 36 }} />
         {subtitulo && <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--muted)' }}>{subtitulo}</div>}
         {acao || <div style={{ width: 36 }} />}
       </div>
       {titulo && (
         <div style={{ fontSize: 28, fontWeight: 800, color: 'var(--ink)', letterSpacing: '-0.02em', marginTop: 6 }}>
           {titulo}
+        </div>
+      )}
+
+      {/* Fixo: continua alcançável depois de descer a tela. Encolhe ao rolar
+          pra ocupar menos da tela enquanto flutua sobre o conteúdo. */}
+      {voltar && (
+        <div className="voltar-fixo">
+          <div className="voltar-fixo-coluna">
+            <button
+              onClick={voltar}
+              aria-label={t("Voltar")}
+              style={{
+                width: 36, height: 36, borderRadius: 18,
+                background: 'var(--card)', border: 'none', display: 'flex',
+                alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
+                // Só transform e box-shadow animam: nenhum dos dois faz layout,
+                // então rolar não custa reflow.
+                transform: rolou ? 'scale(0.8)' : 'none',
+                boxShadow: rolou
+                  ? '0 4px 14px rgba(20,16,24,0.16)'
+                  : '0 1px 2px rgba(0,0,0,0.04)',
+                transition: 'transform .22s cubic-bezier(.22,1,.36,1), box-shadow .22s ease',
+              }}
+            >
+              <Icon name="arrow-left" size={18} color="var(--ink)" strokeWidth={2.2} />
+            </button>
+          </div>
         </div>
       )}
     </div>

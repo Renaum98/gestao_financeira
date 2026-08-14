@@ -25,8 +25,8 @@ import { BaixarDadosModal } from "./perfil/BaixarDadosModal.jsx";
 
 export function PerfilScreen({ ctx }) {
   const {
-    voltar, irPara, setOnboarding,
-    preferences, setPreferences, usuario, sair, ehDesktop,
+    irPara, setOnboarding,
+    preferences, setPreferences, usuario, sair,
     txs, caixinhas, recorrentes, orcamentos, todosMeses,
     partnerUid, partnerNome, convitesEnviados, desfazerParceria,
     partnershipId,
@@ -89,7 +89,9 @@ export function PerfilScreen({ ctx }) {
 
   return (
     <div style={{ paddingBottom: "var(--pad-bottom)" }}>
-      <TopBar voltar={ehDesktop ? undefined : voltar} />
+      {/* Sem botão de voltar: Perfil é uma aba da tab bar, então já se sai
+          dela tocando outra aba. A TopBar fica pelo respiro do topo. */}
+      <TopBar />
 
       <CabecalhoPerfil preferences={preferences} setPreferences={setPreferences} usuario={usuario} />
 
