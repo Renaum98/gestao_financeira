@@ -33,6 +33,17 @@
   .insight-fade { animation: none; }
 }
 
+/* Troca de filtro na lista de transações. A lista nova entra com o mesmo fade
+   dos insights, porém curto: aqui o gesto acabou de acontecer e a resposta
+   precisa parecer imediata — o fade existe pra dizer "isto é outro conjunto",
+   não pra ser assistido. Reaproveita o keyframe acima. */
+.lista-fade {
+  animation: insightFade .26s cubic-bezier(0.22, 1, 0.36, 1);
+}
+@media (prefers-reduced-motion: reduce) {
+  .lista-fade { animation: none; }
+}
+
 /* Transição de página ao trocar de aba.
    Só opacity + translateY: sem `scale`, que forçava compor a página inteira
    como camada justo enquanto a nova tela monta (era a maior fonte de "engasgo"
@@ -63,7 +74,8 @@
    app, o segundo é o que diz que algo está carregando — sem ele, o modo leve
    viraria telas em branco. */
 :root[data-leve] .page-transition,
-:root[data-leve] .insight-fade {
+:root[data-leve] .insight-fade,
+:root[data-leve] .lista-fade {
   animation: none;
   will-change: auto;
 }

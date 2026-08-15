@@ -12,6 +12,7 @@ import {
 } from "../data.js";
 import { Icon, iconePagamento } from "../ui/icons.jsx";
 import { Card, ItemTransacao, SeletorMes, TopBar } from "../ui/common.jsx";
+import { Expansivel, useUltimoNaoNulo } from "../ui/expansivel.jsx";
 import { ConfirmModal } from "../ui/confirm-modal.jsx";
 import { COR_NEG, COR_NEG_FUNDO, COR_POS } from "../lib/colors.js";
 import { guardadoPorTx, ajustarGuardado } from "../lib/guardado-entradas.js";
@@ -168,6 +169,16 @@ export function GastosScreen({ ctx }) {
     return cartoes.find((c) => c.id === id)?.nome || t("Sem cartão");
   };
 
+  // As duas linhas de baixo abrem e fecham em altura (ui/expansivel.jsx). Como
+  // o bloco continua renderizando enquanto fecha, a lista de cartões segura o
+  // último valor — ela esvazia no mesmo instante em que sai de cena.
+  const filtrosCartaoVis = useUltimoNaoNulo(filtrosCartao.length ? filtrosCartao : null) || [];
+
+  // A lista remonta quando os filtros mudam, e o fade curto entra junto. A
+  // busca fica de fora de propósito: reanimar a cada tecla digitada faria a
+  // lista piscar enquanto o usuário escreve.
+  const chaveFiltro = `${filtro}|${filtroPag}|${filtroCartao}`;
+
   return (
     <div style={{ paddingBottom: "var(--pad-bottom)" }}>
       <TopBar
@@ -307,6 +318,7 @@ export function GastosScreen({ ctx }) {
             return (
               <button
                 key={c}
+                className="opcao-suave"
                 onClick={() => setFiltro(c)}
                 style={{
                   padding: "6px 14px",
@@ -327,6 +339,7 @@ export function GastosScreen({ ctx }) {
               >
                 {pontoCor && (
                   <div
+                    className="opcao-suave"
                     style={{
                       width: 8,
                       height: 8,
@@ -347,7 +360,7 @@ export function GastosScreen({ ctx }) {
       </div>
 
       {/* Filtros de tipo de pagamento — não se aplicam a entradas */}
-      {pags.length > 1 && !ehFiltroEntradas && (
+      <Expansivel aberto={pags.length > 1 && !ehFiltroEntradas}>
         <div style={{ padding: "6px 0 0" }}>
           <div
             className="carrossel"
@@ -364,6 +377,7 @@ export function GastosScreen({ ctx }) {
               return (
                 <button
                   key={p}
+                  className="opcao-suave"
                   onClick={() => setFiltroPag(p)}
                   style={{
                     padding: "6px 14px",
@@ -386,7 +400,7 @@ export function GastosScreen({ ctx }) {
                     <Icon
                       name={iconePagamento(p)}
                       size={13}
-                      color={sel ? "var(--bg)" : "var(--ink)"}
+                      color="currentColor"
                       strokeWidth={2}
                     />
                   )}
@@ -396,10 +410,10 @@ export function GastosScreen({ ctx }) {
             })}
           </div>
         </div>
-      )}
+      </Expansivel>
 
       {/* Filtro por cartão — segunda linha, dentro do crédito */}
-      {filtrosCartao.length > 0 && !ehFiltroEntradas && (
+      <Expansivel aberto={filtrosCartao.length > 0 && !ehFiltroEntradas}>
         <div style={{ padding: "6px 0 0" }}>
           <div
             className="carrossel"
@@ -411,12 +425,13 @@ export function GastosScreen({ ctx }) {
               scrollbarWidth: "none",
             }}
           >
-            {filtrosCartao.map((id) => {
+            {filtrosCartaoVis.map((id) => {
               const sel = filtroCartao === id;
               const cartao = cartoes.find((c) => c.id === id);
               return (
                 <button
                   key={id}
+                  className="opcao-suave"
                   onClick={() => setFiltroCartao(id)}
                   style={{
                     padding: "6px 14px",
@@ -458,11 +473,11 @@ export function GastosScreen({ ctx }) {
             })}
           </div>
         </div>
-      )}
+      </Expansivel>
 
       {/* Lista única do mês — sem agrupamento por dia. A data de cada
           transação aparece no próprio ItemTransacao (canto direito). */}
-      <div style={{ padding: "16px 20px 0" }}>
+      <div key={chaveFiltro} className="lista-fade" style={{ padding: "16px 20px 0" }}>
         {txOrdenadas.length === 0 ? (
           <Card style={{ padding: 32, textAlign: "center" }}>
             <div
