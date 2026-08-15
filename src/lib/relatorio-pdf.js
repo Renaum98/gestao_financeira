@@ -7,6 +7,9 @@
 // Só existe versão POR MÊS — um relatório "de tudo" viraria um calhamaço sem
 // leitura útil; pra isso o usuário baixa o .xlsx.
 //
+// O documento é monocromático de propósito (ver a paleta abaixo): num extrato
+// é o número que informa, e a cor só concorria com ele.
+//
 // O resumo sai de `calcularSaldoMes`, a mesma conta do Dashboard: o restante do
 // mês é orçamento fixo + entradas - guardado em caixinhas + diferença trazida
 // do mês anterior - gastos. Duplicar a fórmula aqui só criaria um relatório que
@@ -16,7 +19,6 @@
 // paga o custo no bundle.
 
 import { CATEGORIAS, fmtBRL, rotuloMesT, txDoMes } from '../data.js';
-import { COR_NEG, COR_POS } from './colors.js';
 import { slugNome } from './export.js';
 import { calcularSaldoMes } from './saldo-mes.js';
 import { mesAnteriorDe } from './orcamento.js';
@@ -28,13 +30,22 @@ const MARGEM = 14;
 const LARG_UTIL = LARG - MARGEM * 2; // 182
 const RODAPE = 18; // faixa reservada no pé da página
 
-// ─── Cores do documento ───
+// ─── Tinta do documento ───
 // Fixas (não seguem o tema do app): papel é sempre claro.
-const MARCA = '#6E4FF6';
+//
+// A paleta é cinza de ponta a ponta, de propósito. Num extrato o SINAL já diz
+// se o dinheiro entrou ou saiu, e o tamanho da barra já diz o peso da
+// categoria — pintar isso de verde/vermelho/roxo repetia em cor o que o número
+// dizia melhor, e o que sobrava era enfeite competindo com a leitura. O único
+// respingo de cor no papel é o logo, que identifica o documento.
+//
+// Hierarquia: TINTA para o que se lê (valores, nomes), SUAVE para apoio,
+// FRACO para rótulo de coluna, LINHA para filete, BARRA para preenchimento.
 const TINTA = '#1A141F';
 const SUAVE = '#6B6470';
-const LINHA = '#E3DEE9';
-const ZEBRA = '#F7F4FA';
+const FRACO = '#9A939F';
+const LINHA = '#DEDAE3';
+const BARRA = '#5A5460';
 
 function rgb(hex) {
   const h = hex.replace('#', '');
@@ -133,7 +144,7 @@ function cabecalhoCompleto(ctx, { mesRotulo, nomeUsuario, geradoEm }) {
   // Bloco da direita: mês do relatório + quando foi gerado.
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(13);
-  texto(doc, MARCA);
+  texto(doc, TINTA);
   doc.text(mesRotulo, LARG - MARGEM, 20, { align: 'right' });
 
   doc.setFont('helvetica', 'normal');
@@ -144,8 +155,10 @@ function cabecalhoCompleto(ctx, { mesRotulo, nomeUsuario, geradoEm }) {
     : t('Gerado em {data}', { data: geradoEm });
   doc.text(linhaInfo, LARG - MARGEM, 25.5, { align: 'right' });
 
-  doc.setDrawColor(...rgb(MARCA));
-  doc.setLineWidth(0.8);
+  // Um filete fino e escuro fecha o cabeçalho. A faixa grossa colorida de
+  // antes pesava mais que o próprio título.
+  doc.setDrawColor(...rgb(TINTA));
+  doc.setLineWidth(0.4);
   doc.line(MARGEM, 31, LARG - MARGEM, 31);
 
   ctx.y = 40;
@@ -202,11 +215,14 @@ function tituloSecao(ctx, rotulo) {
 function blocoResumo(ctx, resumo) {
   const { doc, t } = ctx;
   const { orcBase, entradas, gastos, guardado, carryover, restante, mesAnterior } = resumo;
+  // Sem cor por coluna: o sinal na frente do número já diz a direção, e
+  // "entradas" verde ao lado de "gastos" vermelho tirava o olho justamente do
+  // que interessa, que é a comparação entre os quatro valores.
   const colunas = [
-    { rotulo: t('Orçamento do mês'), valor: orcBase, cor: TINTA },
-    { rotulo: t('Entradas'), valor: entradas, cor: COR_POS },
-    { rotulo: t('Gastos'), valor: gastos, cor: COR_NEG },
-    { rotulo: t('Restante'), valor: restante, cor: restante < 0 ? COR_NEG : COR_POS },
+    { rotulo: t('Orçamento do mês'), valor: fmtBRL(orcBase) },
+    { rotulo: t('Entradas'), valor: `+ ${fmtBRL(entradas)}` },
+    { rotulo: t('Gastos'), valor: `- ${fmtBRL(gastos)}` },
+    { rotulo: t('Restante'), valor: fmtBRL(restante) },
   ];
 
   const vao = 4;
@@ -219,12 +235,12 @@ function blocoResumo(ctx, resumo) {
 
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(7.5);
-    texto(doc, SUAVE);
+    texto(doc, FRACO);
     doc.text(cortar(doc, c.rotulo.toUpperCase(), largCol - 2), x, ctx.y + 4);
 
     doc.setFontSize(12);
-    texto(doc, c.cor);
-    doc.text(cortar(doc, fmtBRL(c.valor), largCol - 2), x, ctx.y + 12);
+    texto(doc, TINTA);
+    doc.text(cortar(doc, c.valor, largCol - 2), x, ctx.y + 12);
   });
 
   ctx.y += altBloco;
@@ -260,23 +276,29 @@ function cabecalhoTabela(ctx) {
     valor: t('Valor'),
   };
 
-  preencher(doc, TINTA);
-  doc.roundedRect(MARGEM, ctx.y, LARG_UTIL, 8, 1.5, 1.5, 'F');
+  // Rótulos soltos entre dois filetes, no lugar da barra preta com texto
+  // branco: o cabeçalho para de ser o elemento mais pesado da página e vira o
+  // que ele é, uma legenda das colunas.
+  doc.setDrawColor(...rgb(TINTA));
+  doc.setLineWidth(0.3);
+  doc.line(MARGEM, ctx.y, LARG - MARGEM, ctx.y);
 
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(7.5);
-  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(7);
+  texto(doc, FRACO);
 
   let x = MARGEM;
   for (const col of COLS) {
-    const rotulo = rotulos[col.chave];
-    if (col.dir === 'right') doc.text(rotulo, x + col.larg - 3, ctx.y + 5.4, { align: 'right' });
-    else doc.text(cortar(doc, rotulo, col.larg - 4), x + 3, ctx.y + 5.4);
+    const rotulo = rotulos[col.chave].toUpperCase();
+    if (col.dir === 'right') doc.text(rotulo, x + col.larg - 3, ctx.y + 5, { align: 'right' });
+    else doc.text(cortar(doc, rotulo, col.larg - 4), x + 3, ctx.y + 5);
     x += col.larg;
   }
 
-  ctx.y += 8;
-  ctx.zebra = false;
+  ctx.y += 7.5;
+  doc.setDrawColor(...rgb(LINHA));
+  doc.setLineWidth(0.2);
+  doc.line(MARGEM, ctx.y, LARG - MARGEM, ctx.y);
 }
 
 function linhaTabela(ctx, tx) {
@@ -287,12 +309,6 @@ function linhaTabela(ctx, tx) {
     novaPagina(ctx);
     cabecalhoTabela(ctx);
   }
-
-  if (ctx.zebra) {
-    preencher(doc, ZEBRA);
-    doc.rect(MARGEM, ctx.y, LARG_UTIL, altLinha, 'F');
-  }
-  ctx.zebra = !ctx.zebra;
 
   const ehEntrada = tx.tipo === 'entrada';
   const [, mm, dd] = tx.data.split('-');
@@ -311,7 +327,7 @@ function linhaTabela(ctx, tx) {
     if (col.chave === 'valor') {
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(7.5);
-      texto(doc, ehEntrada ? COR_POS : TINTA);
+      texto(doc, TINTA);
       doc.text(celulas.valor, x + col.larg - 3, yTexto, { align: 'right' });
     } else {
       doc.setFont('helvetica', col.chave === 'descricao' ? 'bold' : 'normal');
@@ -323,6 +339,12 @@ function linhaTabela(ctx, tx) {
   }
 
   ctx.y += altLinha;
+
+  // Filete no lugar da faixa zebrada: guia o olho pela linha sem pintar
+  // metade da tabela de lilás.
+  doc.setDrawColor(...rgb(LINHA));
+  doc.setLineWidth(0.2);
+  doc.line(MARGEM, ctx.y, LARG - MARGEM, ctx.y);
 }
 
 // Fecha a tabela somando o que está listado nela — nada de orçamento aqui, pra
@@ -332,7 +354,9 @@ function totalTabela(ctx, { entradas, gastos }) {
   const altLinha = 9;
   if (ctx.y + altLinha > ALT - RODAPE) novaPagina(ctx);
 
-  doc.setDrawColor(...rgb(LINHA));
+  // Filete escuro: é o que fecha a tabela, então pesa um pouco mais que os
+  // separadores de linha.
+  doc.setDrawColor(...rgb(TINTA));
   doc.setLineWidth(0.3);
   doc.line(MARGEM, ctx.y, LARG - MARGEM, ctx.y);
 
@@ -341,9 +365,7 @@ function totalTabela(ctx, { entradas, gastos }) {
   texto(doc, TINTA);
   doc.text(t('Total lançado no mês'), MARGEM + 3, ctx.y + 6);
 
-  texto(doc, COR_POS);
   doc.text(`+ ${fmtBRL(entradas)}`, LARG - MARGEM - 48, ctx.y + 6, { align: 'right' });
-  texto(doc, COR_NEG);
   doc.text(`- ${fmtBRL(gastos)}`, LARG - MARGEM - 3, ctx.y + 6, { align: 'right' });
 
   ctx.y += altLinha + 6;
@@ -359,28 +381,27 @@ function blocoCategorias(ctx, gastosPorCat, totalGastos) {
 
   tituloSecao(ctx, t('Gastos por categoria'));
 
+  // Sem a bolinha e sem a barra na cor da categoria: aqui a informação é o
+  // peso de cada uma no total, e o comprimento da barra já diz isso. A cor
+  // (dez tons diferentes empilhados) só disputava atenção com ele.
   for (const [catId, valor] of linhas) {
     garantirEspaco(ctx, 9);
     const cat = CATEGORIAS[catId];
     const pct = totalGastos > 0 ? valor / totalGastos : 0;
 
-    // Marcador com a cor da categoria.
-    preencher(doc, cat?.cor || '#B3AAB8');
-    doc.circle(MARGEM + 1.6, ctx.y + 2.2, 1.6, 'F');
-
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(8);
     texto(doc, TINTA);
-    doc.text(cortar(doc, t(cat?.nome || catId), 46), MARGEM + 6, ctx.y + 3);
+    doc.text(cortar(doc, t(cat?.nome || catId), 50), MARGEM, ctx.y + 3);
 
     // Barrinha proporcional ao peso da categoria no total de gastos.
     const xBarra = MARGEM + 56;
     const largBarra = 62;
     preencher(doc, LINHA);
-    doc.roundedRect(xBarra, ctx.y + 1, largBarra, 2.4, 1.2, 1.2, 'F');
+    doc.rect(xBarra, ctx.y + 1.3, largBarra, 1.8, 'F');
     if (pct > 0) {
-      preencher(doc, cat?.cor || '#B3AAB8');
-      doc.roundedRect(xBarra, ctx.y + 1, Math.max(1.5, largBarra * pct), 2.4, 1.2, 1.2, 'F');
+      preencher(doc, BARRA);
+      doc.rect(xBarra, ctx.y + 1.3, Math.max(1.2, largBarra * pct), 1.8, 'F');
     }
 
     doc.setFont('helvetica', 'normal');
@@ -476,7 +497,7 @@ export async function baixarRelatorioPDF({
   };
 
   const mesRotulo = rotuloMesT(t, mes);
-  const ctx = { doc, logo, t, y: 0, zebra: false, mesRotulo };
+  const ctx = { doc, logo, t, y: 0, mesRotulo };
 
   const geradoEm = new Date().toLocaleDateString(lang === 'en' ? 'en-US' : 'pt-BR');
   cabecalhoCompleto(ctx, { mesRotulo, nomeUsuario, geradoEm });
