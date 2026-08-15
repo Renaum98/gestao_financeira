@@ -1074,6 +1074,19 @@ export function App() {
   // a contagem, e um `true` que já era `true` não dispararia efeito nenhum.
   const [tentativaOffline, setTentativaOffline] = React.useState(0);
   const offline = useEstaOffline();
+
+  // Quanto a faixa de offline empurra o conteúdo pra baixo. Fica no <html> (e
+  // não no <main>) porque quem lê essa medida é o botão de voltar, que é
+  // portalizado em document.body — de dentro do <main> a variável não chegaria
+  // nele. Sem isso, o botão fica escondido atrás da faixa justo quando não dá
+  // pra gravar nada.
+  React.useEffect(() => {
+    const raiz = document.documentElement;
+    raiz.style.setProperty(
+      "--offset-topo",
+      offline ? `calc(${ALTURA_FAIXA}px + env(safe-area-inset-top))` : "0px",
+    );
+  }, [offline]);
   const [addModal, setAddModal] = React.useState(null);
   const [onboarding, setOnboarding] = React.useState(
     () => !localStorage.getItem(ONBOARDING_KEY),
@@ -1789,12 +1802,6 @@ export function App() {
           maxWidth: 480,
           margin: "0 auto",
           minHeight: "100vh",
-          // O botão de voltar é fixo na viewport, então não acompanha o empurrão
-          // que a faixa de offline dá no conteúdo — sem este offset ele ficaria
-          // escondido atrás dela justo quando não dá pra gravar nada.
-          "--offset-topo": offline
-            ? `calc(${ALTURA_FAIXA}px + env(safe-area-inset-top))`
-            : "0px",
         }}
       >
         <AreaDeTelas

@@ -1,6 +1,7 @@
 // common.jsx — componentes visuais compartilhados (TopBar, SeletorMes, Card, ItemTransacao)
 
 import React from 'react';
+import { createPortal } from 'react-dom';
 import { CATEGORIAS, MESES_CURTO, fmtBRL, fmtBRLCompacto, rotuloMesT } from '../data.js';
 import { Icon, CatChip, iconePagamento } from './icons.jsx';
 import { COR_POS, COR_POS_FUNDO } from '../lib/colors.js';
@@ -55,34 +56,60 @@ export function TopBar({ titulo, voltar, acao, subtitulo }) {
         </div>
       )}
 
-      {/* Fixo: continua alcançável depois de descer a tela. Encolhe ao rolar
-          pra ocupar menos da tela enquanto flutua sobre o conteúdo. */}
-      {voltar && (
-        <div className="voltar-fixo">
-          <div className="voltar-fixo-coluna">
-            <button
-              onClick={voltar}
-              aria-label={t("Voltar")}
-              style={{
-                width: 36, height: 36, borderRadius: 18,
-                background: 'var(--card)', border: 'none', display: 'flex',
-                alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
-                // Só transform e box-shadow animam: nenhum dos dois faz layout,
-                // então rolar não custa reflow.
-                transform: rolou ? 'scale(0.8)' : 'none',
-                boxShadow: rolou
-                  ? '0 4px 14px rgba(20,16,24,0.16)'
-                  : '0 1px 2px rgba(0,0,0,0.04)',
-                transition: 'transform .22s cubic-bezier(.22,1,.36,1), box-shadow .22s ease',
-              }}
-            >
-              <Icon name="arrow-left" size={18} color="var(--ink)" strokeWidth={2.2} />
-            </button>
-          </div>
-        </div>
-      )}
+      {voltar && <BotaoVoltarFixo voltar={voltar} rolou={rolou} t={t} />}
     </div>
   );
+}
+
+// Botão de voltar que flutua sobre a tela. Encolhe ao rolar pra ocupar menos
+// espaço enquanto paira sobre o conteúdo.
+//
+// PORTALIZADO em document.body, e não é detalhe: `position: fixed` só é
+// relativo à viewport se NENHUM ancestral tiver transform/filter/will-change de
+// transform — qualquer um deles vira o bloco de contenção do elemento fixo. O
+// wrapper `.page-transition` (app.jsx) tem os dois, então, no lugar onde o
+// botão nasce, "fixo" virava "absoluto dentro da página inteira": ele subia
+// junto com o conteúdo e sumia ao descer a tela. É o mesmo motivo que
+// portaliza o ModalOverlay (ver ui/modal-base.jsx).
+function BotaoVoltarFixo({ voltar, rolou, t }) {
+  const botao = (
+    <div className="voltar-fixo">
+      <div className="voltar-fixo-coluna">
+        <button
+          onClick={voltar}
+          aria-label={t("Voltar")}
+          style={{
+            width: 36, height: 36, borderRadius: 18,
+            background: 'var(--card)', border: 'none', display: 'flex',
+            alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
+            // Só transform e box-shadow animam: nenhum dos dois faz layout,
+            // então rolar não custa reflow.
+            transform: rolou ? 'scale(0.8)' : 'none',
+            // Rolando, o botão para de ter o fundo da tela atrás e passa a
+            // pairar sobre o conteúdo — daí o anel, que recorta a borda dele do
+            // que estiver embaixo. É box-shadow e não `border`: borda mudaria o
+            // tamanho da caixa (reflow a cada troca) e apertaria o ícone.
+            //
+            // A cor sai do --ink, então o anel é escuro no tema claro e claro
+            // no escuro sem precisar de duas regras. O --linha do app é fraco
+            // demais (6-8% de alfa) pra separar de um conteúdo qualquer.
+            //
+            // Os dois estados têm DUAS sombras, o anel apenas nasce sem raio e
+            // transparente: listas do mesmo tamanho interpolam sem salto.
+            boxShadow: rolou
+              ? '0 0 0 1.5px color-mix(in oklab, var(--ink) 18%, transparent), 0 4px 14px rgba(20,16,24,0.16)'
+              : '0 0 0 0 transparent, 0 1px 2px rgba(0,0,0,0.04)',
+            transition: 'transform .22s cubic-bezier(.22,1,.36,1), box-shadow .22s ease',
+          }}
+        >
+          <Icon name="arrow-left" size={18} color="var(--ink)" strokeWidth={2.2} />
+        </button>
+      </div>
+    </div>
+  );
+
+  if (typeof document === 'undefined') return botao;
+  return createPortal(botao, document.body);
 }
 
 export function SeletorMes({ mes, setMes, todosMeses }) {
