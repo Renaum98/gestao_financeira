@@ -26,7 +26,7 @@ export function corDaFaixa(pct) {
 //
 // Os detalhes por cima seguem a luminância da cor: num cartão amarelo o branco
 // sumiria, então eles viram escuros.
-function MiniCartao({ cor }) {
+export function MiniCartao({ cor }) {
   const claro = corTextoSobre(cor) === "#FFFFFF";
   const tinta = (a) => (claro ? `rgba(255,255,255,${a})` : `rgba(20,16,24,${a})`);
   return (
