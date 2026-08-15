@@ -16,6 +16,7 @@ import { useT } from "../lib/i18n.jsx";
 import { obterOrcBaseDoMes } from "../lib/orcamento.js";
 import { guardadoNoMes } from "../lib/saldo-mes.js";
 import { mesShift, diasNoMes } from "./analise/utils.js";
+import { ProjecaoAno } from "./analise/ProjecaoAno.jsx";
 import { ResumoMes } from "./analise/ResumoMes.jsx";
 import { PizzaCategorias } from "./analise/PizzaCategorias.jsx";
 import { EvolucaoMeses } from "./analise/EvolucaoMeses.jsx";
@@ -30,6 +31,7 @@ export function AnaliseScreen({ ctx }) {
     txs, mes, setMes, todosMeses, mesAnterior, irPara, ehDesktop,
     partnerTxs = [], partnerNome = "", partnerUid,
     preferences = {}, orcamentos = {}, caixinhas = [], usuario,
+    recorrentes = [],
   } = ctx;
   const tr = useT();
   const ehCompartilhado = !!partnerUid;
@@ -139,6 +141,16 @@ export function AnaliseScreen({ ctx }) {
       <div className={spanAll}>
         <TopBar titulo={tr("Análise")} />
       </div>
+      {/* Projeção do ano — fica acima do seletor de propósito: é a foto do ano
+          inteiro e não muda quando o usuário troca o mês da análise. */}
+      <ProjecaoAno
+        txs={txs}
+        recorrentes={recorrentes}
+        preferences={preferences}
+        mesAtual={mesAtual}
+        spanAll={spanAll}
+      />
+
       <div
         className={spanAll}
         style={{ padding: "0 20px 12px", display: "flex", justifyContent: "flex-end" }}

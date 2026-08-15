@@ -406,3 +406,71 @@
 @media (prefers-reduced-motion: reduce) {
   .voltar-fixo button { transition: none; }
 }
+
+/* ── Bloco expansível (ui/expansivel.jsx) ──────────────────────────────────
+   Abre e fecha em altura com 0fr → 1fr: o grid resolve a altura exata do
+   conteúdo, sem chutar um max-height (mesmo truque da barra de offline). O
+   conteúdo fica montado — animar altura exige que o navegador conheça o
+   tamanho do destino.
+
+   As transições ficam aqui, e não inline, pra o prefers-reduced-motion no fim
+   conseguir desligá-las; o estado (0fr/1fr, opacidade) segue inline, no React. */
+.expansivel {
+  display: grid;
+  transition: grid-template-rows .3s cubic-bezier(.45, .1, .35, 1);
+}
+.expansivel > * {
+  overflow: hidden;
+}
+/* Fade um pouco atrasado na abertura pra o conteúdo não aparecer espremido; ao
+   fechar sai na frente, sumindo antes de a altura chegar a zero.
+
+   O `visibility` é o que tira o conteúdo fechado do Tab e do leitor de tela
+   (altura zero sozinha não tira). Ele entra sem duração, mas atrasado até o fim
+   do colapso — antes disso o conteúdo ainda precisa aparecer, encolhendo. */
+.expansivel-conteudo {
+  transition: opacity .22s ease .1s, visibility 0s;
+}
+.expansivel[data-aberto="false"] .expansivel-conteudo {
+  visibility: hidden;
+  transition: opacity .14s ease, visibility 0s linear .3s;
+}
+
+/* Seta de "abre/fecha" — gira junto com o bloco que ela comanda. */
+.chevron-expansivel {
+  transition: transform .3s cubic-bezier(.45, .1, .35, 1);
+}
+
+/* Barra de progresso do card de projeção anual (Análise). */
+.projecao-barra {
+  transition: width .45s cubic-bezier(.22, 1, .36, 1) .08s;
+}
+
+/* ── Botão de opção nos modais ─────────────────────────────────────────────
+   Trocar Saída↔Entrada, forma de pagamento ou origem do depósito reorganiza o
+   modal inteiro. Cor, borda e sombra transicionam pra a mudança ler como uma
+   coisa se transformando, e não como um corte seco. `color` também anima o
+   ícone dentro do botão: os SVGs usam currentColor no stroke. */
+.opcao-suave {
+  transition: background .22s ease, color .22s ease, box-shadow .22s ease,
+    border-color .22s ease;
+}
+/* Valor grande do modal de transação: muda de tinta ao virar entrada, e o "+"
+   abre pela largura em vez de piscar. */
+.tx-valor {
+  transition: color .28s ease;
+}
+.tx-sinal {
+  transition: max-width .28s cubic-bezier(.45, .1, .35, 1), opacity .2s ease;
+}
+@media (prefers-reduced-motion: reduce) {
+  .expansivel,
+  .expansivel-conteudo,
+  .chevron-expansivel,
+  .projecao-barra,
+  .opcao-suave,
+  .tx-valor,
+  .tx-sinal {
+    transition: none;
+  }
+}

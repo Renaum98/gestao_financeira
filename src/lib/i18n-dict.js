@@ -624,6 +624,16 @@ export const EN = {
 
   // ─── Análise ───
   "Nenhum gasto registrado neste mês.": "No expenses recorded this month.",
+  // ProjecaoAno (hero do ano)
+  "Projeção anual": "Yearly projection",
+  "Orçamento do ano": "Budget for the year",
+  "Total esperado": "Expected total",
+  "Entradas no ano": "Income this year",
+  "Gastos no ano": "Spent this year",
+  "orçamento de {x}/mês nos 12 meses + entradas agendadas":
+    "budget of {x}/month across 12 months + scheduled income",
+  "sem orçamento definido — só as entradas contam":
+    "no budget set — only income counts",
   "Total gasto": "Total spent",
   "Média por dia": "Daily average",
   "Sobrou": "Left over",
@@ -654,6 +664,9 @@ export const EN = {
   "Lance gastos\ne entradas": "Log expenses\nand income",
   "Categorize ou marque como recorrente — tudo em segundos.":
     "Categorize or mark as recurring — all in seconds.",
+  "Cada compra na\nfatura certa": "Every purchase on\nthe right bill",
+  "Acompanhe o limite e veja em qual fatura cada compra entra.":
+    "Track your limit and see which bill each purchase lands on.",
   "Veja para onde\nseu dinheiro vai": "See where\nyour money goes",
   "Gráficos, evolução mensal e comparações automáticas.":
     "Charts, monthly trends and automatic comparisons.",
