@@ -6,6 +6,7 @@ import { formatarValorDigitado, formatarValorInicial, parseValorBR } from "../..
 import { useSelic, taxaAnualEfetiva } from "../../lib/selic.js";
 import { CORES_CAIXINHA, hojeISO } from "./utils.js";
 import { ModalShell, Campo, Toggle, inputStyle } from "./ModalShell.jsx";
+import { Expansivel } from "../../ui/expansivel.jsx";
 import { simboloMoeda } from "../../lib/moeda.js";
 import { useT } from "../../lib/i18n.jsx";
 
@@ -73,6 +74,7 @@ export function ModalCaixinha({ editando, onFechar, onSalvar }) {
             return (
               <button
                 key={c}
+                className="opcao-suave"
                 onClick={() => setCor(c)}
                 style={{
                   width: 32,
@@ -90,22 +92,17 @@ export function ModalCaixinha({ editando, onFechar, onSalvar }) {
       </Campo>
 
       <Campo label={t("Meta (opcional)")}>
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 8,
-            marginBottom: temMeta ? 10 : 0,
-          }}
-        >
+        {/* A margem de baixo do cabeçalho virou margem de cima do conteúdo:
+            dentro do bloco ela some junto na hora de fechar. */}
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <Toggle ativo={temMeta} onChange={setTemMeta} />
           <span style={{ fontSize: 13, color: "var(--muted)", fontWeight: 600 }}>
             {temMeta ? t("Definir um valor-alvo") : t("Sem meta — só vou juntando")}
           </span>
         </div>
-        {temMeta && (
-          <>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 6 }}>
+        <Expansivel aberto={temMeta}>
+          <div>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 16 }}>
               <span style={{ fontSize: 14, color: "var(--muted)", fontWeight: 700 }}>{simboloMoeda()}</span>
               <input
                 type="text"
@@ -149,29 +146,22 @@ export function ModalCaixinha({ editando, onFechar, onSalvar }) {
                 />
               </label>
             </div>
-          </>
-        )}
+          </div>
+        </Expansivel>
       </Campo>
 
       {/* ─── Saldo inicial (só ao criar) ─── */}
       {!editando && (
         <Campo label={t("Já tinha dinheiro guardado?")}>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 8,
-              marginBottom: temSaldoInicial ? 10 : 0,
-            }}
-          >
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <Toggle ativo={temSaldoInicial} onChange={setTemSaldoInicial} />
             <span style={{ fontSize: 13, color: "var(--muted)", fontWeight: 600 }}>
               {temSaldoInicial ? t("Informar o valor que já havia") : t("Começar do zero")}
             </span>
           </div>
-          {temSaldoInicial && (
-            <>
-              <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 6 }}>
+          <Expansivel aberto={temSaldoInicial}>
+            <div>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 16 }}>
                 <span style={{ fontSize: 14, color: "var(--muted)", fontWeight: 700 }}>{simboloMoeda()}</span>
                 <input
                   type="text"
@@ -193,8 +183,8 @@ export function ModalCaixinha({ editando, onFechar, onSalvar }) {
               >
                 {t("Esse valor já existia — entra na caixinha sem sair do seu saldo do mês.")}
               </div>
-            </>
-          )}
+            </div>
+          </Expansivel>
         </Campo>
       )}
 
@@ -223,17 +213,17 @@ export function ModalCaixinha({ editando, onFechar, onSalvar }) {
             <span style={{ fontSize: 11, fontWeight: 600, color: "var(--muted)" }}>{t("Investimento")}</span>
           </div>
           <span
+            className="chevron-expansivel"
             style={{
               display: "inline-flex",
               transform: avancadoAberto ? "rotate(180deg)" : "none",
-              transition: "transform .15s",
             }}
           >
             <Icon name="chevron-down" size={16} color="var(--muted)" strokeWidth={2} />
           </span>
         </button>
 
-        {avancadoAberto && (
+        <Expansivel aberto={avancadoAberto}>
           <div
             style={{
               marginTop: 10,
@@ -243,22 +233,17 @@ export function ModalCaixinha({ editando, onFechar, onSalvar }) {
               boxShadow: "0 1px 2px rgba(0,0,0,0.06)",
             }}
           >
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 8,
-                marginBottom: rendimentoAtivo ? 12 : 0,
-              }}
-            >
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               <Toggle ativo={rendimentoAtivo} onChange={setRendimentoAtivo} />
               <span style={{ fontSize: 13, color: "var(--muted)", fontWeight: 600 }}>
                 {rendimentoAtivo ? t("Render como investimento") : t("Sem rendimento — caixinha comum")}
               </span>
             </div>
 
-            {rendimentoAtivo && (
-              <>
+            {/* Bloco dentro de bloco: o de fora acompanha a altura do de dentro
+                enquanto os dois animam. */}
+            <Expansivel aberto={rendimentoAtivo}>
+              <div style={{ marginTop: 12 }}>
                 <div
                   style={{
                     fontSize: 11,
@@ -320,10 +305,10 @@ export function ModalCaixinha({ editando, onFechar, onSalvar }) {
                 >
                   {t("100% CDI = renda igual ao CDI · Estimativa diária com base na Meta Selic do BCB. Não considera IR.")}
                 </div>
-              </>
-            )}
+              </div>
+            </Expansivel>
           </div>
-        )}
+        </Expansivel>
       </div>
     </ModalShell>
   );

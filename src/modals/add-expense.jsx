@@ -12,6 +12,7 @@ import {
   totalPorCategoria,
 } from "../data.js";
 import { CatChip, Icon, iconePagamento } from "../ui/icons.jsx";
+import { Expansivel, useUltimoNaoNulo } from "../ui/expansivel.jsx";
 import { ModalOverlay } from "../ui/modal-base.jsx";
 import { vibrar } from "../lib/haptics.js";
 import { ConfirmModal } from "../ui/confirm-modal.jsx";
@@ -179,6 +180,17 @@ export function AddExpenseModal({ ctx, params }) {
     return removido > 0.005 ? { removido, detalhes } : null;
   }, [editar, ehEntrada, tipo, valorNum, descricao, categoria, data, txs, caixinhas]);
 
+  // Os blocos condicionais abrem e fecham em altura (ui/expansivel.jsx) em vez
+  // de sumir de uma vez: trocar Saída↔Entrada ou a forma de pagamento reorganiza
+  // meio modal, e no corte seco a tela dava um salto. Como o bloco continua
+  // renderizando enquanto fecha, os avisos seguram o último valor — sem isso o
+  // colapso animaria uma caixa vazia.
+  const avisoOrcVis = useUltimoNaoNulo(avisoOrc);
+  const avisoCartaoVis = useUltimoNaoNulo(avisoCartao);
+  const avisoGuardadoVis = useUltimoNaoNulo(avisoGuardado);
+  const infoFaturaVis = useUltimoNaoNulo(infoFatura);
+  const mostrarCartoes = !ehEntrada && pagamento === PAG_CARTAO && cartoes.length > 0;
+
   const salvar = () => {
     if (valorNum <= 0) return;
     const descFinal = descricao.trim()
@@ -270,6 +282,7 @@ export function AddExpenseModal({ ctx, params }) {
             {editar ? t("Editar transação") : t("Nova transação")}
           </div>
           <button
+            className="opcao-suave"
             onClick={salvar}
             disabled={valorNum <= 0}
             style={{
@@ -312,6 +325,7 @@ export function AddExpenseModal({ ctx, params }) {
             {t("Valor")}
           </div>
           <div
+            className="tx-valor"
             style={{
               fontSize: 48,
               fontWeight: 800,
@@ -322,6 +336,7 @@ export function AddExpenseModal({ ctx, params }) {
             }}
           >
             <span
+              className="tx-valor"
               style={{
                 fontSize: 24,
                 color: ehEntrada ? COR_POS : "var(--muted)",
@@ -330,7 +345,20 @@ export function AddExpenseModal({ ctx, params }) {
                 opacity: ehEntrada ? 0.9 : 1,
               }}
             >
-              {ehEntrada ? "+" + simboloMoeda() : simboloMoeda()}
+              {/* O "+" da entrada abre junto com a cor, em vez de piscar. */}
+              <span
+                className="tx-sinal"
+                style={{
+                  display: "inline-block",
+                  maxWidth: ehEntrada ? "1ch" : 0,
+                  opacity: ehEntrada ? 1 : 0,
+                  overflow: "hidden",
+                  verticalAlign: "top",
+                }}
+              >
+                +
+              </span>
+              {simboloMoeda()}
             </span>
             {valor}
           </div>
@@ -377,6 +405,7 @@ export function AddExpenseModal({ ctx, params }) {
               return (
                 <button
                   key={opt.id}
+                  className="opcao-suave"
                   onClick={() => { vibrar(); setTipo(opt.id); }}
                   style={{
                     flex: 1,
@@ -394,13 +423,14 @@ export function AddExpenseModal({ ctx, params }) {
                     justifyContent: "center",
                     gap: 6,
                     boxShadow: sel && opt.id === "saida" ? "0 1px 2px rgba(0,0,0,0.08)" : "none",
-                    transition: "background .15s",
                   }}
                 >
+                  {/* currentColor: o traço do ícone acompanha a transição de
+                      cor do botão em vez de trocar de uma vez. */}
                   <Icon
                     name={opt.icon}
                     size={14}
-                    color={txtColor}
+                    color="currentColor"
                     strokeWidth={2.6}
                   />
                   {opt.label}
@@ -411,7 +441,7 @@ export function AddExpenseModal({ ctx, params }) {
         </div>
 
         {/* Categoria (só saída) */}
-        {!ehEntrada && (
+        <Expansivel aberto={!ehEntrada}>
         <div style={{ marginTop: 14 }}>
           <div
             style={{
@@ -648,17 +678,18 @@ export function AddExpenseModal({ ctx, params }) {
             </div>
           )}
         </div>
-        )}
+        </Expansivel>
 
         {/* Aviso de orçamento da categoria */}
-        {avisoOrc && (
+        <Expansivel aberto={!!avisoOrc}>
+          {avisoOrcVis && (
           <div
             style={{
               marginTop: 12,
               padding: "10px 14px",
               borderRadius: 12,
-              background: (avisoOrc.excedeu ? COR_NEG : COR_AVISO) + "1A",
-              border: `1px solid ${(avisoOrc.excedeu ? COR_NEG : COR_AVISO)}55`,
+              background: (avisoOrcVis.excedeu ? COR_NEG : COR_AVISO) + "1A",
+              border: `1px solid ${(avisoOrcVis.excedeu ? COR_NEG : COR_AVISO)}55`,
               display: "flex",
               alignItems: "center",
               gap: 10,
@@ -667,23 +698,24 @@ export function AddExpenseModal({ ctx, params }) {
             <Icon
               name="target"
               size={18}
-              color={avisoOrc.excedeu ? COR_NEG : COR_AVISO}
+              color={avisoOrcVis.excedeu ? COR_NEG : COR_AVISO}
               strokeWidth={2.4}
             />
             <div
               style={{
                 fontSize: 12,
                 fontWeight: 700,
-                color: avisoOrc.excedeu ? COR_NEG : COR_AVISO,
+                color: avisoOrcVis.excedeu ? COR_NEG : COR_AVISO,
                 lineHeight: 1.4,
               }}
             >
-              {avisoOrc.excedeu
-                ? t("Você excedeu o orçamento de {cat}: {proj} de {lim}.", { cat: t(CATEGORIAS[categoria].nome), proj: fmtBRL(avisoOrc.projetado), lim: fmtBRL(avisoOrc.limite) })
-                : t("Atenção: {pct}% do orçamento de {cat} ({proj} de {lim}).", { pct: avisoOrc.pct.toFixed(0), cat: t(CATEGORIAS[categoria].nome), proj: fmtBRL(avisoOrc.projetado), lim: fmtBRL(avisoOrc.limite) })}
+              {avisoOrcVis.excedeu
+                ? t("Você excedeu o orçamento de {cat}: {proj} de {lim}.", { cat: t(CATEGORIAS[categoria].nome), proj: fmtBRL(avisoOrcVis.projetado), lim: fmtBRL(avisoOrcVis.limite) })
+                : t("Atenção: {pct}% do orçamento de {cat} ({proj} de {lim}).", { pct: avisoOrcVis.pct.toFixed(0), cat: t(CATEGORIAS[categoria].nome), proj: fmtBRL(avisoOrcVis.projetado), lim: fmtBRL(avisoOrcVis.limite) })}
             </div>
           </div>
-        )}
+          )}
+        </Expansivel>
 
         {/* Descrição */}
         <div style={{ marginTop: 12 }}>
@@ -757,13 +789,14 @@ export function AddExpenseModal({ ctx, params }) {
         )}
 
         {/* Pagamento (só saída) */}
-        {!ehEntrada && (
+        <Expansivel aberto={!ehEntrada}>
         <div style={{ marginTop: 10, display: "flex", gap: 8 }}>
           {PAGAMENTOS.map((p) => {
             const sel = pagamento === p;
             return (
               <button
                 key={p}
+                className="opcao-suave"
                 onClick={() => { vibrar(); setPagamento(p); }}
                 style={{
                   flex: 1,
@@ -786,7 +819,7 @@ export function AddExpenseModal({ ctx, params }) {
                 <Icon
                   name={iconePagamento(p)}
                   size={18}
-                  color={sel ? "var(--bg)" : "var(--ink)"}
+                  color="currentColor"
                   strokeWidth={2}
                 />
                 {t(p.replace("Cartão de ", ""))}
@@ -794,13 +827,13 @@ export function AddExpenseModal({ ctx, params }) {
             );
           })}
         </div>
-        )}
+        </Expansivel>
 
         {/* Qual cartão. Só aparece com cartão cadastrado — sem nenhum, o app
             segue como antes, com "Cartão de crédito" solto. A opção "Sem
             cartão" só existe pra tx que já está órfã (sobra de cartão apagado),
             pra não virar um jeito fácil de criar órfã nova. */}
-        {!ehEntrada && pagamento === PAG_CARTAO && cartoes.length > 0 && (
+        <Expansivel aberto={mostrarCartoes}>
           <div style={{ marginTop: 10, display: "flex", gap: 8, flexWrap: "wrap" }}>
             {cartoes.map((c) => {
               const sel = cartaoId === c.id;
@@ -809,6 +842,7 @@ export function AddExpenseModal({ ctx, params }) {
               return (
                 <button
                   key={c.id}
+                  className="opcao-suave"
                   onClick={() => { vibrar(); setCartaoId(c.id); }}
                   style={{
                     display: "inline-flex",
@@ -826,13 +860,14 @@ export function AddExpenseModal({ ctx, params }) {
                     boxShadow: sel ? "none" : "0 1px 2px rgba(0,0,0,0.06)",
                   }}
                 >
-                  <Icon name="card" size={14} color={tinta} strokeWidth={2.2} />
+                  <Icon name="card" size={14} color="currentColor" strokeWidth={2.2} />
                   {c.nome}
                 </button>
               );
             })}
             {editar && editar.pagamento === PAG_CARTAO && !editar.cartaoId && (
               <button
+                className="opcao-suave"
                 onClick={() => { vibrar(); setCartaoId(null); }}
                 style={{
                   display: "inline-flex",
@@ -854,10 +889,11 @@ export function AddExpenseModal({ ctx, params }) {
               </button>
             )}
           </div>
-        )}
+        </Expansivel>
 
         {/* Em que fatura essa compra cai — só leitura, não muda a conta do mês */}
-        {infoFatura && (
+        <Expansivel aberto={!!infoFatura}>
+          {infoFaturaVis && (
           <div
             style={{
               marginTop: 10,
@@ -872,22 +908,24 @@ export function AddExpenseModal({ ctx, params }) {
             <Icon name="card" size={15} color="var(--muted)" strokeWidth={2.2} />
             <div style={{ fontSize: 11.5, fontWeight: 600, color: "var(--muted)", lineHeight: 1.45 }}>
               {t("Entra na fatura de {fatura} · você paga em {vence}", {
-                fatura: t(MESES[Number(infoFatura.fatura.slice(5, 7)) - 1]),
-                vence: t(MESES[Number(infoFatura.vence.slice(5, 7)) - 1]),
+                fatura: t(MESES[Number(infoFaturaVis.fatura.slice(5, 7)) - 1]),
+                vence: t(MESES[Number(infoFaturaVis.vence.slice(5, 7)) - 1]),
               })}
             </div>
           </div>
-        )}
+          )}
+        </Expansivel>
 
         {/* Aviso de limite do cartão de crédito */}
-        {avisoCartao && (
+        <Expansivel aberto={!!avisoCartao}>
+          {avisoCartaoVis && (
           <div
             style={{
               marginTop: 10,
               padding: "10px 14px",
               borderRadius: 12,
-              background: (avisoCartao.excedeu ? COR_NEG : COR_AVISO) + "1A",
-              border: `1px solid ${(avisoCartao.excedeu ? COR_NEG : COR_AVISO)}55`,
+              background: (avisoCartaoVis.excedeu ? COR_NEG : COR_AVISO) + "1A",
+              border: `1px solid ${(avisoCartaoVis.excedeu ? COR_NEG : COR_AVISO)}55`,
               display: "flex",
               alignItems: "center",
               gap: 10,
@@ -896,26 +934,28 @@ export function AddExpenseModal({ ctx, params }) {
             <Icon
               name="card"
               size={18}
-              color={avisoCartao.excedeu ? COR_NEG : COR_AVISO}
+              color={avisoCartaoVis.excedeu ? COR_NEG : COR_AVISO}
               strokeWidth={2.4}
             />
             <div
               style={{
                 fontSize: 12,
                 fontWeight: 700,
-                color: avisoCartao.excedeu ? COR_NEG : COR_AVISO,
+                color: avisoCartaoVis.excedeu ? COR_NEG : COR_AVISO,
                 lineHeight: 1.4,
               }}
             >
-              {avisoCartao.excedeu
-                ? t("Você excedeu o limite do cartão de crédito: {proj} de {lim}.", { proj: fmtBRL(avisoCartao.projetado), lim: fmtBRL(avisoCartao.limite) })
-                : t("Atenção: {pct}% do limite do cartão de crédito ({proj} de {lim}).", { pct: avisoCartao.pct.toFixed(0), proj: fmtBRL(avisoCartao.projetado), lim: fmtBRL(avisoCartao.limite) })}
+              {avisoCartaoVis.excedeu
+                ? t("Você excedeu o limite do cartão de crédito: {proj} de {lim}.", { proj: fmtBRL(avisoCartaoVis.projetado), lim: fmtBRL(avisoCartaoVis.limite) })
+                : t("Atenção: {pct}% do limite do cartão de crédito ({proj} de {lim}).", { pct: avisoCartaoVis.pct.toFixed(0), proj: fmtBRL(avisoCartaoVis.projetado), lim: fmtBRL(avisoCartaoVis.limite) })}
             </div>
           </div>
-        )}
+          )}
+        </Expansivel>
 
         {/* Aviso: parte do que está na caixinha volta ao salvar esta edição */}
-        {avisoGuardado && (
+        <Expansivel aberto={!!avisoGuardado}>
+          {avisoGuardadoVis && (
           <div
             style={{
               marginTop: 10,
@@ -931,12 +971,13 @@ export function AddExpenseModal({ ctx, params }) {
             <Icon name="piggy" size={18} color={COR_AVISO} strokeWidth={2.4} />
             <div style={{ fontSize: 12, fontWeight: 700, color: COR_AVISO, lineHeight: 1.4 }}>
               {t("Esta entrada banca {valor} guardados em {caixinhas}. Ao salvar, esse valor sai da caixinha.", {
-                valor: fmtBRL(avisoGuardado.removido),
-                caixinhas: avisoGuardado.detalhes.map((d) => `"${d.nome}"`).join(", "),
+                valor: fmtBRL(avisoGuardadoVis.removido),
+                caixinhas: avisoGuardadoVis.detalhes.map((d) => `"${d.nome}"`).join(", "),
               })}
             </div>
           </div>
-        )}
+          )}
+        </Expansivel>
 
         {/* Recorrente */}
         {!editar && (

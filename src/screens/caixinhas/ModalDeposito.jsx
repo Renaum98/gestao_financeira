@@ -9,6 +9,7 @@ import { formatarValorDigitado, parseValorBR, valorZero } from "../../lib/money-
 import { simboloMoeda } from "../../lib/moeda.js";
 import { hojeISO } from "./utils.js";
 import { ModalShell, Campo } from "./ModalShell.jsx";
+import { Expansivel } from "../../ui/expansivel.jsx";
 import { useT } from "../../lib/i18n.jsx";
 
 export function ModalDeposito({ cor, gruposEntrada = [], alocadoPorDescricao = {}, onFechar, onSalvar }) {
@@ -155,6 +156,7 @@ export function ModalDeposito({ cor, gruposEntrada = [], alocadoPorDescricao = {
             return (
               <button
                 key={opt.id}
+                className="opcao-suave"
                 onClick={() => {
                   if (opt.disabled) return;
                   setOrigemTipo(opt.id);
@@ -175,7 +177,6 @@ export function ModalDeposito({ cor, gruposEntrada = [], alocadoPorDescricao = {
                   cursor: opt.disabled ? "default" : "pointer",
                   fontFamily: "inherit",
                   boxShadow: sel ? "0 1px 2px rgba(0,0,0,0.08)" : "none",
-                  transition: "background .15s",
                 }}
               >
                 {opt.label}
@@ -184,7 +185,7 @@ export function ModalDeposito({ cor, gruposEntrada = [], alocadoPorDescricao = {
           })}
         </div>
 
-        {origemTipo === "orcamento" && (
+        <Expansivel aberto={origemTipo === "orcamento"}>
           <div
             style={{
               marginTop: 10,
@@ -197,9 +198,9 @@ export function ModalDeposito({ cor, gruposEntrada = [], alocadoPorDescricao = {
           >
             {t("Será debitado do orçamento do mês.")}
           </div>
-        )}
+        </Expansivel>
 
-        {origemTipo === "entrada" && temEntradas && (
+        <Expansivel aberto={origemTipo === "entrada" && temEntradas}>
           <div
             style={{
               marginTop: 10,
@@ -216,6 +217,7 @@ export function ModalDeposito({ cor, gruposEntrada = [], alocadoPorDescricao = {
               return (
                 <button
                   key={g.descricao}
+                  className="opcao-suave"
                   onClick={() => !semSaldo && setEntradaDesc(g.descricao)}
                   disabled={semSaldo}
                   style={{
@@ -273,13 +275,13 @@ export function ModalDeposito({ cor, gruposEntrada = [], alocadoPorDescricao = {
               );
             })}
           </div>
-        )}
+        </Expansivel>
 
-        {origemTipo === "entrada" && excedeEntrada && (
+        <Expansivel aberto={origemTipo === "entrada" && !!excedeEntrada}>
           <div style={{ marginTop: 8, fontSize: 12, color: COR_NEG, fontWeight: 700, padding: "0 4px" }}>
             {t("Valor excede o disponível desta entrada.")}
           </div>
-        )}
+        </Expansivel>
       </Campo>
     </ModalShell>
   );

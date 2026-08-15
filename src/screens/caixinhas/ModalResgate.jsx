@@ -6,6 +6,7 @@ import { COR_NEG } from "../../lib/colors.js";
 import { formatarValorDigitado, formatarValorInicial, parseValorBR, valorZero } from "../../lib/money-input.js";
 import { simboloMoeda } from "../../lib/moeda.js";
 import { ModalShell } from "./ModalShell.jsx";
+import { Expansivel, useUltimoNaoNulo } from "../../ui/expansivel.jsx";
 import { useT } from "../../lib/i18n.jsx";
 
 export function ModalResgate({ cor, nome, disponivel, rendimento = 0, onFechar, onSalvar }) {
@@ -22,6 +23,10 @@ export function ModalResgate({ cor, nome, disponivel, rendimento = 0, onFechar, 
     rendimento > 0 && disponivel > 0 && valorNum > 0
       ? rendimento * Math.min(1, valorNum / disponivel)
       : 0;
+
+  const rendimentoVisivel = useUltimoNaoNulo(
+    rendimentoQueSai > 0.005 ? rendimentoQueSai : null,
+  ) || 0;
 
   const aplicarTudo = () => setValor(formatarValorInicial(disponivel));
 
@@ -144,11 +149,11 @@ export function ModalResgate({ cor, nome, disponivel, rendimento = 0, onFechar, 
         </button>
       </div>
 
-      {excede && (
+      <Expansivel aberto={excede}>
         <div style={{ marginTop: 10, fontSize: 12, color: COR_NEG, fontWeight: 700, padding: "0 4px" }}>
           {t("Valor maior que o disponível na caixinha.")}
         </div>
-      )}
+      </Expansivel>
 
       <div
         style={{
@@ -163,13 +168,15 @@ export function ModalResgate({ cor, nome, disponivel, rendimento = 0, onFechar, 
         }}
       >
         {t("O valor volta como uma ")}<strong style={{ color: "var(--ink)" }}>{t("entrada do mês atual")}</strong>{t(" e fica disponível no orçamento.")}
-        {rendimentoQueSai > 0.005 && (
+        {/* O valor congela no último não-zero enquanto a linha fecha, senão o
+            texto viraria "R$ 0,00" no meio da animação. */}
+        <Expansivel aberto={rendimentoQueSai > 0.005}>
           <div style={{ marginTop: 6 }}>
             {t("O rendimento de {x} sai junto e deixa de render.", {
-              x: fmtBRL(rendimentoQueSai),
+              x: fmtBRL(rendimentoVisivel),
             })}
           </div>
-        )}
+        </Expansivel>
       </div>
     </ModalShell>
   );
