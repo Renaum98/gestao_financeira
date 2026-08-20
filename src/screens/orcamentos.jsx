@@ -111,10 +111,22 @@ export function OrcamentosScreen({ ctx }) {
   // categorias, que é a longa, fica com a direita.
   const cardPrincipal = (
     <div style={{
-      background: 'linear-gradient(135deg, var(--primary), var(--primary-2))',
+      // Mesmo gradiente do card de saldo do Início: círculo até o canto mais
+      // distante, miolo claro e extremidades no escuro.
+      background: 'radial-gradient(circle at 50% 28%, var(--primary-2) 0%, var(--primary-2) 18%, var(--primary) 66%, color-mix(in oklab, var(--primary) 79%, #000) 100%)',
       color: '#fff', borderRadius: 24, padding: 20, position: 'relative', overflow: 'hidden',
     }}>
-      <div style={{ position: 'absolute', right: -30, top: -30, width: 120, height: 120, borderRadius: '50%', background: 'rgba(255,255,255,0.08)' }} />
+      {/* A faixa de brilho que os outros cards de destaque têm. A bolha branca
+          que ficava aqui saiu: com o miolo já clareado, ela virava uma mancha
+          disputando o mesmo efeito. */}
+      <div
+        aria-hidden="true"
+        style={{
+          position: 'absolute', top: 0, left: '-40%', width: '60%', height: '100%',
+          background: 'linear-gradient(115deg, transparent 35%, rgba(255,255,255,0.10) 50%, transparent 65%)',
+          pointerEvents: 'none',
+        }}
+      />
       <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ fontSize: 12, fontWeight: 600, opacity: 0.85 }}>{t("Orçamento mensal")}</div>
         {!editandoTotal && (

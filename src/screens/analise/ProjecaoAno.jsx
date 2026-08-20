@@ -119,7 +119,18 @@ export function ProjecaoAno({ txs, recorrentes = [], preferences, mesAtual, span
 
   return (
     <div className={spanAll} style={{ padding: "0 var(--pad-x) 12px" }}>
-      <Card style={{ padding: "2px 16px" }}>
+      {/* Mesma vinheta radial dos cards de destaque, só que na cor da própria
+          superfície: aqui o texto é escuro e o valor da sobra é verde/vermelho,
+          então colorir o fundo mataria os dois sinais. O escurecimento das
+          bordas é bem mais sutil que nos cards coloridos — sobre um fundo quase
+          branco, o mesmo peso de lá viraria um cinza pesado. */}
+      <Card
+        style={{
+          padding: "2px 16px",
+          background:
+            "radial-gradient(circle at 50% 28%, var(--card) 0%, var(--card) 66%, color-mix(in oklab, var(--card) 95%, #000) 100%)",
+        }}
+      >
         <div
           onClick={alternar}
           role="button"
