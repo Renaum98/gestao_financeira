@@ -59,12 +59,12 @@ function CardSaldoBase({
   return (
     <div
       style={{
-        // Miolo na cor clara, extremidades no escuro. A elipse é MENOR que o
-        // card (105%/95%) de propósito: assim as quinas ficam além dela e
-        // recebem a cor final inteira, em vez de parar no meio do caminho — é o
-        // que faz o escuro aparecer nos cantos em vez de só insinuar.
+        // Miolo na cor clara, extremidades no escuro. Círculo (e não elipse):
+        // sem raio explícito ele vai até o canto mais distante, então as quinas
+        // é que pegam o tom final. Como o card é bem mais largo que alto, o
+        // escuro fecha forte nas laterais e mais de leve em cima e embaixo.
         background:
-          "radial-gradient(105% 95% at 50% 28%, var(--primary-2) 0%, var(--primary-2) 18%, var(--primary) 58%, color-mix(in oklab, var(--primary) 55%, #000) 100%)",
+          "radial-gradient(circle at 50% 28%, var(--primary-2) 0%, var(--primary-2) 18%, var(--primary) 66%, color-mix(in oklab, var(--primary) 79%, #000) 100%)",
         color: "#fff",
         borderRadius: 28,
         padding: 22,

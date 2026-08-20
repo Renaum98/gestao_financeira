@@ -3,8 +3,9 @@
 import { MESES_CURTO } from "../../data.js";
 
 // Cores selecionáveis pra colorir cada caixinha. Todas calibradas pra dar
-// contraste ≥4 com texto branco (o cabeçalho do card de detalhe usa
-// `linear-gradient(135deg, ${cor}, ${cor}CC)` com texto branco em cima).
+// contraste ≥4 com texto branco no ponto mais CLARO do cabeçalho do card de
+// detalhe, que é `${cor}CC` — hoje o miolo do gradiente radial, antes o fim do
+// linear. Das bordas pra fora o card só escurece, então o pior caso é o miolo.
 export const CORES_CAIXINHA = [
   "#6E4FF6", // roxo (mesma da Violeta)
   "#D44B3F", // coral
