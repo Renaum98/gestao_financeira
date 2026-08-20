@@ -153,13 +153,13 @@ export function AnaliseScreen({ ctx }) {
 
       <div
         className={spanAll}
-        style={{ padding: "0 20px 12px", display: "flex", justifyContent: "flex-end" }}
+        style={{ padding: "0 var(--pad-x) 12px", display: "flex", justifyContent: "flex-end" }}
       >
         <SeletorMes mes={mes} setMes={setMes} todosMeses={todosMeses} />
       </div>
 
       {vazio ? (
-        <div className={spanAll} style={{ padding: "0 20px" }}>
+        <div className={spanAll} style={{ padding: "0 var(--pad-x)" }}>
           <Card style={{ textAlign: "center", padding: "40px 20px" }}>
             <div style={{ fontSize: 14, color: "var(--muted)", fontWeight: 600 }}>
               {tr("Nenhum gasto registrado neste mês.")}

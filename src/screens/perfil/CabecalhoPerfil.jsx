@@ -53,7 +53,7 @@ export function CabecalhoPerfil({ preferences, setPreferences, usuario }) {
   };
 
   return (
-    <div style={{ padding: "0 20px 0", display: "flex", flexDirection: "column", alignItems: "center" }}>
+    <div style={{ padding: "0 var(--pad-x) 0", display: "flex", flexDirection: "column", alignItems: "center" }}>
       {/* Avatar — clique para trocar a foto */}
       <input ref={inputFotoRef} type="file" accept="image/*" onChange={aoSelecionarFoto} style={{ display: "none" }} />
       <button

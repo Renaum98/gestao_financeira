@@ -8,7 +8,7 @@ import { useSelic, calcularRendimento } from "../../lib/selic.js";
 import { valorAtual, calcularLembranca } from "./utils.js";
 import { useT } from "../../lib/i18n.jsx";
 
-export function CardCaixinha({ cx, onClick }) {
+export function CardCaixinha({ cx, onClick, selecionada = false }) {
   const t = useT();
   const selic = useSelic();
   const principal = valorAtual(cx);
@@ -19,6 +19,7 @@ export function CardCaixinha({ cx, onClick }) {
   return (
     <div
       onClick={onClick}
+      className="clicavel"
       style={{
         background: "var(--card)",
         borderRadius: 18,
@@ -27,6 +28,12 @@ export function CardCaixinha({ cx, onClick }) {
         cursor: "pointer",
         position: "relative",
         overflow: "hidden",
+        // Marca de "esta é a que está aberta ao lado". Contorno, e não borda:
+        // borda entraria no box e mexeria no tamanho do card.
+        ...(selecionada && {
+          outline: "2px solid var(--primary)",
+          outlineOffset: 2,
+        }),
       }}
     >
       <div style={{ display: "flex", alignItems: "center", gap: 10 }}>

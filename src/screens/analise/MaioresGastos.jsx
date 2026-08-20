@@ -9,7 +9,7 @@ import { useT } from "../../lib/i18n.jsx";
 export function MaioresGastos({ maioresGastos }) {
   const tr = useT();
   return (
-    <div style={{ padding: "16px 20px 0" }}>
+    <div style={{ padding: "16px var(--pad-x) 0" }}>
       <SecaoTitulo>{tr("Maiores gastos do mês")}</SecaoTitulo>
       <Card style={{ padding: "4px 16px" }}>
         {maioresGastos.map((t, i) => (

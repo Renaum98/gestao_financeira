@@ -1,0 +1,84 @@
+/* desktop.css — o que só existe quando há ponteiro e teclado.
+ *
+ * O escopo aqui é `.em-desktop` (no <html>) e não `.desktop-shell` (no <main>):
+ * a sidebar fica fora do <main>, e modais são portalizados em document.body.
+ * Só a marca no topo alcança as três coisas. Ver lib/desktop.js. */
+
+/* ─── Foco visível ──────────────────────────────────────────────────────────
+   Sem escopo de desktop de propósito: `:focus-visible` só dispara quando a
+   navegação é por teclado, então no celular (toque) ele nunca aparece. Segue o
+   mesmo anel já usado pela tab bar. */
+:focus-visible {
+  outline: 2px solid color-mix(in oklab, var(--primary) 60%, transparent);
+  outline-offset: 2px;
+}
+
+/* Campos zeram o contorno inline (`outline: 'none'`) pra desenhar o próprio
+   estado, e inline vence CSS — mesma situação do font-size do iOS em base.css.
+   Sem o !important o teclado não teria como mostrar onde está. */
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: 2px solid color-mix(in oklab, var(--primary) 60%, transparent) !important;
+  outline-offset: 1px;
+}
+
+/* ─── Hover ─────────────────────────────────────────────────────────────────
+   `filter`, e não `background`: quase todo elemento clicável do app pinta o
+   próprio fundo por estilo inline, e inline vence uma regra `:hover`. O filtro
+   age por cima de qualquer cor que o elemento já tenha.
+   A direção depende do tema — escurecer no claro, clarear no escuro. */
+.em-desktop button:not(:disabled):hover,
+.em-desktop .clicavel:hover,
+.em-desktop .config-item:hover {
+  filter: brightness(0.96);
+}
+.em-desktop.tema-escuro button:not(:disabled):hover,
+.em-desktop.tema-escuro .clicavel:hover,
+.em-desktop.tema-escuro .config-item:hover {
+  filter: brightness(1.18);
+}
+
+/* O `:where()` zera a especificidade: sem isso esta regra venceria a transição
+   própria de `.opcao-suave` (os chips de filtro) e mataria a animação de cor
+   deles. Quem tem transição própria fica com hover instantâneo — o que é
+   perfeitamente legível. */
+:where(.em-desktop) :where(button:not(:disabled)),
+:where(.em-desktop) :where(.clicavel, .config-item) {
+  transition: filter 0.14s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :where(.em-desktop) :where(button, .clicavel, .config-item) {
+    transition: none;
+  }
+}
+
+/* ─── TopBar ────────────────────────────────────────────────────────────────
+   A faixa de cima da TopBar reserva o lugar do botão de voltar e aloja a ação
+   da tela. No desktop, onde o voltar não existe, uma tela sem ação fica com
+   uma barra de 32px de nada acima do título.
+   Os estilos base de `.topbar-nav` moram em components.css: eles valem nas duas
+   larguras, e só a regra de sumiço é de desktop. */
+.em-desktop .topbar-nav--vazia {
+  display: none;
+}
+
+/* ─── Pares de campos em formulário ─────────────────────────────────────────
+   No mobile o wrapper não tem regra nenhuma: é um div solto e os campos seguem
+   empilhados com o marginTop que cada um já traz. No desktop viram colunas.
+   `flex-wrap`, e não um grid de duas colunas, porque um dos campos do par pode
+   sumir (a data some quando o gasto vira recorrente) — sozinho, o que resta
+   volta a ocupar a linha inteira em vez de deixar um buraco ao lado. */
+.em-desktop .par-campos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: flex-start;
+}
+.em-desktop .par-campos > * {
+  flex: 1 1 200px;
+  /* Os campos trazem marginTop diferentes inline (12 e 10) pro empilhamento do
+     mobile. Lado a lado isso os desalinharia, e inline vence CSS. */
+  margin-top: 12px !important;
+}

@@ -2,13 +2,14 @@
 // e os controles de formulário reusados pelos modais de caixinha.
 
 import { createPortal } from "react-dom";
-import { Z_MODAL } from "../../ui/modal-base.jsx";
+import { Z_MODAL, useFecharComEsc } from "../../ui/modal-base.jsx";
 import { useT } from "../../lib/i18n.jsx";
 
 // `corAcentoTexto` existe porque um acento claro (cartão amarelo, por exemplo)
 // engole o branco. Só quem passa uma cor clara precisa informar.
 export function ModalShell({ titulo, onFechar, onSalvar, salvarAtivo, corAcento, corAcentoTexto, children }) {
   const t = useT();
+  useFecharComEsc(onFechar);
   return createPortal(
     <div
       onClick={onFechar}

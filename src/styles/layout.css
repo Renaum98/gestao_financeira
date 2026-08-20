@@ -20,3 +20,81 @@
   align-items: start;
 }
 .cols-desktop > .col-span-all { grid-column: 1 / -1; }
+
+/* Pilha de cards independentes (Perfil, e o que mais vier). No mobile é a mesma
+   coluna de sempre — os 14px entre os cards são os mesmos que antes vinham de
+   espaçadores no JSX. No desktop vira duas colunas.
+   Usamos `column-count` e não grid de propósito: os cards têm alturas bem
+   diferentes e o grid alinharia por linha, deixando buracos embaixo dos cards
+   curtos. O multicol equilibra as duas colunas sozinho. */
+.grade-cards > * { margin-bottom: 14px; }
+.grade-cards > *:last-child { margin-bottom: 0; }
+.desktop-shell .grade-cards {
+  column-count: 2;
+  column-gap: 20px;
+}
+.desktop-shell .grade-cards > * {
+  break-inside: avoid;
+  /* No multicol o último filho pode cair no fim da 1ª coluna: sem a margem,
+     ele encostaria no rodapé. Aqui todos têm margem. */
+  margin-bottom: 20px;
+}
+
+/* Duas colunas com uma âncora estreita à esquerda: o resumo dos cartões, os
+   filtros das transações, o card de orçamento. A da direita é a que cresce.
+   Só é montada no ramo `ehDesktop` das telas — no mobile essas partes seguem
+   empilhadas e a classe nem chega ao DOM.
+   `--painel-largura` deixa cada tela escolher o quanto a âncora precisa. */
+.painel-lateral {
+  display: grid;
+  grid-template-columns: minmax(0, var(--painel-largura, 320px)) minmax(0, 1fr);
+  gap: 20px;
+  align-items: start;
+}
+
+/* Grade de blocos independentes (caixinhas, anos do histórico). No mobile é a
+   mesma coluna empilhada de antes; no desktop se reparte em quantas colunas
+   couberem. `align-items: start` importa no histórico: quando um ano se abre,
+   ele cresce sozinho em vez de esticar o vizinho junto. */
+.grade-tiles {
+  display: flex;
+  flex-direction: column;
+  /* Cada tela empilhava com um respiro próprio; a variável preserva o do mobile
+     em vez de uniformizar por baixo dos panos. */
+  gap: var(--tiles-gap, 12px);
+}
+.desktop-shell .grade-tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 14px;
+  align-items: start;
+}
+
+/* Os chips de filtro das transações. No mobile são faixas que rolam na
+   horizontal; dentro do painel do desktop não há para onde rolar, então eles
+   quebram em linhas e perdem o recuo que existia pra sangrar até a borda da
+   tela. */
+.desktop-shell .painel-filtros .carrossel {
+  flex-wrap: wrap;
+  overflow-x: visible;
+  padding-left: 0;
+  padding-right: 0;
+}
+
+/* Botão de ação única que, numa coluna larga, viraria uma faixa de mil pixels.
+   Sem regra no mobile: lá a coluna já é estreita e nada muda. */
+.desktop-shell .coluna-estreita {
+  max-width: 420px;
+  margin: 0 auto;
+}
+
+/* Par mestre-detalhe: a lista fica numa coluna estreita à esquerda e o item
+   escolhido ocupa a direita. Só existe no desktop — no mobile o detalhe nunca
+   divide a tela com a lista. `align-items: start` porque as duas colunas têm
+   alturas independentes: a lista não deve esticar até o fim do detalhe. */
+.desktop-shell .mestre-detalhe {
+  display: grid;
+  grid-template-columns: minmax(0, 360px) minmax(0, 1fr);
+  gap: 24px;
+  align-items: start;
+}

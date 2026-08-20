@@ -208,6 +208,16 @@
   100% { transform: translateY(0); opacity: 1; }
 }
 
+/* Faixa de cima da TopBar: reserva o lugar do botão de voltar (que é fixo na
+   viewport) e aloja a ação da tela. Valores idênticos aos que eram inline —
+   viraram classe pra o desktop poder escondê-la quando não há o que alojar. */
+.topbar-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 32px;
+}
+
 /* Botões da tab bar — o fundo é do indicador, aqui só o anel de foco. */
 .nav-btn:focus-visible,
 .nav-fab:focus-visible {

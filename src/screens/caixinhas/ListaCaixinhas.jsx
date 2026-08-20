@@ -7,7 +7,10 @@ import { CardCaixinha } from "./CardCaixinha.jsx";
 import { ModalCaixinha } from "./ModalCaixinha.jsx";
 import { useT } from "../../lib/i18n.jsx";
 
-export function CaixinhasScreen({ ctx }) {
+// `params` só chega quando a lista está servindo de mestre ao lado do detalhe
+// (desktop): é o que permite marcar qual caixinha está aberta. Na navegação
+// normal ela vem vazia e nenhuma fica marcada.
+export function CaixinhasScreen({ ctx, params }) {
   const { caixinhas, salvarCaixinha, voltar, irPara, ehDesktop } = ctx;
   const t = useT();
   const [modal, setModal] = React.useState(null); // null | 'nova' | { editando: caixinha }
@@ -16,8 +19,11 @@ export function CaixinhasScreen({ ctx }) {
     <div style={{ paddingBottom: "var(--pad-bottom)" }}>
       <TopBar voltar={ehDesktop ? undefined : voltar} titulo={t("Caixinhas")} />
 
-      <div style={{ padding: "4px 20px 0" }}>
+      <div style={{ padding: "4px var(--pad-x) 0" }}>
         {caixinhas.length === 0 ? (
+          // Sem caixinhas o convite fica numa coluna estreita: esticado por mil
+          // pixels ele viraria uma faixa vazia.
+          <div className="coluna-estreita">
           <Card style={{ padding: 28, textAlign: "center" }}>
             <div
               style={{
@@ -48,18 +54,23 @@ export function CaixinhasScreen({ ctx }) {
               {t("Crie uma caixinha para juntar dinheiro com um objetivo (viagem, reserva, presente…). A meta é opcional.")}
             </div>
           </Card>
+          </div>
         ) : (
-          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          // Cada caixinha é um bloco fechado em si — no desktop cabem várias
+          // por linha sem que nenhuma precise saber disso.
+          <div className="grade-tiles">
             {caixinhas.map((cx) => (
               <CardCaixinha
                 key={cx.id}
                 cx={cx}
+                selecionada={cx.id === params?.id}
                 onClick={() => irPara("caixinha", { id: cx.id })}
               />
             ))}
           </div>
         )}
 
+        <div className="coluna-estreita">
         <button
           onClick={() => setModal("nova")}
           style={{
@@ -84,6 +95,7 @@ export function CaixinhasScreen({ ctx }) {
           <Icon name="plus" size={18} color="#fff" strokeWidth={2.6} />
           {t("Nova caixinha")}
         </button>
+        </div>
       </div>
 
       {modal && (

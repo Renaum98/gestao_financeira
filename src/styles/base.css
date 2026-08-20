@@ -13,13 +13,20 @@
   /* Espaçamentos padrão (mobile): topo reserva o notch; base reserva a tab bar flutuante */
   --pad-top: 38px;
   --pad-bottom: 110px;
+  /* Respiro lateral das seções de uma tela. É variável (e não os 20px cravados
+     de antes) pra que o desktop possa abrir a margem sem que nenhuma regra
+     precise existir no caminho do mobile. */
+  --pad-x: 20px;
   color-scheme: light;
 }
 
-/* No desktop a sidebar substitui a tab bar e não há notch — reduzimos os reservados. */
+/* No desktop a sidebar substitui a tab bar e não há notch — reduzimos os
+   reservados. A margem lateral, ao contrário, cresce: a coluna é bem mais larga
+   e 20px nas beiradas fazem o conteúdo parecer colado no vidro. */
 .desktop-shell {
   --pad-top: 28px;
   --pad-bottom: 32px;
+  --pad-x: 28px;
 }
 
 /* Telas secundárias no mobile: a tab bar sai de cena, então o rodapé só precisa

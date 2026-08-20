@@ -3,6 +3,7 @@
 
 import React from "react";
 import { createPortal } from "react-dom";
+import { useFecharComEsc } from "../../ui/modal-base.jsx";
 import { Icon } from "../../ui/icons.jsx";
 import { Z_MODAL } from "../../ui/modal-base.jsx";
 import { vibrar } from "../../lib/haptics.js";
@@ -137,6 +138,8 @@ export function ConvidarParceiroModal({ meuUid, meuNome, meuEmail, onFechar }) {
       setEnviando(false);
     }
   };
+
+  useFecharComEsc(onFechar);
 
   return createPortal(
     <div

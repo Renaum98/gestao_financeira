@@ -6,7 +6,7 @@ import { useT } from '../../lib/i18n.jsx';
 export function BannerPermissao({ permissao, onAtivar }) {
   const t = useT();
   return (
-    <div style={{ padding: '4px 20px 0' }}>
+    <div style={{ padding: '4px var(--pad-x) 0' }}>
       <div
         style={{
           padding: '14px 16px',

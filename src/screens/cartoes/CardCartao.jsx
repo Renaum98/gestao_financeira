@@ -97,6 +97,7 @@ export function CardCartao({ cartao, uso, onClick, primeiro }) {
   return (
     <div
       onClick={onClick}
+      className="clicavel"
       style={{
         padding: primeiro ? "14px 0 16px" : "16px 0",
         borderTop: primeiro ? "none" : "1px solid var(--linha)",

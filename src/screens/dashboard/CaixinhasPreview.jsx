@@ -9,7 +9,7 @@ export function CaixinhasPreview({ caixinhas, irPara }) {
   if (!caixinhas || caixinhas.length === 0) return null;
 
   return (
-    <div style={{ padding: "20px 20px 0" }}>
+    <div style={{ padding: "20px var(--pad-x) 0" }}>
       <div
         style={{
           display: "flex",

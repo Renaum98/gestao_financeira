@@ -29,10 +29,12 @@ import {
 } from "./lib/partnership.js";
 import { vibrar } from "./lib/haptics.js";
 import { ehTemaEscuro, lerAparenciaSalva, salvarAparencia } from "./lib/tema.js";
+import { useEhDesktop } from "./lib/desktop.js";
 import { ehLeve, lerLeveSalvo, salvarLeve, AUTO } from "./lib/leve.js";
 import { estaOffline, useEstaOffline } from "./lib/conexao.js";
 import { BarraOffline, EspacoBarraOffline, ALTURA_FAIXA } from "./ui/barra-offline.jsx";
 import { useInstallPrompt, InstallPromptModal } from "./ui/install-prompt.jsx";
+import { temOverlayAberto } from "./ui/modal-base.jsx";
 import { LoaderTela, SplashLogo, useSplashInteiro } from "./ui/loader.jsx";
 import { calcOrcBaseAtual, mesCorrente, mesAnteriorDe } from "./lib/orcamento.js";
 import { rendimentoRealizadoAoResgatar } from "./lib/selic.js";
@@ -458,7 +460,7 @@ function Congelada({ congelar, children }) {
   return ultimo.current;
 }
 
-function AreaDeTelas({ tela, params, ctx, secundaria }) {
+function AreaDeTelas({ tela, params, ctx, secundaria, chaveTransicao }) {
   const vivas = React.useRef(new Set());
   const ehAba = Object.hasOwn(ABAS_VIVAS, tela);
   // No modo leve o conjunto guarda no máximo a aba atual: as outras saem do DOM
@@ -473,7 +475,11 @@ function AreaDeTelas({ tela, params, ctx, secundaria }) {
   // Sem a `key` que remontava tudo, a animação de entrada não reinicia sozinha:
   // reiniciamos na mão a cada troca, como se o nó fosse novo.
   const palco = React.useRef(null);
-  const assinatura = tela + JSON.stringify(params || {});
+  // Trocar de params normalmente é navegar, e a animação deve tocar. A exceção é
+  // o par mestre-detalhe do desktop: lá os params são só qual item está aberto,
+  // e reanimar o palco inteiro faria a lista da esquerda piscar junto. Quem
+  // monta o par passa uma chave que ignora os params.
+  const assinatura = chaveTransicao ?? tela + JSON.stringify(params || {});
   React.useLayoutEffect(() => {
     const el = palco.current;
     // No modo leve não há animação pra reiniciar, e o `offsetWidth` abaixo é um
@@ -517,6 +523,34 @@ const NAV_DESKTOP = [
   { id: "historico", icon: "calendar", label: "Histórico" },
   { id: "perfil", icon: "user", label: "Perfil" },
 ];
+
+// Largura da coluna de conteúdo no desktop, por tela. O padrão estreito serve
+// às telas que são uma lista só — esticá-las deixaria linhas longas demais pra
+// ler. Quem tem layout próprio em colunas pede espaço e aparece aqui.
+const LARGURA_DESKTOP = {
+  inicio: 1080,
+  analise: 1080,
+  gastos: 1080,
+  perfil: 1000,
+  cartoes: 1000,
+  caixinhas: 1000,
+  orcamentos: 1000,
+  historico: 940,
+  recorrentes: 940,
+  caixinha: 1100, // lista + detalhe lado a lado
+};
+const LARGURA_DESKTOP_PADRAO = 640;
+
+// Telas de detalhe que, no desktop, aparecem AO LADO da lista de onde saíram em
+// vez de substituí-la: a lista fica montada à esquerda e escolher outro item
+// troca só o painel da direita. No mobile nada disso existe — lá o detalhe
+// ocupa a tela inteira, como sempre.
+//
+// Só entra aqui o par em que a lista é curta o bastante pra caber numa coluna
+// estreita E o detalhe é a tela inteira de um item dela.
+const MESTRE_DE = {
+  caixinha: { id: "caixinhas", Tela: CaixinhasScreen },
+};
 
 function Sidebar({ tela, irPara, abrirAdd, usuario, fotoPerfil }) {
   const t = useT();
@@ -700,24 +734,14 @@ function Sidebar({ tela, irPara, abrirAdd, usuario, fotoPerfil }) {
   );
 }
 
-function useEhDesktop() {
-  const consulta = "(min-width: 900px)";
-  const [ehDesktop, setEhDesktop] = React.useState(
-    () => typeof window !== "undefined" && window.matchMedia(consulta).matches,
-  );
-  React.useEffect(() => {
-    const mq = window.matchMedia(consulta);
-    const handler = (e) => setEhDesktop(e.matches);
-    mq.addEventListener("change", handler);
-    return () => mq.removeEventListener("change", handler);
-  }, []);
-  return ehDesktop;
-}
-
 function aplicarTema(paleta, modo) {
   const root = document.documentElement;
   const pal = PALETAS.find((p) => p.primary === paleta) || PALETAS[0];
   const ehEscuro = ehTemaEscuro(modo);
+  // Marca no <html> pra o CSS saber a direção de um realce: no tema claro um
+  // hover escurece, no escuro clareia. As cores em si continuam vindo das
+  // variáveis abaixo — a classe só diz de que lado estamos.
+  root.classList.toggle("tema-escuro", ehEscuro);
   // Paletas podem ter variantes dark (a "Preto" vira prata pra continuar
   // visível contra o --bg escuro). Se não houver, usa a clara.
   const { primary, primary2 } = coresDaPaleta(pal, ehEscuro);
@@ -1021,6 +1045,25 @@ export function App() {
   }, [cloud.ready]);
 
   const ehDesktop = useEhDesktop();
+
+  // Atalho de teclado do desktop: "N" abre uma transação nova, o mesmo que o
+  // botão do topo da sidebar. Não aparece escrito em lugar nenhum — é um extra
+  // pra quem descobrir, não o caminho principal, que continua sendo o botão.
+  React.useEffect(() => {
+    if (!ehDesktop) return;
+    const aoTeclar = (e) => {
+      if (e.key !== "n" && e.key !== "N") return;
+      if (e.metaKey || e.ctrlKey || e.altKey) return; // Ctrl+N é do navegador
+      if (temOverlayAberto()) return;
+      // Digitando num campo, "n" é só a letra n.
+      if (e.target?.matches?.('input, textarea, select, [contenteditable="true"]')) return;
+      e.preventDefault();
+      vibrar();
+      setAddModal({});
+    };
+    window.addEventListener("keydown", aoTeclar);
+    return () => window.removeEventListener("keydown", aoTeclar);
+  }, [ehDesktop]);
   const install = useInstallPrompt();
 
   // Prefetch dos chunks das telas quando o browser estiver ocioso. Como as
@@ -1140,6 +1183,11 @@ export function App() {
       setParams({});
     } else if (t === "add") {
       setAddModal(p);
+    } else if (t === tela) {
+      // Já estamos nesta tela: trocar de item (outra caixinha no painel do
+      // desktop) é substituir o que está aberto, não empilhar mais um passo.
+      // Sem isso, escolher cinco caixinhas seguidas custaria cinco voltas.
+      setParams(p);
     } else {
       setStack([...stack, { tela, params }]);
       setTela(t);
@@ -1726,11 +1774,22 @@ export function App() {
   else if (tela === "orcamentos") conteudo = <OrcamentosScreen ctx={ctx} />;
   else if (tela === "historico") conteudo = <HistoricoScreen ctx={ctx} />;
   else if (tela === "caixinhas") conteudo = <CaixinhasScreen ctx={ctx} />;
-  else if (tela === "caixinha")
-    conteudo = <CaixinhaScreen ctx={ctx} params={params} />;
+  else if (tela === "caixinha") conteudo = <CaixinhaScreen ctx={ctx} params={params} />;
   else if (tela === "recorrentes") conteudo = <RecorrentesScreen ctx={ctx} />;
   else if (tela === "cartoes") conteudo = <CartoesScreen ctx={ctx} />;
   else if (tela === "notificacoes") conteudo = <NotificacoesScreen ctx={ctx} />;
+
+  // No desktop, um detalhe com dono ganha a lista ao lado em vez de escondê-la.
+  // As duas telas vêm do mesmo chunk lazy, então o par não custa rede extra.
+  const mestre = ehDesktop ? MESTRE_DE[tela] : null;
+  if (mestre) {
+    conteudo = (
+      <div className="mestre-detalhe">
+        <mestre.Tela ctx={ctx} params={params} />
+        {conteudo}
+      </div>
+    );
+  }
 
   if (ehDesktop) {
     return (
@@ -1744,7 +1803,9 @@ export function App() {
         }}
       >
         <Sidebar
-          tela={tela}
+          // Com a lista ao lado, quem está aberto é o dono do detalhe: a
+          // sidebar deve marcar "Caixinhas", não perder o destaque.
+          tela={mestre?.id || tela}
           irPara={irPara}
           abrirAdd={() => { vibrar(); setAddModal({}); }}
           usuario={usuario}
@@ -1758,7 +1819,7 @@ export function App() {
           <EspacoBarraOffline offline={offline} />
           <div
             style={{
-              maxWidth: tela === "inicio" || tela === "analise" ? 1080 : 640,
+              maxWidth: LARGURA_DESKTOP[tela] || LARGURA_DESKTOP_PADRAO,
               margin: "0 auto",
               padding: "0 24px",
               minHeight: "100vh",
@@ -1769,6 +1830,7 @@ export function App() {
               params={params}
               ctx={ctx}
               secundaria={conteudo}
+              chaveTransicao={mestre ? tela : undefined}
             />
           </div>
         </main>

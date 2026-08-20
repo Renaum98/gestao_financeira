@@ -95,55 +95,58 @@ export function PerfilScreen({ ctx }) {
 
       <CabecalhoPerfil preferences={preferences} setPreferences={setPreferences} usuario={usuario} />
 
-      <div style={{ padding: "24px 20px 0" }}>
-        <AparenciaCard preferences={preferences} setPreferences={setPreferences} />
+      <div style={{ padding: "24px var(--pad-x) 0" }}>
+        {/* Nenhum card daqui depende do vizinho — nem da ordem, nem da largura.
+            É o que deixa a .grade-cards reorganizá-los em duas colunas no
+            desktop sem ajuste nenhum aqui dentro. No mobile ela só repõe os
+            14px de respiro que antes eram espaçadores no meio do JSX. */}
+        <div className="grade-cards">
+          <AparenciaCard preferences={preferences} setPreferences={setPreferences} />
 
-        <div style={{ height: 14 }} />
-        <DesempenhoCard preferences={preferences} setPreferences={setPreferences} />
+          <DesempenhoCard preferences={preferences} setPreferences={setPreferences} />
 
-        <div style={{ height: 14 }} />
-        <ContaCompartilhadaCard
-          partnerUid={partnerUid}
-          partnerNome={partnerNome}
-          convitePendente={(convitesEnviados || []).find((c) => c.status === "pendente")}
-          onConvidar={() => {
-            vibrar();
-            setConvidando(true);
-          }}
-          onCancelarConvite={async (id) => {
-            try {
-              await cancelarConvite(id);
+          <ContaCompartilhadaCard
+            partnerUid={partnerUid}
+            partnerNome={partnerNome}
+            convitePendente={(convitesEnviados || []).find((c) => c.status === "pendente")}
+            onConvidar={() => {
               vibrar();
-            } catch { }
-          }}
-          onDesfazer={() => {
-            vibrar();
-            setConfirmandoDesfazer(true);
-          }}
-        />
+              setConvidando(true);
+            }}
+            onCancelarConvite={async (id) => {
+              try {
+                await cancelarConvite(id);
+                vibrar();
+              } catch { }
+            }}
+            onDesfazer={() => {
+              vibrar();
+              setConfirmandoDesfazer(true);
+            }}
+          />
 
-        <div style={{ height: 14 }} />
-        <Card style={{ padding: "4px 16px" }}>
-          <ConfigItem icon="piggy" label={t("Caixinhas")} onClick={() => irPara("caixinhas")} />
-          <ConfigItem icon="card" label={t("Cartões")} onClick={() => irPara("cartoes")} />
-          <ConfigItem icon="target" label={t("Orçamentos")} onClick={() => irPara("orcamentos")} />
-          <ConfigItem icon="history" label={t("Recorrentes")} onClick={() => irPara("recorrentes")} />
-          <ConfigItem icon="calendar" label={t("Histórico")} onClick={() => irPara("historico")} />
-        </Card>
+          <Card style={{ padding: "4px 16px" }}>
+            <ConfigItem icon="piggy" label={t("Caixinhas")} onClick={() => irPara("caixinhas")} />
+            <ConfigItem icon="card" label={t("Cartões")} onClick={() => irPara("cartoes")} />
+            <ConfigItem icon="target" label={t("Orçamentos")} onClick={() => irPara("orcamentos")} />
+            <ConfigItem icon="history" label={t("Recorrentes")} onClick={() => irPara("recorrentes")} />
+            <ConfigItem icon="calendar" label={t("Histórico")} onClick={() => irPara("historico")} />
+          </Card>
 
-        <div style={{ height: 14 }} />
-        <Card style={{ padding: "4px 16px" }}>
-          <ConfigItem icon="sparkle" label={t("Refazer tour")} onClick={() => setOnboarding(true)} />
-          <ConfigItem icon="list" label={t("Baixar dados (.xlsx)")} onClick={abrirBaixar} />
-          <ConfigItem icon="file-text" label={t("Baixar relatório (.pdf)")} onClick={abrirRelatorio} />
-        </Card>
+          <Card style={{ padding: "4px 16px" }}>
+            <ConfigItem icon="sparkle" label={t("Refazer tour")} onClick={() => setOnboarding(true)} />
+            <ConfigItem icon="list" label={t("Baixar dados (.xlsx)")} onClick={abrirBaixar} />
+            <ConfigItem icon="file-text" label={t("Baixar relatório (.pdf)")} onClick={abrirRelatorio} />
+          </Card>
 
-        <div style={{ height: 14 }} />
-        <IdiomaCard preferences={preferences} setPreferences={setPreferences} />
+          <IdiomaCard preferences={preferences} setPreferences={setPreferences} />
 
-        <div style={{ height: 14 }} />
-        <MoedaCard preferences={preferences} setPreferences={setPreferences} />
+          <MoedaCard preferences={preferences} setPreferences={setPreferences} />
+        </div>
 
+        {/* Sair / excluir / versão: botões de ação única, que numa coluna de mil
+            pixels ficariam faixas enormes. A classe só existe no desktop. */}
+        <div className="coluna-estreita">
         <div style={{ height: 18 }} />
         <button
           onClick={() => setConfirmarSair(true)}
@@ -198,6 +201,7 @@ export function PerfilScreen({ ctx }) {
 
         <div style={{ padding: "24px 0", textAlign: "center" }}>
           <div style={{ fontSize: 11, color: "var(--muted)", fontWeight: 600 }}>MyCounts · v1.0</div>
+        </div>
         </div>
       </div>
 

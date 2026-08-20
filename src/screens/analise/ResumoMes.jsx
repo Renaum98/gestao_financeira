@@ -63,7 +63,7 @@ export function ResumoMes({
 }) {
   const t = useT();
   return (
-    <div className={spanAll} style={{ padding: "0 20px" }}>
+    <div className={spanAll} style={{ padding: "0 var(--pad-x)" }}>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
         <StatCard
           rotulo={t("Total gasto")}

@@ -12,7 +12,7 @@ export function PizzaCategorias({ dados, total }) {
   const [ativa, setAtiva] = React.useState(null);
 
   return (
-    <div style={{ padding: "16px 20px 0" }}>
+    <div style={{ padding: "16px var(--pad-x) 0" }}>
       <Card>
         <div style={{ display: "flex", justifyContent: "center", padding: "10px 0" }}>
           <PieChart

@@ -10,7 +10,7 @@ import { useT } from "../../lib/i18n.jsx";
 export function PorPagamento({ porPagamento, total }) {
   const t = useT();
   return (
-    <div style={{ padding: "16px 20px 0" }}>
+    <div style={{ padding: "16px var(--pad-x) 0" }}>
       <SecaoTitulo>{t("Por forma de pagamento")}</SecaoTitulo>
       <Card style={{ padding: "4px 16px" }}>
         {porPagamento.map(([nome, valor], i) => (

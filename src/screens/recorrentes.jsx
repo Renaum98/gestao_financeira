@@ -20,74 +20,94 @@ export function RecorrentesScreen({ ctx }) {
   const [confirmar, setConfirmar] = React.useState(null);
   const [editando, setEditando] = React.useState(null);
 
+  // A explicação e a lista são as duas únicas peças da tela. No mobile elas se
+  // sucedem — o texto no caminho da leitura, logo abaixo do título. No desktop
+  // o texto vira a coluna estreita da esquerda e a lista fica com o resto.
+  const explicacao = t("Esses gastos são adicionados automaticamente todo mês. Edite para atualizar do mês atual em diante ou cancele se a cobrança parar.");
+
+  const conteudo = recorrentes.length === 0 ? (
+    <Card style={{ padding: 28, textAlign: 'center' }}>
+      <div style={{
+        width: 56, height: 56, borderRadius: 28,
+        background: 'color-mix(in oklab, var(--primary) 14%, transparent)',
+        margin: '0 auto 12px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+      }}>
+        <Icon name="history" size={26} color="var(--primary)" strokeWidth={2.2} />
+      </div>
+      <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--ink)' }}>
+        {t("Nenhum gasto recorrente")}
+      </div>
+      <div style={{ fontSize: 13, color: 'var(--muted)', fontWeight: 500, marginTop: 6, lineHeight: 1.4 }}>
+        {t("Ao adicionar um gasto, marque \"Repetir todo mês\" para ele aparecer aqui e ser lançado automaticamente nos próximos meses.")}
+      </div>
+    </Card>
+  ) : (
+    <Card style={{ padding: '4px 16px' }}>
+      {recorrentes.map((r, i) => {
+        const cat = CATEGORIAS[r.categoria] || CATEGORIAS.outros;
+        return (
+          <div key={r.id} style={{
+            display: 'flex', alignItems: 'center', gap: 12, padding: '14px 0',
+            borderTop: i === 0 ? 'none' : '1px solid var(--linha)',
+          }}>
+            <CatChip catId={r.categoria} size={40} />
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--ink)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                {r.descricao}
+              </div>
+              <div style={{ fontSize: 11, color: 'var(--muted)', fontWeight: 600, marginTop: 2 }}>
+                {t("{cat} · todo dia {dia} · desde {inicio}", { cat: t(cat.nome), dia: r.dia, inicio: rotuloMesCurtoT(t, r.inicio) })}
+                {r.fim ? t(" · até {fim}", { fim: rotuloMesCurtoT(t, r.fim) }) : ''}
+                {r.crescimento ? t(" · reajuste {pct}% por parcela", { pct: (r.crescimento * 100).toLocaleString('pt-BR', { maximumFractionDigits: 2 }) }) : ''}
+              </div>
+            </div>
+            <div style={{ textAlign: 'right' }}>
+              <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--ink)' }}>
+                {fmtBRL(r.valor)}
+              </div>
+              <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 4 }}>
+                <button onClick={() => { vibrar(); setEditando(r); }} style={{
+                  background: 'transparent', border: 'none', cursor: 'pointer',
+                  padding: 0, color: 'var(--primary)', fontSize: 11, fontWeight: 700,
+                  fontFamily: 'inherit',
+                }}>{t("Editar")}</button>
+                <button onClick={() => setConfirmar(r)} style={{
+                  background: 'transparent', border: 'none', cursor: 'pointer',
+                  padding: 0, color: COR_NEG, fontSize: 11, fontWeight: 700,
+                  fontFamily: 'inherit',
+                }}>{t("Cancelar")}</button>
+              </div>
+            </div>
+          </div>
+        );
+      })}
+    </Card>
+  );
+
   return (
     <div style={{ paddingBottom: "var(--pad-bottom)" }}>
       <TopBar voltar={ehDesktop ? undefined : voltar} titulo={t("Recorrentes")} />
 
-      <div style={{ padding: '0 20px 12px', fontSize: 13, color: 'var(--muted)', fontWeight: 500, lineHeight: 1.45 }}>
-        {t("Esses gastos são adicionados automaticamente todo mês. Edite para atualizar do mês atual em diante ou cancele se a cobrança parar.")}
-      </div>
+      {ehDesktop ? (
+        <div style={{ padding: '4px var(--pad-x) 0' }}>
+          <div className="painel-lateral">
+            <Card style={{ padding: 16, fontSize: 13, color: 'var(--muted)', fontWeight: 500, lineHeight: 1.45 }}>
+              {explicacao}
+            </Card>
+            {conteudo}
+          </div>
+        </div>
+      ) : (
+        <>
+          <div style={{ padding: '0 var(--pad-x) 12px', fontSize: 13, color: 'var(--muted)', fontWeight: 500, lineHeight: 1.45 }}>
+            {explicacao}
+          </div>
 
-      <div style={{ padding: '4px 20px 0' }}>
-        {recorrentes.length === 0 ? (
-          <Card style={{ padding: 28, textAlign: 'center' }}>
-            <div style={{
-              width: 56, height: 56, borderRadius: 28,
-              background: 'color-mix(in oklab, var(--primary) 14%, transparent)',
-              margin: '0 auto 12px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-            }}>
-              <Icon name="history" size={26} color="var(--primary)" strokeWidth={2.2} />
-            </div>
-            <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--ink)' }}>
-              {t("Nenhum gasto recorrente")}
-            </div>
-            <div style={{ fontSize: 13, color: 'var(--muted)', fontWeight: 500, marginTop: 6, lineHeight: 1.4 }}>
-              {t("Ao adicionar um gasto, marque \"Repetir todo mês\" para ele aparecer aqui e ser lançado automaticamente nos próximos meses.")}
-            </div>
-          </Card>
-        ) : (
-          <Card style={{ padding: '4px 16px' }}>
-            {recorrentes.map((r, i) => {
-              const cat = CATEGORIAS[r.categoria] || CATEGORIAS.outros;
-              return (
-                <div key={r.id} style={{
-                  display: 'flex', alignItems: 'center', gap: 12, padding: '14px 0',
-                  borderTop: i === 0 ? 'none' : '1px solid var(--linha)',
-                }}>
-                  <CatChip catId={r.categoria} size={40} />
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--ink)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                      {r.descricao}
-                    </div>
-                    <div style={{ fontSize: 11, color: 'var(--muted)', fontWeight: 600, marginTop: 2 }}>
-                      {t("{cat} · todo dia {dia} · desde {inicio}", { cat: t(cat.nome), dia: r.dia, inicio: rotuloMesCurtoT(t, r.inicio) })}
-                      {r.fim ? t(" · até {fim}", { fim: rotuloMesCurtoT(t, r.fim) }) : ''}
-                      {r.crescimento ? t(" · reajuste {pct}% por parcela", { pct: (r.crescimento * 100).toLocaleString('pt-BR', { maximumFractionDigits: 2 }) }) : ''}
-                    </div>
-                  </div>
-                  <div style={{ textAlign: 'right' }}>
-                    <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--ink)' }}>
-                      {fmtBRL(r.valor)}
-                    </div>
-                    <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 4 }}>
-                      <button onClick={() => { vibrar(); setEditando(r); }} style={{
-                        background: 'transparent', border: 'none', cursor: 'pointer',
-                        padding: 0, color: 'var(--primary)', fontSize: 11, fontWeight: 700,
-                        fontFamily: 'inherit',
-                      }}>{t("Editar")}</button>
-                      <button onClick={() => setConfirmar(r)} style={{
-                        background: 'transparent', border: 'none', cursor: 'pointer',
-                        padding: 0, color: COR_NEG, fontSize: 11, fontWeight: 700,
-                        fontFamily: 'inherit',
-                      }}>{t("Cancelar")}</button>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </Card>
-        )}
-      </div>
+          <div style={{ padding: '4px var(--pad-x) 0' }}>
+            {conteudo}
+          </div>
+        </>
+      )}
 
       {confirmar && (
         <ConfirmModal

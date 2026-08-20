@@ -25,7 +25,7 @@ export function CategoriaScreen({ ctx, params }) {
   return (
     <div style={{ paddingBottom: "var(--pad-bottom)" }}>
       <TopBar voltar={voltar} />
-      <div style={{ padding: "4px 20px 0" }}>
+      <div style={{ padding: "4px var(--pad-x) 0" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
           <CatChip catId={cat.id} size={56} />
           <div>

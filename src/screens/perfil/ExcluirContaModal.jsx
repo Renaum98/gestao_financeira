@@ -3,6 +3,7 @@
 
 import React from "react";
 import { createPortal } from "react-dom";
+import { useFecharComEsc } from "../../ui/modal-base.jsx";
 import { Icon } from "../../ui/icons.jsx";
 import { Z_MODAL } from "../../ui/modal-base.jsx";
 import { reautenticarComSenha } from "../../lib/firebase.js";
@@ -59,6 +60,8 @@ export function ExcluirContaModal({ uid, meuEmail, meuNome, partnershipId, onFec
   };
 
   const apagando = etapa === "apagando";
+
+  useFecharComEsc(onFechar);
 
   return createPortal(
     <div

@@ -169,7 +169,7 @@ export function LoaderTela({ label = 'Carregando' }) {
       {/* TopBar */}
       <div
         style={{
-          padding: 'var(--pad-top, 16px) 20px 12px',
+          padding: 'var(--pad-top, 16px) var(--pad-x) 12px',
           display: 'flex',
           flexDirection: 'column',
           gap: 4,
@@ -190,7 +190,7 @@ export function LoaderTela({ label = 'Carregando' }) {
       </div>
 
       {/* Card principal (saldo / resumo) */}
-      <div style={{ padding: '8px 20px 0' }}>
+      <div style={{ padding: '8px var(--pad-x) 0' }}>
         <div
           style={{
             padding: 20,
@@ -212,7 +212,7 @@ export function LoaderTela({ label = 'Carregando' }) {
       </div>
 
       {/* Lista — algumas linhas tipo "transação" */}
-      <div style={{ padding: '20px 20px 0' }}>
+      <div style={{ padding: '20px var(--pad-x) 0' }}>
         <Skeleton w={140} h={14} r={6} style={{ marginBottom: 12 }} />
         <div
           style={{

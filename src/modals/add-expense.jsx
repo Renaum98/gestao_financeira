@@ -247,6 +247,7 @@ export function AddExpenseModal({ ctx, params }) {
     <ModalOverlay
       onClose={fechar}
       maxWidth={440}
+      maxWidthDesktop={560}
       padding="16px 20px 24px"
       dialogStyle={{ overflowX: "hidden", transformOrigin: "center" }}
     >
@@ -717,6 +718,12 @@ export function AddExpenseModal({ ctx, params }) {
           )}
         </Expansivel>
 
+        {/* Descrição e data. No desktop dividem a mesma linha — é o único par
+            de campos curtos e sempre vizinhos deste formulário. O resto segue
+            empilhado de propósito: metade das seções aparece e some conforme o
+            preenchimento, e em duas colunas o formulário pularia enquanto está
+            sendo usado. */}
+        <div className="par-campos">
         {/* Descrição */}
         <div style={{ marginTop: 12 }}>
           <input
@@ -787,6 +794,7 @@ export function AddExpenseModal({ ctx, params }) {
           </label>
         </div>
         )}
+        </div>
 
         {/* Pagamento (só saída) */}
         <Expansivel aberto={!ehEntrada}>

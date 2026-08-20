@@ -11,7 +11,7 @@ export function EvolucaoConjunta({ evolucaoConjunta, maxEvolConjunta, mes, setMe
   if (!evolucaoConjunta) return null;
 
   return (
-    <div style={{ padding: "16px 20px 0" }}>
+    <div style={{ padding: "16px var(--pad-x) 0" }}>
       <SecaoTitulo>{t("Você vs. {nome}", { nome: partnerNome || t("parceiro") })}</SecaoTitulo>
       <Card>
         <div

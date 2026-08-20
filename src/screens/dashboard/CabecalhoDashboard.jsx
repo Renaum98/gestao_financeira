@@ -30,7 +30,7 @@ export function CabecalhoDashboard({
     <div
       className={ehDesktop ? "col-span-all" : undefined}
       style={{
-        padding: "var(--pad-top) 20px 12px",
+        padding: "var(--pad-top) var(--pad-x) 12px",
         display: "flex",
         flexDirection: "column",
         gap: 4,

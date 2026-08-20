@@ -86,7 +86,7 @@ export function Onboarding({ onFim }) {
     }}>
       <style>{KEYFRAMES}</style>
 
-      <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '0 20px' }}>
+      <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '0 var(--pad-x)' }}>
         {!ultimo && (
           <button onClick={onFim} style={{
             background: 'transparent', border: 'none', color: 'var(--muted)',
@@ -150,7 +150,7 @@ export function Onboarding({ onFim }) {
         </div>
       </div>
 
-      <div style={{ padding: '0 20px 60px' }}>
+      <div style={{ padding: '0 var(--pad-x) 60px' }}>
         <div style={{ display: 'flex', justifyContent: 'center', gap: 6, marginBottom: 24 }}>
           {slides.map((_, i) => (
             <button

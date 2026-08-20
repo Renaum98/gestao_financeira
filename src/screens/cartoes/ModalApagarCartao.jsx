@@ -9,6 +9,7 @@
 
 import React from "react";
 import { createPortal } from "react-dom";
+import { useFecharComEsc } from "../../ui/modal-base.jsx";
 import { Icon } from "../../ui/icons.jsx";
 import { Z_MODAL } from "../../ui/modal-base.jsx";
 import { COR_NEG } from "../../lib/colors.js";
@@ -65,6 +66,8 @@ export function ModalApagarCartao({ cartao, outros, quantidade, onFechar, onConf
   const t = useT();
   const [destino, setDestino] = React.useState(outros[0]?.id ?? null);
   const temLancamentos = quantidade > 0;
+
+  useFecharComEsc(onFechar);
 
   return createPortal(
     <div

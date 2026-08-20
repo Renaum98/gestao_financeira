@@ -273,7 +273,7 @@ export function DashboardScreen({ ctx }) {
           inteira, porque o seletor com as setas mora dentro do próprio card. O
           que se perde é o swipe entre meses. */}
       {ehDesktop || leve ? (
-        <div className={ehDesktop ? "col-span-all" : undefined} style={{ padding: "4px 20px 0" }}>
+        <div className={ehDesktop ? "col-span-all" : undefined} style={{ padding: "4px var(--pad-x) 0" }}>
           {renderCardSaldo(mes)}
         </div>
       ) : (
@@ -283,7 +283,7 @@ export function DashboardScreen({ ctx }) {
       <InsightsCard insights={insights} ehDesktop={ehDesktop} />
 
       {/* Botão discreto: simular um gasto e checar se cabe no orçamento */}
-      <div className={ehDesktop ? "col-span-all" : undefined} style={{ padding: "10px 20px 0" }}>
+      <div className={ehDesktop ? "col-span-all" : undefined} style={{ padding: "10px var(--pad-x) 0" }}>
         <button
           onClick={() => {
             vibrar();

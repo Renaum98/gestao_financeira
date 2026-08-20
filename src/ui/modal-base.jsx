@@ -12,6 +12,7 @@
 
 import React from 'react';
 import { createPortal } from 'react-dom';
+import { useEhDesktop } from '../lib/desktop.js';
 
 // Z-index padrão de TODO modal/overlay do app. Valor altíssimo (perto do
 // máximo de 32 bits) pra garantir que um modal sempre fique acima de
@@ -21,10 +22,47 @@ import { createPortal } from 'react-dom';
 // preferência, o próprio ModalOverlay) em vez de um número solto.
 export const Z_MODAL = 2147483000;
 
+// Pilha dos overlays abertos. Com um ConfirmModal por cima de outro modal, os
+// dois escutam a mesma tecla — e o de fora, que montou primeiro, responderia
+// antes. A pilha garante que só o de cima fecha.
+const abertos = [];
+
+// Há algum modal na tela? Quem tem atalho de teclado global precisa saber pra
+// não agir por baixo de um formulário aberto.
+export function temOverlayAberto() {
+  return abertos.length > 0;
+}
+
+// Esc fecha o modal. Vale em qualquer largura: no celular a tecla não existe,
+// então a regra simplesmente nunca dispara lá.
+export function useFecharComEsc(onClose) {
+  const fechar = React.useRef(onClose);
+  fechar.current = onClose;
+  React.useEffect(() => {
+    const eu = {};
+    abertos.push(eu);
+    const aoTeclar = (e) => {
+      if (e.key !== 'Escape') return;
+      if (abertos[abertos.length - 1] !== eu) return;
+      e.stopPropagation();
+      fechar.current?.();
+    };
+    document.addEventListener('keydown', aoTeclar);
+    return () => {
+      document.removeEventListener('keydown', aoTeclar);
+      const i = abertos.indexOf(eu);
+      if (i >= 0) abertos.splice(i, 1);
+    };
+  }, []);
+}
+
 export function ModalOverlay({
   onClose,
   children,
   maxWidth = 420,
+  // Largura no desktop. Sem valor, o modal fica do tamanho do mobile — só pede
+  // mais espaço quem tem o que fazer com ele (formulário longo, duas colunas).
+  maxWidthDesktop,
   padding = '16px 20px 22px',
   borderRadius = 28,
   // Quando `scrollable` (default), o dialog limita a altura à viewport e
@@ -43,6 +81,10 @@ export function ModalOverlay({
     document.body.style.overflow = 'hidden';
     return () => { document.body.style.overflow = prev; };
   }, []);
+
+  useFecharComEsc(onClose);
+  const ehDesktop = useEhDesktop();
+  const largura = (ehDesktop && maxWidthDesktop) || maxWidth;
 
   const overlay = (
     <div
@@ -63,7 +105,7 @@ export function ModalOverlay({
         aria-modal="true"
         style={{
           width: '100%',
-          maxWidth,
+          maxWidth: largura,
           ...(scrollable && {
             maxHeight: 'calc(100dvh - 40px)',
             overflowY: 'auto',

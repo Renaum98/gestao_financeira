@@ -40,10 +40,12 @@ export function TopBar({ titulo, voltar, acao, subtitulo }) {
   const rolou = useRolou(!!voltar);
   return (
     <div style={{
-      padding: 'var(--pad-top) 20px 12px', display: 'flex',
+      padding: 'var(--pad-top) var(--pad-x) 12px', display: 'flex',
       flexDirection: 'column', gap: 4,
     }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', minHeight: 32 }}>
+      {/* A faixa some só quando não tem nada pra alojar E nada pra reservar: com
+          `voltar` ela guarda o lugar do botão fixo (ver BotaoVoltarFixo). */}
+      <div className={`topbar-nav${!acao && !subtitulo && !voltar ? ' topbar-nav--vazia' : ''}`}>
         {/* O botão sai do fluxo (é fixo na viewport); este vão guarda o lugar
             dele pra o título e a ação não escorregarem pra esquerda. */}
         <div style={{ width: 36 }} />
@@ -144,9 +146,15 @@ export function SeletorMes({ mes, setMes, todosMeses }) {
   );
 }
 
-export function Card({ children, style = {}, onClick, ...rest }) {
+export function Card({ children, style = {}, onClick, className, ...rest }) {
   return (
-    <div onClick={onClick} {...rest} style={{
+    <div
+      onClick={onClick}
+      // Um card que responde a clique é alvo de ponteiro: no desktop ele
+      // reage ao passar o mouse. Quem não tem onClick não ganha a classe.
+      className={[className, onClick && "clicavel"].filter(Boolean).join(" ") || undefined}
+      {...rest}
+      style={{
       background: 'var(--card)', borderRadius: 22, padding: 18,
       boxShadow: '0 1px 2px rgba(20,16,24,0.04), 0 4px 12px rgba(20,16,24,0.03)',
       cursor: onClick ? 'pointer' : 'default',
@@ -182,7 +190,7 @@ export function ItemTransacao({ tx, onClick, doParceiro = false, nomeParceiro = 
     ? 'var(--muted)'
     : (ehEntrada ? COR_POS : 'var(--ink)');
   return (
-    <div onClick={onClick} style={{
+    <div onClick={onClick} className={onClick ? 'clicavel' : undefined} style={{
       display: 'flex', alignItems: 'center', gap: 12, padding: '12px 4px',
       cursor: onClick ? 'pointer' : 'default',
       opacity: doParceiro ? 0.78 : 1,

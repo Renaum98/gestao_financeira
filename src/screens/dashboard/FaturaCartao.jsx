@@ -143,7 +143,7 @@ export function FaturaCartao({ grupos, temCartoes, irPara, ehDesktop }) {
   if (visiveis.length === 0) return null;
 
   return (
-    <div className={ehDesktop ? "col-span-all" : undefined} style={{ padding: "16px 20px 0" }}>
+    <div className={ehDesktop ? "col-span-all" : undefined} style={{ padding: "16px var(--pad-x) 0" }}>
       <div
         style={{
           display: "flex",

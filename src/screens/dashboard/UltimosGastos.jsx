@@ -7,7 +7,7 @@ import { useT } from "../../lib/i18n.jsx";
 export function UltimosGastos({ recentes, irPara, guardadoTx = {} }) {
   const t = useT();
   return (
-    <div style={{ padding: "16px 20px 0" }}>
+    <div style={{ padding: "16px var(--pad-x) 0" }}>
       <div
         style={{
           display: "flex",

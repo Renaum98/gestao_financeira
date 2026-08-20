@@ -12,7 +12,7 @@ import { useT } from "../../lib/i18n.jsx";
 export function TopCategorias({ dados, porCatAnt, irPara }) {
   const t = useT();
   return (
-    <div style={{ padding: "16px 20px 0" }}>
+    <div style={{ padding: "16px var(--pad-x) 0" }}>
       <SecaoTitulo>{t("Top categorias")}</SecaoTitulo>
       <Card style={{ padding: "4px 16px" }}>
         {dados.map((d, i) => {

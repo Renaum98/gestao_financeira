@@ -7,7 +7,7 @@ import { useT } from '../../lib/i18n.jsx';
 export function EstadoVazio() {
   const t = useT();
   return (
-    <div style={{ padding: '4px 20px 0' }}>
+    <div style={{ padding: '4px var(--pad-x) 0' }}>
       <Card style={{ padding: 28, textAlign: 'center' }}>
         <div
           style={{

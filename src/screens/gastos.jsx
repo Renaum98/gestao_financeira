@@ -21,7 +21,7 @@ import { corDoCartao, corTextoSobre } from "../lib/cartoes.js";
 import { useT } from "../lib/i18n.jsx";
 
 export function GastosScreen({ ctx }) {
-  const { txs, mes, setMes, todosMeses, irPara, excluirTx, caixinhas, cartoes = [] } = ctx;
+  const { txs, mes, setMes, todosMeses, irPara, excluirTx, caixinhas, cartoes = [], ehDesktop } = ctx;
   const t = useT();
   const [filtro, setFiltro] = React.useState("todas");
   const [filtroPag, setFiltroPag] = React.useState("todos");
@@ -179,122 +179,97 @@ export function GastosScreen({ ctx }) {
   // lista piscar enquanto o usuário escreve.
   const chaveFiltro = `${filtro}|${filtroPag}|${filtroCartao}`;
 
-  return (
-    <div style={{ paddingBottom: "var(--pad-bottom)" }}>
-      <TopBar
-        titulo={t("Transações")}
-        acao={
-          <button
-            onClick={() => irPara("historico")}
-            style={{
-              width: 36,
-              height: 36,
-              borderRadius: 18,
-              background: "var(--card)",
-              border: "none",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              cursor: "pointer",
-              boxShadow: "0 1px 2px rgba(0,0,0,0.04)",
-            }}
-          >
-            <Icon
-              name="calendar"
-              size={18}
-              color="var(--ink)"
-              strokeWidth={2}
-            />
-          </button>
-        }
-      />
-
-      <div style={{ padding: "0 20px" }}>
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-          }}
-        >
-          <div style={{ fontSize: 13, color: "var(--muted)", fontWeight: 600 }}>
-            {t("{n} transações ·", { n: txMes.length })}<br/> {t("Total:")}{" "}
-            <span style={{ color: "var(--ink)", fontWeight: 700 }}>
-              {fmtBRL(total)}
-            </span>
-            {guardadoNoFiltro > 0.005 && (
-              <div style={{ fontSize: 11, fontWeight: 600, marginTop: 2 }}>
-                {t("{x} já em caixinhas", { x: fmtBRL(guardadoNoFiltro) })}
-              </div>
-            )}
+  // As quatro peças da tela. No mobile elas se empilham na ordem de sempre:
+  // resumo, busca, filtros, lista. No desktop as três primeiras viram uma
+  // coluna de controles à esquerda e a lista fica com a largura toda — que é o
+  // que a tela realmente tem pra mostrar.
+  const resumoMes = (
+    <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+      }}
+    >
+      <div style={{ fontSize: 13, color: "var(--muted)", fontWeight: 600 }}>
+        {t("{n} transações ·", { n: txMes.length })}<br/> {t("Total:")}{" "}
+        <span style={{ color: "var(--ink)", fontWeight: 700 }}>
+          {fmtBRL(total)}
+        </span>
+        {guardadoNoFiltro > 0.005 && (
+          <div style={{ fontSize: 11, fontWeight: 600, marginTop: 2 }}>
+            {t("{x} já em caixinhas", { x: fmtBRL(guardadoNoFiltro) })}
           </div>
-          <SeletorMes mes={mes} setMes={setMes} todosMeses={todosMeses} />
-        </div>
+        )}
       </div>
+      <SeletorMes mes={mes} setMes={setMes} todosMeses={todosMeses} />
+    </div>
+  );
 
-      {/* Busca */}
-      <div style={{ padding: "14px 20px 0" }}>
-        <div
+  const caixaBusca = (
+    <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: 8,
+        padding: "10px 14px",
+        background: "var(--card)",
+        borderRadius: 14,
+        boxShadow: "0 1px 2px rgba(0,0,0,0.04)",
+      }}
+    >
+      <svg
+        width="16"
+        height="16"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="var(--muted)"
+        strokeWidth="2.2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <circle cx="11" cy="11" r="7" />
+        <path d="M21 21l-4-4" />
+      </svg>
+      <input
+        value={busca}
+        onChange={(e) => setBusca(e.target.value)}
+        placeholder={t("Buscar gasto...")}
+        style={{
+          flex: 1,
+          border: "none",
+          background: "transparent",
+          outline: "none",
+          fontSize: 14,
+          color: "var(--ink)",
+          fontFamily: "inherit",
+          fontWeight: 500,
+        }}
+      />
+      {busca && (
+        <button
+          onClick={() => setBusca("")}
           style={{
+            background: "transparent",
+            border: "none",
+            cursor: "pointer",
+            padding: 0,
             display: "flex",
-            alignItems: "center",
-            gap: 8,
-            padding: "10px 14px",
-            background: "var(--card)",
-            borderRadius: 14,
-            boxShadow: "0 1px 2px rgba(0,0,0,0.04)",
           }}
         >
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="var(--muted)"
-            strokeWidth="2.2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <circle cx="11" cy="11" r="7" />
-            <path d="M21 21l-4-4" />
-          </svg>
-          <input
-            value={busca}
-            onChange={(e) => setBusca(e.target.value)}
-            placeholder={t("Buscar gasto...")}
-            style={{
-              flex: 1,
-              border: "none",
-              background: "transparent",
-              outline: "none",
-              fontSize: 14,
-              color: "var(--ink)",
-              fontFamily: "inherit",
-              fontWeight: 500,
-            }}
+          <Icon
+            name="close"
+            size={14}
+            color="var(--muted)"
+            strokeWidth={2.4}
           />
-          {busca && (
-            <button
-              onClick={() => setBusca("")}
-              style={{
-                background: "transparent",
-                border: "none",
-                cursor: "pointer",
-                padding: 0,
-                display: "flex",
-              }}
-            >
-              <Icon
-                name="close"
-                size={14}
-                color="var(--muted)"
-                strokeWidth={2.4}
-              />
-            </button>
-          )}
-        </div>
-      </div>
+        </button>
+      )}
+    </div>
+  );
 
+  const filtros = (
+    <>
       {/* Filtros de categoria */}
       <div style={{ padding: "10px 0 0" }}>
         <div
@@ -303,7 +278,7 @@ export function GastosScreen({ ctx }) {
             display: "flex",
             gap: 6,
             overflowX: "auto",
-            padding: "2px 20px 4px",
+            padding: "2px var(--pad-x) 4px",
             scrollbarWidth: "none",
           }}
         >
@@ -368,7 +343,7 @@ export function GastosScreen({ ctx }) {
               display: "flex",
               gap: 6,
               overflowX: "auto",
-              padding: "2px 20px 4px",
+              padding: "2px var(--pad-x) 4px",
               scrollbarWidth: "none",
             }}
           >
@@ -421,7 +396,7 @@ export function GastosScreen({ ctx }) {
               display: "flex",
               gap: 6,
               overflowX: "auto",
-              padding: "2px 20px 4px",
+              padding: "2px var(--pad-x) 4px",
               scrollbarWidth: "none",
             }}
           >
@@ -474,114 +449,180 @@ export function GastosScreen({ ctx }) {
           </div>
         </div>
       </Expansivel>
+    </>
+  );
 
-      {/* Lista única do mês — sem agrupamento por dia. A data de cada
-          transação aparece no próprio ItemTransacao (canto direito). */}
-      <div key={chaveFiltro} className="lista-fade" style={{ padding: "16px 20px 0" }}>
-        {txOrdenadas.length === 0 ? (
-          <Card style={{ padding: 32, textAlign: "center" }}>
+  const lista = (
+    // A chave remonta o bloco a cada troca de filtro — é o que dispara o
+    // lista-fade. No desktop o recuo lateral já vem do painel.
+    <div
+      key={chaveFiltro}
+      className="lista-fade"
+      style={ehDesktop ? { paddingTop: 0 } : { padding: "16px var(--pad-x) 0" }}
+    >
+      {txOrdenadas.length === 0 ? (
+        <Card style={{ padding: 32, textAlign: "center" }}>
+          <div
+            style={{
+              width: 56,
+              height: 56,
+              borderRadius: 28,
+              background: "var(--bg)",
+              margin: "0 auto 12px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <Icon
+              name="list"
+              size={26}
+              color="var(--muted)"
+              strokeWidth={2}
+            />
+          </div>
+          <div style={{ fontSize: 15, fontWeight: 700, color: "var(--ink)" }}>
+            {ehFiltroEntradas ? t("Nenhuma entrada") : t("Nenhum gasto")}
+          </div>
+          <div style={{ fontSize: 13, color: "var(--muted)", marginTop: 4 }}>
+            {t("Tente outro filtro ou adicione um novo.")}
+          </div>
+        </Card>
+      ) : (
+        <Card style={{ padding: "6px 16px" }}>
+          {txOrdenadas.map((tx, i) => (
             <div
+              key={tx.id}
               style={{
-                width: 56,
-                height: 56,
-                borderRadius: 28,
-                background: "var(--bg)",
-                margin: "0 auto 12px",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
+                borderTop: i === 0 ? "none" : "1px solid var(--linha)",
+                position: "relative",
               }}
             >
-              <Icon
-                name="list"
-                size={26}
-                color="var(--muted)"
-                strokeWidth={2}
+              <ItemTransacao
+                tx={tx}
+                guardado={guardadoTx[tx.id]}
+                onClick={() => setAcaoAberta(tx.id)}
               />
-            </div>
-            <div style={{ fontSize: 15, fontWeight: 700, color: "var(--ink)" }}>
-              {ehFiltroEntradas ? t("Nenhuma entrada") : t("Nenhum gasto")}
-            </div>
-            <div style={{ fontSize: 13, color: "var(--muted)", marginTop: 4 }}>
-              {t("Tente outro filtro ou adicione um novo.")}
-            </div>
-          </Card>
-        ) : (
-          <Card style={{ padding: "6px 16px" }}>
-            {txOrdenadas.map((tx, i) => (
-              <div
-                key={tx.id}
-                style={{
-                  borderTop: i === 0 ? "none" : "1px solid var(--linha)",
-                  position: "relative",
-                }}
-              >
-                <ItemTransacao
-                  tx={tx}
-                  guardado={guardadoTx[tx.id]}
-                  onClick={() => setAcaoAberta(tx.id)}
-                />
-                {acaoAberta === tx.id && (
-                  <div
+              {acaoAberta === tx.id && (
+                <div
+                  style={{
+                    display: "flex",
+                    gap: 8,
+                    padding: "0 0 12px",
+                  }}
+                >
+                  <button
+                    onClick={() => {
+                      setAcaoAberta(null);
+                      irPara("add", { editar: tx });
+                    }}
                     style={{
-                      display: "flex",
-                      gap: 8,
-                      padding: "0 0 12px",
+                      flex: 1,
+                      padding: "8px 12px",
+                      borderRadius: 12,
+                      border: "none",
+                      background: "var(--bg)",
+                      color: "var(--ink)",
+                      fontWeight: 700,
+                      fontSize: 13,
+                      cursor: "pointer",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: 6,
                     }}
                   >
-                    <button
-                      onClick={() => {
-                        setAcaoAberta(null);
-                        irPara("add", { editar: tx });
-                      }}
-                      style={{
-                        flex: 1,
-                        padding: "8px 12px",
-                        borderRadius: 12,
-                        border: "none",
-                        background: "var(--bg)",
-                        color: "var(--ink)",
-                        fontWeight: 700,
-                        fontSize: 13,
-                        cursor: "pointer",
-                        display: "inline-flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        gap: 6,
-                      }}
-                    >
-                      <Icon name="edit" size={14} strokeWidth={2.2} /> {t("Editar")}
-                    </button>
-                    <button
-                      onClick={() => {
-                        setConfirmarExclusao(tx);
-                        setAcaoAberta(null);
-                      }}
-                      style={{
-                        flex: 1,
-                        padding: "8px 12px",
-                        borderRadius: 12,
-                        border: "none",
-                        background: COR_NEG_FUNDO,
-                        color: COR_NEG,
-                        fontWeight: 700,
-                        fontSize: 13,
-                        cursor: "pointer",
-                        display: "inline-flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        gap: 6,
-                      }}
-                    >
-                      <Icon name="trash" size={14} strokeWidth={2.2} /> {t("Excluir")}
-                    </button>
-                  </div>
-                )}
-              </div>
-            ))}
-          </Card>
-        )}
-      </div>
+                    <Icon name="edit" size={14} strokeWidth={2.2} /> {t("Editar")}
+                  </button>
+                  <button
+                    onClick={() => {
+                      setConfirmarExclusao(tx);
+                      setAcaoAberta(null);
+                    }}
+                    style={{
+                      flex: 1,
+                      padding: "8px 12px",
+                      borderRadius: 12,
+                      border: "none",
+                      background: COR_NEG_FUNDO,
+                      color: COR_NEG,
+                      fontWeight: 700,
+                      fontSize: 13,
+                      cursor: "pointer",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: 6,
+                    }}
+                  >
+                    <Icon name="trash" size={14} strokeWidth={2.2} /> {t("Excluir")}
+                  </button>
+                </div>
+              )}
+            </div>
+          ))}
+        </Card>
+      )}
+    </div>
+  );
+
+  return (
+    <div style={{ paddingBottom: "var(--pad-bottom)" }}>
+      <TopBar
+        titulo={t("Transações")}
+        acao={
+          <button
+            onClick={() => irPara("historico")}
+            style={{
+              width: 36,
+              height: 36,
+              borderRadius: 18,
+              background: "var(--card)",
+              border: "none",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              cursor: "pointer",
+              boxShadow: "0 1px 2px rgba(0,0,0,0.04)",
+            }}
+          >
+            <Icon
+              name="calendar"
+              size={18}
+              color="var(--ink)"
+              strokeWidth={2}
+            />
+          </button>
+        }
+      />
+
+      {ehDesktop ? (
+        <div style={{ padding: "0 var(--pad-x)" }}>
+          <div className="painel-lateral">
+            <div className="painel-filtros">
+              {resumoMes}
+              <div style={{ marginTop: 14 }}>{caixaBusca}</div>
+              {filtros}
+            </div>
+            {lista}
+          </div>
+        </div>
+      ) : (
+        <>
+          <div style={{ padding: "0 var(--pad-x)" }}>
+            {resumoMes}
+          </div>
+
+          {/* Busca */}
+          <div style={{ padding: "14px var(--pad-x) 0" }}>
+            {caixaBusca}
+          </div>
+
+          {filtros}
+
+          {lista}
+        </>
+      )}
 
       {confirmarExclusao && (
         <ConfirmModal

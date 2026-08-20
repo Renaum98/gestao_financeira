@@ -23,6 +23,7 @@ export function CaixinhaScreen({ ctx, params }) {
     caixinhas,
     txs,
     voltar,
+    ehDesktop,
     depositarCaixinha,
     resgatarCaixinha,
     excluirCaixinha,
@@ -70,7 +71,7 @@ export function CaixinhaScreen({ ctx, params }) {
   if (!cx) {
     return (
       <div>
-        <TopBar voltar={voltar} titulo={tr("Caixinha")} />
+        <TopBar voltar={ehDesktop ? undefined : voltar} titulo={tr("Caixinha")} />
         <div style={{ padding: 20, textAlign: "center", color: "var(--muted)" }}>
           {tr("Caixinha não encontrada.")}
         </div>
@@ -97,7 +98,9 @@ export function CaixinhaScreen({ ctx, params }) {
   return (
     <div style={{ paddingBottom: "var(--pad-bottom)" }}>
       <TopBar
-        voltar={voltar}
+        // No desktop a lista fica montada ao lado, então não há de onde voltar:
+        // o botão (que é fixo na viewport) só pairaria sobre ela.
+        voltar={ehDesktop ? undefined : voltar}
         acao={
           <button
             onClick={() => setModalEditar(true)}
@@ -119,7 +122,7 @@ export function CaixinhaScreen({ ctx, params }) {
         }
       />
 
-      <div style={{ padding: "4px 20px 0" }}>
+      <div style={{ padding: "4px var(--pad-x) 0" }}>
         <CabecalhoCaixinha
           cx={cx}
           atual={atual}

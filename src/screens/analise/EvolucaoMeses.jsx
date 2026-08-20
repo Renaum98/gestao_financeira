@@ -9,7 +9,7 @@ import { useT } from "../../lib/i18n.jsx";
 export function EvolucaoMeses({ evolucao, maxEvol, mediaEvol, mes, setMes }) {
   const t = useT();
   return (
-    <div style={{ padding: "16px 20px 0" }}>
+    <div style={{ padding: "16px var(--pad-x) 0" }}>
       <SecaoTitulo>{t("Evolução (6 meses)")}</SecaoTitulo>
       <Card>
         <div

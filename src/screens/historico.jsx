@@ -19,6 +19,7 @@ function LinhaMes({ d, ativo, primeiro, t, onClick }) {
   return (
     <div
       onClick={onClick}
+      className="clicavel"
       style={{
         display: "flex",
         alignItems: "center",
@@ -118,7 +119,7 @@ export function HistoricoScreen({ ctx }) {
   return (
     <div style={{ paddingBottom: "var(--pad-bottom)" }}>
       <TopBar voltar={ehDesktop ? undefined : voltar} titulo={t("Histórico")} />
-      <div style={{ padding: "4px 20px 0" }}>
+      <div style={{ padding: "4px var(--pad-x) 0" }}>
         <div
           style={{
             fontSize: 13,
@@ -132,7 +133,10 @@ export function HistoricoScreen({ ctx }) {
           {t("Meses")}
         </div>
 
-        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+        {/* Um card por ano, e nenhum depende do outro: no desktop eles se
+            repartem em colunas. Um ano aberto cresce dentro da própria célula
+            (a grade usa align-items: start) em vez de esticar o vizinho. */}
+        <div className="grade-tiles" style={{ "--tiles-gap": "10px" }}>
           {anos.map((g) => {
             const aberto = abertos.has(g.ano);
             // O ano do mês que está aberto no app ganha destaque: recolhido,

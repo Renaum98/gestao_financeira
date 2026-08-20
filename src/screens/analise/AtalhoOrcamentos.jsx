@@ -7,7 +7,7 @@ import { useT } from "../../lib/i18n.jsx";
 export function AtalhoOrcamentos({ irPara, spanAll }) {
   const t = useT();
   return (
-    <div className={spanAll} style={{ padding: "16px 20px 0" }}>
+    <div className={spanAll} style={{ padding: "16px var(--pad-x) 0" }}>
       <Card
         onClick={() => irPara("orcamentos")}
         style={{

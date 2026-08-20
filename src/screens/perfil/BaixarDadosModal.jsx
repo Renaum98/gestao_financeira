@@ -5,6 +5,7 @@
 // nem aparece nesse modo.
 
 import { createPortal } from "react-dom";
+import { useFecharComEsc } from "../../ui/modal-base.jsx";
 import { rotuloMes } from "../../data.js";
 import { Icon } from "../../ui/icons.jsx";
 import { Z_MODAL } from "../../ui/modal-base.jsx";
@@ -71,6 +72,9 @@ export function BaixarDadosModal({
   // opção "Todos os dados", então só o PDF trava.
   const semOpcoes = ehPdf && todosMeses.length === 0;
   const podeBaixar = !baixando && !!mesSelecionado;
+  // Mesmo critério do clique fora: durante o download não se fecha nada.
+  useFecharComEsc(baixando ? undefined : onCancelar);
+
   return createPortal(
     <div
       onClick={baixando ? undefined : onCancelar}

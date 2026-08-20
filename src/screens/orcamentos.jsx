@@ -105,312 +105,346 @@ export function OrcamentosScreen({ ctx }) {
     setEditandoCat(null);
   };
 
-  return (
-    <div style={{ paddingBottom: "var(--pad-bottom)" }}>
-      <TopBar voltar={ehDesktop ? undefined : voltar} titulo={t("Orçamentos")} />
+  // Três blocos: o orçamento do mês, o limite por forma de pagamento e a lista
+  // por categoria. No mobile eles se sucedem. No desktop os dois primeiros —
+  // curtos e ligados entre si — formam a coluna da esquerda, e a lista de
+  // categorias, que é a longa, fica com a direita.
+  const cardPrincipal = (
+    <div style={{
+      background: 'linear-gradient(135deg, var(--primary), var(--primary-2))',
+      color: '#fff', borderRadius: 24, padding: 20, position: 'relative', overflow: 'hidden',
+    }}>
+      <div style={{ position: 'absolute', right: -30, top: -30, width: 120, height: 120, borderRadius: '50%', background: 'rgba(255,255,255,0.08)' }} />
+      <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ fontSize: 12, fontWeight: 600, opacity: 0.85 }}>{t("Orçamento mensal")}</div>
+        {!editandoTotal && (
+          <button onClick={() => { setTempTotal(formatarValorInicial(orcBase)); setEditandoTotal(true); }} style={{
+            background: 'rgba(255,255,255,0.18)', border: 'none', cursor: 'pointer',
+            color: '#fff', padding: '6px 10px', borderRadius: 999,
+            display: 'inline-flex', alignItems: 'center', gap: 5,
+            fontSize: 11, fontWeight: 700, fontFamily: 'inherit',
+          }}>
+            <Icon name="edit" size={12} color="#fff" strokeWidth={2.4} /> {t("Editar")}
+          </button>
+        )}
+      </div>
 
-      {/* Card principal — total mensal editável */}
-      <div style={{ padding: '4px 20px 0' }}>
+      {editandoTotal ? (
+        <>
+        <div style={{ position: 'relative', marginTop: 4, display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span style={{ fontSize: 22, fontWeight: 700, opacity: 0.85 }}>{simboloMoeda()}</span>
+          <input
+            autoFocus
+            type="text"
+            inputMode="numeric"
+            pattern="[0-9]*"
+            value={tempTotal}
+            onChange={(e) => setTempTotal(formatarValorDigitado(e.target.value))}
+            onKeyDown={(e) => { if (e.key === 'Enter') salvarTotal(); if (e.key === 'Escape') setEditandoTotal(false); }}
+            style={{
+              flex: 1, padding: '6px 10px', borderRadius: 10,
+              border: 'none', background: 'rgba(255,255,255,0.18)',
+              fontSize: 26, fontWeight: 800, color: '#fff',
+              outline: 'none', fontFamily: 'inherit', letterSpacing: '-0.02em',
+              minWidth: 0,
+            }}
+          />
+          <button onClick={salvarTotal} style={{
+            width: 36, height: 36, borderRadius: 18, border: 'none', cursor: 'pointer',
+            background: '#fff', color: 'var(--primary)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+          }}>
+            <Icon name="check" size={16} color="var(--primary)" strokeWidth={2.6} />
+          </button>
+        </div>
         <div style={{
-          background: 'linear-gradient(135deg, var(--primary), var(--primary-2))',
-          color: '#fff', borderRadius: 24, padding: 20, position: 'relative', overflow: 'hidden',
+          marginTop: 10, fontSize: 11, fontWeight: 600, lineHeight: 1.4,
+          opacity: 0.85, position: 'relative',
         }}>
-          <div style={{ position: 'absolute', right: -30, top: -30, width: 120, height: 120, borderRadius: '50%', background: 'rgba(255,255,255,0.08)' }} />
-          <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div style={{ fontSize: 12, fontWeight: 600, opacity: 0.85 }}>{t("Orçamento mensal")}</div>
-            {!editandoTotal && (
-              <button onClick={() => { setTempTotal(formatarValorInicial(orcBase)); setEditandoTotal(true); }} style={{
-                background: 'rgba(255,255,255,0.18)', border: 'none', cursor: 'pointer',
-                color: '#fff', padding: '6px 10px', borderRadius: 999,
-                display: 'inline-flex', alignItems: 'center', gap: 5,
-                fontSize: 11, fontWeight: 700, fontFamily: 'inherit',
-              }}>
-                <Icon name="edit" size={12} color="#fff" strokeWidth={2.4} /> {t("Editar")}
-              </button>
-            )}
-          </div>
+          {t("Use um valor fixo que você recebe todo mês, como salário ou mesada. Recebimentos extras devem ser lançados como Entrada em Transações.")}
+        </div>
+        </>
+      ) : (
+        <div style={{ fontSize: 28, fontWeight: 800, marginTop: 4, letterSpacing: '-0.02em', position: 'relative' }}>
+          {temOrcamento ? fmtBRL(orcMensal) : (
+            <button onClick={() => { setTempTotal(formatarValorInicial(0)); setEditandoTotal(true); }} style={{
+              background: 'transparent', border: '1.5px dashed rgba(255,255,255,0.6)',
+              color: '#fff', padding: '8px 14px', borderRadius: 12,
+              fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
+            }}>{t("Definir orçamento")}</button>
+          )}
+        </div>
+      )}
 
-          {editandoTotal ? (
-            <>
-            <div style={{ position: 'relative', marginTop: 4, display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={{ fontSize: 22, fontWeight: 700, opacity: 0.85 }}>{simboloMoeda()}</span>
+      {temOrcamento && (
+        <div style={{ marginTop: 14, position: 'relative' }}>
+          <div style={{ height: 8, background: 'rgba(255,255,255,0.2)', borderRadius: 8, overflow: 'hidden' }}>
+            <div style={{
+              height: '100%', width: `${Math.min(100, pctGeral)}%`,
+              background: pctGeral > 100 ? '#FFB1BD' : '#fff', borderRadius: 8,
+              transition: 'width .3s ease',
+            }} />
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8, fontSize: 12, fontWeight: 600 }}>
+            <span>{t("Gasto: {x}", { x: fmtBRLCompacto(totalGasto) })}</span>
+            <span style={{ opacity: 0.85 }}>{t("{pct}% utilizado", { pct: pctGeral.toFixed(0) })}</span>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+
+  const secaoPagamento = (
+    <>
+      <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: 0.4, padding: '0 4px 10px' }}>
+        {t("Por forma de pagamento")}
+      </div>
+      <Card style={{ padding: '14px 16px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <div style={{
+            width: 36, height: 36, borderRadius: 12, background: 'var(--surface-sunken)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+          }}>
+            <Icon name="card" size={18} color="var(--ink)" strokeWidth={2} />
+          </div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--ink)' }}>{t("Cartão de crédito")}</div>
+            <div style={{ fontSize: 11, color: 'var(--muted)', fontWeight: 600, marginTop: 1 }}>
+              {temCartao
+                ? t("{gasto} de {orc}", { gasto: fmtBRLCompacto(gastoCartao), orc: fmtBRLCompacto(orcCartao) })
+                : t('Sem limite definido')}
+            </div>
+          </div>
+          {editandoCartao ? (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
               <input
                 autoFocus
                 type="text"
                 inputMode="numeric"
                 pattern="[0-9]*"
-                value={tempTotal}
-                onChange={(e) => setTempTotal(formatarValorDigitado(e.target.value))}
-                onKeyDown={(e) => { if (e.key === 'Enter') salvarTotal(); if (e.key === 'Escape') setEditandoTotal(false); }}
+                value={tempCartao}
+                onChange={(e) => setTempCartao(formatarValorDigitado(e.target.value))}
+                onKeyDown={(e) => { if (e.key === 'Enter') salvarCartao(); if (e.key === 'Escape') setEditandoCartao(false); }}
                 style={{
-                  flex: 1, padding: '6px 10px', borderRadius: 10,
-                  border: 'none', background: 'rgba(255,255,255,0.18)',
-                  fontSize: 26, fontWeight: 800, color: '#fff',
-                  outline: 'none', fontFamily: 'inherit', letterSpacing: '-0.02em',
-                  minWidth: 0,
+                  width: 90, padding: '6px 10px', borderRadius: 10,
+                  border: '1.5px solid var(--primary)', background: 'var(--card)',
+                  fontSize: 13, fontWeight: 700, color: 'var(--ink)', outline: 'none',
+                  fontFamily: 'inherit', textAlign: 'right',
                 }}
               />
-              <button onClick={salvarTotal} style={{
-                width: 36, height: 36, borderRadius: 18, border: 'none', cursor: 'pointer',
-                background: '#fff', color: 'var(--primary)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+              <button onClick={salvarCartao} style={{
+                width: 30, height: 30, borderRadius: 15, border: 'none',
+                background: 'var(--primary)', color: '#fff', cursor: 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
               }}>
-                <Icon name="check" size={16} color="var(--primary)" strokeWidth={2.6} />
+                <Icon name="check" size={14} strokeWidth={2.6} />
               </button>
             </div>
-            <div style={{
-              marginTop: 10, fontSize: 11, fontWeight: 600, lineHeight: 1.4,
-              opacity: 0.85, position: 'relative',
-            }}>
-              {t("Use um valor fixo que você recebe todo mês, como salário ou mesada. Recebimentos extras devem ser lançados como Entrada em Transações.")}
-            </div>
-            </>
           ) : (
-            <div style={{ fontSize: 28, fontWeight: 800, marginTop: 4, letterSpacing: '-0.02em', position: 'relative' }}>
-              {temOrcamento ? fmtBRL(orcMensal) : (
-                <button onClick={() => { setTempTotal(formatarValorInicial(0)); setEditandoTotal(true); }} style={{
-                  background: 'transparent', border: '1.5px dashed rgba(255,255,255,0.6)',
-                  color: '#fff', padding: '8px 14px', borderRadius: 12,
-                  fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
-                }}>{t("Definir orçamento")}</button>
-              )}
-            </div>
-          )}
-
-          {temOrcamento && (
-            <div style={{ marginTop: 14, position: 'relative' }}>
-              <div style={{ height: 8, background: 'rgba(255,255,255,0.2)', borderRadius: 8, overflow: 'hidden' }}>
-                <div style={{
-                  height: '100%', width: `${Math.min(100, pctGeral)}%`,
-                  background: pctGeral > 100 ? '#FFB1BD' : '#fff', borderRadius: 8,
-                  transition: 'width .3s ease',
-                }} />
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8, fontSize: 12, fontWeight: 600 }}>
-                <span>{t("Gasto: {x}", { x: fmtBRLCompacto(totalGasto) })}</span>
-                <span style={{ opacity: 0.85 }}>{t("{pct}% utilizado", { pct: pctGeral.toFixed(0) })}</span>
-              </div>
-            </div>
+            <button onClick={() => { setEditandoCartao(true); setTempCartao(formatarValorInicial(orcCartao)); }} style={{
+              background: 'transparent', border: 'none', cursor: 'pointer', padding: 4, color: 'var(--muted)',
+            }}>
+              <Icon name="edit" size={16} strokeWidth={2} />
+            </button>
           )}
         </div>
-      </div>
+        {temCartao && (
+          <div style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div style={{ flex: 1 }}>
+              <BarraProgresso valor={Math.min(gastoCartao, orcCartao)} max={orcCartao || 1} cor={pctCartao > 100 ? COR_NEG : 'var(--primary)'} altura={8} />
+            </div>
+            <div style={{ fontSize: 12, fontWeight: 800, color: corCartao, minWidth: 38, textAlign: 'right' }}>
+              {pctCartao.toFixed(0)}%
+            </div>
+          </div>
+        )}
 
-      {/* Limite do cartão de crédito */}
-      <div style={{ padding: '20px 20px 0' }}>
-        <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: 0.4, padding: '0 4px 10px' }}>
-          {t("Por forma de pagamento")}
-        </div>
-        <Card style={{ padding: '14px 16px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        {/* Com cartão cadastrado, o fechamento é de cada cartão — o campo
+            global sai daqui pra não existirem dois lugares dizendo quando a
+            fatura fecha. A linha vira o atalho pro cadastro. */}
+        {cartoes.length > 0 ? (
+          <div
+            onClick={() => irPara('cartoes')}
+            style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid var(--linha)', display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer' }}
+          >
             <div style={{
               width: 36, height: 36, borderRadius: 12, background: 'var(--surface-sunken)',
               display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
             }}>
-              <Icon name="card" size={18} color="var(--ink)" strokeWidth={2} />
+              <Icon name="card" size={18} color="var(--muted)" strokeWidth={2} />
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--ink)' }}>{t("Cartão de crédito")}</div>
+              <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--ink)' }}>{t("Meus cartões")}</div>
               <div style={{ fontSize: 11, color: 'var(--muted)', fontWeight: 600, marginTop: 1 }}>
-                {temCartao
-                  ? t("{gasto} de {orc}", { gasto: fmtBRLCompacto(gastoCartao), orc: fmtBRLCompacto(orcCartao) })
-                  : t('Sem limite definido')}
+                {t("{n} cadastrados · cada um com seu fechamento", { n: cartoes.length })}
               </div>
             </div>
-            {editandoCartao ? (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                <input
-                  autoFocus
-                  type="text"
-                  inputMode="numeric"
-                  pattern="[0-9]*"
-                  value={tempCartao}
-                  onChange={(e) => setTempCartao(formatarValorDigitado(e.target.value))}
-                  onKeyDown={(e) => { if (e.key === 'Enter') salvarCartao(); if (e.key === 'Escape') setEditandoCartao(false); }}
-                  style={{
-                    width: 90, padding: '6px 10px', borderRadius: 10,
-                    border: '1.5px solid var(--primary)', background: 'var(--card)',
-                    fontSize: 13, fontWeight: 700, color: 'var(--ink)', outline: 'none',
-                    fontFamily: 'inherit', textAlign: 'right',
-                  }}
-                />
-                <button onClick={salvarCartao} style={{
-                  width: 30, height: 30, borderRadius: 15, border: 'none',
-                  background: 'var(--primary)', color: '#fff', cursor: 'pointer',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                }}>
-                  <Icon name="check" size={14} strokeWidth={2.6} />
-                </button>
-              </div>
-            ) : (
-              <button onClick={() => { setEditandoCartao(true); setTempCartao(formatarValorInicial(orcCartao)); }} style={{
-                background: 'transparent', border: 'none', cursor: 'pointer', padding: 4, color: 'var(--muted)',
-              }}>
-                <Icon name="edit" size={16} strokeWidth={2} />
-              </button>
-            )}
+            <Icon name="chevron-right" size={18} color="var(--muted)" strokeWidth={2} />
           </div>
-          {temCartao && (
-            <div style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 10 }}>
-              <div style={{ flex: 1 }}>
-                <BarraProgresso valor={Math.min(gastoCartao, orcCartao)} max={orcCartao || 1} cor={pctCartao > 100 ? COR_NEG : 'var(--primary)'} altura={8} />
-              </div>
-              <div style={{ fontSize: 12, fontWeight: 800, color: corCartao, minWidth: 38, textAlign: 'right' }}>
-                {pctCartao.toFixed(0)}%
-              </div>
+        ) : (
+        /* Fechamento da fatura — define em qual fatura cada compra cai.
+           Não altera o saldo do mês, só o ciclo mostrado (lib/fatura.js). */
+        <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid var(--linha)', display: 'flex', alignItems: 'center', gap: 12 }}>
+          <div style={{
+            width: 36, height: 36, borderRadius: 12, background: 'var(--surface-sunken)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+          }}>
+            <Icon name="calendar" size={18} color="var(--muted)" strokeWidth={2} />
+          </div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--ink)' }}>{t("Fechamento da fatura")}</div>
+            <div style={{ fontSize: 11, color: 'var(--muted)', fontWeight: 600, marginTop: 1 }}>
+              {diaFech > 0
+                ? t("Fecha dia {dia} · vence no mês seguinte", { dia: diaFech })
+                : t("Fecha no último dia do mês · vence no mês seguinte")}
             </div>
-          )}
-
-          {/* Com cartão cadastrado, o fechamento é de cada cartão — o campo
-              global sai daqui pra não existirem dois lugares dizendo quando a
-              fatura fecha. A linha vira o atalho pro cadastro. */}
-          {cartoes.length > 0 ? (
-            <div
-              onClick={() => irPara('cartoes')}
-              style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid var(--linha)', display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer' }}
-            >
-              <div style={{
-                width: 36, height: 36, borderRadius: 12, background: 'var(--surface-sunken)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+          </div>
+          {editandoFech ? (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <input
+                autoFocus
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                value={tempFech}
+                placeholder={t("Último")}
+                aria-label={t("Dia de fechamento da fatura")}
+                onChange={(e) => setTempFech(e.target.value.replace(/[^0-9]/g, '').slice(0, 2))}
+                onKeyDown={(e) => { if (e.key === 'Enter') salvarFech(); if (e.key === 'Escape') setEditandoFech(false); }}
+                style={{
+                  width: 62, padding: '6px 10px', borderRadius: 10,
+                  border: '1.5px solid var(--primary)', background: 'var(--card)',
+                  fontSize: 13, fontWeight: 700, color: 'var(--ink)', outline: 'none',
+                  fontFamily: 'inherit', textAlign: 'right',
+                }}
+              />
+              <button onClick={salvarFech} style={{
+                width: 30, height: 30, borderRadius: 15, border: 'none',
+                background: 'var(--primary)', color: '#fff', cursor: 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
               }}>
-                <Icon name="card" size={18} color="var(--muted)" strokeWidth={2} />
-              </div>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--ink)' }}>{t("Meus cartões")}</div>
-                <div style={{ fontSize: 11, color: 'var(--muted)', fontWeight: 600, marginTop: 1 }}>
-                  {t("{n} cadastrados · cada um com seu fechamento", { n: cartoes.length })}
-                </div>
-              </div>
-              <Icon name="chevron-right" size={18} color="var(--muted)" strokeWidth={2} />
+                <Icon name="check" size={14} strokeWidth={2.6} />
+              </button>
             </div>
           ) : (
-          /* Fechamento da fatura — define em qual fatura cada compra cai.
-             Não altera o saldo do mês, só o ciclo mostrado (lib/fatura.js). */
-          <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid var(--linha)', display: 'flex', alignItems: 'center', gap: 12 }}>
-            <div style={{
-              width: 36, height: 36, borderRadius: 12, background: 'var(--surface-sunken)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+            <button onClick={() => { setEditandoFech(true); setTempFech(diaFech > 0 ? String(diaFech) : ''); }} style={{
+              background: 'transparent', border: 'none', cursor: 'pointer', padding: 4, color: 'var(--muted)',
             }}>
-              <Icon name="calendar" size={18} color="var(--muted)" strokeWidth={2} />
-            </div>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--ink)' }}>{t("Fechamento da fatura")}</div>
-              <div style={{ fontSize: 11, color: 'var(--muted)', fontWeight: 600, marginTop: 1 }}>
-                {diaFech > 0
-                  ? t("Fecha dia {dia} · vence no mês seguinte", { dia: diaFech })
-                  : t("Fecha no último dia do mês · vence no mês seguinte")}
-              </div>
-            </div>
-            {editandoFech ? (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                <input
-                  autoFocus
-                  type="text"
-                  inputMode="numeric"
-                  pattern="[0-9]*"
-                  value={tempFech}
-                  placeholder={t("Último")}
-                  aria-label={t("Dia de fechamento da fatura")}
-                  onChange={(e) => setTempFech(e.target.value.replace(/[^0-9]/g, '').slice(0, 2))}
-                  onKeyDown={(e) => { if (e.key === 'Enter') salvarFech(); if (e.key === 'Escape') setEditandoFech(false); }}
-                  style={{
-                    width: 62, padding: '6px 10px', borderRadius: 10,
-                    border: '1.5px solid var(--primary)', background: 'var(--card)',
-                    fontSize: 13, fontWeight: 700, color: 'var(--ink)', outline: 'none',
-                    fontFamily: 'inherit', textAlign: 'right',
-                  }}
-                />
-                <button onClick={salvarFech} style={{
-                  width: 30, height: 30, borderRadius: 15, border: 'none',
-                  background: 'var(--primary)', color: '#fff', cursor: 'pointer',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                }}>
-                  <Icon name="check" size={14} strokeWidth={2.6} />
-                </button>
-              </div>
-            ) : (
-              <button onClick={() => { setEditandoFech(true); setTempFech(diaFech > 0 ? String(diaFech) : ''); }} style={{
-                background: 'transparent', border: 'none', cursor: 'pointer', padding: 4, color: 'var(--muted)',
-              }}>
-                <Icon name="edit" size={16} strokeWidth={2} />
-              </button>
-            )}
-          </div>
+              <Icon name="edit" size={16} strokeWidth={2} />
+            </button>
           )}
-        </Card>
-      </div>
-
-      {/* Categorias */}
-      <div style={{ padding: '20px 20px 0' }}>
-        <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: 0.4, padding: '0 4px 10px' }}>
-          {t("Por categoria")}
         </div>
-        <Card style={{ padding: '4px 16px' }}>
-          {catsMinhas().map((c, i) => {
-            const cat = CATEGORIAS[c];
-            const gasto = porCat[c] || 0;
-            const orc = orcamentos[c] || 0;
-            const pct = orc > 0 ? (gasto / orc) * 100 : 0;
-            const cor = pct > 100 ? COR_NEG : pct > 80 ? COR_AVISO : COR_POS;
-            return (
-              <div key={c} style={{
-                padding: '14px 0',
-                borderTop: i === 0 ? 'none' : '1px solid var(--linha)',
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <CatChip catId={c} size={36} />
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--ink)' }}>{t(cat.nome)}</div>
-                    <div style={{ fontSize: 11, color: 'var(--muted)', fontWeight: 600, marginTop: 1 }}>
-                      {t("{gasto} de {orc}", { gasto: fmtBRLCompacto(gasto), orc: fmtBRLCompacto(orc) })}
-                    </div>
+        )}
+      </Card>
+    </>
+  );
+
+  const secaoCategorias = (
+    <>
+      <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: 0.4, padding: '0 4px 10px' }}>
+        {t("Por categoria")}
+      </div>
+      <Card style={{ padding: '4px 16px' }}>
+        {catsMinhas().map((c, i) => {
+          const cat = CATEGORIAS[c];
+          const gasto = porCat[c] || 0;
+          const orc = orcamentos[c] || 0;
+          const pct = orc > 0 ? (gasto / orc) * 100 : 0;
+          const cor = pct > 100 ? COR_NEG : pct > 80 ? COR_AVISO : COR_POS;
+          return (
+            <div key={c} style={{
+              padding: '14px 0',
+              borderTop: i === 0 ? 'none' : '1px solid var(--linha)',
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <CatChip catId={c} size={36} />
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--ink)' }}>{t(cat.nome)}</div>
+                  <div style={{ fontSize: 11, color: 'var(--muted)', fontWeight: 600, marginTop: 1 }}>
+                    {t("{gasto} de {orc}", { gasto: fmtBRLCompacto(gasto), orc: fmtBRLCompacto(orc) })}
                   </div>
-                  {editandoCat === c ? (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                      <input
-                        autoFocus
-                        type="text"
-                        inputMode="numeric"
-                        pattern="[0-9]*"
-                        value={tempCat}
-                        onChange={(e) => setTempCat(formatarValorDigitado(e.target.value))}
-                        onKeyDown={(e) => { if (e.key === 'Enter') salvarCat(c); if (e.key === 'Escape') setEditandoCat(null); }}
-                        style={{
-                          width: 90, padding: '6px 10px', borderRadius: 10,
-                          border: '1.5px solid var(--primary)', background: 'var(--card)',
-                          fontSize: 13, fontWeight: 700, color: 'var(--ink)', outline: 'none',
-                          fontFamily: 'inherit', textAlign: 'right',
-                        }}
-                      />
-                      <button onClick={() => salvarCat(c)} style={{
-                        width: 30, height: 30, borderRadius: 15, border: 'none',
-                        background: 'var(--primary)', color: '#fff', cursor: 'pointer',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      }}>
-                        <Icon name="check" size={14} strokeWidth={2.6} />
-                      </button>
-                    </div>
-                  ) : (
-                    <button onClick={() => { setEditandoCat(c); setTempCat(formatarValorInicial(orc)); }} style={{
-                      background: 'transparent', border: 'none', cursor: 'pointer', padding: 4,
-                      color: 'var(--muted)',
+                </div>
+                {editandoCat === c ? (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <input
+                      autoFocus
+                      type="text"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      value={tempCat}
+                      onChange={(e) => setTempCat(formatarValorDigitado(e.target.value))}
+                      onKeyDown={(e) => { if (e.key === 'Enter') salvarCat(c); if (e.key === 'Escape') setEditandoCat(null); }}
+                      style={{
+                        width: 90, padding: '6px 10px', borderRadius: 10,
+                        border: '1.5px solid var(--primary)', background: 'var(--card)',
+                        fontSize: 13, fontWeight: 700, color: 'var(--ink)', outline: 'none',
+                        fontFamily: 'inherit', textAlign: 'right',
+                      }}
+                    />
+                    <button onClick={() => salvarCat(c)} style={{
+                      width: 30, height: 30, borderRadius: 15, border: 'none',
+                      background: 'var(--primary)', color: '#fff', cursor: 'pointer',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
                     }}>
-                      <Icon name="edit" size={16} strokeWidth={2} />
+                      <Icon name="check" size={14} strokeWidth={2.6} />
                     </button>
-                  )}
+                  </div>
+                ) : (
+                  <button onClick={() => { setEditandoCat(c); setTempCat(formatarValorInicial(orc)); }} style={{
+                    background: 'transparent', border: 'none', cursor: 'pointer', padding: 4,
+                    color: 'var(--muted)',
+                  }}>
+                    <Icon name="edit" size={16} strokeWidth={2} />
+                  </button>
+                )}
+              </div>
+              <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div style={{ flex: 1 }}>
+                  <BarraProgresso valor={Math.min(gasto, orc)} max={orc || 1} cor={pct > 100 ? COR_NEG : cat.cor} altura={8} />
                 </div>
-                <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <div style={{ flex: 1 }}>
-                    <BarraProgresso valor={Math.min(gasto, orc)} max={orc || 1} cor={pct > 100 ? COR_NEG : cat.cor} altura={8} />
-                  </div>
-                  <div style={{ fontSize: 12, fontWeight: 800, color: cor, minWidth: 38, textAlign: 'right' }}>
-                    {pct.toFixed(0)}%
-                  </div>
+                <div style={{ fontSize: 12, fontWeight: 800, color: cor, minWidth: 38, textAlign: 'right' }}>
+                  {pct.toFixed(0)}%
                 </div>
               </div>
-            );
-          })}
-        </Card>
-      </div>
+            </div>
+          );
+        })}
+      </Card>
+    </>
+  );
+
+  return (
+    <div style={{ paddingBottom: "var(--pad-bottom)" }}>
+      <TopBar voltar={ehDesktop ? undefined : voltar} titulo={t("Orçamentos")} />
+
+      {ehDesktop ? (
+        <div style={{ padding: '4px var(--pad-x) 0' }}>
+          <div className="painel-lateral" style={{ "--painel-largura": "380px" }}>
+            <div>
+              {cardPrincipal}
+              <div style={{ marginTop: 20 }}>{secaoPagamento}</div>
+            </div>
+            <div>{secaoCategorias}</div>
+          </div>
+        </div>
+      ) : (
+        <>
+          {/* Card principal — total mensal editável */}
+          <div style={{ padding: '4px var(--pad-x) 0' }}>
+            {cardPrincipal}
+          </div>
+
+          {/* Limite do cartão de crédito */}
+          <div style={{ padding: '20px var(--pad-x) 0' }}>
+            {secaoPagamento}
+          </div>
+
+          {/* Categorias */}
+          <div style={{ padding: '20px var(--pad-x) 0' }}>
+            {secaoCategorias}
+          </div>
+        </>
+      )}
     </div>
   );
 }
