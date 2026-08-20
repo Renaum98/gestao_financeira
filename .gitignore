@@ -7,4 +7,7 @@ dist-ssr
 *.log
 .vscode
 .idea
-.claude
+# Config do Claude Code: o que é de máquina fica de fora, mas o launch.json
+# (config do dev server) é do projeto e continua versionado.
+.claude/*
+!.claude/launch.json
