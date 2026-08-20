@@ -2,7 +2,6 @@
 
 import { mesCorrente } from './lib/datas.js';
 import { getMoeda } from './lib/moeda.js';
-import { COR_BARRA, GRADIENTE } from './ui/logo-geometria.js';
 
 export const CATEGORIAS = {
   alimentacao: { id: 'alimentacao', nome: 'Alimentação', cor: '#FF9B6E', corFundo: '#FFEEDF', emoji: 'A' },
@@ -166,6 +165,53 @@ export const PALETAS = [
     primary2Dark: '#998E96',
     nome: 'Preto',
   },
+  {
+    // A única paleta em que o par não são dois tons da mesma cor, e sim duas
+    // cores diferentes — daí a marca `par`, que faz as superfícies sólidas de
+    // destaque virarem gradiente (ver `fundoDaPaleta`). Nas outras isso não
+    // faria sentido: um degradê entre dois tons vizinhos só suja a cor chapada.
+    //
+    // O amarelo é terroso, e não o da bandeira, por causa do branco que vai por
+    // cima: #FFDF00 dá 1,33:1 com branco, ilegível. Este #B8860B dá 3,25:1, bem
+    // no meio da faixa em que os primary2 das outras paletas vivem (3,0 a 4,2)
+    // — e é mais legível do que o miolo violeta que o app usa hoje, em 2,88:1.
+    // O verde, a 5,06:1, cai na mesma faixa dos outros primary.
+    //
+    // No card de destaque o amarelo é o miolo e o verde o corpo: o número grande
+    // atravessa os dois, e nenhum dos dois o engole.
+    par: true,
+    primary: '#00803A', primary2: '#B8860B',
+    // No escuro o verde clareia pra continuar visível contra o --bg (#13101A):
+    // 5,06:1 contra o fundo, espelhando o que a Esmeralda faz. O amarelo já
+    // estava no teto do branco, então se repete — mesmo caso da Esmeralda.
+    primaryDark: '#00994A', primary2Dark: '#B8860B',
+    nome: 'Brasil',
+  },
+  {
+    // Vermelho → âmbar. O âmbar veio como #FFC500 e teve de descer: com branco
+    // por cima ele dá 1,59:1, e numa paleta `par` a segunda cor é o MIOLO do
+    // card de destaque, bem onde o número grande fica. Este #BE8600 dá 3,18:1,
+    // dentro da faixa em que os primary2 do app vivem (3,0 a 4,2). O vermelho
+    // passou intacto: 6,17:1 com branco por cima e os mesmos 6,17:1 quando ele
+    // pinta texto sobre o card claro, que é o outro papel do primary.
+    par: true,
+    primary: '#C21500', primary2: '#BE8600',
+    primaryDark: '#F04C37', primary2Dark: '#BE8600',
+    nome: 'Fogo',
+  },
+  {
+    // Violeta → coral. O violeta veio como pedido, 6,82:1 nos dois papéis. O
+    // coral veio #FF5555 e desceu um passo de luminosidade, com o matiz
+    // intacto: em cima do card ele gritava mais que a primeira cor. Em
+    // #F2494B fica 3,60:1 com branco — no meio da faixa dos primary2, junto do
+    // violeta da paleta padrão — e 5,22:1 contra o fundo escuro, que é onde as
+    // variantes dark de todas as outras paletas caem. Por isso ele se repete
+    // no escuro em vez de ganhar uma clara própria.
+    par: true,
+    primary: '#6025F5', primary2: '#F2494B',
+    primaryDark: '#8E6EFF', primary2Dark: '#F2494B',
+    nome: 'Sky Clean',
+  },
 ];
 
 // Resolve as duas cores de uma paleta pro tema ativo. Uma paleta só declara as
@@ -181,33 +227,41 @@ export function coresDaPaleta(pal, ehEscuro) {
   };
 }
 
-// As três cores do logo (ui/logo-animado.jsx) na paleta escolhida: o começo e o
-// fim do gradiente da seta, e as barras.
+// O fundo de uma superfície sólida de destaque — botão cheio, chip ativo, o “+”
+// da tab bar. Quase sempre é a cor chapada; numa paleta `par` (duas cores
+// diferentes) vira o degradê entre as duas, no mesmo ângulo
+// que os botões grandes do app já usam pro par.
 //
-// A paleta padrão devolve as cores da marca sem tocar em nada. Ela é a única com
-// um desenho por trás — o logo.png original, de onde saíram esses três valores e
-// os PNGs do PWA. Trocar o roxo-magenta dela por um roxo derivado só faria o logo
-// da tela discordar do ícone na tela inicial, sem ninguém ter pedido.
+// Vale como valor de `background` nos dois casos: a propriedade aceita tanto
+// uma cor quanto uma imagem, então quem consome escreve sempre o mesmo.
+export function fundoDaPaleta(pal, ehEscuro) {
+  const { primary, primary2 } = coresDaPaleta(pal, ehEscuro);
+  return pal.par ? `linear-gradient(135deg, ${primary}, ${primary2})` : primary;
+}
+
+// O fundo do card de destaque — gradiente vertical, do tom claro no topo até o
+// escuro na base. Fica aqui, e não no componente, porque a receita depende de a
+// paleta ser `par` ou não, e só este arquivo sabe disso.
 //
-// Nas outras, as três cores saem do par da paleta escurecendo em oklab, que
-// preserva o matiz e só desce a luminância. Os fatores não são gosto: 0.60, 0.72
-// e 0.83 caem em L=0.336, 0.404 e 0.536, e o logo original tem L=0.331, 0.408 e
-// 0.539. É a mesma relação entre as três, transposta pra outra cor — as barras
-// como massa mais escura, a seta abrindo do fundo pro claro por cima delas.
+// Numa paleta comum o claro é só um realce e se dissolve cedo: as duas cores
+// são tons vizinhos, e dar área demais ao claro foi o que deixava o número
+// grande ilegível (o miolo violeta dá 2,88:1 com branco).
 //
-// Sempre as variantes claras da paleta (`pal.primary`, não `coresDaPaleta`): o
-// logo mora num azulejo branco nos dois temas, então quem manda no contraste é o
-// branco, não o fundo do app.
-export function coresDoLogo(pal) {
-  if (pal === PALETAS[0]) {
-    return { de: GRADIENTE.de, ate: GRADIENTE.ate, barra: COR_BARRA };
-  }
-  const escuro = (cor, parte) => `color-mix(in oklab, ${cor} ${parte}%, #000)`;
-  return {
-    de: escuro(pal.primary, 60),
-    ate: escuro(pal.primary2, 83),
-    barra: escuro(pal.primary, 72),
-  };
+// Numa paleta `par` a segunda cor NÃO é realce, é a identidade — dissolvida cedo
+// ela some e o card inteiro vira a primeira cor. Então ela segura uma faixa no
+// topo e a primeira cor só fecha em 60% da altura. Dá pra fazer isso porque
+// toda segunda cor de paleta `par` é escolhida na faixa de 3,0 a 4,2:1 com
+// branco — ou seja, mais legível que o miolo que causou o problema.
+//
+// A base escura é a mesma de sempre: 72% da cor com preto. Num gradiente
+// vertical ela vira uma faixa no pé do card, que é justamente onde o rodapé de
+// números mora — texto branco ali só ganha contraste.
+export function heroDaPaleta(pal, ehEscuro) {
+  const { primary, primary2 } = coresDaPaleta(pal, ehEscuro);
+  const base = `color-mix(in oklab, ${primary} 72%, #000)`;
+  const topo = pal.par ? `${primary2} 0%, ${primary2} 16%` : `${primary2} 0%`;
+  const corpo = pal.par ? '60%' : '45%';
+  return `linear-gradient(to bottom, ${topo}, ${primary} ${corpo}, ${base} 100%)`;
 }
 
 // Formatação monetária localizada. A moeda ativa (símbolo + formato) vem de

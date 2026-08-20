@@ -227,7 +227,7 @@ export function OrcamentosScreen({ ctx }) {
               />
               <button onClick={salvarCartao} style={{
                 width: 30, height: 30, borderRadius: 15, border: 'none',
-                background: 'var(--primary)', color: '#fff', cursor: 'pointer',
+                background: 'var(--primary-fundo)', color: '#fff', cursor: 'pointer',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
               }}>
                 <Icon name="check" size={14} strokeWidth={2.6} />
@@ -313,7 +313,7 @@ export function OrcamentosScreen({ ctx }) {
               />
               <button onClick={salvarFech} style={{
                 width: 30, height: 30, borderRadius: 15, border: 'none',
-                background: 'var(--primary)', color: '#fff', cursor: 'pointer',
+                background: 'var(--primary-fundo)', color: '#fff', cursor: 'pointer',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
               }}>
                 <Icon name="check" size={14} strokeWidth={2.6} />
@@ -376,7 +376,7 @@ export function OrcamentosScreen({ ctx }) {
                     />
                     <button onClick={() => salvarCat(c)} style={{
                       width: 30, height: 30, borderRadius: 15, border: 'none',
-                      background: 'var(--primary)', color: '#fff', cursor: 'pointer',
+                      background: 'var(--primary-fundo)', color: '#fff', cursor: 'pointer',
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                     }}>
                       <Icon name="check" size={14} strokeWidth={2.6} />

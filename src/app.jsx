@@ -6,7 +6,8 @@ import {
   ORDEM_CATS,
   PALETAS,
   coresDaPaleta,
-  coresDoLogo,
+  fundoDaPaleta,
+  heroDaPaleta,
   listarMeses,
   aplicarCategoriasCustom,
   novaCategoriaCustom,
@@ -709,7 +710,7 @@ function Sidebar({ tela, irPara, abrirAdd, usuario, fotoPerfil }) {
                 width: 30,
                 height: 30,
                 borderRadius: 15,
-                background: "var(--primary)",
+                background: "var(--primary-fundo)",
               }}
             />
           )}
@@ -746,12 +747,22 @@ function aplicarTema(paleta, modo) {
   const { primary, primary2 } = coresDaPaleta(pal, ehEscuro);
   root.style.setProperty("--primary", primary);
   root.style.setProperty("--primary-2", primary2);
-  // O logo acompanha a cor de destaque. Não é o mesmo par: o logo mora num
-  // azulejo branco e tem três tons próprios — ver `coresDoLogo` (data.js).
-  const logo = coresDoLogo(pal);
-  root.style.setProperty("--logo-de", logo.de);
-  root.style.setProperty("--logo-ate", logo.ate);
-  root.style.setProperty("--logo-barra", logo.barra);
+  // Fundo das superfícies sólidas de destaque. Numa paleta comum é o próprio
+  // --primary; numa paleta `par`, cujas duas cores são cores mesmo e não tons
+  // vizinhos, é o degradê entre elas — ver `fundoDaPaleta` (data.js). Fica numa
+  // variável separada porque `--primary` também pinta texto e ícone, e ali
+  // gradiente não serve.
+  root.style.setProperty("--primary-fundo", fundoDaPaleta(pal, ehEscuro));
+  // O gradiente do card de destaque. Vem pronto de `heroDaPaleta` porque a
+  // receita muda quando o par são duas cores de verdade — ver lá o porquê.
+  root.style.setProperty("--primary-hero", heroDaPaleta(pal, ehEscuro));
+  // O logo NÃO acompanha a cor de destaque. Ele já acompanhou, derivando três
+  // tons próprios da paleta; com a lista de paletas crescendo, isso virou uma
+  // marca que muda de cor a cada escolha do usuário, e a animação de abertura
+  // — a primeira coisa que ele vê — nunca era a mesma duas vezes. Agora as
+  // cores da marca valem sempre: os SVGs de ui/logo-animado.jsx trazem os
+  // valores originais como fallback dos `var(--logo-*)`, então basta não
+  // definir as variáveis.
   if (ehEscuro) {
     // Paleta dark calibrada para contraste WCAG AA:
     // - bg → card → card-2 formam uma escada clara de elevação

@@ -36,7 +36,7 @@ function OpcaoBaixar({ label, descricao, selecionado, onClick }) {
           height: 22,
           borderRadius: 11,
           border: `2px solid ${selecionado ? "var(--primary)" : "var(--linha)"}`,
-          background: selecionado ? "var(--primary)" : "transparent",
+          background: selecionado ? "var(--primary-fundo)" : "transparent",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",

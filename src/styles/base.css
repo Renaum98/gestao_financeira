@@ -10,6 +10,17 @@
   --linha: rgba(20, 16, 24, 0.06);
   --primary: #6E4FF6;
   --primary-2: #A085FF;
+  /* Fundo de superfície sólida de destaque. Igual ao --primary em quase toda
+     paleta; na Brasil, cujo par são duas cores, o app troca por um degradê
+     em tempo de execução (ver aplicarTema em app.jsx). */
+  --primary-fundo: #6E4FF6;
+  /* Gradiente do card de destaque, também reescrito por aplicarTema. */
+  --primary-hero: linear-gradient(
+    to bottom,
+    #A085FF 0%,
+    #6E4FF6 45%,
+    color-mix(in oklab, #6E4FF6 72%, #000) 100%
+  );
   /* Espaçamentos padrão (mobile): topo reserva o notch; base reserva a tab bar flutuante */
   --pad-top: 38px;
   --pad-bottom: 110px;

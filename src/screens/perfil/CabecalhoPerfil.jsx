@@ -173,7 +173,7 @@ export function CabecalhoPerfil({ preferences, setPreferences, usuario }) {
               borderRadius: 18,
               border: "none",
               cursor: "pointer",
-              background: "var(--primary)",
+              background: "var(--primary-fundo)",
               color: "#fff",
               display: "flex",
               alignItems: "center",

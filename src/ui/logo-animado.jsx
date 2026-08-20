@@ -19,11 +19,15 @@ import {
   LADO, HASTE, PONTA, ESPESSURA, RAIO, COR_BARRA, GRADIENTE, BARRAS, MASCARA,
 } from './logo-geometria.js';
 
-// As cores vêm da paleta do usuário por variável CSS — quem as calcula é o
-// `coresDoLogo` (data.js), e quem as escreve no :root é o `aplicarTema`
-// (app.jsx). O fallback é a cor da marca, que é o que a paleta padrão devolve:
-// assim o logo sai certo mesmo antes do tema ser aplicado, e continua certo se
-// alguém desenhar este componente fora do app.
+// As cores são as da marca, sempre — hoje ninguém escreve os `--logo-*`, então
+// o que vale é o fallback. O logo já seguiu a paleta do usuário, e deixou de
+// seguir quando a lista de paletas cresceu: uma marca que muda de cor a cada
+// escolha não é uma marca, e a animação de abertura é a primeira coisa que se
+// vê do app.
+//
+// As variáveis continuam no caminho de propósito: se um dia fizer sentido
+// pintar o logo de outra cor num contexto específico, basta defini-las por
+// cima — sem mexer neste desenho.
 //
 // Vão no `style` e não como atributo de apresentação (`fill="…"`) porque só o
 // style é, sem discussão, uma declaração CSS em todo navegador — `var()` dentro

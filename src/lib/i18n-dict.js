@@ -52,6 +52,17 @@ export const EN = {
   "Sistema": "System",
   "Claro": "Light",
   "Escuro": "Dark",
+  // Nomes das paletas. Antes viviam só no `title` da bolinha; agora o
+  // seletor os mostra como texto.
+  "Violeta": "Violet",
+  "Coral": "Coral",
+  "Esmeralda": "Emerald",
+  "Oceano": "Ocean",
+  "Mostarda": "Mustard",
+  "Rosa": "Pink",
+  "Preto": "Black",
+  "Brasil": "Brazil",
+  "Fogo": "Fire",
   "Cor de destaque": "Accent color",
 
   // ─── Desempenho / Modo leve ───

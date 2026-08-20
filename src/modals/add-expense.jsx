@@ -654,7 +654,7 @@ export function AddExpenseModal({ ctx, params }) {
                   onClick={confirmarNovaCat}
                   disabled={!novoNomeCat.trim()}
                   style={{
-                    background: novoNomeCat.trim() ? "var(--primary)" : "var(--linha)",
+                    background: novoNomeCat.trim() ? "var(--primary-fundo)" : "var(--linha)",
                     color: novoNomeCat.trim() ? "#fff" : "var(--muted)",
                     border: "none",
                     padding: "8px 16px",
@@ -1217,7 +1217,7 @@ function ToggleSimples({ ativo, onChange }) {
         width: 42,
         height: 26,
         borderRadius: 14,
-        background: ativo ? "var(--primary)" : "var(--surface-sunken)",
+        background: ativo ? "var(--primary-fundo)" : "var(--surface-sunken)",
         position: "relative",
         cursor: "pointer",
         transition: "background .15s",

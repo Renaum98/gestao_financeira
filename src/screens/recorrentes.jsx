@@ -190,7 +190,7 @@ function EditarRecorrenteModal({ rec, cartoes = [], onFechar, onSalvar }) {
           {t("Editar recorrente")}
         </div>
         <button onClick={salvar} disabled={!podeSalvar} style={{
-          background: podeSalvar ? 'var(--primary)' : 'var(--linha)',
+          background: podeSalvar ? 'var(--primary-fundo)' : 'var(--linha)',
           color: podeSalvar ? '#fff' : 'var(--muted)',
           border: 'none', padding: '6px 14px', borderRadius: 999,
           fontWeight: 800, fontSize: 13, cursor: podeSalvar ? 'pointer' : 'default',

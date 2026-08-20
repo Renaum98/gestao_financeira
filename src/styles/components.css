@@ -1,5 +1,5 @@
 /* components.css — superfícies e controles reutilizados: "liquid glass",
-   itens de configuração e o swatch de cor de destaque. */
+   itens de configuração e a bolinha de cor de destaque. */
 
 /* "Liquid glass" — superfície translúcida com blur, hairline e brilho no topo.
    Funciona em claro e escuro porque parte de var(--card)/var(--ink). */
@@ -342,45 +342,27 @@
   .logo-azulejo { animation: none; transform: none; }
 }
 
-/* Botão "swatch" de cor de destaque — efeito de alto relevo (convexo) */
-.swatch-raised {
-  border: none;
-  padding: 0;
-  cursor: pointer;
-  transition: transform .08s ease, box-shadow .12s ease;
-  box-shadow:
-    0 5px 10px rgba(0,0,0,0.20),
-    0 2px 3px rgba(0,0,0,0.14),
-    inset 0 2px 3px rgba(255,255,255,0.55),
-    inset 0 -4px 6px rgba(0,0,0,0.25);
-}
-.swatch-raised:hover {
-  transform: translateY(-1px);
-  box-shadow:
-    0 7px 14px rgba(0,0,0,0.24),
-    0 2px 3px rgba(0,0,0,0.14),
-    inset 0 2px 3px rgba(255,255,255,0.55),
-    inset 0 -4px 6px rgba(0,0,0,0.25);
-}
-.swatch-raised:active {
-  transform: translateY(1px);
-  box-shadow:
-    0 1px 2px rgba(0,0,0,0.22),
-    inset 0 3px 7px rgba(0,0,0,0.32),
-    inset 0 -1px 2px rgba(255,255,255,0.28);
-}
-.swatch-raised.is-selected {
-  transform: translateY(1px);
-  box-shadow:
-    0 1px 2px rgba(0,0,0,0.22),
-    inset 0 3px 7px rgba(0,0,0,0.30),
-    inset 0 -1px 2px rgba(255,255,255,0.28),
-    0 0 0 3px var(--card),
-    0 0 0 5px currentColor;
+/* Painel de um select estilizado (hoje a cor de destaque, no Perfil). Sobe
+   ancorado na caixa, crescendo a partir do topo — o mesmo scaleIn dos modais,
+   só que mais curto, porque aqui a distância percorrida é pequena. Fica em
+   classe, e não inline, pra poder sumir com o resto no reduced-motion. */
+.select-painel {
+  transform-origin: top center;
+  animation: scaleIn .16s cubic-bezier(.22, 1, .36, 1);
 }
 @media (prefers-reduced-motion: reduce) {
-  .swatch-raised { transition: none; }
-  .swatch-raised:hover, .swatch-raised:active { transform: none; }
+  .select-painel { animation: none; }
+}
+
+/* Bolinha de cor da paleta — alto relevo (convexo), pra ela parecer uma pastilha
+   e não um círculo chapado. Hoje ela é decorativa: quem recebe o clique é a linha
+   inteira do seletor, então aqui não há estado de hover nem de pressão. */
+.swatch-bolinha {
+  box-shadow:
+    0 5px 10px rgba(0, 0, 0, 0.20),
+    0 2px 3px rgba(0, 0, 0, 0.14),
+    inset 0 2px 3px rgba(255, 255, 255, 0.55),
+    inset 0 -4px 6px rgba(0, 0, 0, 0.25);
 }
 
 /* ── Botão de voltar flutuante ─────────────────────────────────────────────
