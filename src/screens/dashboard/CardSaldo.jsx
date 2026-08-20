@@ -58,11 +58,13 @@ function CardSaldoBase({
 
   return (
     <div
-      className="card-saldo"
       style={{
+        // Miolo na cor clara, extremidades no escuro. A elipse é MENOR que o
+        // card (105%/95%) de propósito: assim as quinas ficam além dela e
+        // recebem a cor final inteira, em vez de parar no meio do caminho — é o
+        // que faz o escuro aparecer nos cantos em vez de só insinuar.
         background:
-          "linear-gradient(135deg, var(--primary) 0%, var(--primary-2) 50%, var(--primary) 100%)",
-        backgroundSize: "200% 200%",
+          "radial-gradient(105% 95% at 50% 28%, var(--primary-2) 0%, var(--primary-2) 18%, var(--primary) 58%, color-mix(in oklab, var(--primary) 55%, #000) 100%)",
         color: "#fff",
         borderRadius: 28,
         padding: 22,
@@ -73,7 +75,6 @@ function CardSaldoBase({
     >
       <div
         aria-hidden="true"
-        className="card-saldo__brilho"
         style={{
           position: "absolute",
           top: 0,
@@ -83,32 +84,6 @@ function CardSaldoBase({
           background:
             "linear-gradient(115deg, transparent 35%, rgba(255,255,255,0.10) 50%, transparent 65%)",
           pointerEvents: "none",
-        }}
-      />
-      <div
-        aria-hidden="true"
-        className="card-saldo__bolha card-saldo__bolha--a"
-        style={{
-          position: "absolute",
-          right: -40,
-          top: -40,
-          width: 160,
-          height: 160,
-          borderRadius: "50%",
-          background: "rgba(255,255,255,0.08)",
-        }}
-      />
-      <div
-        aria-hidden="true"
-        className="card-saldo__bolha card-saldo__bolha--b"
-        style={{
-          position: "absolute",
-          right: 30,
-          bottom: -60,
-          width: 110,
-          height: 110,
-          borderRadius: "50%",
-          background: "rgba(255,255,255,0.05)",
         }}
       />
 
