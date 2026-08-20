@@ -7,7 +7,6 @@ import {
   PALETAS,
   coresDaPaleta,
   coresDoLogo,
-  chaveMes,
   listarMeses,
   aplicarCategoriasCustom,
   novaCategoriaCustom,
@@ -27,6 +26,7 @@ import {
   useLimparParceriaOrfa,
   desfazerParceria as desfazerParceriaFn,
 } from "./lib/partnership.js";
+import { chaveMes, dataISO, dataNoMes, hojeISO, mesCorrente, mesShift } from "./lib/datas.js";
 import { vibrar } from "./lib/haptics.js";
 import { ehTemaEscuro, lerAparenciaSalva, salvarAparencia } from "./lib/tema.js";
 import { useEhDesktop } from "./lib/desktop.js";
@@ -994,8 +994,7 @@ export function App() {
     const recs = cloud.recorrentes;
     if (!recs || recs.length === 0) return;
 
-    const hoje = new Date();
-    const yyyymmHoje = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, "0")}`;
+    const yyyymmHoje = mesCorrente();
     const novosTxs = [];
     let mutou = false;
 
@@ -1006,14 +1005,8 @@ export function App() {
       let cur = r.ultimoMesGerado;
       const limite = r.fim && r.fim < yyyymmHoje ? r.fim : yyyymmHoje;
       while (cur < limite) {
-        const [y, m] = cur.split("-").map(Number);
-        const proxData = new Date(y, m, 1); // primeiro dia do mês seguinte (m é 1-indexed, JS aceita)
-        const ny = proxData.getFullYear();
-        const nm0 = proxData.getMonth(); // 0-indexed
-        const yyyymm = `${ny}-${String(nm0 + 1).padStart(2, "0")}`;
-        const ultDia = new Date(ny, nm0 + 1, 0).getDate();
-        const dia = Math.min(r.dia, ultDia);
-        const data = `${yyyymm}-${String(dia).padStart(2, "0")}`;
+        const yyyymm = mesShift(cur, 1);
+        const data = dataNoMes(yyyymm, r.dia);
         novosTxs.push({
           id: `${r.id}-${yyyymm}`,
           tipo: r.tipo,
@@ -1212,7 +1205,7 @@ export function App() {
       const out = [];
       for (let i = 0; i < total; i++) {
         const dt = new Date(ano, mesN - 1 + i, dia);
-        const yyyymmdd = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, "0")}-${String(dt.getDate()).padStart(2, "0")}`;
+        const yyyymmdd = dataISO(dt);
         out.push({
           id: `${grupoId}-${i + 1}`,
           descricao: base.descricao,
@@ -1253,13 +1246,8 @@ export function App() {
 
       const txsRec = [];
       for (let i = 0; i < totalMeses; i++) {
-        const d = new Date(yy, mm - 1 + i, 1);
-        const ny = d.getFullYear();
-        const nm0 = d.getMonth();
-        const yyyymm = `${ny}-${String(nm0 + 1).padStart(2, "0")}`;
-        const ultDia = new Date(ny, nm0 + 1, 0).getDate();
-        const diaReal = Math.min(diaCfg, ultDia);
-        const data = `${yyyymm}-${String(diaReal).padStart(2, "0")}`;
+        const yyyymm = mesShift(inicioYYMM, i);
+        const data = dataNoMes(yyyymm, diaCfg);
         const valorMes = valorRecNoMes(recMolde, yyyymm);
         txsRec.push(
           i === 0
@@ -1353,8 +1341,7 @@ export function App() {
   // yyyymm original (com clamping pro último dia do mês).
   const editarRecorrente = (recId, dados) => {
     vibrar(14);
-    const hoje = new Date();
-    const yyyymmHoje = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, "0")}`;
+    const yyyymmHoje = mesCorrente();
     const recAntiga = cloud.recorrentes.find((r) => r.id === recId);
     // Financiamento com reajuste: ao mudar o valor, o novo valor passa a ser a
     // base ancorada no mês atual; as parcelas futuras seguem crescendo a partir
@@ -1394,10 +1381,7 @@ export function App() {
               : dados.valor;
         }
         if (dados.dia !== undefined) {
-          const [y, m] = t.data.split("-").map(Number);
-          const ultDia = new Date(y, m, 0).getDate();
-          const diaReal = Math.min(dados.dia, ultDia);
-          nova.data = `${t.data.slice(0, 7)}-${String(diaReal).padStart(2, "0")}`;
+          nova.data = dataNoMes(t.data.slice(0, 7), dados.dia);
         }
         return nova;
       });
@@ -1408,8 +1392,7 @@ export function App() {
   // Marca uma tx como paga (some das "Próximas a vencer", continua no histórico).
   const marcarTxPago = (id) => {
     vibrar(14);
-    const hoje = new Date();
-    const yyyymmdd = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, "0")}-${String(hoje.getDate()).padStart(2, "0")}`;
+    const yyyymmdd = hojeISO();
     cloud.setTxs((atual) =>
       atual.map((t) => (t.id === id ? { ...t, pago: true, pagoEm: yyyymmdd } : t)),
     );
@@ -1418,8 +1401,7 @@ export function App() {
   // Cancela a recorrência: remove apenas as txs futuras (do mês atual em diante).
   // Os lançamentos de meses passados ficam preservados no histórico.
   const cancelarRecorrente = (recId) => {
-    const hoje = new Date();
-    const yyyymmHoje = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, "0")}`;
+    const yyyymmHoje = mesCorrente();
     cloud.setRecorrentes((atual) => atual.filter((r) => r.id !== recId));
     cloud.setTxs((atual) =>
       atual.filter((t) => {
@@ -1482,7 +1464,7 @@ export function App() {
         return atual.map((c) => (c.id === dados.id ? { ...c, ...resto } : c));
       }
       const { saldoInicial, ...resto } = dados;
-      const hoje = new Date().toISOString().slice(0, 10);
+      const hoje = hojeISO();
       // Valor que já existia na caixinha vira um depósito "inicial": soma ao
       // valor atual mas não abate o saldo do mês (guardadoNoMes o ignora).
       const depositos =
@@ -1533,8 +1515,7 @@ export function App() {
     const lista = caixinhasAtivas || [];
     const cx = lista.find((c) => c.id === id);
     if (!cx) return;
-    const hoje = new Date();
-    const yyyymmdd = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, "0")}-${String(hoje.getDate()).padStart(2, "0")}`;
+    const yyyymmdd = hojeISO();
     const txId = `tx-${Date.now()}`;
     const realizado = rendimentoRealizadoAoResgatar(cx, v, rendimentoAtual);
     const saque = {

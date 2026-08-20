@@ -5,7 +5,7 @@ import { fmtBRL } from "../../data.js";
 import { COR_NEG } from "../../lib/colors.js";
 import { formatarValorDigitado, formatarValorInicial, parseValorBR, valorZero } from "../../lib/money-input.js";
 import { simboloMoeda } from "../../lib/moeda.js";
-import { ModalShell } from "./ModalShell.jsx";
+import { ModalShell } from "../../ui/modal-shell.jsx";
 import { Expansivel, useUltimoNaoNulo } from "../../ui/expansivel.jsx";
 import { useT } from "../../lib/i18n.jsx";
 

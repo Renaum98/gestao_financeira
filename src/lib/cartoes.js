@@ -27,6 +27,7 @@
 // O saldo do mês continua igual: cartão é organização e leitura, não uma nova
 // conta de saldo. Ver o cabeçalho de lib/fatura.js.
 
+import { hojeISO } from "./datas.js";
 import { PAG_CARTAO } from "./fatura.js";
 
 // ─── Cor do cartão ─────────────────────────────────────────────────────────
@@ -94,7 +95,7 @@ export function novoCartao({ nome, cor, diaFechamento, limite }) {
     cor: cor || COR_CARTAO_PADRAO,
     diaFechamento: Number(diaFechamento) || 0, // 0 = último dia do mês
     limite: Number(limite) > 0 ? Number(limite) : 0, // 0 = sem limite informado
-    criadoEm: new Date().toISOString().slice(0, 10),
+    criadoEm: hojeISO(),
   };
 }
 

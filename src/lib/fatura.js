@@ -9,28 +9,15 @@
 // Este módulo existe só para MOSTRAR o ciclo — em que fatura a compra caiu e
 // quando ela vence. Se um dia o app virar regime de caixa, é aqui que muda.
 
-import { mesAnteriorDe } from "./orcamento.js";
+import { diasNoMes, mesAnteriorDe, mesSeguinteDe } from "./datas.js";
 
 export const PAG_CARTAO = "Cartão de crédito";
-
-// Último dia de um mês "yyyy-mm" (dia 0 do mês seguinte).
-export function ultimoDiaDoMes(mes) {
-  const [y, m] = mes.split("-").map(Number);
-  return new Date(y, m, 0).getDate();
-}
-
-// Soma um mês a "yyyy-mm", normalizando virada de ano.
-export function mesSeguinteDe(mes) {
-  const [y, m] = mes.split("-").map(Number);
-  const d = new Date(y, m, 1);
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
-}
 
 // Dia em que a fatura de um mês fecha. 0/ausente = último dia do mês (padrão),
 // que dá o comportamento "fatura de agosto = compras de agosto". Um dia que o
 // mês não comporta (31 em fevereiro) também cai no último dia.
 export function fechamentoDoMes(mes, diaFechamento) {
-  const ultimo = ultimoDiaDoMes(mes);
+  const ultimo = diasNoMes(mes);
   const dia = Number(diaFechamento) || 0;
   return dia >= 1 && dia < ultimo ? dia : ultimo;
 }
@@ -43,10 +30,10 @@ export function dataFechamento(faturaMes, diaFechamento) {
 
 // Em qual fatura (yyyy-mm) uma compra cai. Compras feitas DEPOIS do fechamento
 // já entram na fatura do mês seguinte — igual ao banco.
-export function faturaDaCompra(dataISO, diaFechamento) {
-  if (!dataISO) return null;
-  const mes = dataISO.slice(0, 7);
-  const dia = Number(dataISO.slice(8, 10));
+export function faturaDaCompra(data, diaFechamento) {
+  if (!data) return null;
+  const mes = data.slice(0, 7);
+  const dia = Number(data.slice(8, 10));
   return dia <= fechamentoDoMes(mes, diaFechamento) ? mes : mesSeguinteDe(mes);
 }
 
@@ -78,9 +65,9 @@ export function totalFatura(txs, faturaMes, diaFechamento, cartaoId) {
 // "a pagar", virou histórico.
 //
 // `cartaoId` segue a convenção de totalFatura: ausente = todos os cartões.
-export function faturasEmAberto(txs, diaFechamento, hojeISO, cartaoId) {
-  const mesAtual = hojeISO.slice(0, 7);
-  const mesAberta = faturaDaCompra(hojeISO, diaFechamento);
+export function faturasEmAberto(txs, diaFechamento, hoje, cartaoId) {
+  const mesAtual = hoje.slice(0, 7);
+  const mesAberta = faturaDaCompra(hoje, diaFechamento);
   const aberta = {
     mes: mesAberta,
     total: totalFatura(txs, mesAberta, diaFechamento, cartaoId),
@@ -103,18 +90,18 @@ export function faturasEmAberto(txs, diaFechamento, hojeISO, cartaoId) {
 // devolve um grupo único sem cartão — o card do Dashboard de antes. Um grupo
 // "sem cartão" também aparece no fim quando sobrou tx órfã (cartão apagado com
 // "deixar sem cartão") e ainda existe algum cartão cadastrado.
-export function faturasPorCartao(txs, cartoes, diaFechamentoGlobal, hojeISO) {
+export function faturasPorCartao(txs, cartoes, diaFechamentoGlobal, hoje) {
   const lista = cartoes || [];
   if (lista.length === 0) {
-    return [{ cartao: null, faturas: faturasEmAberto(txs, diaFechamentoGlobal, hojeISO) }];
+    return [{ cartao: null, faturas: faturasEmAberto(txs, diaFechamentoGlobal, hoje) }];
   }
 
   const grupos = lista.map((cartao) => ({
     cartao,
-    faturas: faturasEmAberto(txs, cartao.diaFechamento || 0, hojeISO, cartao.id),
+    faturas: faturasEmAberto(txs, cartao.diaFechamento || 0, hoje, cartao.id),
   }));
 
-  const orfas = faturasEmAberto(txs, diaFechamentoGlobal, hojeISO, null);
+  const orfas = faturasEmAberto(txs, diaFechamentoGlobal, hoje, null);
   if (orfas.fechada || orfas.aberta.total > 0) {
     grupos.push({ cartao: null, faturas: orfas });
   }

@@ -5,7 +5,8 @@ import { Icon } from "../../ui/icons.jsx";
 import { COR_POS, COR_POS_FUNDO } from "../../lib/colors.js";
 import { BarraProgresso } from "../../ui/charts.jsx";
 import { useSelic, calcularRendimento } from "../../lib/selic.js";
-import { valorAtual, calcularLembranca } from "./utils.js";
+import { calcularLembranca } from "./utils.js";
+import { valorAtual } from "../../lib/caixinhas.js";
 import { useT } from "../../lib/i18n.jsx";
 
 export function CardCaixinha({ cx, onClick, selecionada = false }) {

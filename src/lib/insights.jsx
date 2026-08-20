@@ -7,6 +7,7 @@
 // um array de { icon, cor, texto }. O `texto` é JSX (com strongs/cores) pra
 // a tela renderizar direto.
 
+import { valorAtual } from "./caixinhas.js";
 import { CATEGORIAS, fmtBRLCompacto, totalPorCategoria } from '../data.js';
 import { COR_POS, COR_NEG, COR_AVISO } from './colors.js';
 
@@ -191,7 +192,7 @@ export function computeInsights({
     const comMeta = caixinhas
       .filter((c) => c.meta > 0)
       .map((c) => {
-        const atual = (c.depositos || []).reduce((s, d) => s + d.valor, 0);
+        const atual = valorAtual(c);
         return { ...c, atual, pct: (atual / c.meta) * 100 };
       })
       .filter((c) => c.pct < 100)

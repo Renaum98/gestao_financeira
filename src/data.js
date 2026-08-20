@@ -1,5 +1,6 @@
 // data.js — categorias, pagamentos, helpers de formatação e agregação.
 
+import { mesCorrente } from './lib/datas.js';
 import { getMoeda } from './lib/moeda.js';
 import { COR_BARRA, GRADIENTE } from './ui/logo-geometria.js';
 
@@ -262,10 +263,6 @@ export function txDoMes(txs, yyyymm) {
   return txs.filter(t => t.data.startsWith(yyyymm));
 }
 
-export function chaveMes(date) {
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2,'0')}`;
-}
-
 export function rotuloMes(yyyymm) {
   const [a, m] = yyyymm.split('-');
   return `${MESES[parseInt(m,10) - 1]} ${a}`;
@@ -311,6 +308,6 @@ export function totalEntradas(txs) {
 // ordenados do mais recente para o mais antigo.
 export function listarMeses(txs) {
   const set = new Set(txs.map(t => t.data.slice(0, 7)));
-  set.add(chaveMes(new Date()));
+  set.add(mesCorrente());
   return Array.from(set).sort((a, b) => b.localeCompare(a));
 }

@@ -7,8 +7,8 @@ import { Icon } from "../../ui/icons.jsx";
 import { COR_POS, COR_NEG, COR_POS_FUNDO } from "../../lib/colors.js";
 import { formatarValorDigitado, parseValorBR, valorZero } from "../../lib/money-input.js";
 import { simboloMoeda } from "../../lib/moeda.js";
-import { hojeISO } from "./utils.js";
-import { ModalShell, Campo } from "./ModalShell.jsx";
+import { hojeISO } from "../../lib/datas.js";
+import { ModalShell, Campo } from "../../ui/modal-shell.jsx";
 import { Expansivel } from "../../ui/expansivel.jsx";
 import { useT } from "../../lib/i18n.jsx";
 

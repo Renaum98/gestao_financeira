@@ -3,7 +3,8 @@
 // ativo + cada slide do carrossel). Funções puras, sem React.
 
 import { totalGeral, totalEntradas, txDoMes } from "../data.js";
-import { obterOrcBaseDoMes, mesCorrente } from "./orcamento.js";
+import { obterOrcBaseDoMes } from "./orcamento.js";
+import { mesCorrente } from "./datas.js";
 import { totalEntradasGuardadas } from "./guardado-entradas.js";
 
 // Soma depósitos em caixinhas feitos no mês, separando o que é meu do parceiro.

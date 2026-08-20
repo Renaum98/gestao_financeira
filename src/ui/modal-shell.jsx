@@ -1,9 +1,14 @@
-// ModalShell.jsx — wrapper de modal centralizado (mesmo estilo do add-expense)
-// e os controles de formulário reusados pelos modais de caixinha.
+// modal-shell.jsx — wrapper de modal centralizado (mesmo estilo do add-expense)
+// e os controles de formulário que os modais de cadastro compartilham: rótulo de
+// campo, chave liga-desliga e o estilo de input.
+//
+// Nasceu dentro de screens/caixinhas/ e ficou lá mesmo depois que os cartões
+// passaram a usá-lo. É infraestrutura de UI, não detalhe de caixinha — por isso
+// mora aqui.
 
 import { createPortal } from "react-dom";
-import { Z_MODAL, useFecharComEsc } from "../../ui/modal-base.jsx";
-import { useT } from "../../lib/i18n.jsx";
+import { Z_MODAL, useFecharComEsc } from "./modal-base.jsx";
+import { useT } from "../lib/i18n.jsx";
 
 // `corAcentoTexto` existe porque um acento claro (cartão amarelo, por exemplo)
 // engole o branco. Só quem passa uma cor clara precisa informar.

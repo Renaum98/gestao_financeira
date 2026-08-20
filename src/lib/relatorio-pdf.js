@@ -21,7 +21,7 @@
 import { CATEGORIAS, fmtBRL, rotuloMesT, txDoMes } from '../data.js';
 import { slugNome } from './export.js';
 import { calcularSaldoMes } from './saldo-mes.js';
-import { mesAnteriorDe } from './orcamento.js';
+import { mesAnteriorDe } from './datas.js';
 
 // ─── Medidas (mm, A4 retrato) ───
 const LARG = 210;

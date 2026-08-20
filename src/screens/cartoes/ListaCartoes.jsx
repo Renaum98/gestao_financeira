@@ -14,7 +14,7 @@ import { ModalCartao } from "./ModalCartao.jsx";
 import { ModalApagarCartao } from "./ModalApagarCartao.jsx";
 import { contarNoCartao, usoDoCartao, faixaDoUso } from "../../lib/cartoes.js";
 import { faturasEmAberto } from "../../lib/fatura.js";
-import { hojeISO } from "../caixinhas/utils.js";
+import { hojeISO } from "../../lib/datas.js";
 import { useT } from "../../lib/i18n.jsx";
 
 // Rótulo da situação geral, no chip do topo. Vale a faixa do cartão mais

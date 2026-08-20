@@ -5,6 +5,8 @@
 // `orcamentos` é opcional — só geram alerta as categorias com valor > 0
 // definido pelo usuário (orçamento por categoria é uma medida opcional).
 
+import { chaveMes, mesSeguinteDe } from '../../lib/datas.js';
+
 export function calcularNotificacoes(
   txs,
   recorrentes = [],
@@ -45,8 +47,7 @@ export function calcularNotificacoes(
 
   // Recorrências sem pré-geração para o próximo mês — sinaliza que o usuário
   // pode revisar (continuar ou cancelar).
-  const proximoMes = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 1);
-  const proximoYYMM = `${proximoMes.getFullYear()}-${String(proximoMes.getMonth() + 1).padStart(2, '0')}`;
+  const proximoYYMM = mesSeguinteDe(chaveMes(hoje));
   const recsRevisar = recorrentes.filter(
     (r) => r.ultimoMesGerado && r.ultimoMesGerado < proximoYYMM,
   );
@@ -56,7 +57,7 @@ export function calcularNotificacoes(
   // do mês corrente por categoria e classifica em "estourada" (>100%) ou
   // "perto do limite" (≥90% e ≤100%). IDs por mês para não repetir alerta
   // após virada de mês.
-  const mesAtual = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, '0')}`;
+  const mesAtual = chaveMes(hoje);
   const gastosMesPorCat = {};
   for (const t of txs) {
     if (t.tipo === 'entrada') continue;

@@ -2,14 +2,16 @@
 // CTAs (depositar/resgatar), histórico e os modais.
 
 import React from "react";
-import { fmtBRL, chaveMes } from "../../data.js";
+import { fmtBRL } from "../../data.js";
+import { chaveMes } from "../../lib/datas.js";
 import { Icon } from "../../ui/icons.jsx";
 import { COR_NEG } from "../../lib/colors.js";
 import { TopBar } from "../../ui/common.jsx";
 import { ConfirmModal } from "../../ui/confirm-modal.jsx";
 import { useSelic, calcularRendimento, rendimentoDesdeSempre } from "../../lib/selic.js";
 import { alocadoPorDescricao } from "../../lib/guardado-entradas.js";
-import { valorAtual, calcularLembranca } from "./utils.js";
+import { calcularLembranca } from "./utils.js";
+import { valorAtual } from "../../lib/caixinhas.js";
 import { CabecalhoCaixinha } from "./CabecalhoCaixinha.jsx";
 import { CardLembranca } from "./CardLembranca.jsx";
 import { HistoricoDepositos } from "./HistoricoDepositos.jsx";

@@ -2,6 +2,7 @@
 // A biblioteca `xlsx` é carregada sob demanda (dynamic import) para não
 // pesar o bundle inicial — só quem clica em "Baixar dados" paga o custo.
 
+import { valorAtual } from './caixinhas.js';
 import { CATEGORIAS, txDoMes } from '../data.js';
 
 function nomeCategoria(catId) {
@@ -87,7 +88,7 @@ function abaCaixinhas(XLSX, caixinhas = []) {
   const dados = caixinhas.map((c) => ({
     Nome: c.nome,
     Meta: Number(c.meta) || 0,
-    Atual: (c.depositos || []).reduce((s, d) => s + (Number(d.valor) || 0), 0),
+    Atual: valorAtual(c),
     'Criada em': c.criadoEm || '',
     'Nº depósitos': (c.depositos || []).length,
   }));

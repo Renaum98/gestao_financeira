@@ -10,3 +10,11 @@ export const COR_POS = '#1B9E6A';        // sucesso, sobra, entrada
 export const COR_AVISO = '#E08A00';      // atenção, alerta intermediário
 export const COR_NEG_FUNDO = '#FFE5EA';  // fundo claro p/ NEG
 export const COR_POS_FUNDO = '#DAF5E9';  // fundo claro p/ POS
+
+// Sobre os cards de destaque (roxo, ou a cor da caixinha) o verde e o vermelho
+// acima somem — ver ui/card-destaque.jsx. Estes são os equivalentes claros.
+export const COR_POS_SOBRE = '#D9F5C8';       // sobra/entrada sobre cor
+export const COR_NEG_SOBRE = '#FFD0D9';       // déficit/gasto sobre cor
+// Mais saturado, pra área grande: um preenchimento de barra com o tom de texto
+// acima ficaria lavado contra o trilho branco translúcido.
+export const COR_NEG_SOBRE_FORTE = '#FFB1BD';

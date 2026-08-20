@@ -16,6 +16,7 @@
 //   2) Quem enviou: um listener detecta o invite aceito e marca o próprio user.
 
 import { useEffect, useRef, useState } from "react";
+import { hojeISO } from "./datas.js";
 import {
   db,
   doc,
@@ -615,7 +616,7 @@ export function useSharedCaixinhas({ partnershipId, uid, partnerNome }) {
       );
     } else {
       const { saldoInicial, ...resto } = dados;
-      const hoje = new Date().toISOString().slice(0, 10);
+      const hoje = hojeISO();
       // Valor prévio da caixinha: depósito "inicial", não abate o saldo do mês.
       const depositos =
         saldoInicial > 0

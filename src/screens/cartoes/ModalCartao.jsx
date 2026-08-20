@@ -5,7 +5,7 @@
 
 import React from "react";
 import { Icon } from "../../ui/icons.jsx";
-import { ModalShell, Campo, inputStyle } from "../caixinhas/ModalShell.jsx";
+import { ModalShell, Campo, inputStyle } from "../../ui/modal-shell.jsx";
 import {
   CORES_CARTAO,
   COR_CARTAO_PADRAO,

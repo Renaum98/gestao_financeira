@@ -15,7 +15,7 @@ import { Card, SeletorMes, TopBar } from "../ui/common.jsx";
 import { useT } from "../lib/i18n.jsx";
 import { obterOrcBaseDoMes } from "../lib/orcamento.js";
 import { guardadoNoMes } from "../lib/saldo-mes.js";
-import { mesShift, diasNoMes } from "./analise/utils.js";
+import { chaveMes, mesShift, diasNoMes } from "../lib/datas.js";
 import { ProjecaoAno } from "./analise/ProjecaoAno.jsx";
 import { ResumoMes } from "./analise/ResumoMes.jsx";
 import { PizzaCategorias } from "./analise/PizzaCategorias.jsx";
@@ -59,7 +59,7 @@ export function AnaliseScreen({ ctx }) {
 
   // ─── Resumo ───
   const hoje = new Date();
-  const mesAtual = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, "0")}`;
+  const mesAtual = chaveMes(hoje);
   const diasDecorridos = mes === mesAtual ? hoje.getDate() : diasNoMes(mes);
   const mediaDia = diasDecorridos > 0 ? total / diasDecorridos : 0;
   const entradasMes = totalEntradas(txMes);

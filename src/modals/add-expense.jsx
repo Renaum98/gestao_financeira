@@ -23,11 +23,7 @@ import { ajustarGuardado } from "../lib/guardado-entradas.js";
 import { faturaDaCompra, mesPagamentoDaFatura, PAG_CARTAO } from "../lib/fatura.js";
 import { corDoCartao, corTextoSobre, fechamentoDe } from "../lib/cartoes.js";
 import { useT } from "../lib/i18n.jsx";
-
-function hojeISO() {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-}
+import { chaveMes, dataNoMes, hojeISO } from "../lib/datas.js";
 
 const CORES_CAT = [
   "#6E4FF6", "#FF9B6E", "#5DA8FF", "#9B7BFF", "#FF7AA8",
@@ -199,11 +195,7 @@ export function AddExpenseModal({ ctx, params }) {
     // Data efetiva: quando recorrente, usa mês atual + dia de vencimento informado.
     let dataFinal = data;
     if (vaiCriarRec) {
-      const y = _hoje.getFullYear();
-      const m = _hoje.getMonth() + 1;
-      const ultDia = new Date(y, m, 0).getDate();
-      const diaReal = Math.min(diaVenc, ultDia);
-      dataFinal = `${y}-${String(m).padStart(2, "0")}-${String(diaReal).padStart(2, "0")}`;
+      dataFinal = dataNoMes(chaveMes(_hoje), diaVenc);
     }
     const tx = {
       id: editar ? editar.id : `tx-${Date.now()}`,

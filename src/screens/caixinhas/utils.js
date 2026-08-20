@@ -1,5 +1,7 @@
 // utils.js — helpers puros e constantes das caixinhas.
 
+import { hojeISO } from "../../lib/datas.js";
+import { valorAtual } from "../../lib/caixinhas.js";
 import { MESES_CURTO } from "../../data.js";
 
 // Cores selecionáveis pra colorir cada caixinha. Todas calibradas pra dar
@@ -16,15 +18,6 @@ export const CORES_CAIXINHA = [
   "#168F6E", // teal
   "#7456E0", // lilás
 ];
-
-export function hojeISO() {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-}
-
-export function valorAtual(cx) {
-  return (cx.depositos || []).reduce((s, d) => s + d.valor, 0);
-}
 
 function diasEntre(de, ate) {
   const d1 = new Date(de + "T12:00:00");

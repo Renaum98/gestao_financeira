@@ -2,7 +2,7 @@
 // Orquestra os blocos da tela; cada bloco vive em ./dashboard/*.
 
 import React from "react";
-import { CATEGORIAS, MESES, chaveMes, totalPorCategoria } from "../data.js";
+import { CATEGORIAS, MESES, totalPorCategoria } from "../data.js";
 import { Icon } from "../ui/icons.jsx";
 import { calcularNotificacoes } from "./notificacoes.jsx";
 import { dispararPendentes } from "../lib/notifications.js";
@@ -12,9 +12,8 @@ import { useT } from "../lib/i18n.jsx";
 import { computeInsights } from "../lib/insights.jsx";
 import { calcularSaldoMes } from "../lib/saldo-mes.js";
 import { guardadoPorTx } from "../lib/guardado-entradas.js";
-import { mesAnteriorDe } from "../lib/orcamento.js";
+import { chaveMes, hojeISO, mesAnteriorDe } from "../lib/datas.js";
 import { faturasPorCartao } from "../lib/fatura.js";
-import { hojeISO } from "./caixinhas/utils.js";
 import { DiferencaMesModal } from "./dashboard/DiferencaMesModal.jsx";
 import { CabecalhoDashboard } from "./dashboard/CabecalhoDashboard.jsx";
 import { CardSaldo } from "./dashboard/CardSaldo.jsx";

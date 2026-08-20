@@ -2,11 +2,10 @@
 // propósito NÃO depende do mês selecionado na tela: o seletor manda nos blocos
 // abaixo, aqui a foto é sempre o ano corrente.
 //
-// É o card de destaque da Análise, no mesmo desenho do card de saldo do Início
-// e do orçamento mensal: gradiente radial roxo com o miolo claro, faixa de
-// brilho diagonal e pastilhas translúcidas. Sobre o roxo, sobra e déficit
-// trocam o verde/vermelho da UI clara pelos tons claros #D9F5C8 / #FFD0D9 —
-// os mesmos que o card de saldo usa no "Restante".
+// É o card de destaque da Análise — mesmo <CardDestaque> do card de saldo do
+// Início e do orçamento mensal, com as pastilhas translúcidas de sempre. Sobre
+// o roxo, sobra e déficit trocam o verde/vermelho da UI clara pelos tons
+// COR_POS_SOBRE / COR_NEG_SOBRE, os mesmos do "Restante" lá.
 //
 // Abre recolhido: rótulo, ano e o valor da sobra. O detalhe (barra, entradas,
 // gastos) vem no clique — mesmo padrão dos anos do Histórico.
@@ -35,24 +34,13 @@ import {
   txDoMes,
   valorRecNoMes,
 } from "../../data.js";
+import { CardDestaque } from "../../ui/card-destaque.jsx";
 import { Expansivel } from "../../ui/expansivel.jsx";
 import { Icon } from "../../ui/icons.jsx";
 import { calcOrcBaseAtual, obterOrcBaseDoMes } from "../../lib/orcamento.js";
+import { COR_POS_SOBRE, COR_NEG_SOBRE, COR_NEG_SOBRE_FORTE } from "../../lib/colors.js";
 import { vibrar } from "../../lib/haptics.js";
 import { useT } from "../../lib/i18n.jsx";
-
-// Gradiente e faixa de brilho dos cards de destaque (Início, Orçamentos).
-// Círculo sem raio explícito: ele vai até o canto mais distante, então são as
-// quinas que pegam o tom final — num card largo o escuro fecha forte nas
-// laterais e de leve em cima e embaixo.
-const FUNDO_HERO =
-  "radial-gradient(circle at 50% 28%, var(--primary-2) 0%, var(--primary-2) 18%, var(--primary) 66%, color-mix(in oklab, var(--primary) 79%, #000) 100%)";
-const BRILHO =
-  "linear-gradient(115deg, transparent 35%, rgba(255,255,255,0.10) 50%, transparent 65%)";
-
-// Sobre o roxo, o verde e o vermelho da UI clara ficam ilegíveis.
-const CLARO_POS = "#D9F5C8";
-const CLARO_NEG = "#FFD0D9";
 
 export function calcularProjecaoAno({ ano, txs, recorrentes, preferences, mesAtual }) {
   let orcamentoAno = 0;
@@ -159,30 +147,12 @@ export function ProjecaoAno({ txs, recorrentes = [], preferences, mesAtual, span
 
   return (
     <div className={spanAll} style={{ padding: "0 var(--pad-x) 12px" }}>
-      <div
+      <CardDestaque
         style={{
-          background: FUNDO_HERO,
-          color: "#fff",
           borderRadius: 28,
-          padding: 20,
-          position: "relative",
-          overflow: "hidden",
           boxShadow: "0 4px 12px color-mix(in oklab, var(--primary) 10%, transparent)",
         }}
       >
-        <div
-          aria-hidden="true"
-          style={{
-            position: "absolute",
-            top: 0,
-            left: "-40%",
-            width: "60%",
-            height: "100%",
-            background: BRILHO,
-            pointerEvents: "none",
-          }}
-        />
-
         {/* Só o cabeçalho e o valor comandam o abre-fecha; o detalhe fica fora
             do alvo, senão um clique perdido nele fecharia o card recém-aberto. */}
         <div
@@ -196,7 +166,7 @@ export function ProjecaoAno({ txs, recorrentes = [], preferences, mesAtual, span
               alternar();
             }
           }}
-          style={{ position: "relative", cursor: "pointer" }}
+          style={{ cursor: "pointer" }}
         >
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <div style={{ flex: 1, minWidth: 0, fontSize: 13, fontWeight: 600, opacity: 0.85 }}>
@@ -228,7 +198,7 @@ export function ProjecaoAno({ txs, recorrentes = [], preferences, mesAtual, span
               fontSize: 34,
               fontWeight: 800,
               letterSpacing: "-0.03em",
-              color: estourou ? CLARO_NEG : CLARO_POS,
+              color: estourou ? COR_NEG_SOBRE : COR_POS_SOBRE,
             }}
           >
             {estourou && "−"}
@@ -239,7 +209,7 @@ export function ProjecaoAno({ txs, recorrentes = [], preferences, mesAtual, span
           </div>
         </div>
 
-        <Expansivel aberto={aberto} style={{ position: "relative" }}>
+        <Expansivel aberto={aberto}>
           <div
             style={{
               marginTop: 16,
@@ -261,7 +231,7 @@ export function ProjecaoAno({ txs, recorrentes = [], preferences, mesAtual, span
                   width: aberto ? `${pctGasto}%` : "0%",
                   height: "100%",
                   borderRadius: 8,
-                  background: estourou ? "#FFB1BD" : "#fff",
+                  background: estourou ? COR_NEG_SOBRE_FORTE : "#fff",
                 }}
               />
             </div>
@@ -282,9 +252,9 @@ export function ProjecaoAno({ txs, recorrentes = [], preferences, mesAtual, span
 
             <div style={{ marginTop: 10 }}>
               <Linha rotulo={t("Orçamento do ano")} valor={fmtBRL(orcamentoAno)} />
-              <Linha rotulo={t("Entradas no ano")} valor={fmtBRL(entradasAno)} cor={CLARO_POS} />
+              <Linha rotulo={t("Entradas no ano")} valor={fmtBRL(entradasAno)} cor={COR_POS_SOBRE} />
               <Linha rotulo={t("Total esperado")} valor={fmtBRL(esperado)} destaque />
-              <Linha rotulo={t("Gastos no ano")} valor={fmtBRL(gastosAno)} cor={CLARO_NEG} />
+              <Linha rotulo={t("Gastos no ano")} valor={fmtBRL(gastosAno)} cor={COR_NEG_SOBRE} />
             </div>
 
             <div
@@ -306,7 +276,7 @@ export function ProjecaoAno({ txs, recorrentes = [], preferences, mesAtual, span
             </div>
           </div>
         </Expansivel>
-      </div>
+      </CardDestaque>
     </div>
   );
 }

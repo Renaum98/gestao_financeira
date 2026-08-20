@@ -21,8 +21,8 @@ function nomeMes(mes, t) {
 }
 
 // "2026-08-25" → "25/08"
-function diaMes(dataISO) {
-  return `${dataISO.slice(8, 10)}/${dataISO.slice(5, 7)}`;
+function diaMes(data) {
+  return `${data.slice(8, 10)}/${data.slice(5, 7)}`;
 }
 
 function LinhaFatura({ titulo, legenda, valor, destaque, cor }) {

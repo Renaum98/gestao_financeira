@@ -5,6 +5,8 @@
 // localStorage pra não bater na API toda hora. Se a requisição falhar (offline,
 // CORS, etc.), reutilizamos o cache antigo ou caímos num fallback estático.
 
+import { hojeISO } from "./datas.js";
+import { valorAtual } from "./caixinhas.js";
 import { useEffect, useState } from "react";
 
 // Fallback caso a API esteja fora e não exista cache anterior.
@@ -73,11 +75,6 @@ function cdiAnualDecimal(selicAnualPct) {
   return Math.max(0, (selicAnualPct - 0.1) / 100);
 }
 
-function hojeISO() {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-}
-
 function diasEntre(de, ate) {
   const d1 = new Date(de + "T12:00:00");
   const d2 = new Date(ate + "T12:00:00");
@@ -128,7 +125,7 @@ export function calcularRendimento(cx, selicAnualPct) {
 export function rendimentoRealizadoAoResgatar(cx, valorResgatado, rendimentoAtual) {
   const rend = Number(rendimentoAtual) || 0;
   if (rend <= 0) return 0;
-  const principal = (cx?.depositos || []).reduce((s, d) => s + d.valor, 0);
+  const principal = valorAtual(cx);
   if (!(principal > 0)) return rend;
   const fracao = Math.min(1, (Number(valorResgatado) || 0) / principal);
   return rend * fracao;

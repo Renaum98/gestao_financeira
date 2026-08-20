@@ -3,7 +3,7 @@
 
 import React from "react";
 import { Icon } from "../ui/icons.jsx";
-import { chaveMes } from "../data.js";
+import { chaveMes } from "../lib/datas.js";
 import { Card, TopBar } from "../ui/common.jsx";
 import { ConfirmModal } from "../ui/confirm-modal.jsx";
 import { vibrar } from "../lib/haptics.js";

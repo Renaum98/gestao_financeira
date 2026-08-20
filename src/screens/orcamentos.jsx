@@ -4,8 +4,10 @@ import React from 'react';
 import { CATEGORIAS, catsMinhas, fmtBRL, fmtBRLCompacto, totalEntradas, totalGeral, totalPorCategoria, txDoMes } from '../data.js';
 import { CatChip, Icon } from '../ui/icons.jsx';
 import { Card, TopBar } from '../ui/common.jsx';
+import { CardDestaque } from '../ui/card-destaque.jsx';
+import { guardadoNoMes } from '../lib/saldo-mes.js';
 import { BarraProgresso } from '../ui/charts.jsx';
-import { COR_POS, COR_NEG, COR_AVISO } from '../lib/colors.js';
+import { COR_POS, COR_NEG, COR_AVISO, COR_NEG_SOBRE_FORTE } from '../lib/colors.js';
 import {
   formatarValorDigitado,
   formatarValorInicial,
@@ -13,7 +15,8 @@ import {
   valorZero,
 } from '../lib/money-input.js';
 import { simboloMoeda } from '../lib/moeda.js';
-import { mesCorrente, registrarMudancaOrcBase } from '../lib/orcamento.js';
+import { registrarMudancaOrcBase } from '../lib/orcamento.js';
+import { mesCorrente } from '../lib/datas.js';
 import { useT } from '../lib/i18n.jsx';
 
 export function OrcamentosScreen({ ctx }) {
@@ -31,25 +34,11 @@ export function OrcamentosScreen({ ctx }) {
   // categoria são sub-limites OPCIONAIS dentro do mensal — não compõem o
   // mensal nem precisam somar igual a ele. Sem mensal definido = sem teto.
   const orcBase = preferences.orcamentoMensal > 0 ? preferences.orcamentoMensal : 0;
-  // Depósitos em caixinhas no mês — dinheiro guardado, não disponível.
-  // Saques (valor < 0) ficam de fora: o resgate já volta como entrada do mês.
-  // Em conta compartilhada, conto só os depósitos QUE EU FIZ — depósito do
-  // parceiro abate o saldo dele, não o meu.
+  // Depósitos em caixinhas no mês — dinheiro guardado, não disponível. As
+  // regras (saque não conta, saldo inicial não abate, depósito do parceiro é
+  // do parceiro) vivem em guardadoNoMes, junto do card de saldo e da Análise.
   const meuUid = usuario?.uid;
-  const guardadoEmCaixinhas = (caixinhas || []).reduce(
-    (s, c) =>
-      s +
-      (c.depositos || []).reduce((s2, d) => {
-        if (!d.data || !d.data.startsWith(mes)) return s2;
-        if (!(d.valor > 0)) return s2;
-        // Saldo inicial não abate o orçamento: já existia antes de cadastrar.
-        if (d.tipo === "inicial") return s2;
-        const dono = d.feitoPor || meuUid;
-        if (meuUid && dono !== meuUid) return s2;
-        return s2 + d.valor;
-      }, 0),
-    0,
-  );
+  const guardadoEmCaixinhas = guardadoNoMes(caixinhas, mes, meuUid).meu;
   // Entradas do mês somam ao orçamento; caixinhas guardadas abatem.
   // Só faz sentido mostrar "orcMensal" quando há um teto definido.
   const temOrcamento = orcBase > 0;
@@ -118,24 +107,8 @@ export function OrcamentosScreen({ ctx }) {
   // curtos e ligados entre si — formam a coluna da esquerda, e a lista de
   // categorias, que é a longa, fica com a direita.
   const cardPrincipal = (
-    <div style={{
-      // Mesmo gradiente do card de saldo do Início: círculo até o canto mais
-      // distante, miolo claro e extremidades no escuro.
-      background: 'radial-gradient(circle at 50% 28%, var(--primary-2) 0%, var(--primary-2) 18%, var(--primary) 66%, color-mix(in oklab, var(--primary) 79%, #000) 100%)',
-      color: '#fff', borderRadius: 24, padding: 20, position: 'relative', overflow: 'hidden',
-    }}>
-      {/* A faixa de brilho que os outros cards de destaque têm. A bolha branca
-          que ficava aqui saiu: com o miolo já clareado, ela virava uma mancha
-          disputando o mesmo efeito. */}
-      <div
-        aria-hidden="true"
-        style={{
-          position: 'absolute', top: 0, left: '-40%', width: '60%', height: '100%',
-          background: 'linear-gradient(115deg, transparent 35%, rgba(255,255,255,0.10) 50%, transparent 65%)',
-          pointerEvents: 'none',
-        }}
-      />
-      <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+    <CardDestaque>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ fontSize: 12, fontWeight: 600, opacity: 0.85 }}>{t("Orçamento mensal")}</div>
         {!editandoTotal && (
           <button onClick={() => { setTempTotal(formatarValorInicial(orcBase)); setEditandoTotal(true); }} style={{
@@ -151,7 +124,7 @@ export function OrcamentosScreen({ ctx }) {
 
       {editandoTotal ? (
         <>
-        <div style={{ position: 'relative', marginTop: 4, display: 'flex', alignItems: 'center', gap: 8 }}>
+        <div style={{ marginTop: 4, display: 'flex', alignItems: 'center', gap: 8 }}>
           <span style={{ fontSize: 22, fontWeight: 700, opacity: 0.85 }}>{simboloMoeda()}</span>
           <input
             autoFocus
@@ -179,13 +152,13 @@ export function OrcamentosScreen({ ctx }) {
         </div>
         <div style={{
           marginTop: 10, fontSize: 11, fontWeight: 600, lineHeight: 1.4,
-          opacity: 0.85, position: 'relative',
+          opacity: 0.85,
         }}>
           {t("Use um valor fixo que você recebe todo mês, como salário ou mesada. Recebimentos extras devem ser lançados como Entrada em Transações.")}
         </div>
         </>
       ) : (
-        <div style={{ fontSize: 28, fontWeight: 800, marginTop: 4, letterSpacing: '-0.02em', position: 'relative' }}>
+        <div style={{ fontSize: 28, fontWeight: 800, marginTop: 4, letterSpacing: '-0.02em' }}>
           {temOrcamento ? fmtBRL(orcMensal) : (
             <button onClick={() => { setTempTotal(formatarValorInicial(0)); setEditandoTotal(true); }} style={{
               background: 'transparent', border: '1.5px dashed rgba(255,255,255,0.6)',
@@ -197,11 +170,11 @@ export function OrcamentosScreen({ ctx }) {
       )}
 
       {temOrcamento && (
-        <div style={{ marginTop: 14, position: 'relative' }}>
+        <div style={{ marginTop: 14 }}>
           <div style={{ height: 8, background: 'rgba(255,255,255,0.2)', borderRadius: 8, overflow: 'hidden' }}>
             <div style={{
               height: '100%', width: `${Math.min(100, pctGeral)}%`,
-              background: pctGeral > 100 ? '#FFB1BD' : '#fff', borderRadius: 8,
+              background: pctGeral > 100 ? COR_NEG_SOBRE_FORTE : '#fff', borderRadius: 8,
               transition: 'width .3s ease',
             }} />
           </div>
@@ -211,7 +184,7 @@ export function OrcamentosScreen({ ctx }) {
           </div>
         </div>
       )}
-    </div>
+    </CardDestaque>
   );
 
   const secaoPagamento = (

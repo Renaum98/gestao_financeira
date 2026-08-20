@@ -5,8 +5,10 @@
 import React from "react";
 import { fmtBRL, fmtBRLCompacto, rotuloMesT, MESES } from "../../data.js";
 import { SeletorMes } from "../../ui/common.jsx";
+import { CardDestaque } from "../../ui/card-destaque.jsx";
+import { COR_POS_SOBRE, COR_NEG_SOBRE } from "../../lib/colors.js";
 import { calcularSaldoMes } from "../../lib/saldo-mes.js";
-import { mesAnteriorDe } from "../../lib/orcamento.js";
+import { mesAnteriorDe } from "../../lib/datas.js";
 import { useT } from "../../lib/i18n.jsx";
 
 function CardSaldoBase({
@@ -57,42 +59,18 @@ function CardSaldoBase({
   const nomeMesAnt = t(MESES[Number(mesAnteriorDe(mesCard).split("-")[1]) - 1]);
 
   return (
-    <div
+    <CardDestaque
       style={{
-        // Miolo na cor clara, extremidades no escuro. Círculo (e não elipse):
-        // sem raio explícito ele vai até o canto mais distante, então as quinas
-        // é que pegam o tom final. Como o card é bem mais largo que alto, o
-        // escuro fecha forte nas laterais e mais de leve em cima e embaixo.
-        background:
-          "radial-gradient(circle at 50% 28%, var(--primary-2) 0%, var(--primary-2) 18%, var(--primary) 66%, color-mix(in oklab, var(--primary) 79%, #000) 100%)",
-        color: "#fff",
         borderRadius: 28,
         padding: 22,
-        position: "relative",
-        overflow: "hidden",
         boxShadow: "0 4px 12px color-mix(in oklab, var(--primary) 10%, transparent)",
       }}
     >
-      <div
-        aria-hidden="true"
-        style={{
-          position: "absolute",
-          top: 0,
-          left: "-40%",
-          width: "60%",
-          height: "100%",
-          background:
-            "linear-gradient(115deg, transparent 35%, rgba(255,255,255,0.10) 50%, transparent 65%)",
-          pointerEvents: "none",
-        }}
-      />
-
       <div
         style={{
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
-          position: "relative",
         }}
       >
         <div style={{ fontSize: 13, fontWeight: 600, opacity: 0.85 }}>
@@ -107,7 +85,6 @@ function CardSaldoBase({
           fontSize: 36,
           fontWeight: 800,
           letterSpacing: "-0.03em",
-          position: "relative",
         }}
       >
         {fmtBRL(total)}
@@ -119,7 +96,6 @@ function CardSaldoBase({
           alignItems: "center",
           gap: 8,
           marginTop: 6,
-          position: "relative",
         }}
       >
         {totalAnt > 0 && (
@@ -149,7 +125,6 @@ function CardSaldoBase({
           borderTop: "1px solid rgba(255,255,255,0.18)",
           display: "flex",
           justifyContent: "space-between",
-          position: "relative",
         }}
       >
         <div>
@@ -186,7 +161,7 @@ function CardSaldoBase({
               fontSize: 15,
               fontWeight: 700,
               marginTop: 2,
-              color: restante >= 0 ? "#D9F5C8" : "#FFD0D9",
+              color: restante >= 0 ? COR_POS_SOBRE : COR_NEG_SOBRE,
             }}
           >
             {fmtBRL(Math.abs(restante))}
@@ -200,7 +175,6 @@ function CardSaldoBase({
             marginTop: 14,
             paddingTop: 12,
             borderTop: "1px dashed rgba(255,255,255,0.22)",
-            position: "relative",
           }}
         >
           <div
@@ -233,7 +207,7 @@ function CardSaldoBase({
             <span>{t("Orçamento")} {fmtBRLCompacto(orcTotalParceiro)}</span>
             <span
               style={{
-                color: restanteParceiro >= 0 ? "#D9F5C8" : "#FFD0D9",
+                color: restanteParceiro >= 0 ? COR_POS_SOBRE : COR_NEG_SOBRE,
                 fontWeight: 700,
               }}
             >
@@ -268,7 +242,7 @@ function CardSaldoBase({
               style={{
                 fontSize: 14,
                 fontWeight: 800,
-                color: disponivelConjunto >= 0 ? "#D9F5C8" : "#FFD0D9",
+                color: disponivelConjunto >= 0 ? COR_POS_SOBRE : COR_NEG_SOBRE,
                 letterSpacing: "-0.01em",
               }}
             >
@@ -277,7 +251,7 @@ function CardSaldoBase({
           </div>
         </div>
       )}
-    </div>
+    </CardDestaque>
   );
 }
 

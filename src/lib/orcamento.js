@@ -21,18 +21,13 @@
 // Meses anteriores ao registro mais antigo herdam esse registro — é o melhor
 // palpite disponível para um período em que o app ainda não guardava histórico.
 
+import { mesAnteriorDe } from "./datas.js";
+
 // Orçamento base "agora" — só o mensal manual. Limites por categoria
 // NÃO compõem o orçamento base: eles são sub-limites opcionais dentro do
 // mensal, não substitutos dele. Sem mensal definido = sem orçamento base.
 export function calcOrcBaseAtual(preferences) {
   return preferences?.orcamentoMensal > 0 ? preferences.orcamentoMensal : 0;
-}
-
-// Subtrai um mês de um "yyyy-mm", normalizando virada de ano.
-export function mesAnteriorDe(mes) {
-  const [y, m] = mes.split("-").map(Number);
-  const d = new Date(y, m - 2, 1);
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
 }
 
 // Orçamento base do mês `mes` (yyyy-mm). A janela "ao vivo" — mês atual,
@@ -78,10 +73,4 @@ export function registrarMudancaOrcBase(preferences, novo, mes) {
   if (antigo > 0 && antigo !== novo && !cobrePassado) snaps[ultimoAntigo] = antigo;
   snaps[inicioVigencia] = novo;
   return snaps;
-}
-
-// Retorna o yyyy-mm do mês corrente (data local).
-export function mesCorrente() {
-  const hoje = new Date();
-  return `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, "0")}`;
 }

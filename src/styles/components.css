@@ -451,6 +451,25 @@
   transition: transform .3s cubic-bezier(.45, .1, .35, 1);
 }
 
+/* Faixa de brilho diagonal dos cards de destaque — ver ui/card-destaque.jsx.
+   Nasce fora da borda esquerda e atravessa o card na diagonal, dando a
+   impressão de luz refletida. Não recebe ponteiro: é decorativa e cobre o
+   card inteiro. */
+.card-destaque-brilho {
+  position: absolute;
+  top: 0;
+  left: -40%;
+  width: 60%;
+  height: 100%;
+  background: linear-gradient(
+    115deg,
+    transparent 35%,
+    rgba(255, 255, 255, 0.1) 50%,
+    transparent 65%
+  );
+  pointer-events: none;
+}
+
 /* Barra de progresso do card de projeção anual (Análise). */
 .projecao-barra {
   transition: width .45s cubic-bezier(.22, 1, .36, 1) .08s;
