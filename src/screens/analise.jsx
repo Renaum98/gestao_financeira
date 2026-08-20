@@ -181,7 +181,7 @@ export function AnaliseScreen({ ctx }) {
             spanAll={spanAll}
           />
 
-          <PizzaCategorias dados={dados} total={total} />
+          <PizzaCategorias dados={dados} total={total} comTitulo={ehDesktop} />
 
           <EvolucaoMeses
             evolucao={evolucao}

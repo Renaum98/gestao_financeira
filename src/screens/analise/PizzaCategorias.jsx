@@ -5,14 +5,20 @@ import React from "react";
 import { fmtBRLCompacto } from "../../data.js";
 import { Card } from "../../ui/common.jsx";
 import { PieChart } from "../../ui/charts.jsx";
+import { SecaoTitulo } from "./SecaoTitulo.jsx";
 import { useT } from "../../lib/i18n.jsx";
 
-export function PizzaCategorias({ dados, total }) {
+// `comTitulo` só é ligado no desktop. É a única seção da Análise sem título, e
+// na coluna dupla isso desalinha: o cartão vizinho começa abaixo do título dele
+// e este começa colado no topo. No empilhamento do mobile não faz diferença
+// nenhuma, então lá segue como sempre foi.
+export function PizzaCategorias({ dados, total, comTitulo = false }) {
   const t = useT();
   const [ativa, setAtiva] = React.useState(null);
 
   return (
     <div style={{ padding: "16px var(--pad-x) 0" }}>
+      {comTitulo && <SecaoTitulo>{t("Por categoria")}</SecaoTitulo>}
       <Card>
         <div style={{ display: "flex", justifyContent: "center", padding: "10px 0" }}>
           <PieChart

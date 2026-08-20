@@ -13,8 +13,9 @@ export function EvolucaoConjunta({ evolucaoConjunta, maxEvolConjunta, mes, setMe
   return (
     <div style={{ padding: "16px var(--pad-x) 0" }}>
       <SecaoTitulo>{t("Você vs. {nome}", { nome: partnerNome || t("parceiro") })}</SecaoTitulo>
-      <Card>
+      <Card className="card-cheio">
         <div
+          className="grafico-barras"
           style={{
             display: "flex",
             alignItems: "flex-end",

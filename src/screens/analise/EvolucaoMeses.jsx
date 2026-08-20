@@ -11,8 +11,9 @@ export function EvolucaoMeses({ evolucao, maxEvol, mediaEvol, mes, setMes }) {
   return (
     <div style={{ padding: "16px var(--pad-x) 0" }}>
       <SecaoTitulo>{t("Evolução (6 meses)")}</SecaoTitulo>
-      <Card>
+      <Card className="card-cheio">
         <div
+          className="grafico-barras"
           style={{
             display: "flex",
             alignItems: "flex-end",

@@ -17,9 +17,37 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 4px 28px;
-  align-items: start;
 }
 .cols-desktop > .col-span-all { grid-column: 1 / -1; }
+
+/* Os cartões de uma mesma linha terminam juntos. A linha já tinha a altura do
+   mais alto de qualquer jeito — antes (`align-items: start`) a sobra virava um
+   rombo na página embaixo do cartão curto; agora ela fica dentro do cartão, e
+   a coluna lê como duas caixas do mesmo tamanho.
+   O último filho de cada seção é sempre o cartão; o que vem antes, quando vem,
+   é o título. */
+.cols-desktop > :not(.col-span-all) {
+  display: flex;
+  flex-direction: column;
+}
+.cols-desktop > :not(.col-span-all) > :last-child {
+  flex: 1;
+}
+
+/* Cartão que sabe usar a altura extra em vez de deixá-la em branco: vira
+   coluna e o gráfico cresce junto. Só quem pede (`card-cheio`) — virar todo
+   cartão em flex mexeria no arranjo interno de listas que não pediram nada. */
+.cols-desktop .card-cheio {
+  display: flex;
+  flex-direction: column;
+}
+.cols-desktop .card-cheio .grafico-barras {
+  /* `flex: 1 0 auto` e não `height: auto`: a altura inline (130px aqui, 150 na
+     conjunta) vira a base do flex, então o gráfico cresce com a sobra mas nunca
+     encolhe abaixo do que era. Isso importa porque as barras têm altura em
+     porcentagem — sem uma altura definida no pai elas desabariam. */
+  flex: 1 0 auto;
+}
 
 /* Pilha de cards independentes (Perfil, e o que mais vier). No mobile é a mesma
    coluna de sempre — os 14px entre os cards são os mesmos que antes vinham de
