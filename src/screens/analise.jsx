@@ -67,8 +67,8 @@ export function AnaliseScreen({ ctx }) {
   // "Sobrou" no mês — mesma fórmula do card de saldo do Dashboard:
   //   restante = (orçamento base + entradas) − guardado em caixinhas − gastos
   // `obterOrcBaseDoMes` aplica o orçamento vigente ao mês atual, aos futuros e
-  // ao imediatamente anterior; meses mais antigos leem o snapshot congelado em
-  // preferences.orcBaseAt[mes]. Assim alterar o orçamento hoje reflete no mês
+  // ao imediatamente anterior; meses mais antigos leem o histórico de vigência
+  // em preferences.orcBaseAt. Assim alterar o orçamento hoje reflete no mês
   // passado mais recente e dali pra frente, sem mexer em meses antigos.
   const orcBase = obterOrcBaseDoMes(mes, preferences, mesAtual);
   const meuUid = usuario?.uid;

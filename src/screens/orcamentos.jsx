@@ -13,7 +13,7 @@ import {
   valorZero,
 } from '../lib/money-input.js';
 import { simboloMoeda } from '../lib/moeda.js';
-import { mesCorrente } from '../lib/orcamento.js';
+import { mesCorrente, registrarMudancaOrcBase } from '../lib/orcamento.js';
 import { useT } from '../lib/i18n.jsx';
 
 export function OrcamentosScreen({ ctx }) {
@@ -79,8 +79,16 @@ export function OrcamentosScreen({ ctx }) {
   const pctCartao = orcCartao > 0 ? (gastoCartao / orcCartao) * 100 : 0;
   const corCartao = pctCartao > 100 ? COR_NEG : pctCartao > 80 ? COR_AVISO : COR_POS;
 
+  // Salvar o orçamento também carimba o histórico de vigência: o valor novo
+  // vale deste mês (e do anterior, a janela ao vivo de sempre) em diante, e o
+  // antigo fica congelado nos meses mais velhos — ver registrarMudancaOrcBase.
+  // É o que faz a projeção do ano somar o orçamento real de cada mês.
   const salvarTotal = () => {
-    setPreferences({ orcamentoMensal: Math.max(0, parseValorBR(tempTotal)) });
+    const novo = Math.max(0, parseValorBR(tempTotal));
+    setPreferences({
+      orcamentoMensal: novo,
+      orcBaseAt: registrarMudancaOrcBase(preferences, novo, mes),
+    });
     setEditandoTotal(false);
   };
 

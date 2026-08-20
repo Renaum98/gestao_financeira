@@ -2,8 +2,14 @@
 // propósito NÃO depende do mês selecionado na tela: o seletor manda nos blocos
 // abaixo, aqui a foto é sempre o ano corrente.
 //
-// Abre recolhido: só "Projeção anual" e o total. O detalhe (entradas, gastos,
-// barra) vem no clique — mesmo padrão dos anos do Histórico.
+// É o card de destaque da Análise, no mesmo desenho do card de saldo do Início
+// e do orçamento mensal: gradiente radial roxo com o miolo claro, faixa de
+// brilho diagonal e pastilhas translúcidas. Sobre o roxo, sobra e déficit
+// trocam o verde/vermelho da UI clara pelos tons claros #D9F5C8 / #FFD0D9 —
+// os mesmos que o card de saldo usa no "Restante".
+//
+// Abre recolhido: rótulo, ano e o valor da sobra. O detalhe (barra, entradas,
+// gastos) vem no clique — mesmo padrão dos anos do Histórico.
 //
 // A conta do ano:
 //   esperado = Σ (orçamento do mês + entradas do mês), janeiro a dezembro
@@ -11,6 +17,10 @@
 // Ou seja: o orçamento de cada mês é dinheiro que se espera ter, não gasto
 // previsto. Os gastos que descem dele são os reais — o que já foi lançado,
 // incluindo parcelas com data futura.
+//
+// O orçamento é lido mês a mês, não "o de hoje × 12": `obterOrcBaseDoMes` usa o
+// histórico de vigência, então um aumento feito em agosto vale de agosto (e do
+// mês anterior, julho) em diante, e junho pra trás mantém o valor antigo.
 //
 // Entradas de um mês = as já lançadas + as agendadas (recorrentes do tipo
 // entrada) que ainda não viraram tx naquele mês. O "ainda não viraram tx" evita
@@ -25,24 +35,42 @@ import {
   txDoMes,
   valorRecNoMes,
 } from "../../data.js";
-import { Card } from "../../ui/common.jsx";
 import { Expansivel } from "../../ui/expansivel.jsx";
 import { Icon } from "../../ui/icons.jsx";
 import { calcOrcBaseAtual, obterOrcBaseDoMes } from "../../lib/orcamento.js";
-import { COR_POS as VERDE, COR_NEG as VERMELHO } from "../../lib/colors.js";
 import { vibrar } from "../../lib/haptics.js";
 import { useT } from "../../lib/i18n.jsx";
+
+// Gradiente e faixa de brilho dos cards de destaque (Início, Orçamentos).
+// Círculo sem raio explícito: ele vai até o canto mais distante, então são as
+// quinas que pegam o tom final — num card largo o escuro fecha forte nas
+// laterais e de leve em cima e embaixo.
+const FUNDO_HERO =
+  "radial-gradient(circle at 50% 28%, var(--primary-2) 0%, var(--primary-2) 18%, var(--primary) 66%, color-mix(in oklab, var(--primary) 79%, #000) 100%)";
+const BRILHO =
+  "linear-gradient(115deg, transparent 35%, rgba(255,255,255,0.10) 50%, transparent 65%)";
+
+// Sobre o roxo, o verde e o vermelho da UI clara ficam ilegíveis.
+const CLARO_POS = "#D9F5C8";
+const CLARO_NEG = "#FFD0D9";
 
 export function calcularProjecaoAno({ ano, txs, recorrentes, preferences, mesAtual }) {
   let orcamentoAno = 0;
   let entradasAno = 0;
   let gastosAno = 0;
+  // O orçamento pode mudar no meio do ano; guardamos o primeiro mês pra saber
+  // se houve variação e ajustar a legenda do card.
+  let orcPrimeiroMes = null;
+  let orcVariou = false;
 
   for (let i = 1; i <= 12; i++) {
     const mes = `${ano}-${String(i).padStart(2, "0")}`;
     const txMes = txDoMes(txs, mes);
 
-    orcamentoAno += obterOrcBaseDoMes(mes, preferences, mesAtual);
+    const orcMes = obterOrcBaseDoMes(mes, preferences, mesAtual);
+    if (orcPrimeiroMes === null) orcPrimeiroMes = orcMes;
+    else if (orcMes !== orcPrimeiroMes) orcVariou = true;
+    orcamentoAno += orcMes;
     gastosAno += totalGeral(txMes);
 
     // Entradas já lançadas no mês.
@@ -70,25 +98,35 @@ export function calcularProjecaoAno({ ano, txs, recorrentes, preferences, mesAtu
     esperado,
     sobra: esperado - gastosAno,
     orcMensal: calcOrcBaseAtual(preferences),
+    orcVariou,
   };
 }
 
-function Linha({ rotulo, valor, cor }) {
+// Uma linha do detalhe. `destaque` marca o subtotal (Total esperado) com uma
+// pastilha translúcida — é o resultado da soma logo acima, não mais um item
+// dela.
+function Linha({ rotulo, valor, cor, destaque }) {
   return (
     <div
       style={{
         display: "flex",
         alignItems: "center",
         justifyContent: "space-between",
-        padding: "9px 0",
+        gap: 12,
+        padding: destaque ? "10px 12px" : "9px 2px",
+        margin: destaque ? "4px 0" : 0,
+        borderRadius: destaque ? 12 : 0,
+        background: destaque ? "rgba(255,255,255,0.12)" : undefined,
       }}
     >
-      <span style={{ fontSize: 12.5, fontWeight: 600, color: "var(--muted)" }}>{rotulo}</span>
+      <span style={{ fontSize: 12.5, fontWeight: 600, opacity: destaque ? 0.95 : 0.8 }}>
+        {rotulo}
+      </span>
       <span
         style={{
           fontSize: 14,
-          fontWeight: 800,
-          color: cor || "var(--ink)",
+          fontWeight: destaque ? 800 : 700,
+          color: cor || "#fff",
           letterSpacing: "-0.01em",
         }}
       >
@@ -103,14 +141,16 @@ export function ProjecaoAno({ txs, recorrentes = [], preferences, mesAtual, span
   const ano = Number(mesAtual.slice(0, 4));
   const [aberto, setAberto] = React.useState(false);
 
-  const { orcamentoAno, entradasAno, gastosAno, esperado, sobra, orcMensal } = React.useMemo(
-    () => calcularProjecaoAno({ ano, txs, recorrentes, preferences, mesAtual }),
-    [ano, txs, recorrentes, preferences, mesAtual],
-  );
+  const { orcamentoAno, entradasAno, gastosAno, esperado, sobra, orcMensal, orcVariou } =
+    React.useMemo(
+      () => calcularProjecaoAno({ ano, txs, recorrentes, preferences, mesAtual }),
+      [ano, txs, recorrentes, preferences, mesAtual],
+    );
 
   // Barra: quanto do total esperado do ano os gastos já comeram.
   const pctGasto =
     esperado > 0 ? Math.min(100, (gastosAno / esperado) * 100) : gastosAno > 0 ? 100 : 0;
+  const estourou = sobra < 0;
 
   const alternar = () => {
     vibrar();
@@ -119,18 +159,32 @@ export function ProjecaoAno({ txs, recorrentes = [], preferences, mesAtual, span
 
   return (
     <div className={spanAll} style={{ padding: "0 var(--pad-x) 12px" }}>
-      {/* Mesma vinheta radial dos cards de destaque, só que na cor da própria
-          superfície: aqui o texto é escuro e o valor da sobra é verde/vermelho,
-          então colorir o fundo mataria os dois sinais. O escurecimento das
-          bordas é bem mais sutil que nos cards coloridos — sobre um fundo quase
-          branco, o mesmo peso de lá viraria um cinza pesado. */}
-      <Card
+      <div
         style={{
-          padding: "2px 16px",
-          background:
-            "radial-gradient(circle at 50% 28%, var(--card) 0%, var(--card) 66%, color-mix(in oklab, var(--card) 95%, #000) 100%)",
+          background: FUNDO_HERO,
+          color: "#fff",
+          borderRadius: 28,
+          padding: 20,
+          position: "relative",
+          overflow: "hidden",
+          boxShadow: "0 4px 12px color-mix(in oklab, var(--primary) 10%, transparent)",
         }}
       >
+        <div
+          aria-hidden="true"
+          style={{
+            position: "absolute",
+            top: 0,
+            left: "-40%",
+            width: "60%",
+            height: "100%",
+            background: BRILHO,
+            pointerEvents: "none",
+          }}
+        />
+
+        {/* Só o cabeçalho e o valor comandam o abre-fecha; o detalhe fica fora
+            do alvo, senão um clique perdido nele fecharia o card recém-aberto. */}
         <div
           onClick={alternar}
           role="button"
@@ -142,90 +196,117 @@ export function ProjecaoAno({ txs, recorrentes = [], preferences, mesAtual, span
               alternar();
             }
           }}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 10,
-            padding: "14px 0",
-            cursor: "pointer",
-          }}
+          style={{ position: "relative", cursor: "pointer" }}
         >
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: 14, fontWeight: 800, color: "var(--ink)" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <div style={{ flex: 1, minWidth: 0, fontSize: 13, fontWeight: 600, opacity: 0.85 }}>
               {t("Projeção anual")}
             </div>
-            <div style={{ fontSize: 11, color: "var(--muted)", fontWeight: 600, marginTop: 2 }}>
+            <span
+              style={{
+                padding: "4px 10px",
+                borderRadius: 999,
+                background: "rgba(255,255,255,0.18)",
+                fontSize: 11,
+                fontWeight: 700,
+                letterSpacing: 0.2,
+              }}
+            >
               {ano}
-            </div>
+            </span>
+            <span
+              className="chevron-expansivel"
+              style={{ display: "inline-flex", transform: aberto ? "rotate(180deg)" : "none" }}
+            >
+              <Icon name="chevron-down" size={18} color="rgba(255,255,255,0.85)" strokeWidth={2} />
+            </span>
           </div>
+
           <div
             style={{
-              fontSize: 17,
+              marginTop: 10,
+              fontSize: 34,
               fontWeight: 800,
-              color: sobra >= 0 ? VERDE : VERMELHO,
-              letterSpacing: "-0.02em",
+              letterSpacing: "-0.03em",
+              color: estourou ? CLARO_NEG : CLARO_POS,
             }}
           >
-            {sobra < 0 && "−"}
+            {estourou && "−"}
             {fmtBRL(Math.abs(sobra))}
           </div>
-          <span
-            className="chevron-expansivel"
-            style={{
-              display: "inline-flex",
-              transform: aberto ? "rotate(180deg)" : "none",
-            }}
-          >
-            <Icon name="chevron-down" size={18} color="var(--muted)" strokeWidth={2} />
-          </span>
+          <div style={{ marginTop: 2, fontSize: 11.5, fontWeight: 600, opacity: 0.8 }}>
+            {estourou ? t("acima do previsto no ano") : t("sobra prevista no ano")}
+          </div>
         </div>
 
-        <Expansivel aberto={aberto}>
-          <div style={{ borderTop: "1px solid var(--linha)", padding: "12px 0 14px" }}>
+        <Expansivel aberto={aberto} style={{ position: "relative" }}>
+          <div
+            style={{
+              marginTop: 16,
+              paddingTop: 14,
+              borderTop: "1px solid rgba(255,255,255,0.18)",
+            }}
+          >
+            <div
+              style={{
+                height: 8,
+                borderRadius: 8,
+                background: "rgba(255,255,255,0.2)",
+                overflow: "hidden",
+              }}
+            >
               <div
+                className="projecao-barra"
                 style={{
-                  height: 6,
-                  borderRadius: 999,
-                  background: "var(--linha)",
-                  overflow: "hidden",
+                  width: aberto ? `${pctGasto}%` : "0%",
+                  height: "100%",
+                  borderRadius: 8,
+                  background: estourou ? "#FFB1BD" : "#fff",
                 }}
-              >
-                <div
-                  className="projecao-barra"
-                  style={{
-                    width: aberto ? `${pctGasto}%` : "0%",
-                    height: "100%",
-                    borderRadius: 999,
-                    background: VERMELHO,
-                  }}
-                />
-              </div>
+              />
+            </div>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                marginTop: 8,
+                fontSize: 12,
+                fontWeight: 600,
+              }}
+            >
+              <span>{t("Gasto: {x}", { x: fmtBRL(gastosAno) })}</span>
+              <span style={{ opacity: 0.85 }}>
+                {t("{pct}% utilizado", { pct: pctGasto.toFixed(0) })}
+              </span>
+            </div>
 
-              <div style={{ marginTop: 8 }}>
-                <Linha rotulo={t("Orçamento do ano")} valor={fmtBRL(orcamentoAno)} />
-                <Linha rotulo={t("Entradas no ano")} valor={fmtBRL(entradasAno)} cor={VERDE} />
-                <Linha rotulo={t("Total esperado")} valor={fmtBRL(esperado)} />
-                <Linha rotulo={t("Gastos no ano")} valor={fmtBRL(gastosAno)} cor={VERMELHO} />
-              </div>
+            <div style={{ marginTop: 10 }}>
+              <Linha rotulo={t("Orçamento do ano")} valor={fmtBRL(orcamentoAno)} />
+              <Linha rotulo={t("Entradas no ano")} valor={fmtBRL(entradasAno)} cor={CLARO_POS} />
+              <Linha rotulo={t("Total esperado")} valor={fmtBRL(esperado)} destaque />
+              <Linha rotulo={t("Gastos no ano")} valor={fmtBRL(gastosAno)} cor={CLARO_NEG} />
+            </div>
 
-              <div
-                style={{
-                  fontSize: 10.5,
-                  fontWeight: 600,
-                  color: "var(--muted)",
-                  lineHeight: 1.45,
-                  marginTop: 4,
-                }}
-              >
-                {orcMensal > 0
-                  ? t("orçamento de {x}/mês nos 12 meses + entradas agendadas", {
+            <div
+              style={{
+                fontSize: 10.5,
+                fontWeight: 600,
+                opacity: 0.75,
+                lineHeight: 1.45,
+                marginTop: 6,
+              }}
+            >
+              {orcMensal <= 0
+                ? t("sem orçamento definido — só as entradas contam")
+                : orcVariou
+                  ? t("orçamento de cada mês do ano + entradas agendadas")
+                  : t("orçamento de {x}/mês nos 12 meses + entradas agendadas", {
                       x: fmtBRL(orcMensal),
-                    })
-                  : t("sem orçamento definido — só as entradas contam")}
-              </div>
+                    })}
+            </div>
           </div>
         </Expansivel>
-      </Card>
+      </div>
     </div>
   );
 }
