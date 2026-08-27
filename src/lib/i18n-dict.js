@@ -4,6 +4,14 @@
 // Para adicionar suporte a uma nova tela, basta envolver os textos dela com
 // `t("...")` no componente e acrescentar as entradas correspondentes aqui.
 // Textos sem entrada caem de volta pro português automaticamente.
+//
+// Os comentários de seção abaixo são só organização: o objeto é PLANO e as
+// chaves valem pro app inteiro. Repetir uma chave numa seção nova não cria uma
+// tradução local — é um no-op silencioso, e o último valor vence. Doze chaves
+// já tinham nascido assim, cada uma repetida na seção onde alguém precisou dela
+// sem achar a de cima. Não custou nada porque as duas cópias diziam a mesma
+// coisa; o dia em que discordarem, quem editar a de cima vai jurar que mexeu no
+// app e não mexeu. Antes de acrescentar uma entrada, procure a chave no arquivo.
 
 export const EN = {
   // ─── Navegação (TabBar / Sidebar) ───
@@ -323,13 +331,6 @@ export const EN = {
   "Cartão de crédito": "Credit card",
   "Cartão de débito": "Debit card",
   "Dinheiro": "Cash",
-  // Paletas de cor
-  "Violeta": "Violet",
-  "Esmeralda": "Emerald",
-  "Oceano": "Ocean",
-  "Mostarda": "Mustard",
-  "Rosa": "Pink",
-  "Preto": "Black",
   // TopBar / SeletorMes / ItemTransacao
   "Voltar": "Back",
   "Mês anterior": "Previous month",
@@ -378,7 +379,6 @@ export const EN = {
 
   // ─── Modal Adicionar / Editar transação ───
   "Editar transação": "Edit transaction",
-  "Nova transação": "New transaction",
   "Salvar": "Save",
   "Saída": "Expense",
   "Categoria": "Category",
@@ -441,7 +441,6 @@ export const EN = {
   "Cartões": "Cards",
   "Faturas dos cartões": "Card statements",
   "Sem cartão": "No card",
-  "Todos": "All",
   "Nenhum cartão cadastrado": "No cards added yet",
   "Cadastre seus cartões para separar as faturas, cada um com seu dia de fechamento. Não pedimos o número do cartão.":
     "Add your cards to keep statements apart, each with its own closing day. We never ask for the card number.",
@@ -592,7 +591,6 @@ export const EN = {
   "Pelo parceiro": "By partner",
   // ModalCaixinha
   "Editar caixinha": "Edit savings",
-  "Nome": "Name",
   "Ex: Viagem para a praia": "e.g. Beach trip",
   "Cor": "Color",
   "Meta (opcional)": "Target (optional)",
@@ -649,7 +647,6 @@ export const EN = {
     "no budget set — only income counts",
   "Total gasto": "Total spent",
   "Média por dia": "Daily average",
-  "Sobrou": "Left over",
   "{pct}% vs mês anterior": "{pct}% vs last month",
   "{n} dia": "{n} day",
   "{n} dias": "{n} days",
@@ -664,7 +661,6 @@ export const EN = {
   "parceiro": "partner",
   "Você: {x}": "You: {x}",
   "{nome}: {x}": "{nome}: {x}",
-  "Você": "You",
   "Top categorias": "Top categories",
   "Maiores gastos do mês": "Biggest expenses of the month",
   "Acompanhar orçamentos": "Track budgets",
@@ -733,7 +729,6 @@ export const EN = {
   "Última parcela {prazo} · {n}× {x}": "Last installment {prazo} · {n}× {x}",
   "Orçamento por categoria": "Budget by category",
   "Alertas das categorias com orçamento definido": "Alerts for categories with a set budget",
-  "Ajustar →": "Adjust →",
   "{cat} estourou o orçamento": "{cat} went over budget",
   "{cat} chegando ao limite": "{cat} nearing the limit",
   "Recorrências para revisar": "Recurring to review",
