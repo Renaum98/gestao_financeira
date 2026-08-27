@@ -64,6 +64,38 @@
   .page-transition { animation: none; }
 }
 
+/* Entrada da tela de Notificações: ela desce da borda de cima da tela.
+
+   `transform-origin: top` é o que faz a diferença. Com a origem no meio (o
+   padrão) um `scale` cresce pros dois lados e a tela parece inflar; ancorada no
+   topo, a borda de cima fica parada e só a de baixo desce — o desdobrar de uma
+   persiana. O `translateY` acrescenta a descida do conjunto.
+
+   O percurso é curto de propósito. Fazer a tela vir de fato de fora da janela
+   (um `translateY(-100%)`) deixaria o fundo à mostra na maior parte da
+   animação, e o que se vê é um piscar do fundo, não uma tela descendo.
+
+   Só no celular. No desktop o cabeçalho não sai de cena ao navegar: a tela
+   aparece ao lado do sino, sem vir de lugar nenhum, e a animação estaria
+   contando uma história que não aconteceu. Por isso o escopo é `.em-desktop`
+   negado — a mesma marca única que lib/desktop.js mantém no <html>.
+
+   O palco em volta continua com o `pageIn` de sempre. São animações de coisas
+   diferentes (o palco esmaece, a tela desce) e em elementos aninhados, então
+   não disputam a mesma propriedade. */
+@keyframes notifEntrada {
+  from { opacity: 0; transform: scale(.94) translateY(-18px); }
+  to   { opacity: 1; transform: scale(1)   translateY(0); }
+}
+:root:not(.em-desktop) .notif-entrada {
+  transform-origin: top center;
+  animation: notifEntrada .32s cubic-bezier(0.22, 1, 0.36, 1) both;
+  will-change: opacity, transform;
+}
+@media (prefers-reduced-motion: reduce) {
+  :root:not(.em-desktop) .notif-entrada { animation: none; }
+}
+
 /* Modo leve (lib/leve.js): as animações que existem só pra suavizar a troca de
    tela saem de cena. Numa GPU fraca elas competem justamente com a montagem da
    tela nova — o quadro em que o app tem menos folga. O `will-change` some
@@ -74,6 +106,7 @@
    app, o segundo é o que diz que algo está carregando — sem ele, o modo leve
    viraria telas em branco. */
 :root[data-leve] .page-transition,
+:root[data-leve] .notif-entrada,
 :root[data-leve] .insight-fade,
 :root[data-leve] .lista-fade {
   animation: none;

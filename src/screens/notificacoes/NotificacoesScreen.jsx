@@ -73,7 +73,7 @@ export function NotificacoesScreen({ ctx }) {
   };
 
   return (
-    <div style={{ paddingBottom: 'var(--pad-bottom)' }}>
+    <div className="notif-entrada" style={{ paddingBottom: 'var(--pad-bottom)' }}>
       <TopBar voltar={voltar} titulo={t("Notificações")} />
 
       {notificacoesSuportadas() && permissao !== 'granted' && permissao !== 'unsupported' && (
