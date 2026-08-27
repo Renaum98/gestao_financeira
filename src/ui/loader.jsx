@@ -25,10 +25,16 @@
 import { useEffect, useState } from 'react';
 import { LogoAzulejo } from './logo-animado.jsx';
 
-// Quanto dura a entrada do logo, do primeiro traço até o fim do estouro. A
-// linha do tempo inteira está em components.css, ao lado das animações; se ela
-// mudar lá, este número muda aqui.
-const ENTRADA_MS = 1300;
+// Quanto dura a entrada do logo, do primeiro traço até o fim do eco que o
+// estouro dispara. A linha do tempo inteira está em components.css, ao lado das
+// animações; se ela mudar lá, este número muda aqui. Hoje o eco é o último a
+// terminar, e termina exatamente neste 1.6s — encurtar aqui cortaria o fade
+// dele pela metade.
+//
+// É o único trecho da abertura que cobra tempo de todo mundo: enquanto ele
+// corre, o app já está pronto e esperando. Foi 1.3s enquanto o eco durava
+// 0.33s, e subiu quando ele precisou ficar visível.
+const ENTRADA_MS = 1600;
 
 // Com "prefers-reduced-motion" as animações do logo não rodam (components.css),
 // e segurar a tela 1.3s num desenho parado seria atraso puro.
@@ -147,7 +153,16 @@ export function SplashLogo({ label = 'Carregando' }) {
         background: 'var(--bg)',
       }}
     >
-      <LogoAzulejo size={104} />
+      {/* O eco precisa nascer no centro do azulejo, não no centro da caixa: com
+          as `safe-area` descontadas em cima e embaixo em alturas diferentes,
+          os dois centros não coincidem. Por isso ele é irmão do azulejo dentro
+          de um invólucro do tamanho dele, e não um filho da tela — assim o
+          `position: absolute` dele se ancora no logo. A animação está em
+          components.css, junto do estouro de onde ela sai. */}
+      <div style={{ position: 'relative', display: 'flex' }}>
+        <div aria-hidden="true" className="splash-eco" />
+        <LogoAzulejo size={104} />
+      </div>
     </div>
   );
 }

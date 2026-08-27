@@ -306,10 +306,23 @@
 
    Mora aqui, e não junto do azulejo, porque esses números só fazem sentido ao
    lado da coreografia acima. */
+/* A cor da luz do logo — a sombra do azulejo, o halo do estouro e o eco que
+   varre a tela. É da marca, não do usuário: pelo mesmo motivo que o desenho do
+   logo deixou de seguir a paleta escolhida (ver logo-animado.jsx), com
+   `--primary` a abertura do app mudava de cor a cada paleta, o desenho num roxo
+   e a luz dele em outro.
+
+   Fica em variável, com o roxo da marca (COR_BARRA, logo-geometria.js) como
+   valor de partida, pra acompanhar os `--logo-*` do desenho: quem um dia quiser
+   pintar o logo de outra cor num contexto específico redefine os quatro juntos
+   e a luz continua batendo com a tinta. No :root porque quem a usa não está
+   todo dentro do azulejo — o eco é irmão dele, não filho. */
+:root { --logo-brilho: var(--logo-barra, #721D78); }
+
 .logo-azulejo {
   box-shadow:
-    0 16px 36px color-mix(in oklab, var(--primary) 30%, transparent),
-    0 0 0 color-mix(in oklab, var(--primary) 0%, transparent);
+    0 16px 36px color-mix(in oklab, var(--logo-brilho) 30%, transparent),
+    0 0 0 color-mix(in oklab, var(--logo-brilho) 0%, transparent);
   will-change: transform;
   animation:
     logo-estourar .5s cubic-bezier(.34, .8, .3, 1) .8s,
@@ -320,8 +333,8 @@
   34%  {
     transform: scale(1.11);
     box-shadow:
-      0 22px 56px color-mix(in oklab, var(--primary) 52%, transparent),
-      0 0 100px 22px color-mix(in oklab, var(--primary) 55%, transparent);
+      0 22px 56px color-mix(in oklab, var(--logo-brilho) 52%, transparent),
+      0 0 100px 22px color-mix(in oklab, var(--logo-brilho) 55%, transparent);
   }
   66%  { transform: scale(.985); }
   100% { transform: scale(1); }
@@ -329,17 +342,83 @@
 @keyframes logo-flutuar {
   0%, 100% {
     transform: translateY(0);
-    box-shadow: 0 16px 36px color-mix(in oklab, var(--primary) 30%, transparent);
+    box-shadow: 0 16px 36px color-mix(in oklab, var(--logo-brilho) 30%, transparent);
   }
   50% {
     transform: translateY(-8px);
-    box-shadow: 0 24px 44px color-mix(in oklab, var(--primary) 26%, transparent);
+    box-shadow: 0 24px 44px color-mix(in oklab, var(--logo-brilho) 26%, transparent);
   }
+}
+
+/* O eco do estouro — a claridade que sai do azulejo e varre a tela inteira.
+   Só no splash da abertura (ui/loader.jsx); o login usa o mesmo azulejo, mas
+   ali ele não é o assunto da tela e um clarão de tela cheia seria demais.
+
+   O tempo não é escolhido, é herdado: o estouro começa aos 0.80s e seu pico
+   está em 34% de 0.5s, ou seja 0.97s. É de lá que o eco parte — antes disso ele
+   correria à frente da luz que o causou. Mexer na duração ou no atraso do
+   estouro move este atraso junto.
+
+   E fecha em 1.60s, que é o ENTRADA_MS de loader.jsx: é até ali que o splash
+   fica presa na tela quando os dados já voltaram. Os dois números andam juntos
+   — um eco mais longo que o ENTRADA_MS seria cortado no meio do fade, e um
+   corte no meio de um fade vira um estalo. Nasceu em 0.33s e ficou rápido
+   demais pra se enxergar; alongar custou 0.30s na abertura do app, e é esse o
+   preço de mexer aqui de novo.
+
+   A peça é um círculo de 100vmax que cresce de 0.12 a 2.2 — em 2.2 ele passa da
+   diagonal de qualquer tela, então a claridade chega às quatro bordas em
+   qualquer proporção. Cresce por `transform`, e não por width/height, pra a
+   animação inteira ficar no compositor: é um quadro só, rasterizado uma vez e
+   escalado. O borrão que o escalonamento traz é bem-vindo aqui — o que se quer
+   é luz difusa, não uma borda nítida.
+
+   O pico de opacidade é 0.5, e a própria radial já chega transparente em 72% do
+   raio: o clarão lava a tela sem nunca apagar o logo que o emitiu. */
+.splash-eco {
+  /* Centrado no azulejo pelo par `50% + margem negativa de meia peça`, e não
+     por `translate(-50%, -50%)`: a animação usa `transform` pra escalar, e um
+     translate ali seria sobrescrito por ela a cada quadro — o círculo voltaria
+     pra posição estática, o canto de cima à esquerda do invólucro, e cresceria
+     dali pra fora da tela. Com a margem, `transform` fica livre pro scale, que
+     por padrão parte do centro da peça. */
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 100vmax;
+  height: 100vmax;
+  margin: -50vmax 0 0 -50vmax;
+  border-radius: 50%;
+  pointer-events: none;
+  opacity: 0;
+  background: radial-gradient(
+    circle closest-side,
+    color-mix(in oklab, var(--logo-brilho) 55%, transparent) 0%,
+    color-mix(in oklab, var(--logo-brilho) 20%, transparent) 45%,
+    transparent 72%
+  );
+  will-change: transform, opacity;
+  animation: splash-eco .63s cubic-bezier(.2, .7, .35, 1) .97s both;
+}
+@keyframes splash-eco {
+  0%   { opacity: 0;  transform: scale(.12); }
+  /* Acende quase junto com a partida — o que se lê como "explosão" é a luz
+     aparecer de uma vez e a frente continuar correndo depois. Mas some devagar:
+     o 45% segura a claridade em quase todo o brilho na primeira metade do
+     percurso, e é essa demora que dá tempo de enxergar a frente atravessando a
+     tela. Sem ela o fade acompanha a escala e o eco já chega apagado nas
+     bordas. */
+  18%  { opacity: .5; }
+  45%  { opacity: .4; }
+  100% { opacity: 0;  transform: scale(2.2); }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .logo-haste, .logo-barra, .logo-ponta { animation: none; }
   .logo-azulejo { animation: none; transform: none; }
+  /* Sem o estouro não há pico do qual ecoar; e um clarão de tela cheia é
+     justamente o tipo de coisa que esta preferência existe pra evitar. */
+  .splash-eco { display: none; }
 }
 
 /* Painel de um select estilizado (hoje a cor de destaque, no Perfil). Sobe
