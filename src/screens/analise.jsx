@@ -30,7 +30,7 @@ export function AnaliseScreen({ ctx }) {
   const {
     txs, mes, setMes, todosMeses, mesAnterior, irPara, ehDesktop,
     partnerTxs = [], partnerNome = "", partnerUid,
-    preferences = {}, orcamentos = {}, caixinhas = [], usuario,
+    preferences = {}, caixinhas = [], usuario,
     recorrentes = [],
   } = ctx;
   const tr = useT();

@@ -134,14 +134,45 @@ export function CarrosselSaldoMes({ todosMeses, mes, setMes, renderCard }) {
   // (os cards variam de altura: entradas, diferença do mês, bloco do parceiro).
   // Só cresce, nunca encolhe, então converge no primeiro card mais alto e para.
   const [alturaSlide, setAlturaSlide] = React.useState(0);
+  //
+  // A medição é reativa, e não a cada render, por dois motivos.
+  //
+  // O primeiro é custo: sem lista de dependências este efeito rodava depois de
+  // TODO render e lia `offsetHeight` — uma leitura que obriga o navegador a
+  // recalcular o layout na hora. Durante o swipe o componente re-renderiza a
+  // cada mês que passa, então era um reflow síncrono a cada passada, bem no
+  // gesto em que o quadro não pode atrasar.
+  //
+  // O segundo é que a lista de dependências óbvia estaria errada. `[idxAtivo,
+  // alturaSlide]` faz o efeito parar de rodar quando o conteúdo do card cresce
+  // sozinho — os dados chegam da cache, aparece o bloco do parceiro, entra a
+  // linha de entradas — e a fileira ficaria baixa demais sem que nada disso
+  // mudasse `idxAtivo`. Quem sabe dessa mudança é o ResizeObserver, não o
+  // React: ele avisa quando a caixa muda, seja qual for a causa.
+  //
+  // `Math.max` guarda a regra de sempre — a altura só cresce, nunca encolhe,
+  // então converge no card mais alto e para. Por ser funcional, ele também tira
+  // `alturaSlide` das dependências: era essa leitura que amarrava o efeito ao
+  // próprio resultado.
+  //
+  // Não há laço de realimentação. O `minHeight` que este estado alimenta é piso
+  // do slide, e a face só se estica até ele: medindo de novo dá o mesmo número,
+  // o `Math.max` devolve o valor atual e o React não re-renderiza.
   React.useLayoutEffect(() => {
     const face = slideRefs.current[idxAtivo]?.firstElementChild;
     if (!face) return;
     // offsetHeight ignora o transform aplicado por aplicarEfeitos — é a caixa
     // real, então a altura medida não encolhe junto com o efeito.
-    const h = face.offsetHeight;
-    if (h > alturaSlide) setAlturaSlide(h);
-  });
+    const medir = () =>
+      setAlturaSlide((atual) => Math.max(atual, face.offsetHeight));
+    medir();
+    if (typeof ResizeObserver === "undefined") return;
+    const ro = new ResizeObserver(medir);
+    ro.observe(face);
+    return () => ro.disconnect();
+    // `mesesAsc` entra porque um conjunto de meses diferente remonta os slides:
+    // sem ele o observer seguiria preso a um nó que saiu da árvore.
+  }, [idxAtivo, mesesAsc]);
 
   // Escala e opacidade de cada slide conforme a distância até o centro da tela.
   const aplicarEfeitos = React.useCallback(() => {

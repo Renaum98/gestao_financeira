@@ -21,7 +21,6 @@
 
 import {
   db,
-  auth,
   doc,
   getDoc,
   getDocs,

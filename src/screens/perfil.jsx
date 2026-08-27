@@ -82,7 +82,7 @@ export function PerfilScreen({ ctx }) {
       }
       vibrar(14);
       setBaixar(null);
-    } catch (err) {
+    } catch {
       setBaixar((b) => ({ ...b, baixando: false, erro: t("Não foi possível gerar o arquivo.") }));
     }
   };

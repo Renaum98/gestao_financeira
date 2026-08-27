@@ -285,7 +285,6 @@ function TabBar({ tela, irPara, abrirAdd }) {
   };
 
   const aoCancelar = () => {
-    const a = arraste.current;
     const el = indicadorRef.current;
     arraste.current = null;
     if (!el) return;

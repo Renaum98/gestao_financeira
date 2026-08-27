@@ -28,7 +28,7 @@ export function ConviteItem({ convite, meuUid, meuNome, meuEmail, primeiro }) {
     setAcao('recusando');
     try {
       await recusarConvite(convite.id);
-    } catch (err) {
+    } catch {
       setErro(t('Não foi possível recusar.'));
       setAcao(null);
     }
