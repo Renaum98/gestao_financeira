@@ -94,7 +94,13 @@ export function AnaliseScreen({ ctx }) {
       });
     }
     return out;
-  }, [txs, mes]);
+    // `tr` entra aqui porque o rótulo do mês passa por ele. Parece dispensável
+    // — funções costumam ser estáveis —, mas o `useT` devolve um useCallback
+    // amarrado ao idioma (lib/i18n.jsx), então a identidade muda justamente
+    // quando a tradução muda. Sem ele, trocar de idioma não mexe em `txs` nem
+    // em `mes`, o memo não refaz e o gráfico fica com os meses na língua
+    // anterior enquanto o resto da tela já virou.
+  }, [txs, mes, tr]);
   const maxEvol = Math.max(...evolucao.map((e) => e.total), 1);
   const mediaEvol = evolucao.reduce((s, e) => s + e.total, 0) / evolucao.length;
 
@@ -112,7 +118,7 @@ export function AnaliseScreen({ ctx }) {
       });
     }
     return out;
-  }, [ehCompartilhado, txs, partnerTxs, mes]);
+  }, [ehCompartilhado, txs, partnerTxs, mes, tr]); // `tr`: ver o memo acima
   const maxEvolConjunta = evolucaoConjunta
     ? Math.max(...evolucaoConjunta.flatMap((e) => [e.meu, e.parceiro]), 1)
     : 1;
