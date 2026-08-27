@@ -23,10 +23,9 @@
 // fosse. Quem usa não precisa mais repetir isso bloco a bloco.
 
 // Sem cor própria, o gradiente vem pronto no token — quem o monta é
-// `heroDaPaleta` (data.js), porque a receita muda conforme a paleta tenha uma
-// segunda cor de verdade ou só um tom vizinho. Com cor própria (a caixinha),
-// montamos aqui a receita de paleta comum, que é o caso dela: `corClara` é a
-// mesma cor com alpha, não uma segunda cor.
+// `heroDaPaleta` (data.js), que é quem conhece as duas cores da paleta. Com cor
+// própria (a caixinha), montamos aqui a mesma receita: `corClara` é a mesma cor
+// com alpha, não uma segunda cor.
 const HERO_DA_PALETA = "var(--primary-hero)";
 
 function fundoProprio(cor, corClara) {

@@ -108,7 +108,7 @@ export function CabecalhoDashboard({
                   width: "100%",
                   height: "100%",
                   borderRadius: 18,
-                  background: "linear-gradient(135deg, var(--primary), var(--primary-2))",
+                  background: "var(--primary-degrade)",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",

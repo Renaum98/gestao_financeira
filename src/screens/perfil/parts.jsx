@@ -14,7 +14,7 @@ export function Toggle({ ativo, onChange }) {
         width: 42,
         height: 26,
         borderRadius: 14,
-        background: ativo ? "var(--primary-fundo)" : "var(--surface-sunken)",
+        background: ativo ? "var(--primary)" : "var(--surface-sunken)",
         position: "relative",
         cursor: "pointer",
         transition: "background .15s",

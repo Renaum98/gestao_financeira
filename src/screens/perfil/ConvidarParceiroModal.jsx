@@ -100,7 +100,7 @@ function ExplicacaoConta({ onContinuar, onCancelar }) {
             padding: 12,
             borderRadius: 14,
             border: "none",
-            background: "linear-gradient(135deg, var(--primary), var(--primary-2))",
+            background: "var(--primary-degrade)",
             color: "#fff",
             fontSize: 14,
             fontWeight: 800,
@@ -182,7 +182,7 @@ export function ConvidarParceiroModal({ meuUid, meuNome, meuEmail, onFechar }) {
               width: 42,
               height: 42,
               borderRadius: 14,
-              background: "linear-gradient(135deg, var(--primary), var(--primary-2))",
+              background: "var(--primary-degrade)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -288,7 +288,7 @@ export function ConvidarParceiroModal({ meuUid, meuNome, meuEmail, onFechar }) {
                   background:
                     enviando || !email.trim()
                       ? "var(--linha)"
-                      : "linear-gradient(135deg, var(--primary), var(--primary-2))",
+                      : "var(--primary-degrade)",
                   color: enviando || !email.trim() ? "var(--muted)" : "#fff",
                   fontSize: 14,
                   fontWeight: 800,

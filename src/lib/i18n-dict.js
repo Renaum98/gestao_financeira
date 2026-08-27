@@ -61,8 +61,6 @@ export const EN = {
   "Mostarda": "Mustard",
   "Rosa": "Pink",
   "Preto": "Black",
-  "Brasil": "Brazil",
-  "Fogo": "Fire",
   "Cor de destaque": "Accent color",
 
   // ─── Desempenho / Modo leve ───

@@ -1,7 +1,7 @@
 // AparenciaCard.jsx — escolha de tema (sistema/claro/escuro) e cor de destaque.
 
 import React from "react";
-import { PALETAS, coresDaPaleta } from "../../data.js";
+import { PALETAS, degradeDaPaleta, acharPaleta } from "../../data.js";
 import { Card } from "../../ui/common.jsx";
 import { Icon } from "../../ui/icons.jsx";
 import { Segmentado } from "./parts.jsx";
@@ -9,11 +9,12 @@ import { vibrar } from "../../lib/haptics.js";
 import { useTemaEscuro } from "../../lib/tema.js";
 import { useT } from "../../lib/i18n.jsx";
 
-// A bolinha da paleta. `cor` já vem resolvida pro tema ativo — ver o comentário
-// em `coresDaPaleta`. O degradê entre as duas é o que faz a Brasil aparecer
-// como verde e amarelo aqui; nas outras o par são tons vizinhos e ele lê como
-// cor chapada.
-function Bolinha({ cor, tamanho = 24 }) {
+// A bolinha da paleta. Recebe a paleta inteira, e não as cores já resolvidas,
+// porque quem sabe resolvê-las pro tema ativo é `degradeDaPaleta` — o mesmo que
+// pinta os botões, e tem de ser o mesmo, senão a bolinha promete uma cor e o
+// botão entrega outra. As duas cores de uma paleta são tons vizinhos, então o
+// degradê lê aqui como cor chapada.
+function Bolinha({ pal, escuro, tamanho = 24 }) {
   return (
     <span
       className="swatch-bolinha"
@@ -22,7 +23,7 @@ function Bolinha({ cor, tamanho = 24 }) {
         width: tamanho,
         height: tamanho,
         borderRadius: tamanho / 2,
-        background: `linear-gradient(135deg, ${cor.primary}, ${cor.primary2})`,
+        background: degradeDaPaleta(pal, escuro),
         flexShrink: 0,
       }}
     />
@@ -30,7 +31,7 @@ function Bolinha({ cor, tamanho = 24 }) {
 }
 
 // Seletor de cor de destaque. Era uma fila de bolinhas soltas, que passou a
-// não caber numa linha de celular quando as paletas chegaram a oito — e que
+// não caber numa linha de celular quando as paletas passaram de meia dúzia — e que
 // nunca disse o nome de nenhuma: o nome só existia no `title`, invisível no
 // toque.
 //
@@ -50,7 +51,7 @@ function Bolinha({ cor, tamanho = 24 }) {
 function SeletorPaleta({ paletaAtual, escuro, onEscolher, t }) {
   const [aberto, setAberto] = React.useState(false);
   const caixa = React.useRef(null);
-  const atual = PALETAS.find((p) => p.primary === paletaAtual) || PALETAS[0];
+  const atual = acharPaleta(paletaAtual);
 
   // Clique fora e Esc fecham. `pointerdown` e não `click`: o dedo que encosta
   // fora já conta, sem esperar o toque terminar, e assim a lista não fica
@@ -105,7 +106,7 @@ function SeletorPaleta({ paletaAtual, escuro, onEscolher, t }) {
           boxShadow: "0 1px 2px rgba(0,0,0,0.06)",
         }}
       >
-        <Bolinha cor={coresDaPaleta(atual, escuro)} />
+        <Bolinha pal={atual} escuro={escuro} />
         <span style={{ flex: 1, textAlign: "left" }}>{t(atual.nome)}</span>
         <span
           className="chevron-expansivel"
@@ -136,17 +137,19 @@ function SeletorPaleta({ paletaAtual, escuro, onEscolher, t }) {
             background: "var(--card)",
             border: "1px solid var(--linha)",
             boxShadow: "0 14px 32px rgba(20,16,24,0.18), 0 3px 8px rgba(20,16,24,0.10)",
-            // Teto pra a lista não crescer até sair da tela: com dez paletas
-            // (linhas de ~42px) ela já passa disso e rola por dentro, como um
-            // select faz. O corte respeita o canto redondo.
+            // Teto pra a lista não crescer até sair da tela: passando de oito
+            // paletas (linhas de ~42px) ela rola por dentro, como um select
+            // faz. O corte respeita o canto redondo.
             maxHeight: 360,
             overflowY: "auto",
           }}
         >
           {PALETAS.map((p, i) => {
-            // p.primary é a identidade da paleta (é o que fica salvo em
-            // preferences.paleta); só a pintura muda com o tema.
-            const sel = p.primary === paletaAtual;
+            // Compara com `atual`, e não com o hex salvo: uma paleta que já
+            // trocou de cor tem o hex antigo em preferences.paleta, e aí
+            // nenhuma linha ficaria marcada (ver `acharPaleta`). Só a pintura
+            // muda com o tema; a identidade é sempre o p.primary de hoje.
+            const sel = p.primary === atual.primary;
             return (
               <button
                 key={p.primary}
@@ -169,7 +172,7 @@ function SeletorPaleta({ paletaAtual, escuro, onEscolher, t }) {
                   cursor: "pointer",
                 }}
               >
-                <Bolinha cor={coresDaPaleta(p, escuro)} tamanho={22} />
+                <Bolinha pal={p} escuro={escuro} tamanho={22} />
                 <span style={{ flex: 1, textAlign: "left" }}>{t(p.nome)}</span>
                 {sel && <Icon name="check" size={16} color="var(--primary)" strokeWidth={2.6} />}
               </button>

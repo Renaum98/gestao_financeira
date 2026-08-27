@@ -6,7 +6,7 @@ import {
   ORDEM_CATS,
   PALETAS,
   coresDaPaleta,
-  fundoDaPaleta,
+  degradeDaPaleta, acharPaleta,
   heroDaPaleta,
   listarMeses,
   aplicarCategoriasCustom,
@@ -370,7 +370,7 @@ function TabBar({ tela, irPara, abrirAdd }) {
                   borderRadius: 26,
                   border: "none",
                   background:
-                    "linear-gradient(135deg, var(--primary), var(--primary-2))",
+                    "var(--primary-degrade)",
                   color: "#fff",
                   cursor: "pointer",
                   display: "flex",
@@ -610,7 +610,7 @@ function Sidebar({ tela, irPara, abrirAdd, usuario, fotoPerfil }) {
           borderRadius: 14,
           border: "none",
           background:
-            "linear-gradient(135deg, var(--primary), var(--primary-2))",
+            "var(--primary-degrade)",
           color: "#fff",
           fontSize: 14,
           fontWeight: 800,
@@ -710,7 +710,7 @@ function Sidebar({ tela, irPara, abrirAdd, usuario, fotoPerfil }) {
                 width: 30,
                 height: 30,
                 borderRadius: 15,
-                background: "var(--primary-fundo)",
+                background: "var(--primary)",
               }}
             />
           )}
@@ -736,7 +736,7 @@ function Sidebar({ tela, irPara, abrirAdd, usuario, fotoPerfil }) {
 
 function aplicarTema(paleta, modo) {
   const root = document.documentElement;
-  const pal = PALETAS.find((p) => p.primary === paleta) || PALETAS[0];
+  const pal = acharPaleta(paleta);
   const ehEscuro = ehTemaEscuro(modo);
   // Marca no <html> pra o CSS saber a direção de um realce: no tema claro um
   // hover escurece, no escuro clareia. As cores em si continuam vindo das
@@ -747,14 +747,12 @@ function aplicarTema(paleta, modo) {
   const { primary, primary2 } = coresDaPaleta(pal, ehEscuro);
   root.style.setProperty("--primary", primary);
   root.style.setProperty("--primary-2", primary2);
-  // Fundo das superfícies sólidas de destaque. Numa paleta comum é o próprio
-  // --primary; numa paleta `par`, cujas duas cores são cores mesmo e não tons
-  // vizinhos, é o degradê entre elas — ver `fundoDaPaleta` (data.js). Fica numa
-  // variável separada porque `--primary` também pinta texto e ícone, e ali
-  // gradiente não serve.
-  root.style.setProperty("--primary-fundo", fundoDaPaleta(pal, ehEscuro));
-  // O gradiente do card de destaque. Vem pronto de `heroDaPaleta` porque a
-  // receita muda quando o par são duas cores de verdade — ver lá o porquê.
+  // O degradê de destaque dos botões grandes, banners e avatares. Sai daqui, e
+  // não de cada botão, porque nenhum deles sabe qual paleta está ativa; antes a
+  // receita estava copiada em 22 lugares.
+  root.style.setProperty("--primary-degrade", degradeDaPaleta(pal, ehEscuro));
+  // O gradiente do card de destaque. Vem pronto de `heroDaPaleta`, que é quem
+  // conhece as paradas e o porquê delas.
   root.style.setProperty("--primary-hero", heroDaPaleta(pal, ehEscuro));
   // O logo NÃO acompanha a cor de destaque. Ele já acompanhou, derivando três
   // tons próprios da paleta; com a lista de paletas crescendo, isso virou uma

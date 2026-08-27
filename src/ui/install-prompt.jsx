@@ -186,7 +186,7 @@ export function InstallPromptModal({ temAtalho, plataformaIOS, onInstalar, onDis
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 18 }}>
               <button onClick={acaoInstalar} style={{
                 width: '100%', padding: '14px 16px', borderRadius: 14, border: 'none',
-                background: 'linear-gradient(135deg, var(--primary), var(--primary-2))',
+                background: 'var(--primary-degrade)',
                 color: '#fff', fontSize: 15, fontWeight: 800, fontFamily: 'inherit',
                 cursor: 'pointer',
                 boxShadow: '0 8px 20px color-mix(in oklab, var(--primary) 30%, transparent)',
@@ -231,7 +231,7 @@ export function InstallPromptModal({ temAtalho, plataformaIOS, onInstalar, onDis
 
             <button onClick={onDispensar} style={{
               width: '100%', padding: '13px', borderRadius: 14, border: 'none',
-              background: 'linear-gradient(135deg, var(--primary), var(--primary-2))',
+              background: 'var(--primary-degrade)',
               color: '#fff', fontSize: 14, fontWeight: 800, fontFamily: 'inherit',
               cursor: 'pointer', marginTop: 16,
               boxShadow: '0 8px 20px color-mix(in oklab, var(--primary) 30%, transparent)',

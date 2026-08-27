@@ -153,7 +153,7 @@ function BotaoPrimario({ children, ...props }) {
   return (
     <button {...props} style={{
       width: '100%', padding: '14px 18px', borderRadius: 14, border: 'none',
-      background: props.disabled ? 'var(--linha)' : 'linear-gradient(135deg, var(--primary), var(--primary-2))',
+      background: props.disabled ? 'var(--linha)' : 'var(--primary-degrade)',
       color: props.disabled ? 'var(--muted)' : '#fff',
       fontSize: 15, fontWeight: 800, fontFamily: 'inherit',
       cursor: props.disabled ? 'default' : 'pointer',
