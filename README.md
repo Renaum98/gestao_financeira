@@ -1,6 +1,8 @@
 # MyCounts — gestão financeira
 
-App de finanças pessoais para uso diário no celular. **PWA** instalável, dados sincronizados em **Firebase Firestore**, gateado por **PIN local de 4 dígitos**. Stack: React + Vite + Firebase, sem backend próprio.
+App de finanças pessoais para uso diário no celular. **PWA** instalável, dados sincronizados em **Firebase Firestore**, login por **e-mail e senha** com verificação. Stack: React + Vite + Firebase, sem backend próprio.
+
+Para a lista do que o app faz, veja [FUNCIONALIDADES.md](FUNCIONALIDADES.md). Para entender o código por dentro, o [Guia do Projeto](GUIA-DO-PROJETO.md).
 
 ## Como rodar localmente
 
@@ -22,29 +24,18 @@ E acesse `http://<ip-do-pc>:5173` pelo navegador do celular.
 O app **não funciona** sem um projeto Firebase configurado.
 
 1. Em [console.firebase.google.com](https://console.firebase.google.com), crie um projeto.
-2. **Authentication** → Sign-in method → ative **Anonymous**.
+2. **Authentication** → Sign-in method → ative **E-mail/senha**.
 3. **Firestore Database** → crie um banco em modo de produção.
-4. **Cole estas Security Rules** (cada usuário só lê/escreve no próprio doc):
+4. **Publique as Security Rules** de [`firestore.rules`](firestore.rules) — cole o conteúdo do arquivo na aba "Regras" do Console, ou rode `firebase deploy --only firestore:rules`.
 
-   ```
-   rules_version = '2';
-   service cloud.firestore {
-     match /databases/{database}/documents {
-       match /users/{uid} {
-         allow read, write: if request.auth != null && request.auth.uid == uid;
-       }
-     }
-   }
-   ```
+   As regras são parte do app, não um detalhe de infraestrutura: é nelas que mora a linha entre "criou uma conta" e "pode gravar" — toda escrita exige e-mail confirmado. Sem publicá-las, o banco fica aberto para qualquer conta recém-criada.
 
 5. Em **Configurações do projeto → Seus apps**, adicione um app Web e copie a `firebaseConfig`.
 6. Cole as chaves em **um destes lugares**:
    - **Opção A (recomendado)**: copie `.env.example` para `.env` e preencha as variáveis `VITE_FIREBASE_*`.
    - **Opção B**: edite diretamente `src/lib/firebase.js` (bloco bem marcado no topo).
 
-> A chave do Firebase é **pública por design** — pode ir no repositório. O controle de acesso vem das Security Rules acima, não da chave.
-
-> As regras acima são só o mínimo pra subir. As que valem estão em [`firestore.rules`](firestore.rules) — publique esse arquivo antes de abrir o app pra outras pessoas.
+> A chave do Firebase é **pública por design** — pode ir no repositório. O controle de acesso vem das Security Rules, não da chave.
 
 ## Proteção contra bot
 
@@ -57,7 +48,7 @@ Criar conta no Firebase Auth é grátis e automatizável, então "está autentic
 Para ligar o App Check (só a camada 2 precisa de configuração):
 
 1. Console do Firebase → **App Check → Apps** → registra o app Web com o provedor **reCAPTCHA v3**. Ele gera uma chave de site.
-2. Põe a chave no `.env` como `VITE_FIREBASE_APPCHECK_KEY` (e nas Environment Variables da Vercel / Secrets do GitHub Actions).
+2. Põe a chave no `.env` como `VITE_FIREBASE_APPCHECK_KEY` (e nas Environment Variables da Vercel).
 3. Em dev, gera um token de debug em **App Check → Apps → Gerenciar tokens de depuração** e põe em `VITE_FIREBASE_APPCHECK_DEBUG_TOKEN`.
 4. Deixa alguns dias com a métrica em **Não aplicado**; quando as requisições verificadas forem a maioria, liga o **Aplicar** no Cloud Firestore e no Authentication.
 
@@ -65,72 +56,91 @@ Sem a variável de ambiente o módulo não faz nada e o app roda como antes — 
 
 Vale ligar também, no Console: **Authentication → Settings → Proteção contra enumeração de e-mail**, e a política de senha (mínimo 8 caracteres), que hoje só é exigida no cliente.
 
-## Build + Deploy no GitHub Pages
+## Deploy
 
-O repositório já tem o workflow `.github/workflows/deploy.yml`. Para publicar:
+O app é servido a partir da raiz do domínio (`base: '/'` em `vite.config.js`) e publicado na **Vercel**. O [`vercel.json`](vercel.json) cuida do que um PWA precisa e é fácil de errar:
 
-1. Crie o repositório no GitHub e dê push.
-2. Em **Settings → Pages**, escolha **GitHub Actions** como source.
-3. Em **Settings → Secrets and variables → Actions**, adicione as variáveis de ambiente do Firebase (`VITE_FIREBASE_API_KEY`, `VITE_FIREBASE_AUTH_DOMAIN`, etc.) — ou hardcode em `firebase.js` antes do push.
-4. Faça push na `main`. O workflow builda e publica em `https://<usuario>.github.io/<repo>/`.
+- **rewrite de SPA** — qualquer rota cai no `index.html`, porque a navegação é do lado do cliente;
+- **cache** — `index.html`, `sw.js` e o manifest nunca são cacheados, e os assets com hash no nome são cacheados para sempre. Sem isso, um service worker antigo continua servindo uma versão velha do app depois do deploy.
 
-> Importante: depois do deploy, adicione o domínio `<usuario>.github.io` em **Firebase → Authentication → Settings → Authorized domains**.
+Para publicar:
+
+1. Importe o repositório na Vercel (o build é `npm run build`, saída em `dist/` — ela detecta sozinha).
+2. Em **Settings → Environment Variables**, adicione as variáveis `VITE_FIREBASE_*` do `.env.example`.
+3. Faça push na `main`.
+
+> Importante: depois do deploy, adicione o domínio em **Firebase → Authentication → Settings → Authorized domains**. Sem isso o login falha em produção mesmo com tudo o mais certo.
 
 ## Instalar no celular
 
 Pelo Chrome do Android: menu → **Instalar app**.
 Pelo Safari iOS: compartilhar → **Adicionar à Tela de Início**.
 
-Depois disso abre fullscreen, com ícone próprio, e funciona offline (cache do Service Worker).
+Depois disso abre fullscreen, com ícone próprio, e funciona offline (cache do Service Worker + cache persistente do Firestore).
 
 ## Estrutura
 
 ```
 gestao_financeira/
 ├── index.html                  Shell HTML mínimo (Vite injeta o resto)
-├── package.json
-├── vite.config.js              Configuração Vite + PWA + base path
+├── vite.config.js              Vite + PWA (manifest, service worker)
+├── vercel.json                 Rewrites de SPA + cache do PWA
+├── firestore.rules             Security Rules — publique no Console
 ├── .env.example                Template das variáveis Firebase
-├── .github/workflows/deploy.yml  CI → GitHub Pages
 ├── public/
-│   └── logo.png                Ícone-fonte do app (gera manifest e favicon via scripts/generate-icons.mjs)
+│   └── logo.png                Ícone-fonte (gera manifest e favicon via scripts/generate-icons.mjs)
 └── src/
     ├── main.jsx                Entry point (ReactDOM.createRoot)
-    ├── app.jsx                 App raiz: auth, PIN, navegação, estado
-    ├── styles.css              CSS global (variáveis de tema)
-    ├── data.js                 Categorias, paletas, helpers (fmtBRL, txDoMes…)
-    ├── lib/
-    │   ├── firebase.js         Init Firebase + auth anônima + Firestore
-    │   ├── storage.js          Hook useCloudState (sincroniza com Firestore)
-    │   └── pin.js              Hash + verificação do PIN local
+    ├── app.jsx                 App raiz: auth, navegação, estado central, tema
+    ├── data.js                 Categorias, paletas, helpers (fmtBRL, degradês…)
+    ├── styles/                 base, layout, components, animations, loaders
+    ├── lib/                    Regras de negócio, sem React
+    │   ├── firebase.js           Init + auth por e-mail/senha
+    │   ├── storage.js            useCloudState (sincroniza com Firestore)
+    │   ├── saldo-mes.js          A conta do saldo do mês
+    │   ├── orcamento.js          Orçamento + histórico de vigência por mês
+    │   ├── fatura.js             Ciclo de fatura do cartão
+    │   ├── caixinhas.js          Saldo de uma caixinha
+    │   ├── selic.js              Meta Selic (API do BCB) + rendimento projetado
+    │   ├── partnership.js        Conta compartilhada: convite, aceite, vínculo
+    │   ├── notifications.js      Lembretes nativos de contas a vencer
+    │   ├── i18n.jsx / i18n-dict.js  Tradução pt/en
+    │   ├── moeda.js              BRL / USD / EUR / GBP (formato, sem câmbio)
+    │   ├── export.js             Planilha .xlsx sob demanda
+    │   ├── relatorio-pdf.js      Relatório mensal em PDF
+    │   ├── app-check.js          Atestado anti-bot
+    │   ├── rate-limit-auth.js    Trava progressiva do formulário
+    │   ├── conexao.js            Estado offline + conflito de escrita
+    │   ├── leve.js               Modo leve
+    │   └── desktop.js            Fonte única do corte mobile/desktop
     ├── ui/                     Componentes compartilhados
-    │   ├── icons.jsx
-    │   ├── charts.jsx
-    │   └── common.jsx
-    ├── screens/                Uma tela por arquivo
-    │   ├── pin.jsx             Definir/desbloquear PIN
-    │   ├── onboarding.jsx      Tour inicial
-    │   ├── dashboard.jsx       Início
-    │   ├── gastos.jsx          Lista
-    │   ├── analise.jsx         Pizza + ranking
-    │   ├── categoria.jsx       Detalhe
-    │   ├── orcamentos.jsx      Limites
-    │   ├── historico.jsx       Comparativo de meses
-    │   └── perfil.jsx          Nome + tema + PIN
+    │   ├── charts.jsx            Gráficos SVG feitos à mão
+    │   ├── card-destaque.jsx     O card "herói" das telas
+    │   ├── logo-animado.jsx      Logo em vetor + animação de abertura
+    │   └── loader.jsx            Splash, skeletons e spinner
+    ├── screens/                Uma tela por arquivo (ou pasta)
+    │   ├── login.jsx             Login/cadastro + verificação de e-mail
+    │   ├── onboarding.jsx        Tour inicial
+    │   ├── dashboard.jsx         Início
+    │   ├── gastos.jsx            Lista de transações
+    │   ├── analise.jsx           Gráficos e projeção
+    │   ├── orcamentos.jsx        Limites por categoria
+    │   ├── caixinhas.jsx         Metas de poupança
+    │   ├── cartoes.jsx           Cartões e faturas
+    │   ├── recorrentes.jsx       Contas que se repetem
+    │   ├── historico.jsx         Comparativo de meses
+    │   ├── notificacoes.jsx      Avisos e convites
+    │   └── perfil.jsx            Conta, aparência, idioma, moeda
     └── modals/
-        └── add-expense.jsx     Adicionar/editar gasto
+        ├── add-expense.jsx       Adicionar/editar transação
+        └── simular-gasto.jsx     Testar o impacto de um gasto
 ```
 
 ## Como os dados ficam armazenados
 
-- **Firestore**: doc `users/{uid}` com `{ txs, orcamentos, preferences }`.
-- **Auth**: anônima — cada dispositivo recebe um `uid` próprio e estável.
-  - ⚠️ Limpar dados do navegador → perde o `uid` → perde acesso aos dados (ficam orfãos no Firestore). Se for um problema, ative email/senha em `Authentication` e adapte `lib/firebase.js` para vincular conta.
-- **PIN**: SHA-256 com salt em `localStorage` (chave `finca.pin.hash`). Não vai para o Firebase. Reset = apagar dados do app no navegador.
+- **Auth**: e-mail e senha, com verificação de e-mail. A mesma conta abre em qualquer aparelho.
+- **Firestore**: doc `users/{uid}` com `{ txs, orcamentos, caixinhas, recorrentes, categoriasCustom, cartoes, preferences }`.
+- **Conta compartilhada**: `invites/{id}` para os convites, `partnerships/{id}` para o vínculo, e `userIndex/{emailLower}` para achar alguém pelo e-mail.
+- **Local**: só preferência de aparência e caches (a Meta Selic por 24h, o palpite de sessão que escolhe o que mostrar durante a abertura). Nada de dado financeiro.
 
-## Próximos passos sugeridos
-
-- Vincular conta com email/senha (para usar o mesmo banco de gastos em mais de um celular).
-- Notificações push para lembretes de orçamento (precisa do Cloud Messaging do Firebase).
-- Categorias customizáveis pelo usuário.
-- Export CSV.
+Cada coleção é um campo de array no doc do usuário, e toda escrita manda o array inteiro. Isso simplifica muito o app — e cria um caso de conflito quando um aparelho fica offline, que está tratado em `lib/conexao.js` com a nuvem prevalecendo.
