@@ -22,6 +22,19 @@ import { SecaoProximas } from './SecaoProximas.jsx';
 import { SecaoTerminando } from './SecaoTerminando.jsx';
 import { SecaoRecorrencias } from './SecaoRecorrencias.jsx';
 
+// Identidade estável pro caso de `notifLidas` faltar. Parece exagero por uma
+// lista vazia, e é o contrário: um `|| []` escrito na linha cria um array NOVO
+// a cada render, e este aqui alimenta três hooks — o useMemo que calcula as
+// notificações, o Set de lidas e o efeito que dispara as nativas. Com
+// identidade nova toda vez, os três refazem trabalho a cada render e o efeito
+// chama `dispararPendentes` de novo.
+//
+// Hoje o ramo não chega a rodar: o storage mescla os defaults na leitura
+// (`notifLidas: []` em DEFAULT_STATE.preferences), e array vazio é truthy, então
+// o `||` sempre fica com o valor de lá. A constante é o que impede isso de virar
+// um problema silencioso no dia em que esse default sair.
+const SEM_LIDAS = [];
+
 export function NotificacoesScreen({ ctx }) {
   const {
     txs, recorrentes, voltar, irPara, preferences, setPreferences,
@@ -29,7 +42,7 @@ export function NotificacoesScreen({ ctx }) {
     notificacoesParceria = [], dispensarNotifParceria,
   } = ctx;
   const t = useT();
-  const lidas = preferences?.notifLidas || [];
+  const lidas = preferences?.notifLidas || SEM_LIDAS;
   const { proximas, terminando, recsRevisar, orcEstourados, orcProximos, idsAtivos } = React.useMemo(
     () => calcularNotificacoes(txs, recorrentes, lidas, convitesRecebidos, notificacoesParceria, orcamentos),
     [txs, recorrentes, lidas, convitesRecebidos, notificacoesParceria, orcamentos],

@@ -103,6 +103,22 @@ const ACOES_QUE_ESCREVEM = [
 // Acompanha o .nav-indicador em components.css.
 const RAIO_GOTA = 20;
 
+// Lista vazia com identidade fixa, pros campos do `ctx` que caem num vazio.
+//
+// Um `|| []` escrito na linha devolve um array NOVO a cada render, e o ctx é
+// remontado a cada render. Quem recebe esse campo e o põe numa lista de
+// dependências passa a refazer o trabalho sempre — foi esse o caso do `lidas`
+// na tela de Notificações, que alimentava três hooks.
+//
+// Hoje nenhum dos dois ramos chega a rodar: o storage já devolve `?? []` na
+// leitura do snapshot, e array vazio é truthy. A constante é o que impede isso
+// de virar um problema silencioso, e num arquivo diferente do que o causou, se
+// aquele default sair.
+//
+// Congelada porque é compartilhada: quem tentar escrever nela quebra alto, em
+// vez de contaminar o outro campo em silêncio.
+const LISTA_VAZIA = Object.freeze([]);
+
 const ITENS_TAB = [
   { id: "inicio", icon: "home", label: "Início" },
   { id: "gastos", icon: "list", label: "Transações" },
@@ -1680,7 +1696,7 @@ export function App() {
     recorrentes: cloud.recorrentes,
     cancelarRecorrente,
     editarRecorrente,
-    cartoes: cloud.cartoes || [],
+    cartoes: cloud.cartoes || LISTA_VAZIA,
     salvarCartao,
     excluirCartao,
     marcarTxPago,
@@ -1705,7 +1721,7 @@ export function App() {
     convitesRecebidos,
     convitesEnviados,
     desfazerParceria,
-    notificacoesParceria: cloud.notificacoesParceria || [],
+    notificacoesParceria: cloud.notificacoesParceria || LISTA_VAZIA,
     dispensarNotifParceria,
     usuario,
     sair: sairFirebase,
