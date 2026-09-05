@@ -23,7 +23,7 @@ export function fechamentoDoMes(mes, diaFechamento) {
 }
 
 // Data (yyyy-mm-dd) em que a fatura de um mês fecha.
-export function dataFechamento(faturaMes, diaFechamento) {
+function dataFechamento(faturaMes, diaFechamento) {
   const dia = fechamentoDoMes(faturaMes, diaFechamento);
   return `${faturaMes}-${String(dia).padStart(2, "0")}`;
 }

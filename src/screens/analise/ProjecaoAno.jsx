@@ -42,7 +42,7 @@ import { COR_POS_SOBRE, COR_NEG_SOBRE, COR_NEG_SOBRE_FORTE } from "../../lib/col
 import { vibrar } from "../../lib/haptics.js";
 import { useT } from "../../lib/i18n.jsx";
 
-export function calcularProjecaoAno({ ano, txs, recorrentes, preferences, mesAtual }) {
+function calcularProjecaoAno({ ano, txs, recorrentes, preferences, mesAtual }) {
   let orcamentoAno = 0;
   let entradasAno = 0;
   let gastosAno = 0;

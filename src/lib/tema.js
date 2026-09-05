@@ -37,7 +37,7 @@ export function salvarAparencia(paleta, modo) {
   }
 }
 
-export function sistemaPrefereDark() {
+function sistemaPrefereDark() {
   return (
     typeof window !== "undefined" &&
     !!window.matchMedia &&

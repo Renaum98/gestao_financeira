@@ -38,7 +38,7 @@ const CORES = {
   ate: { stopColor: `var(--logo-ate, ${GRADIENTE.ate})` },
 };
 
-export function LogoAnimado({ titulo }) {
+function LogoAnimado({ titulo }) {
   // O useId do React 18 devolve algo como ":r0:", e dois-pontos em `url(#...)`
   // não é referência válida — some com eles antes de usar como id.
   const id = React.useId().replace(/:/g, '');

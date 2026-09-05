@@ -62,7 +62,7 @@ function luminancia(hex) {
   return 0.2126 * canal(0) + 0.7152 * canal(2) + 0.0722 * canal(4);
 }
 
-export function ehCorClara(hex) {
+function ehCorClara(hex) {
   return luminancia(hex) > 0.45;
 }
 
@@ -99,7 +99,7 @@ export function novoCartao({ nome, cor, diaFechamento, limite }) {
   };
 }
 
-export function acharCartao(cartoes, id) {
+function acharCartao(cartoes, id) {
   if (!id) return null;
   return (cartoes || []).find((c) => c.id === id) || null;
 }
