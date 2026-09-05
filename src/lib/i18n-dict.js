@@ -8,10 +8,11 @@
 // Os comentários de seção abaixo são só organização: o objeto é PLANO e as
 // chaves valem pro app inteiro. Repetir uma chave numa seção nova não cria uma
 // tradução local — é um no-op silencioso, e o último valor vence. Doze chaves
-// já tinham nascido assim, cada uma repetida na seção onde alguém precisou dela
-// sem achar a de cima. Não custou nada porque as duas cópias diziam a mesma
-// coisa; o dia em que discordarem, quem editar a de cima vai jurar que mexeu no
-// app e não mexeu. Antes de acrescentar uma entrada, procure a chave no arquivo.
+// já nasceram assim, cada uma repetida na seção onde alguém precisou dela sem
+// achar a de cima; foram unificadas, e hoje o arquivo não tem nenhuma repetida.
+// Enquanto as duas cópias dizem a mesma coisa não custa nada; o dia em que
+// discordarem, quem editar a de cima vai jurar que mexeu no app e não mexeu.
+// Antes de acrescentar uma entrada, procure a chave no arquivo.
 
 export const EN = {
   // ─── Navegação (TabBar / Sidebar) ───
