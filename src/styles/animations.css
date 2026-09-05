@@ -7,7 +7,6 @@
   from { transform: scale(0.94); opacity: 0; }
   to   { transform: scale(1);    opacity: 1; }
 }
-@keyframes spin { to { transform: rotate(360deg); } }
 
 /* Card de saldo do mês — sem animações orgânicas (causavam reflow do texto
    ao atualizar valores). Mantemos só o visual estático: gradiente, bolhas

@@ -76,16 +76,12 @@ export function Icon({ name, size = 22, color = 'currentColor', strokeWidth = 2 
       return (<svg style={s} viewBox="0 0 24 24" {...props}><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>);
     case 'eye-off':
       return (<svg style={s} viewBox="0 0 24 24" {...props}><path d="M3 3l18 18"/><path d="M10.5 6.2A10.3 10.3 0 0112 6c7 0 10 6 10 6a16 16 0 01-3.4 4"/><path d="M6.6 6.6C3.6 8.4 2 12 2 12s3 6 10 6c1.6 0 3-.3 4.2-.7"/></svg>);
-    case 'filter':
-      return (<svg style={s} viewBox="0 0 24 24" {...props}><path d="M3 5h18M6 12h12M10 19h4"/></svg>);
     case 'trash':
       return (<svg style={s} viewBox="0 0 24 24" {...props}><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg>);
     case 'edit':
       return (<svg style={s} viewBox="0 0 24 24" {...props}><path d="M4 20h4l10-10-4-4L4 16v4z"/><path d="M14 6l4 4"/></svg>);
     case 'bell':
       return (<svg style={s} viewBox="0 0 24 24" {...props}><path d="M6 9a6 6 0 0112 0v5l2 3H4l2-3V9z"/><path d="M10 20a2 2 0 004 0"/></svg>);
-    case 'settings':
-      return (<svg style={s} viewBox="0 0 24 24" {...props}><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 00.3 1.8l.1.1a2 2 0 11-2.8 2.8l-.1-.1a1.7 1.7 0 00-1.8-.3 1.7 1.7 0 00-1 1.5V21a2 2 0 11-4 0v-.1a1.7 1.7 0 00-1-1.5 1.7 1.7 0 00-1.8.3l-.1.1a2 2 0 11-2.8-2.8l.1-.1a1.7 1.7 0 00.3-1.8 1.7 1.7 0 00-1.5-1H3a2 2 0 110-4h.1a1.7 1.7 0 001.5-1 1.7 1.7 0 00-.3-1.8l-.1-.1a2 2 0 112.8-2.8l.1.1a1.7 1.7 0 001.8.3h0a1.7 1.7 0 001-1.5V3a2 2 0 114 0v.1a1.7 1.7 0 001 1.5h0a1.7 1.7 0 001.8-.3l.1-.1a2 2 0 112.8 2.8l-.1.1a1.7 1.7 0 00-.3 1.8v0a1.7 1.7 0 001.5 1H21a2 2 0 110 4h-.1a1.7 1.7 0 00-1.5 1z"/></svg>);
     case 'target':
       return (<svg style={s} viewBox="0 0 24 24" {...props}><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5" fill={color}/></svg>);
     case 'history':

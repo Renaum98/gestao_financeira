@@ -38,13 +38,12 @@ const CORES = {
   ate: { stopColor: `var(--logo-ate, ${GRADIENTE.ate})` },
 };
 
-export function LogoAnimado({ animar = true, titulo }) {
+export function LogoAnimado({ titulo }) {
   // O useId do React 18 devolve algo como ":r0:", e dois-pontos em `url(#...)`
   // não é referência válida — some com eles antes de usar como id.
   const id = React.useId().replace(/:/g, '');
   const grad = `${id}-grad`;
   const corte = `${id}-corte`;
-  const cls = (base) => (animar ? base : undefined);
 
   return (
     <svg
@@ -79,7 +78,7 @@ export function LogoAnimado({ animar = true, titulo }) {
         {BARRAS.map((b, i) => (
           <rect
             key={b.x}
-            className={cls(`logo-barra logo-barra-${i + 1}`)}
+            className={`logo-barra logo-barra-${i + 1}`}
             x={b.x} y={b.y} width={b.largura} height={b.altura} rx={RAIO}
           />
         ))}
@@ -91,7 +90,7 @@ export function LogoAnimado({ animar = true, titulo }) {
           afeta a quina de fora do "V"; a de dentro segue reta, então a máscara
           continua valendo. */}
       <path
-        className={cls('logo-haste')}
+        className="logo-haste"
         d={HASTE}
         fill="none"
         stroke={`url(#${grad})`}
@@ -100,7 +99,7 @@ export function LogoAnimado({ animar = true, titulo }) {
         strokeLinejoin="round"
         pathLength="100"
       />
-      <path className={cls('logo-ponta')} d={PONTA} fill={`url(#${grad})`} />
+      <path className="logo-ponta" d={PONTA} fill={`url(#${grad})`} />
     </svg>
   );
 }

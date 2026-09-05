@@ -170,10 +170,11 @@ export function GastosScreen({ ctx }) {
 
   // Lista única do mês, ordenada da mais recente para a mais antiga.
   // O dia/mês continua visível por transação no próprio ItemTransacao.
-  const txOrdenadas = React.useMemo(
-    () => [...txMes, ...depMes].sort((a, b) => b.data.localeCompare(a.data)),
-    [txMes, depMes],
-  );
+  //
+  // Sem useMemo: `txMes` e `depMes` são recalculados a cada render (a filtragem
+  // acima devolve arrays novos), então nenhuma dependência se repetiria e o
+  // memo nunca acertaria — só cobraria a comparação.
+  const txOrdenadas = [...txMes, ...depMes].sort((a, b) => b.data.localeCompare(a.data));
 
   const cats = [
     "todas",

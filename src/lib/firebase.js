@@ -47,7 +47,6 @@ import {
   serverTimestamp,
   writeBatch,
   arrayUnion,
-  arrayRemove,
 } from "firebase/firestore";
 
 const firebaseConfig = {
@@ -165,5 +164,4 @@ export {
   serverTimestamp,
   writeBatch,
   arrayUnion,
-  arrayRemove,
 };
