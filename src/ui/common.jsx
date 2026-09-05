@@ -168,6 +168,10 @@ export function Card({ children, style = {}, onClick, className, ...rest }) {
 export function ItemTransacao({ tx, onClick, doParceiro = false, nomeParceiro = '', guardado = 0 }) {
   const t = useT();
   const ehEntrada = tx.tipo === 'entrada';
+  // Linha derivada de um depósito em caixinha (ver lib/caixinhas.js). Não é uma
+  // tx gravada: aparece na lista pra o dinheiro guardado ter rastro no mês, mas
+  // não tem categoria, pagamento, nem edição.
+  const ehGuardadoCx = tx.tipo === 'guardado';
   // Parte desta entrada que já foi pra uma caixinha (ver lib/guardado-entradas).
   // Esse dinheiro entrou mas não está mais disponível pra gastar — marcamos a
   // transação pra não parecer saldo livre.
@@ -178,7 +182,10 @@ export function ItemTransacao({ tx, onClick, doParceiro = false, nomeParceiro = 
   // mas não é renda nova — rotulamos como "Resgatado" pra não se confundir
   // com um salário/recebimento de verdade. Marcado por `caixinhaId`.
   const ehResgate = ehEntrada && !!tx.caixinhaId;
-  const cat = ehEntrada ? null : CATEGORIAS[tx.categoria];
+  const cat = ehEntrada || ehGuardadoCx ? null : CATEGORIAS[tx.categoria];
+  // Cor da caixinha de destino — é o que dá pra reconhecer de qual delas se
+  // trata sem ler o nome.
+  const corCx = tx.caixinhaCor || 'var(--primary)';
   const d = new Date(tx.data + 'T12:00:00');
   const dia = d.getDate(), mesC = t(MESES_CURTO[d.getMonth()]);
   const parc = tx.parcelas;
@@ -186,7 +193,7 @@ export function ItemTransacao({ tx, onClick, doParceiro = false, nomeParceiro = 
   const inicialParceiro = (nomeParceiro?.trim()[0] || '?').toUpperCase();
   // No modo "parceiro" deixamos tudo bem mais discreto: cores muted, sem hover.
   const corTitulo = doParceiro ? 'var(--muted)' : 'var(--ink)';
-  const corValor = doParceiro || (temGuardado && guardadoTudo)
+  const corValor = doParceiro || ehGuardadoCx || (temGuardado && guardadoTudo)
     ? 'var(--muted)'
     : (ehEntrada ? COR_POS : 'var(--ink)');
   return (
@@ -196,7 +203,15 @@ export function ItemTransacao({ tx, onClick, doParceiro = false, nomeParceiro = 
       opacity: doParceiro ? 0.78 : 1,
     }}>
       <div style={{ position: 'relative', flexShrink: 0 }}>
-        {ehEntrada ? (
+        {ehGuardadoCx ? (
+          <div style={{
+            width: 42, height: 42, borderRadius: 14,
+            background: `color-mix(in oklab, ${corCx} 16%, transparent)`,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>
+            <Icon name="piggy" size={20} color={corCx} strokeWidth={2.2} />
+          </div>
+        ) : ehEntrada ? (
           <div style={{
             width: 42, height: 42, borderRadius: 14,
             background: doParceiro ? 'var(--surface-sunken)' : COR_POS_FUNDO,
@@ -268,7 +283,13 @@ export function ItemTransacao({ tx, onClick, doParceiro = false, nomeParceiro = 
           )}
         </div>
         <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 2, display: 'flex', alignItems: 'center', gap: 6 }}>
-          {ehEntrada ? (
+          {ehGuardadoCx ? (
+            <span style={{ fontWeight: 700, color: 'var(--muted)' }}>
+              {t('Guardado')} · {tx.origem?.tipo === 'entrada'
+                ? t('Da entrada: {desc}', { desc: tx.origem.descricao || t('removida') })
+                : t('Do orçamento')}
+            </span>
+          ) : ehEntrada ? (
             <span style={{ fontWeight: 700, color: corValor }}>
               {ehResgate ? t('Resgatado') : t('Entrada')}
               {temGuardado && (guardadoTudo ? ` · ${t('na caixinha')}` : ` · ${t('parte na caixinha')}`)}
@@ -297,7 +318,9 @@ export function ItemTransacao({ tx, onClick, doParceiro = false, nomeParceiro = 
           // Entrada inteiramente guardada: risca o valor — entrou, mas já saiu.
           textDecoration: guardadoTudo && temGuardado ? 'line-through' : 'none',
         }}>
-          {ehEntrada && !doParceiro ? `+${valorFmt}` : valorFmt}
+          {ehGuardadoCx
+            ? `−${valorFmt}`
+            : ehEntrada && !doParceiro ? `+${valorFmt}` : valorFmt}
         </div>
         <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 2 }}>
           {dia} {mesC}

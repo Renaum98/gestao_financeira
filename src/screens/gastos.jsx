@@ -16,12 +16,13 @@ import { Expansivel, useUltimoNaoNulo } from "../ui/expansivel.jsx";
 import { ConfirmModal } from "../ui/confirm-modal.jsx";
 import { COR_NEG, COR_NEG_FUNDO, COR_POS } from "../lib/colors.js";
 import { guardadoPorTx, ajustarGuardado } from "../lib/guardado-entradas.js";
+import { depositosDoMes } from "../lib/caixinhas.js";
 import { PAG_CARTAO } from "../lib/fatura.js";
 import { corDoCartao, corTextoSobre } from "../lib/cartoes.js";
 import { useT } from "../lib/i18n.jsx";
 
 export function GastosScreen({ ctx }) {
-  const { txs, mes, setMes, todosMeses, irPara, excluirTx, caixinhas, cartoes = [], ehDesktop } = ctx;
+  const { txs, mes, setMes, todosMeses, irPara, excluirTx, caixinhas, cartoes = [], ehDesktop, usuario } = ctx;
   const t = useT();
   const [filtro, setFiltro] = React.useState("todas");
   const [filtroPag, setFiltroPag] = React.useState("todos");
@@ -72,6 +73,16 @@ export function GastosScreen({ ctx }) {
 
   const ehFiltroEntradas = filtro === "entradas";
 
+  // Dinheiro que foi pra dentro de uma caixinha neste mês. Vira linha na lista
+  // como qualquer movimento — só não entra no "Total", que o orçamento do mês
+  // já abateu esse valor (ver lib/caixinhas.js).
+  const depositosMes = React.useMemo(
+    () => depositosDoMes(caixinhas, mes, usuario?.uid),
+    [caixinhas, mes, usuario],
+  );
+  const temGuardados = depositosMes.length > 0;
+  const ehFiltroGuardados = filtro === "guardados";
+
   // Quanto de cada entrada do mês já foi pra uma caixinha — o item da lista
   // sinaliza esse valor como indisponível.
   const guardadoTx = React.useMemo(
@@ -92,10 +103,12 @@ export function GastosScreen({ ctx }) {
   React.useEffect(() => {
     if (ehFiltroEntradas) {
       if (!temEntradas) setFiltro("todas");
+    } else if (ehFiltroGuardados) {
+      if (!temGuardados) setFiltro("todas");
     } else if (filtro !== "todas" && !catsComTx.has(filtro)) {
       setFiltro("todas");
     }
-  }, [filtro, ehFiltroEntradas, catsComTx, temEntradas]);
+  }, [filtro, ehFiltroEntradas, ehFiltroGuardados, catsComTx, temEntradas, temGuardados]);
   React.useEffect(() => {
     if (filtroPag !== "todos" && !pagsComTx.has(filtroPag)) setFiltroPag("todos");
   }, [filtroPag, pagsComTx]);
@@ -112,24 +125,44 @@ export function GastosScreen({ ctx }) {
   }, [filtroCartao, cartoesComTx, cartoes]);
 
   let txMes = txMesBruto;
+  // Os depósitos só acompanham "Todas" e o filtro deles: categoria e pagamento
+  // não existem numa linha de caixinha, e em "Entradas" ela seria o oposto do
+  // que o chip promete.
+  let depMes = ehFiltroEntradas || (!ehFiltroGuardados && filtro !== "todas")
+    ? []
+    : depositosMes;
   if (ehFiltroEntradas) {
     // Só entradas — categoria/pagamento não se aplicam a elas.
     txMes = txMes.filter((t) => t.tipo === "entrada");
+  } else if (ehFiltroGuardados) {
+    txMes = [];
   } else {
     if (filtro !== "todas") txMes = txMes.filter((t) => t.categoria === filtro);
-    if (filtroPag !== "todos")
+    if (filtroPag !== "todos") {
       txMes = txMes.filter((t) => t.pagamento === filtroPag);
+      depMes = [];
+    }
     if (filtroPag === PAG_CARTAO && filtroCartao !== "todos")
       txMes = txMes.filter((t) => (t.cartaoId || "sem") === filtroCartao);
   }
-  if (busca)
-    txMes = txMes.filter((t) =>
-      t.descricao.toLowerCase().includes(busca.toLowerCase()),
-    );
+  if (busca) {
+    const alvo = busca.toLowerCase();
+    txMes = txMes.filter((t) => t.descricao.toLowerCase().includes(alvo));
+    depMes = depMes.filter((d) => d.descricao.toLowerCase().includes(alvo));
+  }
 
-  // No filtro de entradas, o "Total" soma o que entrou (totalGeral ignora
-  // entradas e daria zero).
-  const total = ehFiltroEntradas ? totalEntradas(txMes) : totalGeral(txMes);
+  // Quanto das linhas visíveis foi pra dentro de uma caixinha.
+  const depositadoNoFiltro = depMes.reduce((s, d) => s + d.valor, 0);
+  // O "Total" muda de assunto conforme o chip: em Entradas soma o que entrou
+  // (totalGeral ignora entradas e daria zero) e em Guardado soma os depósitos.
+  // Em "Todas" ele continua sendo só a soma dos GASTOS: o dinheiro guardado já
+  // foi descontado do orçamento do mês, e somá-lo aqui contaria duas vezes —
+  // por isso ele aparece numa linha separada, logo abaixo.
+  const total = ehFiltroEntradas
+    ? totalEntradas(txMes)
+    : ehFiltroGuardados
+      ? depositadoNoFiltro
+      : totalGeral(txMes);
   // No filtro de entradas, quanto do total já está preso numa caixinha.
   const guardadoNoFiltro = ehFiltroEntradas
     ? txMes.reduce((s, t) => s + (guardadoTx[t.id] || 0), 0)
@@ -138,13 +171,14 @@ export function GastosScreen({ ctx }) {
   // Lista única do mês, ordenada da mais recente para a mais antiga.
   // O dia/mês continua visível por transação no próprio ItemTransacao.
   const txOrdenadas = React.useMemo(
-    () => [...txMes].sort((a, b) => b.data.localeCompare(a.data)),
-    [txMes],
+    () => [...txMes, ...depMes].sort((a, b) => b.data.localeCompare(a.data)),
+    [txMes, depMes],
   );
 
   const cats = [
     "todas",
     ...(temEntradas ? ["entradas"] : []),
+    ...(temGuardados ? ["guardados"] : []),
     ...catsMinhas().filter((c) => catsComTx.has(c)),
   ];
   const pags = ["todos", ...PAGAMENTOS.filter((p) => pagsComTx.has(p))];
@@ -192,13 +226,18 @@ export function GastosScreen({ ctx }) {
       }}
     >
       <div style={{ fontSize: 13, color: "var(--muted)", fontWeight: 600 }}>
-        {t("{n} transações ·", { n: txMes.length })}<br/> {t("Total:")}{" "}
+        {t("{n} transações ·", { n: txOrdenadas.length })}<br/> {t("Total:")}{" "}
         <span style={{ color: "var(--ink)", fontWeight: 700 }}>
           {fmtBRL(total)}
         </span>
         {guardadoNoFiltro > 0.005 && (
           <div style={{ fontSize: 11, fontWeight: 600, marginTop: 2 }}>
             {t("{x} já em caixinhas", { x: fmtBRL(guardadoNoFiltro) })}
+          </div>
+        )}
+        {depositadoNoFiltro > 0.005 && !ehFiltroGuardados && (
+          <div style={{ fontSize: 11, fontWeight: 600, marginTop: 2 }}>
+            {t("+ {x} guardado em caixinhas", { x: fmtBRL(depositadoNoFiltro) })}
           </div>
         )}
       </div>
@@ -285,7 +324,8 @@ export function GastosScreen({ ctx }) {
           {cats.map((c) => {
             const sel = filtro === c;
             const ehEntradas = c === "entradas";
-            const cat = c === "todas" || ehEntradas ? null : CATEGORIAS[c];
+            const ehGuardados = c === "guardados";
+            const cat = c === "todas" || ehEntradas || ehGuardados ? null : CATEGORIAS[c];
             // Chip "Entradas" ganha destaque verde (selecionado) pra sinalizar
             // que é dinheiro que entrou, não gasto.
             const bgSel = ehEntradas ? COR_POS : "var(--ink)";
@@ -327,7 +367,9 @@ export function GastosScreen({ ctx }) {
                   ? t("Todas")
                   : ehEntradas
                     ? t("Entradas")
-                    : t(cat.nome)}
+                    : ehGuardados
+                      ? t("Guardado")
+                      : t(cat.nome)}
               </button>
             );
           })}
@@ -335,7 +377,7 @@ export function GastosScreen({ ctx }) {
       </div>
 
       {/* Filtros de tipo de pagamento — não se aplicam a entradas */}
-      <Expansivel aberto={pags.length > 1 && !ehFiltroEntradas}>
+      <Expansivel aberto={pags.length > 1 && !ehFiltroEntradas && !ehFiltroGuardados}>
         <div style={{ padding: "6px 0 0" }}>
           <div
             className="carrossel"
@@ -388,7 +430,7 @@ export function GastosScreen({ ctx }) {
       </Expansivel>
 
       {/* Filtro por cartão — segunda linha, dentro do crédito */}
-      <Expansivel aberto={filtrosCartao.length > 0 && !ehFiltroEntradas}>
+      <Expansivel aberto={filtrosCartao.length > 0 && !ehFiltroEntradas && !ehFiltroGuardados}>
         <div style={{ padding: "6px 0 0" }}>
           <div
             className="carrossel"
@@ -482,7 +524,11 @@ export function GastosScreen({ ctx }) {
             />
           </div>
           <div style={{ fontSize: 15, fontWeight: 700, color: "var(--ink)" }}>
-            {ehFiltroEntradas ? t("Nenhuma entrada") : t("Nenhum gasto")}
+            {ehFiltroEntradas
+              ? t("Nenhuma entrada")
+              : ehFiltroGuardados
+                ? t("Nada guardado")
+                : t("Nenhum gasto")}
           </div>
           <div style={{ fontSize: 13, color: "var(--muted)", marginTop: 4 }}>
             {t("Tente outro filtro ou adicione um novo.")}
@@ -501,7 +547,13 @@ export function GastosScreen({ ctx }) {
               <ItemTransacao
                 tx={tx}
                 guardado={guardadoTx[tx.id]}
-                onClick={() => setAcaoAberta(tx.id)}
+                // Depósito não é tx: não há o que editar nem excluir aqui — o
+                // toque leva pra caixinha, que é onde ele se desfaz.
+                onClick={() =>
+                  tx.tipo === "guardado"
+                    ? irPara("caixinha", { id: tx.caixinhaId })
+                    : setAcaoAberta(tx.id)
+                }
               />
               {acaoAberta === tx.id && (
                 <div

@@ -358,6 +358,8 @@ export const EN = {
   "{n} transações ·": "{n} transactions ·",
   "Total:": "Total:",
   "{x} já em caixinhas": "{x} already in savings jars",
+  "+ {x} guardado em caixinhas": "+ {x} put into savings jars",
+  "Nada guardado": "Nothing saved",
   "Buscar gasto...": "Search expense...",
   "Todas": "All",
   "Todos": "All",
