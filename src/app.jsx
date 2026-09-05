@@ -508,7 +508,9 @@ function AreaDeTelas({ tela, params, ctx, secundaria, chaveTransicao }) {
 
   return (
     <div ref={palco} className="page-transition">
-      <React.Suspense fallback={<LoaderTela />}>
+      {/* O skeleton segue o DESTINO: quem navega pra Análise vê o contorno da
+          Análise, não o do Início (ver ui/loader.jsx). */}
+      <React.Suspense fallback={<LoaderTela tela={tela} />}>
         {[...vivas.current].map((id) => {
           const Tela = ABAS_VIVAS[id];
           const visivel = id === tela;
@@ -1669,7 +1671,7 @@ export function App() {
   if (onboarding)
     return (
       <I18nProvider lang={idioma}>
-        <React.Suspense fallback={<LoaderTela />}>
+        <React.Suspense fallback={<LoaderTela tela="onboarding" />}>
           <Onboarding onFim={finalizarOnboarding} />
         </React.Suspense>
       </I18nProvider>
