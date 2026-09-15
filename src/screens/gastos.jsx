@@ -501,10 +501,10 @@ export function GastosScreen({ ctx }) {
     <div
       key={chaveFiltro}
       className="lista-fade"
-      style={ehDesktop ? { paddingTop: 0 } : { padding: "16px var(--pad-x) 0" }}
+      style={ehDesktop ? { paddingTop: 0 } : { padding: "var(--esp-secao) var(--pad-x) 0" }}
     >
       {txOrdenadas.length === 0 ? (
-        <Card style={{ padding: 32, textAlign: "center" }}>
+        <Card style={{ padding: 28, textAlign: "center" }}>
           <div
             style={{
               width: 56,
@@ -536,7 +536,7 @@ export function GastosScreen({ ctx }) {
           </div>
         </Card>
       ) : (
-        <Card style={{ padding: "6px 16px" }}>
+        <Card style={{ padding: "4px 16px" }}>
           {txOrdenadas.map((tx, i) => (
             <div
               key={tx.id}
@@ -654,7 +654,7 @@ export function GastosScreen({ ctx }) {
           <div className="painel-lateral">
             <div className="painel-filtros">
               {resumoMes}
-              <div style={{ marginTop: 14 }}>{caixaBusca}</div>
+              <div style={{ marginTop: "var(--esp-secao)" }}>{caixaBusca}</div>
               {filtros}
             </div>
             {lista}
@@ -667,7 +667,7 @@ export function GastosScreen({ ctx }) {
           </div>
 
           {/* Busca */}
-          <div style={{ padding: "14px var(--pad-x) 0" }}>
+          <div style={{ padding: "var(--esp-secao) var(--pad-x) 0" }}>
             {caixaBusca}
           </div>
 

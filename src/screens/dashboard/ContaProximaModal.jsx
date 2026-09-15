@@ -97,7 +97,7 @@ export function ContaProximaModal({ tx, onFechar, onMarcarPago }) {
         </div>
       </div>
 
-      <div style={{ display: "flex", gap: 10, marginTop: 18 }}>
+      <div style={{ display: "flex", gap: 10, marginTop: 20 }}>
         <button
           onClick={onFechar}
           style={{

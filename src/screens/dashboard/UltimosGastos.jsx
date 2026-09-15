@@ -7,13 +7,13 @@ import { useT } from "../../lib/i18n.jsx";
 export function UltimosGastos({ recentes, irPara, guardadoTx = {} }) {
   const t = useT();
   return (
-    <div style={{ padding: "16px var(--pad-x) 0" }}>
+    <div style={{ padding: "var(--esp-secao) var(--pad-x) 0" }}>
       <div
         style={{
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
-          padding: "0 4px 6px",
+          padding: "0 4px var(--esp-titulo)",
         }}
       >
         <div style={{ fontSize: 15, fontWeight: 700, color: "var(--ink)" }}>
@@ -34,7 +34,7 @@ export function UltimosGastos({ recentes, irPara, guardadoTx = {} }) {
           {t("Ver todos →")}
         </button>
       </div>
-      <Card style={{ padding: "6px 16px" }}>
+      <Card style={{ padding: "4px 16px" }}>
         {recentes.length === 0 && (
           <div style={{ padding: 24, textAlign: "center", color: "var(--muted)", fontSize: 13 }}>
             {t("Sem gastos neste mês.")}

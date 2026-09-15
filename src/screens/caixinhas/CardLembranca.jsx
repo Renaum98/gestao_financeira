@@ -13,7 +13,7 @@ export function CardLembranca({ lembranca }) {
   if (!lembranca) return null;
 
   return (
-    <Card style={{ marginTop: 14, padding: 16, display: "flex", alignItems: "flex-start", gap: 12 }}>
+    <Card style={{ marginTop: "var(--esp-secao)", padding: 16, display: "flex", alignItems: "flex-start", gap: 12 }}>
       <div
         style={{
           width: 38,

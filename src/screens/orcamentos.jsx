@@ -189,7 +189,7 @@ export function OrcamentosScreen({ ctx }) {
 
   const secaoPagamento = (
     <>
-      <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: 0.4, padding: '0 4px 10px' }}>
+      <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: 0.4, padding: '0 4px var(--esp-titulo)' }}>
         {t("Por forma de pagamento")}
       </div>
       <Card style={{ padding: '14px 16px' }}>
@@ -334,7 +334,7 @@ export function OrcamentosScreen({ ctx }) {
 
   const secaoCategorias = (
     <>
-      <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: 0.4, padding: '0 4px 10px' }}>
+      <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: 0.4, padding: '0 4px var(--esp-titulo)' }}>
         {t("Por categoria")}
       </div>
       <Card style={{ padding: '4px 16px' }}>
@@ -415,7 +415,7 @@ export function OrcamentosScreen({ ctx }) {
           <div className="painel-lateral" style={{ "--painel-largura": "380px" }}>
             <div>
               {cardPrincipal}
-              <div style={{ marginTop: 20 }}>{secaoPagamento}</div>
+              <div style={{ marginTop: "var(--esp-secao)" }}>{secaoPagamento}</div>
             </div>
             <div>{secaoCategorias}</div>
           </div>
@@ -428,12 +428,12 @@ export function OrcamentosScreen({ ctx }) {
           </div>
 
           {/* Limite do cartão de crédito */}
-          <div style={{ padding: '20px var(--pad-x) 0' }}>
+          <div style={{ padding: 'var(--esp-secao) var(--pad-x) 0' }}>
             {secaoPagamento}
           </div>
 
           {/* Categorias */}
-          <div style={{ padding: '20px var(--pad-x) 0' }}>
+          <div style={{ padding: 'var(--esp-secao) var(--pad-x) 0' }}>
             {secaoCategorias}
           </div>
         </>

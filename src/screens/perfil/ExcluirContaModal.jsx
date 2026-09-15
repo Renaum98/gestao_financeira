@@ -143,7 +143,7 @@ export function ExcluirContaModal({ uid, meuEmail, meuNome, partnershipId, onFec
                 {erro}
               </div>
             )}
-            <div style={{ display: "flex", gap: 10, marginTop: 18 }}>
+            <div style={{ display: "flex", gap: 10, marginTop: 20 }}>
               <button
                 type="button"
                 onClick={onFechar}

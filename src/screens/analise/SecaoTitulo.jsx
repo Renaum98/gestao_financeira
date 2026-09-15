@@ -8,7 +8,7 @@ export function SecaoTitulo({ children }) {
         fontSize: 15,
         fontWeight: 700,
         color: "var(--ink)",
-        padding: "0 4px 8px",
+        padding: "0 4px var(--esp-titulo)",
       }}
     >
       {children}

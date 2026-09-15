@@ -9,13 +9,13 @@ export function CaixinhasPreview({ caixinhas, irPara }) {
   if (!caixinhas || caixinhas.length === 0) return null;
 
   return (
-    <div style={{ padding: "20px var(--pad-x) 0" }}>
+    <div style={{ padding: "var(--esp-secao) var(--pad-x) 0" }}>
       <div
         style={{
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
-          padding: "0 4px 8px",
+          padding: "0 4px var(--esp-titulo)",
         }}
       >
         <div style={{ fontSize: 15, fontWeight: 700, color: "var(--ink)" }}>{t("Caixinhas")}</div>
@@ -34,7 +34,7 @@ export function CaixinhasPreview({ caixinhas, irPara }) {
           {t("Ver todas →")}
         </button>
       </div>
-      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: "var(--esp-pilha)" }}>
         {caixinhas.slice(0, 3).map((cx) => (
           <CardCaixinha
             key={cx.id}

@@ -67,13 +67,13 @@ export function NotifItem({
 
 export function Secao({ titulo, subtitulo, acao, children }) {
   return (
-    <div style={{ padding: '4px var(--pad-x) 0', marginTop: 18 }}>
+    <div style={{ padding: 'var(--esp-secao) var(--pad-x) 0' }}>
       <div
         style={{
           display: 'flex',
           alignItems: 'flex-end',
           justifyContent: 'space-between',
-          padding: '0 4px 8px',
+          padding: '0 4px var(--esp-titulo)',
           gap: 12,
         }}
       >

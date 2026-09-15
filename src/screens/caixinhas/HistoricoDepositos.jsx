@@ -19,7 +19,7 @@ export function HistoricoDepositos({ depositos, cx, entradas, caixinhasCompartil
           color: "var(--muted)",
           textTransform: "uppercase",
           letterSpacing: 0.4,
-          padding: "24px 4px 8px",
+          padding: "var(--esp-secao) 4px var(--esp-titulo)",
         }}
       >
         {depositos.length === 0

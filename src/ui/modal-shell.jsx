@@ -43,7 +43,7 @@ export function ModalShell({ titulo, onFechar, onSalvar, salvarAtivo, corAcento,
           overflowX: "hidden",
           background: "var(--bg)",
           borderRadius: 28,
-          padding: "16px 20px 24px",
+          padding: "16px 20px 22px",
           boxShadow: "0 24px 60px rgba(0,0,0,0.28), 0 4px 12px rgba(0,0,0,0.08)",
           animation: "scaleIn .34s cubic-bezier(0.22, 1, 0.36, 1)",
         }}

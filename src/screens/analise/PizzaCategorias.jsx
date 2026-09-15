@@ -17,7 +17,7 @@ export function PizzaCategorias({ dados, total, comTitulo = false }) {
   const [ativa, setAtiva] = React.useState(null);
 
   return (
-    <div style={{ padding: "16px var(--pad-x) 0" }}>
+    <div style={{ padding: "var(--esp-secao) var(--pad-x) 0" }}>
       {comTitulo && <SecaoTitulo>{t("Por categoria")}</SecaoTitulo>}
       <Card>
         <div style={{ display: "flex", justifyContent: "center", padding: "10px 0" }}>

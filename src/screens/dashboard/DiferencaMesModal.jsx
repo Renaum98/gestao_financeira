@@ -64,7 +64,7 @@ export function DiferencaMesModal({ nomeMesAnt, valor, onTrazer, onIgnorar }) {
         </div>
       </div>
 
-      <div style={{ display: "flex", gap: 10, marginTop: 18 }}>
+      <div style={{ display: "flex", gap: 10, marginTop: 20 }}>
         <button
           onClick={onIgnorar}
           style={{

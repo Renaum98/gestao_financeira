@@ -29,6 +29,16 @@
      de antes) pra que o desktop possa abrir a margem sem que nenhuma regra
      precise existir no caminho do mobile. */
   --pad-x: 20px;
+  /* Respiros verticais de uma tela, por papel. Antes cada seção trazia o seu
+     número (10, 14, 16, 18, 20, 24…) e a mesma distância mudava de tela pra
+     tela; agora quem monta layout escolhe o papel, e o número mora aqui.
+     - secao:  entre dois blocos de uma tela (card → título do próximo, etc).
+               A primeira seção usa 4px porque a TopBar já deixa 12 embaixo.
+     - titulo: entre o título/rótulo de uma seção e o card dela.
+     - pilha:  entre cards empilhados numa lista. */
+  --esp-secao: 16px;
+  --esp-titulo: 8px;
+  --esp-pilha: 12px;
   color-scheme: light;
 }
 

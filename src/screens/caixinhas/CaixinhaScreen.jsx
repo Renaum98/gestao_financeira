@@ -137,7 +137,7 @@ export function CaixinhaScreen({ ctx, params }) {
         <CardLembranca lembranca={lembranca} />
 
         {/* CTA depositar / resgatar */}
-        <div style={{ display: "flex", gap: 10, marginTop: 14 }}>
+        <div style={{ display: "flex", gap: 10, marginTop: "var(--esp-secao)" }}>
           <button
             onClick={() => setModalDeposito(true)}
             style={{

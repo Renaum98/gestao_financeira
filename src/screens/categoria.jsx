@@ -47,7 +47,7 @@ export function CategoriaScreen({ ctx, params }) {
           </div>
         </div>
 
-        <Card style={{ marginTop: 18, padding: 20 }}>
+        <Card style={{ marginTop: "var(--esp-secao)", padding: 20 }}>
           <div style={{ fontSize: 12, color: "var(--muted)", fontWeight: 600 }}>
             {tr("Gasto neste mês")}
           </div>
@@ -114,12 +114,12 @@ export function CategoriaScreen({ ctx, params }) {
             color: "var(--muted)",
             textTransform: "uppercase",
             letterSpacing: 0.4,
-            padding: "20px 4px 8px",
+            padding: "var(--esp-secao) 4px var(--esp-titulo)",
           }}
         >
           {tr("{count} transações", { count: txMes.length })}
         </div>
-        <Card style={{ padding: "6px 16px" }}>
+        <Card style={{ padding: "4px 16px" }}>
           {txMes.length === 0 && (
             <div
               style={{

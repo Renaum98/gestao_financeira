@@ -235,7 +235,7 @@ function TopoSkel({ acao = false, titulo = 180 }) {
 // tamanho parecem uma tabela, não texto.
 function LinhasSkel({ n = 4, icone = 42, r = 14, valor = 64 }) {
   return (
-    <CardSkel style={{ padding: '6px 16px', gap: 0 }}>
+    <CardSkel style={{ padding: '4px 16px', gap: 0 }}>
       {Array.from({ length: n }, (_, i) => (
         <div key={i} style={{
           display: 'flex', alignItems: 'center', gap: 12, padding: '12px 0',
@@ -330,8 +330,8 @@ function SkelInicio() {
       </div>
 
       <div style={{
-        padding: '12px var(--pad-x) 0',
-        display: 'flex', flexDirection: 'column', gap: 10,
+        padding: 'var(--esp-secao) var(--pad-x) 0',
+        display: 'flex', flexDirection: 'column', gap: 'var(--esp-secao)',
       }}>
         <CardSkel style={{ gap: 10 }}>
           <Skeleton w={110} h={12} r={6} />
@@ -341,7 +341,7 @@ function SkelInicio() {
         <Skeleton w={'100%'} h={40} r={14} />
       </div>
 
-      <div style={{ padding: '18px var(--pad-x) 0' }}>
+      <div style={{ padding: 'var(--esp-secao) var(--pad-x) 0' }}>
         <Skeleton w={130} h={14} r={6} style={{ marginBottom: 12 }} />
         <LinhasSkel n={3} />
       </div>
@@ -363,13 +363,13 @@ function SkelTransacoes() {
         </div>
         <Skeleton w={96} h={38} r={999} />
       </div>
-      <div style={{ padding: '14px var(--pad-x) 0' }}>
+      <div style={{ padding: 'var(--esp-secao) var(--pad-x) 0' }}>
         <Skeleton w={'100%'} h={40} r={14} />
       </div>
       <div style={{ padding: '10px 0 0' }}>
         <ChipsSkel larguras={[62, 84, 90, 72, 66]} />
       </div>
-      <div style={{ padding: '16px var(--pad-x) 0' }}>
+      <div style={{ padding: 'var(--esp-secao) var(--pad-x) 0' }}>
         <LinhasSkel n={5} />
       </div>
     </>
@@ -381,7 +381,7 @@ function SkelAnalise() {
   return (
     <>
       <TopoSkel titulo={140} />
-      <div style={PAD_X}>
+      <div style={{ padding: '4px var(--pad-x) 0' }}>
         <CardSkel style={{ gap: 10 }}>
           <Skeleton w={130} h={12} r={6} />
           <Skeleton w={'48%'} h={24} r={8} />
@@ -389,11 +389,11 @@ function SkelAnalise() {
         </CardSkel>
       </div>
       <div style={{
-        padding: '12px var(--pad-x)', display: 'flex', justifyContent: 'flex-end',
+        padding: 'var(--esp-secao) var(--pad-x) var(--esp-titulo)', display: 'flex', justifyContent: 'flex-end',
       }}>
         <Skeleton w={96} h={38} r={999} />
       </div>
-      <div style={{ ...PAD_X, display: 'flex', flexDirection: 'column', gap: 14 }}>
+      <div style={{ ...PAD_X, display: 'flex', flexDirection: 'column', gap: 'var(--esp-secao)' }}>
         <CardSkel>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
             {[0, 1, 2, 3].map((i) => (
@@ -438,8 +438,8 @@ function SkelPerfil() {
         <Skeleton w={182} h={12} r={6} />
       </div>
       <div style={{
-        padding: '24px var(--pad-x) 0',
-        display: 'flex', flexDirection: 'column', gap: 14,
+        padding: 'var(--esp-secao) var(--pad-x) 0',
+        display: 'flex', flexDirection: 'column', gap: 'var(--esp-pilha)',
       }}>
         <CardSkel style={{ gap: 12 }}>
           <Skeleton w={100} h={13} r={6} />
@@ -466,7 +466,7 @@ function SkelOrcamentos() {
           <Skeleton w={160} h={11} r={6} />
         </CardSkel>
       </div>
-      <div style={{ padding: '20px var(--pad-x) 0' }}>
+      <div style={{ padding: 'var(--esp-secao) var(--pad-x) 0' }}>
         <Skeleton w={150} h={14} r={6} style={{ marginBottom: 12 }} />
         <CardSkel style={{ padding: '4px 16px', gap: 0 }}>
           {[0, 1, 2, 3, 4].map((i) => (
@@ -529,11 +529,11 @@ function SkelCaixinha() {
           <Skeleton w={200} h={32} r={8} />
           <Skeleton w={'100%'} h={8} r={999} />
         </CardSkel>
-        <div style={{ display: 'flex', gap: 10, marginTop: 14 }}>
+        <div style={{ display: 'flex', gap: 10, marginTop: 'var(--esp-secao)' }}>
           <Skeleton w={'100%'} h={46} r={14} />
           <Skeleton w={'100%'} h={46} r={14} />
         </div>
-        <Skeleton w={140} h={13} r={6} style={{ margin: '24px 0 8px' }} />
+        <Skeleton w={140} h={13} r={6} style={{ margin: 'var(--esp-secao) 0 var(--esp-titulo)' }} />
         <LinhasSkel n={3} icone={36} r={12} valor={0} />
       </div>
     </>
@@ -587,7 +587,7 @@ function SkelCategoria() {
           <Skeleton w={140} h={16} r={8} />
           <Skeleton w={180} h={28} r={8} />
         </CardSkel>
-        <div style={{ marginTop: 18 }}>
+        <div style={{ marginTop: 'var(--esp-secao)' }}>
           <LinhasSkel n={4} />
         </div>
       </div>

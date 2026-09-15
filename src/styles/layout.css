@@ -50,12 +50,12 @@
 }
 
 /* Pilha de cards independentes (Perfil, e o que mais vier). No mobile é a mesma
-   coluna de sempre — os 14px entre os cards são os mesmos que antes vinham de
-   espaçadores no JSX. No desktop vira duas colunas.
+   coluna de sempre, com o respiro padrão de pilha entre os cards. No desktop
+   vira duas colunas.
    Usamos `column-count` e não grid de propósito: os cards têm alturas bem
    diferentes e o grid alinharia por linha, deixando buracos embaixo dos cards
    curtos. O multicol equilibra as duas colunas sozinho. */
-.grade-cards > * { margin-bottom: 14px; }
+.grade-cards > * { margin-bottom: var(--esp-pilha); }
 .grade-cards > *:last-child { margin-bottom: 0; }
 .desktop-shell .grade-cards {
   column-count: 2;
@@ -87,14 +87,12 @@
 .grade-tiles {
   display: flex;
   flex-direction: column;
-  /* Cada tela empilhava com um respiro próprio; a variável preserva o do mobile
-     em vez de uniformizar por baixo dos panos. */
-  gap: var(--tiles-gap, 12px);
+  gap: var(--esp-pilha);
 }
 .desktop-shell .grade-tiles {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 14px;
+  gap: var(--esp-pilha);
   align-items: start;
 }
 

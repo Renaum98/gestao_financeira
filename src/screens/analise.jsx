@@ -159,7 +159,7 @@ export function AnaliseScreen({ ctx }) {
 
       <div
         className={spanAll}
-        style={{ padding: "0 var(--pad-x) 12px", display: "flex", justifyContent: "flex-end" }}
+        style={{ padding: "var(--esp-secao) var(--pad-x) var(--esp-titulo)", display: "flex", justifyContent: "flex-end" }}
       >
         <SeletorMes mes={mes} setMes={setMes} todosMeses={todosMeses} />
       </div>

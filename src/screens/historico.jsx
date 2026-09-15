@@ -127,7 +127,7 @@ export function HistoricoScreen({ ctx }) {
             color: "var(--muted)",
             textTransform: "uppercase",
             letterSpacing: 0.4,
-            padding: "0 4px 10px",
+            padding: "0 4px var(--esp-titulo)",
           }}
         >
           {t("Meses")}
@@ -136,7 +136,7 @@ export function HistoricoScreen({ ctx }) {
         {/* Um card por ano, e nenhum depende do outro: no desktop eles se
             repartem em colunas. Um ano aberto cresce dentro da própria célula
             (a grade usa align-items: start) em vez de esticar o vizinho. */}
-        <div className="grade-tiles" style={{ "--tiles-gap": "10px" }}>
+        <div className="grade-tiles">
           {anos.map((g) => {
             const aberto = abertos.has(g.ano);
             // O ano do mês que está aberto no app ganha destaque: recolhido,

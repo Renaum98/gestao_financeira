@@ -146,7 +146,7 @@ export function ProjecaoAno({ txs, recorrentes = [], preferences, mesAtual, span
   };
 
   return (
-    <div className={spanAll} style={{ padding: "0 var(--pad-x) 12px" }}>
+    <div className={spanAll} style={{ padding: "4px var(--pad-x) 0" }}>
       <CardDestaque
         style={{
           borderRadius: 28,

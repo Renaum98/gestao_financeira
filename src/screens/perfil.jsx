@@ -95,11 +95,11 @@ export function PerfilScreen({ ctx }) {
 
       <CabecalhoPerfil preferences={preferences} setPreferences={setPreferences} usuario={usuario} />
 
-      <div style={{ padding: "24px var(--pad-x) 0" }}>
+      <div style={{ padding: "var(--esp-secao) var(--pad-x) 0" }}>
         {/* Nenhum card daqui depende do vizinho — nem da ordem, nem da largura.
             É o que deixa a .grade-cards reorganizá-los em duas colunas no
-            desktop sem ajuste nenhum aqui dentro. No mobile ela só repõe os
-            14px de respiro que antes eram espaçadores no meio do JSX. */}
+            desktop sem ajuste nenhum aqui dentro. No mobile ela só repõe o
+            respiro de pilha que antes eram espaçadores no meio do JSX. */}
         <div className="grade-cards">
           <AparenciaCard preferences={preferences} setPreferences={setPreferences} />
 
