@@ -40,7 +40,7 @@ function LinhaFatura({ titulo, legenda, valor, destaque, cor }) {
         style={{
           width: 42,
           height: 42,
-          borderRadius: 12,
+          borderRadius: "var(--raio-bloco)",
           background: `color-mix(in oklab, ${corIcone} 14%, transparent)`,
           display: "flex",
           alignItems: "center",
@@ -101,16 +101,41 @@ function GrupoFatura({ grupo, varios, primeiro, t }) {
     ? `color-mix(in oklab, ${corDoCartao(cartao)} 65%, var(--ink))`
     : undefined;
 
-  // Com vários cartões o nome vira o título — quem lê precisa saber de quem é a
-  // fatura antes de saber de que mês ela é.
-  const tituloDe = (mes) => {
-    const nome = cartao ? cartao.nome : t("Sem cartão");
-    if (!cartao && !varios) return t("Fatura de {mes}", { mes: nomeMes(mes, t) });
-    return `${nome} · ${nomeMes(mes, t)}`;
-  };
+  // Com vários cartões cada grupo ganha um cabeçalho com o nome do cartão, e as
+  // linhas ficam só com o mês — quem lê sabe de quem é a fatura antes de saber
+  // de que mês ela é, sem repetir o nome em cada linha.
+  const tituloDe = (mes) => t("Fatura de {mes}", { mes: nomeMes(mes, t) });
 
   return (
     <div style={{ borderTop: primeiro ? "none" : "1px solid var(--linha)" }}>
+      {varios && (
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+            padding: "12px 0 2px",
+            fontSize: 12,
+            fontWeight: 700,
+            color: "var(--muted)",
+            textTransform: "uppercase",
+            letterSpacing: 0.4,
+          }}
+        >
+          <span
+            style={{
+              width: 8,
+              height: 8,
+              borderRadius: "var(--raio-pilula)",
+              background: cor || "var(--muted)",
+              flexShrink: 0,
+            }}
+          />
+          <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+            {cartao ? cartao.nome : t("Sem cartão")}
+          </span>
+        </div>
+      )}
       {fechada && (
         <LinhaFatura
           destaque
