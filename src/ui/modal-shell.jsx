@@ -117,38 +117,6 @@ export function Campo({ label, children }) {
   );
 }
 
-export function Toggle({ ativo, onChange }) {
-  return (
-    <div
-      onClick={() => onChange(!ativo)}
-      style={{
-        width: 42,
-        height: 26,
-        borderRadius: "var(--raio-pilula)",
-        background: ativo ? "var(--primary)" : "var(--surface-sunken)",
-        position: "relative",
-        cursor: "pointer",
-        transition: "background .15s",
-        flexShrink: 0,
-      }}
-    >
-      <div
-        style={{
-          position: "absolute",
-          top: 2,
-          left: ativo ? 18 : 2,
-          width: 22,
-          height: 22,
-          borderRadius: "var(--raio-pilula)",
-          background: "#fff",
-          transition: "left .15s",
-          boxShadow: "0 1px 3px rgba(0,0,0,0.15)",
-        }}
-      />
-    </div>
-  );
-}
-
 export const inputStyle = {
   width: "100%",
   padding: "12px 14px",

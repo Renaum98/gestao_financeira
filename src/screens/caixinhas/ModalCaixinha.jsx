@@ -6,7 +6,8 @@ import { formatarValorDigitado, formatarValorInicial, parseValorBR } from "../..
 import { useSelic, taxaAnualEfetiva } from "../../lib/selic.js";
 import { CORES_CAIXINHA } from "./utils.js";
 import { hojeISO } from "../../lib/datas.js";
-import { ModalShell, Campo, Toggle, inputStyle } from "../../ui/modal-shell.jsx";
+import { ModalShell, Campo, inputStyle } from "../../ui/modal-shell.jsx";
+import { Toggle } from "../../ui/common.jsx";
 import { Expansivel } from "../../ui/expansivel.jsx";
 import { simboloMoeda } from "../../lib/moeda.js";
 import { useT } from "../../lib/i18n.jsx";

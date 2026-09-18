@@ -1,41 +1,8 @@
 // parts.jsx — controles pequenos reusados na tela de Perfil.
 
 import { Icon } from "../../ui/icons.jsx";
+import { Toggle } from "../../ui/common.jsx";
 import { vibrar } from "../../lib/haptics.js";
-
-export function Toggle({ ativo, onChange }) {
-  return (
-    <div
-      onClick={() => {
-        vibrar();
-        onChange(!ativo);
-      }}
-      style={{
-        width: 42,
-        height: 26,
-        borderRadius: "var(--raio-pilula)",
-        background: ativo ? "var(--primary)" : "var(--surface-sunken)",
-        position: "relative",
-        cursor: "pointer",
-        transition: "background .15s",
-      }}
-    >
-      <div
-        style={{
-          position: "absolute",
-          top: 2,
-          left: ativo ? 18 : 2,
-          width: 22,
-          height: 22,
-          borderRadius: "var(--raio-pilula)",
-          background: "#fff",
-          transition: "left .15s",
-          boxShadow: "0 1px 3px rgba(0,0,0,0.15)",
-        }}
-      />
-    </div>
-  );
-}
 
 // Controle segmentado — as opções lado a lado, uma acesa. Usado pelo Tema e
 // pelo Modo leve; nasceu dentro do AparenciaCard e saiu de lá quando o segundo

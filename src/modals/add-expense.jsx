@@ -14,6 +14,7 @@ import {
 import { CatChip, Icon, iconePagamento } from "../ui/icons.jsx";
 import { Expansivel, useUltimoNaoNulo } from "../ui/expansivel.jsx";
 import { ModalOverlay } from "../ui/modal-base.jsx";
+import { Toggle } from "../ui/common.jsx";
 import { vibrar } from "../lib/haptics.js";
 import { ConfirmModal } from "../ui/confirm-modal.jsx";
 import { COR_POS, COR_AVISO, COR_NEG } from "../lib/colors.js";
@@ -1034,7 +1035,7 @@ export function AddExpenseModal({ ctx, params }) {
                 {t("Útil para assinaturas, aluguel e mensalidades.")}
               </div>
             </div>
-            <ToggleSimples ativo={ehRecorrente} onChange={setEhRecorrente} />
+            <Toggle ativo={ehRecorrente} onChange={setEhRecorrente} />
           </label>
         )}
 
@@ -1203,41 +1204,6 @@ export function AddExpenseModal({ ctx, params }) {
       />
     )}
     </>
-  );
-}
-
-function ToggleSimples({ ativo, onChange }) {
-  return (
-    <div
-      onClick={(e) => {
-        e.preventDefault();
-        onChange(!ativo);
-      }}
-      style={{
-        width: 42,
-        height: 26,
-        borderRadius: "var(--raio-pilula)",
-        background: ativo ? "var(--primary)" : "var(--surface-sunken)",
-        position: "relative",
-        cursor: "pointer",
-        transition: "background .15s",
-        flexShrink: 0,
-      }}
-    >
-      <div
-        style={{
-          position: "absolute",
-          top: 2,
-          left: ativo ? 18 : 2,
-          width: 22,
-          height: 22,
-          borderRadius: "var(--raio-pilula)",
-          background: "#fff",
-          transition: "left .15s",
-          boxShadow: "0 1px 3px rgba(0,0,0,0.15)",
-        }}
-      />
-    </div>
   );
 }
 

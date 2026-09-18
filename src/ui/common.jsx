@@ -6,6 +6,7 @@ import { CATEGORIAS, MESES_CURTO, fmtBRL, fmtBRLCompacto, rotuloMesT } from '../
 import { Icon, CatChip, iconePagamento } from './icons.jsx';
 import { COR_POS, COR_POS_FUNDO } from '../lib/colors.js';
 import { useT } from '../lib/i18n.jsx';
+import { vibrar } from '../lib/haptics.js';
 
 // Quanto a página precisa descer pra o botão de voltar encolher. Baixo de
 // propósito: o gesto de descer já começou, o botão sai da frente junto.
@@ -142,6 +143,45 @@ export function SeletorMes({ mes, setMes, todosMeses }) {
       }}>
         <Icon name="arrow-right" size={14} color="var(--ink)" strokeWidth={2.4} />
       </button>
+    </div>
+  );
+}
+
+// Interruptor liga/desliga. Vibra ao virar, como os outros controles de toque
+// do app. O preventDefault é pra quando ele mora dentro de um <label>: sem
+// ele, o clique dispara a ação padrão do rótulo por cima da nossa.
+export function Toggle({ ativo, onChange }) {
+  return (
+    <div
+      onClick={(e) => {
+        e.preventDefault();
+        vibrar();
+        onChange(!ativo);
+      }}
+      style={{
+        width: 42,
+        height: 26,
+        borderRadius: 'var(--raio-pilula)',
+        background: ativo ? 'var(--primary)' : 'var(--surface-sunken)',
+        position: 'relative',
+        cursor: 'pointer',
+        transition: 'background .15s',
+        flexShrink: 0,
+      }}
+    >
+      <div
+        style={{
+          position: 'absolute',
+          top: 2,
+          left: ativo ? 18 : 2,
+          width: 22,
+          height: 22,
+          borderRadius: 'var(--raio-pilula)',
+          background: '#fff',
+          transition: 'left .15s',
+          boxShadow: '0 1px 3px rgba(0,0,0,0.15)',
+        }}
+      />
     </div>
   );
 }
