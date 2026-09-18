@@ -35,12 +35,12 @@ import { lerEnviadas, mesclarEnviadas } from './notif-enviadas.js';
 // servidor. É pública mesmo; a privada mora só na Vercel (VAPID_PRIVATE_KEY,
 // com uma cópia no .env local fora do git). Mesmo esquema da cineteca.
 // ⚠️ Trocar esta invalida TODAS as assinaturas já feitas nos aparelhos.
-export const VAPID_PUBLIC_KEY =
+const VAPID_PUBLIC_KEY =
   'BHH2JUM77uUq667wnxMsOhFfQxGdTrU-SJUODNAJJm6AluY9HqBl8YInBuEa9qN-FUBKAGueO8GHyac5uG8fF5o';
 
 const COLECAO = 'pushSubs';
 
-export function pushSuportado() {
+function pushSuportado() {
   return (
     typeof window !== 'undefined' &&
     'serviceWorker' in navigator &&
