@@ -1,6 +1,6 @@
 # MyCounts — gestão financeira
 
-App de finanças pessoais para uso diário no celular. **PWA** instalável, dados sincronizados em **Firebase Firestore**, login por **e-mail e senha** com verificação. Stack: React + Vite + Firebase, sem backend próprio.
+App de finanças pessoais para uso diário no celular. **PWA** instalável, dados sincronizados em **Firebase Firestore**, login por **e-mail e senha** com verificação. Stack: React + Vite + Firebase, sem backend próprio — a única função de servidor é o cron de notificações push, na Vercel.
 
 Para a lista do que o app faz, veja [FUNCIONALIDADES.md](FUNCIONALIDADES.md). Para entender o código por dentro, o [Guia do Projeto](GUIA-DO-PROJETO.md).
 
@@ -56,6 +56,17 @@ Sem a variável de ambiente o módulo não faz nada e o app roda como antes — 
 
 Vale ligar também, no Console: **Authentication → Settings → Proteção contra enumeração de e-mail**, e a política de senha (mínimo 8 caracteres), que hoje só é exigida no cliente.
 
+## Notificações push (opcional)
+
+Os lembretes de contas a vencer disparam sozinhos quando o app abre (Web Notifications, sem servidor). Pra avisar **com o app fechado**, o app assina Web Push e um cron na Vercel manda os lembretes uma vez por dia — a mesma montagem do push da cineteca (`bib_filmes`): uma função em `api/`, `web-push` com chaves VAPID e a conta de serviço do Firebase via `jose`, sem `firebase-admin`.
+
+- `src/lib/push.js` — assina o push no navegador (chave pública VAPID no código) e guarda a assinatura em `pushSubs/{id}` no Firestore;
+- `public/sw-notifications.js` — o service worker mostra o que chega;
+- `api/push/enviar.js` — o cron (`vercel.json` → `crons`, 09:00 BRT). Monta as notificações de cada usuário com a **mesma regra do app** (`calcularNotificacoes`, importado de `src/`);
+- `api/push/testar.js` — notificação de teste pros aparelhos de quem pediu (botão "Testar" na tela de Notificações).
+
+Sem configurar nada disso o app roda como antes. O passo a passo — Security Rules, conta de serviço, variáveis na Vercel, cron — está em [`docs/push-setup.md`](docs/push-setup.md).
+
 ## Deploy
 
 O app é servido a partir da raiz do domínio (`base: '/'` em `vite.config.js`) e publicado na **Vercel**. O [`vercel.json`](vercel.json) cuida do que um PWA precisa e é fácil de errar:
@@ -66,7 +77,7 @@ O app é servido a partir da raiz do domínio (`base: '/'` em `vite.config.js`) 
 Para publicar:
 
 1. Importe o repositório na Vercel (o build é `npm run build`, saída em `dist/` — ela detecta sozinha).
-2. Em **Settings → Environment Variables**, adicione as variáveis `VITE_FIREBASE_*` do `.env.example`.
+2. Em **Settings → Environment Variables**, adicione as variáveis `VITE_FIREBASE_*` do `.env.example` (e as do push, se for usar — seção acima).
 3. Faça push na `main`.
 
 > Importante: depois do deploy, adicione o domínio em **Firebase → Authentication → Settings → Authorized domains**. Sem isso o login falha em produção mesmo com tudo o mais certo.
@@ -86,9 +97,16 @@ gestao_financeira/
 ├── vite.config.js              Vite + PWA (manifest, service worker)
 ├── vercel.json                 Rewrites de SPA + cache do PWA
 ├── firestore.rules             Security Rules — publique no Console
-├── .env.example                Template das variáveis Firebase
+├── .env.example                Template das variáveis Firebase (e as do push, do lado da Vercel)
+├── docs/push-setup.md          Passo a passo pra ligar o push
+├── api/                        Funções da Vercel (Node) — só o push usa
+│   ├── _lib/                     Firebase por REST (jose), envio web-push, montagem das mensagens
+│   └── push/
+│       ├── enviar.js             Cron diário: manda os lembretes
+│       └── testar.js             Notificação de teste pra quem pediu
 ├── public/
-│   └── logo.png                Ícone-fonte (gera manifest e favicon via scripts/generate-icons.mjs)
+│   ├── logo.png                Ícone-fonte (gera manifest e favicon via scripts/generate-icons.mjs)
+│   └── sw-notifications.js     Service worker: recebe o push e trata o clique
 └── src/
     ├── main.jsx                Entry point (ReactDOM.createRoot)
     ├── app.jsx                 App raiz: auth, navegação, estado central, tema
@@ -103,7 +121,8 @@ gestao_financeira/
     │   ├── caixinhas.js          Saldo de uma caixinha
     │   ├── selic.js              Meta Selic (API do BCB) + rendimento projetado
     │   ├── partnership.js        Conta compartilhada: convite, aceite, vínculo
-    │   ├── notifications.js      Lembretes nativos de contas a vencer
+    │   ├── notifications.js      Lembretes nativos de contas a vencer (ao abrir)
+    │   ├── push.js               Assinatura de Web Push + vínculo com a conta
     │   ├── i18n.jsx / i18n-dict.js  Tradução pt/en
     │   ├── moeda.js              BRL / USD / EUR / GBP (formato, sem câmbio)
     │   ├── export.js             Planilha .xlsx sob demanda

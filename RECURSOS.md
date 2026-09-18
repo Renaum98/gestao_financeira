@@ -2,7 +2,7 @@
 
 **App de finanças pessoais para o dia a dia no celular.** PWA instalável, dados sincronizados em tempo real, funciona offline e pode ser usado sozinho ou a dois.
 
-React + Vite + Firebase (Auth + Firestore). Sem backend próprio — quem controla o acesso são as Security Rules.
+React + Vite + Firebase (Auth + Firestore). Sem backend próprio — quem controla o acesso são as Security Rules; a única função de servidor é o cron que manda as notificações push.
 
 ---
 
@@ -22,7 +22,7 @@ React + Vite + Firebase (Auth + Firestore). Sem backend próprio — quem contro
 
 **Conta compartilhada** — convite por e-mail e, a partir do aceite, os dois enxergam os gastos um do outro com a autoria preservada em cada lançamento e em cada gráfico.
 
-**E ainda** — simulador de gasto antes de gastar, lembretes nativos de contas a vencer, exportação em `.xlsx` e relatório mensal em PDF, tema claro/escuro, 7 paletas, 2 idiomas e 4 moedas.
+**E ainda** — simulador de gasto antes de gastar, lembretes de contas a vencer (ao abrir o app e, por push, com ele fechado), exportação em `.xlsx` e relatório mensal em PDF, tema claro/escuro, 7 paletas, 2 idiomas e 4 moedas.
 
 ---
 

@@ -1,11 +1,16 @@
 // notifications.js — Disparo de notificações nativas (Web Notifications API)
 // para contas a vencer. Funciona no Chrome/Android e em PWAs instalados no iOS 16.4+.
-// As notificações são locais (não usam push remoto) — disparadas sempre que o
-// app é aberto e há itens não notificados pendentes.
+//
+// Este é o disparo LOCAL: acontece sempre que o app é aberto e há itens não
+// notificados pendentes. O complemento com o app fechado é o push remoto
+// (lib/push.js + api/push/enviar.js), que usa a mesma regra e os mesmos
+// textos — api/_lib/mensagens.js é o espelho de `dispararPendentes`; quem
+// mudar um texto aqui muda lá também. Os dois compartilham o registro de
+// "já avisei" (notif-enviadas.js) pra nenhum repetir o outro.
 
 import { CATEGORIAS, fmtBRL } from '../data.js';
-
-const ENVIADAS_KEY = 'finca.notif.enviadas';
+import { lerEnviadas, gravarEnviadas } from './notif-enviadas.js';
+import { sincronizarPush, registrarEnviadasNoPush } from './push.js';
 
 export function notificacoesSuportadas() {
   return typeof window !== 'undefined' && 'Notification' in window;
@@ -26,24 +31,6 @@ export async function pedirPermissaoNotificacoes() {
   } catch {
     return 'denied';
   }
-}
-
-function lerEnviadas() {
-  try {
-    const raw = localStorage.getItem(ENVIADAS_KEY);
-    return raw ? new Set(JSON.parse(raw)) : new Set();
-  } catch {
-    return new Set();
-  }
-}
-
-function gravarEnviadas(set, idsAtivos) {
-  // Mantém só IDs ainda ativos para não crescer indefinidamente.
-  const ativos = new Set(idsAtivos);
-  const limpo = [...set].filter((id) => ativos.has(id));
-  try {
-    localStorage.setItem(ENVIADAS_KEY, JSON.stringify(limpo));
-  } catch {}
 }
 
 async function mostrarNotificacao(titulo, opcoes) {
@@ -81,7 +68,13 @@ export async function dispararPendentes({
   if (!notificacoesSuportadas()) return 0;
   if (Notification.permission !== 'granted') return 0;
 
+  // Antes de ler o registro local: traz do servidor o que já chegou por push
+  // neste aparelho, senão o app repetiria ao abrir o que o cron mandou de
+  // manhã. Resolve null (e rápido) quando não há push — segue como sempre.
+  await sincronizarPush();
+
   const enviadas = lerEnviadas();
+  const novas = [];
   const lidasSet = new Set(lidas);
   const hoje = new Date();
   hoje.setHours(0, 0, 0, 0);
@@ -109,6 +102,7 @@ export async function dispararPendentes({
     });
     if (ok) {
       enviadas.add(tx.id);
+      novas.push(tx.id);
       disparadas += 1;
     }
   }
@@ -124,6 +118,7 @@ export async function dispararPendentes({
     });
     if (ok) {
       enviadas.add(tx.id);
+      novas.push(tx.id);
       disparadas += 1;
     }
   }
@@ -141,6 +136,7 @@ export async function dispararPendentes({
     });
     if (ok) {
       enviadas.add(a.id);
+      novas.push(a.id);
       disparadas += 1;
     }
   }
@@ -158,10 +154,14 @@ export async function dispararPendentes({
     });
     if (ok) {
       enviadas.add(a.id);
+      novas.push(a.id);
       disparadas += 1;
     }
   }
 
   gravarEnviadas(enviadas, idsAtivos);
+  // Sentido inverso: o que mostrou agora vai pra assinatura de push, pra o
+  // servidor não mandar de novo. Não espera — é registro, não o disparo.
+  registrarEnviadasNoPush(novas);
   return disparadas;
 }

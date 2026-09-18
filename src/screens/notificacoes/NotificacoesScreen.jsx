@@ -12,6 +12,7 @@ import {
 } from '../../lib/notifications.js';
 import { calcularNotificacoes } from './calcular.js';
 import { BannerPermissao } from './BannerPermissao.jsx';
+import { LinhaPush } from './LinhaPush.jsx';
 import { EstadoVazio } from './EstadoVazio.jsx';
 import { NotifParceriaItem } from './NotifParceriaItem.jsx';
 import { ConviteItem } from './ConviteItem.jsx';
@@ -92,6 +93,8 @@ export function NotificacoesScreen({ ctx }) {
       {notificacoesSuportadas() && permissao !== 'granted' && permissao !== 'unsupported' && (
         <BannerPermissao permissao={permissao} onAtivar={ativarNotificacoes} />
       )}
+
+      {permissao === 'granted' && <LinhaPush permissao={permissao} />}
 
       {total === 0 && <EstadoVazio />}
 

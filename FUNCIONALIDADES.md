@@ -2,7 +2,7 @@
 
 App de finanças pessoais para uso diário no celular. PWA instalável, dados sincronizados em tempo real, funciona offline e pode ser usado sozinho ou a dois.
 
-**Stack:** React + Vite + Firebase (Auth + Firestore). Sem backend próprio — o app fala direto com o Firestore, e quem controla o acesso são as Security Rules.
+**Stack:** React + Vite + Firebase (Auth + Firestore). Sem backend próprio — o app fala direto com o Firestore, e quem controla o acesso são as Security Rules. A única função de servidor é o cron de notificações push, na Vercel.
 
 ---
 
@@ -61,7 +61,10 @@ Convite por e-mail, aceite pelo outro lado, e a partir daí os dois enxergam os 
 
 ## Notificações
 
-Lembretes nativos de contas a vencer, no Chrome/Android e em PWAs instalados no iOS 16.4+. São **locais**, não push remoto: disparam quando o app abre e há pendência não avisada.
+Lembretes nativos de contas a vencer, parcelamentos terminando e orçamentos estourados, no Chrome/Android e em PWAs instalados no iOS 16.4+. Chegam de dois jeitos que não se repetem:
+
+- **ao abrir o app** — disparo local, na hora, do que ainda não foi avisado;
+- **com o app fechado** — Web Push mandado por um cron diário na Vercel, que usa a mesma regra e os mesmos textos do app. Um botão "Testar" na tela de Notificações confirma que o aparelho está recebendo.
 
 ## Exportar
 

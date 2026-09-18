@@ -72,8 +72,9 @@ export default [
   },
 
   {
-    // Scripts de build rodam no Node, não no navegador.
-    files: ['scripts/**/*.{js,mjs}', '*.config.js'],
+    // Scripts de build e as funções da Vercel (api/) rodam no Node, não no
+    // navegador.
+    files: ['scripts/**/*.{js,mjs}', 'api/**/*.js', '*.config.js'],
     languageOptions: {
       ecmaVersion: 'latest',
       sourceType: 'module',

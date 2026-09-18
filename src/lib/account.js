@@ -10,7 +10,8 @@
 //
 //   1) Se há parceria ativa → marca a partnership como desfeita (o parceiro
 //      vê via snapshot e recebe a notificação igual ao "desfazer" comum).
-//   2) Deleta todos os convites em que sou `fromUid` ou `toUid`.
+//   2) Deleta todos os convites em que sou `fromUid` ou `toUid`, e as
+//      assinaturas de push da conta (`pushSubs` com o meu uid).
 //   3) Deleta o doc `userIndex/{email}`.
 //   4) Deleta o doc `users/{uid}`.
 //   5) Deleta o usuário do Firebase Auth.
@@ -37,6 +38,7 @@ const USERS = "users";
 const USER_INDEX = "userIndex";
 const INVITES = "invites";
 const PARTNERSHIPS = "partnerships";
+const PUSH_SUBS = "pushSubs";
 
 async function marcarParceriaComoDesfeita({ uid, meuNome, partnershipId }) {
   if (!partnershipId) return;
@@ -67,6 +69,19 @@ async function apagarConvites(uid) {
   await Promise.all([apagar("fromUid"), apagar("toUid")]);
 }
 
+// Sem isto o cron de push (api/push/enviar.js) continuaria achando as
+// assinaturas — ele até as apaga sozinho ao ver que o user doc sumiu, mas só
+// na rodada seguinte.
+async function apagarPushSubs(uid) {
+  try {
+    const q = query(collection(db, PUSH_SUBS), where("uid", "==", uid));
+    const snap = await getDocs(q);
+    await Promise.all(snap.docs.map((d) => deleteDoc(d.ref)));
+  } catch (err) {
+    console.warn("[excluirConta] falha ao apagar assinaturas de push:", err);
+  }
+}
+
 async function apagarUserIndex(email) {
   if (!email) return;
   try {
@@ -88,7 +103,7 @@ async function apagarDadosDaConta({
   // Passo 1: avisa o parceiro (se houver).
   await marcarParceriaComoDesfeita({ uid, meuNome, partnershipId });
   // Passos 2 e 3 em paralelo (independentes).
-  await Promise.all([apagarConvites(uid), apagarUserIndex(meuEmail)]);
+  await Promise.all([apagarConvites(uid), apagarPushSubs(uid), apagarUserIndex(meuEmail)]);
   // Passo 4: o doc do usuário em si.
   await deleteDoc(doc(db, USERS, uid));
 }

@@ -3,6 +3,12 @@
   "rewrites": [
     { "source": "/((?!api/).*)", "destination": "/index.html" }
   ],
+  "crons": [
+    { "path": "/api/push/enviar", "schedule": "0 12 * * *" }
+  ],
+  "functions": {
+    "api/push/enviar.js": { "maxDuration": 60 }
+  },
   "headers": [
     {
       "source": "/index.html",

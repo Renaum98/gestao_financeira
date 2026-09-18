@@ -10,6 +10,7 @@
 //   userIndex/{emailLower}      ← { uid, nome } pra busca por e-mail
 //   partnerships/{pId}          ← (Etapa 4) caixinhas compartilhadas
 //   invites/{inviteId}          ← (Etapa 2) convites in-app
+//   pushSubs/{subId}            ← assinaturas de Web Push (uma por aparelho)
 //
 // Postura contra bot: criar conta no Firebase Auth é grátis, instantâneo e
 // automatizável — não dá pra tratar "está autenticado" como sinal de que tem
@@ -149,6 +150,47 @@ service cloud.firestore {
       allow delete: if verificado()
         && (resource.data.fromUid == request.auth.uid
             || resource.data.toUid == request.auth.uid);
+    }
+
+    // ─── pushSubs/{subId} ─────────────────────────────────────────────────
+    // Assinatura de Web Push de um aparelho: endpoint + chaves que o serviço
+    // do navegador deu ao app, e o uid de quem estava logado. Quem LÊ a
+    // coleção inteira e manda as notificações é o cron na Vercel
+    // (api/push/enviar.js), com o Admin SDK — ele passa por cima destas
+    // regras. Aqui só entra o que o app faz pelo SDK web: criar/atualizar a
+    // própria assinatura (lib/push.js) e apagar as suas ao excluir a conta.
+    //
+    // O endpoint é uma URL secreta: quem a tem consegue mandar notificação
+    // pro aparelho. Daí a leitura ser só do dono. O `get` de um doc que não
+    // existe também passa (`resource == null`): é o primeiro passo do app ao
+    // assinar — "já tenho doc?" — e sem isso a leitura falharia com
+    // permission-denied em vez de responder "não". O id é o hash do endpoint,
+    // então saber que um doc existe não revela nada. `list` fica liberado
+    // porque as regras avaliam cada doc do resultado: a query do
+    // `apagarPushSubs` (where uid == eu) passa, e uma listagem sem filtro
+    // esbarra no primeiro doc alheio.
+    match /pushSubs/{subId} {
+      function camposDaAssinatura() {
+        return request.resource.data.keys().hasOnly(
+          ['uid', 'endpoint', 'keys', 'enviadas', 'criadoEm', 'atualizadoEm', 'ultimoEnvioEm'])
+          && request.resource.data.uid == request.auth.uid
+          && request.resource.data.endpoint is string
+          && request.resource.data.endpoint.size() <= 2048
+          // Colchetes de propósito: `.keys` seria o método keys() do map,
+          // não o campo chamado "keys".
+          && request.resource.data['keys'] is map
+          && request.resource.data.enviadas is list;
+      }
+      allow get: if verificado()
+        && (resource == null || resource.data.uid == request.auth.uid);
+      allow list: if verificado() && resource.data.uid == request.auth.uid;
+      allow create: if verificado() && camposDaAssinatura();
+      // O uid do doc não troca de mãos num update: outra conta no mesmo
+      // navegador refaz a assinatura em vez de sobrescrever (lib/push.js).
+      allow update: if verificado()
+        && resource.data.uid == request.auth.uid
+        && camposDaAssinatura();
+      allow delete: if verificado() && resource.data.uid == request.auth.uid;
     }
   }
 }
