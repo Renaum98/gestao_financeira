@@ -64,7 +64,7 @@ Convite por e-mail, aceite pelo outro lado, e a partir daí os dois enxergam os 
 Lembretes nativos de contas a vencer, parcelamentos terminando e orçamentos estourados, no Chrome/Android e em PWAs instalados no iOS 16.4+. Chegam de dois jeitos que não se repetem:
 
 - **ao abrir o app** — disparo local, na hora, do que ainda não foi avisado;
-- **com o app fechado** — Web Push mandado por um cron diário na Vercel, que usa a mesma regra e os mesmos textos do app. Um botão "Testar" na tela de Notificações confirma que o aparelho está recebendo.
+- **com o app fechado** — Web Push mandado por um cron diário na Vercel, que usa a mesma regra e os mesmos textos do app.
 
 ## Exportar
 

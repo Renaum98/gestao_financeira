@@ -706,11 +706,6 @@ export const EN = {
   "Avisamos quando uma conta estiver perto de vencer, mesmo com o app fechado.":
     "We'll let you know when a bill is about to be due, even with the app closed.",
   "Ativar": "Enable",
-  // LinhaPush
-  "Lembretes por push ativos neste aparelho": "Push reminders are on for this device",
-  "Testar": "Test",
-  "Enviado": "Sent",
-  "Falhou": "Failed",
   // ConviteItem
   "{nome} te convidou": "{nome} invited you",
   "Alguém": "Someone",

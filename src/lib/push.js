@@ -214,22 +214,3 @@ export async function registrarEnviadasNoPush(ids) {
     console.warn('[push] não registrou as enviadas:', err);
   }
 }
-
-// Pede ao servidor uma notificação de teste pra todos os aparelhos da conta.
-// Resolve com o resumo ({ assinaturas, enviadas, removidas }) ou null se falhou.
-export async function enviarPushDeTeste(idioma) {
-  const u = auth.currentUser;
-  if (!u) return null;
-  try {
-    const token = await u.getIdToken();
-    const r = await fetch('/api/push/testar', {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ idioma }),
-    });
-    if (!r.ok) return null;
-    return await r.json();
-  } catch {
-    return null;
-  }
-}

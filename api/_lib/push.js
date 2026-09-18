@@ -14,8 +14,8 @@ import webpush from 'web-push';
 
 let configurado = false;
 
-// Confere as chaves e configura o web-push. Os handlers chamam isto logo no
-// começo pra uma variável faltando virar UM 500 com a mensagem, e não um erro
+// Confere as chaves e configura o web-push. O cron chama isto logo no começo
+// pra uma variável faltando virar UM 500 com a mensagem, e não um erro
 // repetido por usuário no meio da rodada.
 export function prepararPush() {
   if (configurado) return;

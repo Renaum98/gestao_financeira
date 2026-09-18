@@ -1,7 +1,7 @@
 // firebase.js — o Firebase visto do SERVIDOR, sem o Admin SDK.
 //
-// O cliente fala com o Firestore pelo SDK web, preso às Security Rules. As
-// funções da Vercel precisam do contrário: ler os dados de TODOS os usuários
+// O cliente fala com o Firestore pelo SDK web, preso às Security Rules. O cron
+// da Vercel precisa do contrário: ler os dados de TODOS os usuários
 // pra decidir quem recebe push, e passar por cima das regras. É o que a conta
 // de serviço faz — e por isso ela é segredo de verdade (ao contrário da
 // `firebaseConfig` do cliente) e só existe como variável de ambiente na
@@ -15,7 +15,7 @@
 // FIREBASE_SERVICE_ACCOUNT: o JSON inteiro da conta de serviço, numa linha só
 // (Console → Configurações do projeto → Contas de serviço → Gerar nova chave).
 
-import { SignJWT, createRemoteJWKSet, importPKCS8, jwtVerify } from 'jose';
+import { SignJWT, importPKCS8 } from 'jose';
 
 // ─── Conta de serviço ──────────────────────────────────────────────────────
 
@@ -35,7 +35,7 @@ function contaDeServico() {
   return conta;
 }
 
-export function projeto() {
+function projeto() {
   return contaDeServico().project_id;
 }
 
@@ -67,32 +67,6 @@ async function accessTokenDeServico() {
   const json = await r.json();
   tokenDeServico = { valor: json.access_token, expira: Date.now() + json.expires_in * 1000 };
   return tokenDeServico.valor;
-}
-
-// ─── Quem está pedindo ─────────────────────────────────────────────────────
-
-// O JWKS do Firebase Auth; o `jose` cacheia por conta própria entre chamadas.
-const JWKS = createRemoteJWKSet(
-  new URL('https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com'),
-);
-
-// O uid de quem chamou, pelo ID token do Firebase no `Authorization: Bearer`.
-// Null se não veio token ou ele não é deste projeto. A função nunca aceita um
-// uid vindo do corpo da requisição — só o que está assinado no token.
-export async function uidDoIdToken(req) {
-  const cabecalho = req.headers.get('authorization') ?? '';
-  const token = cabecalho.startsWith('Bearer ') ? cabecalho.slice(7) : '';
-  if (!token) return null;
-  try {
-    const id = projeto();
-    const { payload } = await jwtVerify(token, JWKS, {
-      issuer: `https://securetoken.google.com/${id}`,
-      audience: id,
-    });
-    return typeof payload.sub === 'string' && payload.sub ? payload.sub : null;
-  } catch {
-    return null;
-  }
 }
 
 // ─── Firestore por REST ────────────────────────────────────────────────────
@@ -179,21 +153,6 @@ export async function listarColecao(colecao) {
     pageToken = json.nextPageToken || '';
   } while (pageToken);
   return docs;
-}
-
-// Os docs de `colecao` em que `campo == valor`: [{ caminho, dados }].
-export async function consultarPorCampo(colecao, campo, valor) {
-  const json = await chamar('POST', `${raiz()}:runQuery`, {
-    structuredQuery: {
-      from: [{ collectionId: colecao }],
-      where: { fieldFilter: { field: { fieldPath: campo }, op: 'EQUAL', value: paraValor(valor) } },
-    },
-  });
-  // A resposta é uma lista de { document?, readTime }: sem resultado, vem um
-  // item só com readTime.
-  return (json || [])
-    .filter((item) => item.document)
-    .map((item) => ({ caminho: caminhoDe(item.document.name), dados: deCampos(item.document.fields) }));
 }
 
 // Atualiza só os campos passados (os outros ficam como estão).

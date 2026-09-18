@@ -62,8 +62,7 @@ Os lembretes de contas a vencer disparam sozinhos quando o app abre (Web Notific
 
 - `src/lib/push.js` — assina o push no navegador (chave pública VAPID no código) e guarda a assinatura em `pushSubs/{id}` no Firestore;
 - `public/sw-notifications.js` — o service worker mostra o que chega;
-- `api/push/enviar.js` — o cron (`vercel.json` → `crons`, 09:00 BRT). Monta as notificações de cada usuário com a **mesma regra do app** (`calcularNotificacoes`, importado de `src/`);
-- `api/push/testar.js` — notificação de teste pros aparelhos de quem pediu (botão "Testar" na tela de Notificações).
+- `api/push/enviar.js` — o cron (`vercel.json` → `crons`, 09:00 BRT). Monta as notificações de cada usuário com a **mesma regra do app** (`calcularNotificacoes`, importado de `src/`).
 
 Sem configurar nada disso o app roda como antes. O passo a passo — Security Rules, conta de serviço, variáveis na Vercel, cron — está em [`docs/push-setup.md`](docs/push-setup.md).
 
@@ -102,8 +101,7 @@ gestao_financeira/
 ├── api/                        Funções da Vercel (Node) — só o push usa
 │   ├── _lib/                     Firebase por REST (jose), envio web-push, montagem das mensagens
 │   └── push/
-│       ├── enviar.js             Cron diário: manda os lembretes
-│       └── testar.js             Notificação de teste pra quem pediu
+│       └── enviar.js             Cron diário: manda os lembretes
 ├── public/
 │   ├── logo.png                Ícone-fonte (gera manifest e favicon via scripts/generate-icons.mjs)
 │   └── sw-notifications.js     Service worker: recebe o push e trata o clique

@@ -89,9 +89,8 @@ A resposta é o resumo da rodada: `{ usuarios, assinaturas, enviadas, removidas,
 ## Passo 5 — Ligar num aparelho
 
 Notificações → **Ativar** (o banner só aparece enquanto a permissão não foi
-dada). Aceita, e a linha "Lembretes por push ativos neste aparelho" aparece
-com um **Testar**: manda uma notificação de teste na hora, pra não precisar
-esperar o cron.
+dada). Aceita, e a assinatura é feita e gravada na hora — não há um segundo
+botão. Dá pra conferir no Console do Firebase: aparece um doc em `pushSubs`.
 
 - **Android/Chrome:** funciona no site aberto e no app instalado.
 - **iPhone:** só o app **instalado na tela de início** (iOS 16.4+). No Safari
@@ -104,9 +103,10 @@ esperar o cron.
 
 ## Como conferir que está entregando
 
-1. Botão **Testar** na tela de Notificações: `Enviado` quer dizer que o serviço
-   de push aceitou; a notificação deve aparecer em seguida (feche o app pra ver
-   o caso real).
+1. Dispare o cron na mão com o `curl` do passo 4, com uma conta a vencer nos
+   próximos 7 dias e o app fechado. `enviadas: 1` na resposta quer dizer que o
+   serviço de push aceitou; a notificação deve aparecer em seguida. Rodar de
+   novo dá `enviadas: 0` — cada assinatura guarda o que já recebeu.
 2. Logs da função: Vercel → projeto → Logs. Cada rodada do cron responde o
    resumo; `erros` lista o uid e o motivo de cada falha.
 3. `removidas > 0` são assinaturas mortas (aparelho revogou, limpou o site ou
@@ -114,9 +114,8 @@ esperar o cron.
 
 ## Em desenvolvimento
 
-`npm run dev` só serve o front — as funções em `api/` não rodam, e o botão
-Testar responde "Falhou". Pra testar o servidor localmente, `vercel dev` com as
-variáveis do passo 3 no `.env`.
+`npm run dev` só serve o front — a função em `api/` não roda. Pra testar o
+servidor localmente, `vercel dev` com as variáveis do passo 3 no `.env`.
 
 ## Trocar as chaves VAPID
 
