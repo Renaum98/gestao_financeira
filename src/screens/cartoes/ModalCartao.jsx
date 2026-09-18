@@ -79,7 +79,7 @@ export function ModalCartao({ editando, ehPrimeiro, diaFechamentoGlobal, onFecha
                 style={{
                   width: 34,
                   height: 34,
-                  borderRadius: 17,
+                  borderRadius: "var(--raio-pilula)",
                   background: c.hex,
                   border: sel ? "3px solid var(--ink)" : "3px solid transparent",
                   cursor: "pointer",
@@ -166,7 +166,7 @@ export function ModalCartao({ editando, ehPrimeiro, diaFechamentoGlobal, onFecha
           style={{
             marginTop: 16,
             padding: "12px 14px",
-            borderRadius: 12,
+            borderRadius: "var(--raio-bloco)",
             background: "var(--card-2)",
             fontSize: 12,
             color: "var(--muted)",
@@ -185,7 +185,7 @@ export function ModalCartao({ editando, ehPrimeiro, diaFechamentoGlobal, onFecha
             width: "100%",
             marginTop: 20,
             padding: "12px",
-            borderRadius: 12,
+            borderRadius: "var(--raio-bloco)",
             border: "none",
             cursor: "pointer",
             background: "transparent",

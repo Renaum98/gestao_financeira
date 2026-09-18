@@ -33,7 +33,7 @@ function LinhaMes({ d, ativo, primeiro, t, onClick }) {
         style={{
           width: 44,
           height: 44,
-          borderRadius: 14,
+          borderRadius: "var(--raio-bloco)",
           background: ativo ? "var(--primary)" : "var(--bg)",
           color: ativo ? "#fff" : "var(--ink)",
           display: "flex",
@@ -167,7 +167,7 @@ export function HistoricoScreen({ ctx }) {
                     style={{
                       width: 44,
                       height: 44,
-                      borderRadius: 14,
+                      borderRadius: "var(--raio-bloco)",
                       background: ehAnoAtivo ? "var(--primary)" : "var(--bg)",
                       color: ehAnoAtivo ? "#fff" : "var(--ink)",
                       display: "flex",

@@ -10,7 +10,7 @@ export function BannerPermissao({ permissao, onAtivar }) {
       <div
         style={{
           padding: '14px 16px',
-          borderRadius: 16,
+          borderRadius: 'var(--raio-card)',
           background:
             permissao === 'denied'
               ? 'var(--surface-sunken)'
@@ -25,7 +25,7 @@ export function BannerPermissao({ permissao, onAtivar }) {
           style={{
             width: 38,
             height: 38,
-            borderRadius: 12,
+            borderRadius: 'var(--raio-controle)',
             background: 'var(--primary-degrade)',
             display: 'flex',
             alignItems: 'center',
@@ -50,7 +50,7 @@ export function BannerPermissao({ permissao, onAtivar }) {
             onClick={onAtivar}
             style={{
               padding: '8px 12px',
-              borderRadius: 10,
+              borderRadius: 'var(--raio-controle)',
               border: 'none',
               background: 'var(--primary-degrade)',
               color: '#fff',

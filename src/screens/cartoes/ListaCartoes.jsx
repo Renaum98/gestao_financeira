@@ -94,12 +94,12 @@ export function CartoesScreen({ ctx }) {
             alignItems: "center",
             gap: 6,
             padding: "6px 12px",
-            borderRadius: 999,
+            borderRadius: "var(--raio-pilula)",
             background: `color-mix(in oklab, ${corPior} 16%, transparent)`,
             flexShrink: 0,
           }}
         >
-          <div style={{ width: 8, height: 8, borderRadius: 4, background: corPior }} />
+          <div style={{ width: 8, height: 8, borderRadius: "var(--raio-pilula)", background: corPior }} />
           <span style={{ fontSize: 12, fontWeight: 800, color: corPior }}>
             {rotuloDaFaixa(faixaPior, t)}
           </span>
@@ -168,7 +168,7 @@ export function CartoesScreen({ ctx }) {
         width: "100%",
         marginTop: 16,
         padding: "14px",
-        borderRadius: 16,
+        borderRadius: "var(--raio-bloco)",
         border: "none",
         cursor: "pointer",
         background: "var(--primary-degrade)",
@@ -202,7 +202,7 @@ export function CartoesScreen({ ctx }) {
                 style={{
                   width: 56,
                   height: 56,
-                  borderRadius: 28,
+                  borderRadius: "var(--raio-pilula)",
                   background: "var(--primary-degrade)",
                   margin: "0 auto 12px",
                   display: "flex",

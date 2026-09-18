@@ -28,7 +28,7 @@ export function PorPagamento({ porPagamento, total }) {
               style={{
                 width: 36,
                 height: 36,
-                borderRadius: 12,
+                borderRadius: "var(--raio-controle)",
                 background: "var(--surface-sunken)",
                 display: "flex",
                 alignItems: "center",

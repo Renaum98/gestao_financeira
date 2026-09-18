@@ -20,14 +20,14 @@ export function DiferencaMesModal({ nomeMesAnt, valor, onTrazer, onIgnorar }) {
       maxWidth={380}
       scrollable={false}
       center
-      borderRadius={24}
+      borderRadius="var(--raio-superficie)"
       padding="22px 22px 18px"
     >
       <div
         style={{
           width: 56,
           height: 56,
-          borderRadius: 28,
+          borderRadius: "var(--raio-pilula)",
           background: "color-mix(in oklab, " + cor + " 16%, transparent)",
           margin: "0 auto 14px",
           display: "flex",
@@ -51,7 +51,7 @@ export function DiferencaMesModal({ nomeMesAnt, valor, onTrazer, onIgnorar }) {
         style={{
           marginTop: 14,
           padding: "14px",
-          borderRadius: 14,
+          borderRadius: "var(--raio-bloco)",
           background: "color-mix(in oklab, " + cor + " 10%, transparent)",
           textAlign: "center",
         }}
@@ -70,7 +70,7 @@ export function DiferencaMesModal({ nomeMesAnt, valor, onTrazer, onIgnorar }) {
           style={{
             flex: 1,
             padding: "12px",
-            borderRadius: 14,
+            borderRadius: "var(--raio-bloco)",
             border: "none",
             background: "var(--card-2)",
             color: "var(--ink)",
@@ -88,7 +88,7 @@ export function DiferencaMesModal({ nomeMesAnt, valor, onTrazer, onIgnorar }) {
           style={{
             flex: 1,
             padding: "12px",
-            borderRadius: 14,
+            borderRadius: "var(--raio-bloco)",
             border: "none",
             background: cor,
             color: "#fff",

@@ -188,7 +188,7 @@ export function SimularGastoModal({
               style={{
                 width: 28,
                 height: 28,
-                borderRadius: 14,
+                borderRadius: "var(--raio-pilula)",
                 background:
                   "color-mix(in oklab, var(--primary) 14%, transparent)",
                 display: "flex",
@@ -340,7 +340,7 @@ export function SimularGastoModal({
               style={{
                 width: 36,
                 height: 36,
-                borderRadius: 12,
+                borderRadius: "var(--raio-controle)",
                 border: "none",
                 background: "var(--card-2)",
                 color: "var(--ink)",
@@ -372,7 +372,7 @@ export function SimularGastoModal({
               style={{
                 width: 36,
                 height: 36,
-                borderRadius: 12,
+                borderRadius: "var(--raio-controle)",
                 border: "none",
                 background: "var(--card-2)",
                 color: "var(--ink)",
@@ -394,7 +394,7 @@ export function SimularGastoModal({
             <div
               style={{
                 padding: "16px 14px",
-                borderRadius: 14,
+                borderRadius: "var(--raio-bloco)",
                 background: "var(--card-2)",
                 color: "var(--muted)",
                 fontSize: 13,
@@ -414,14 +414,14 @@ export function SimularGastoModal({
                     display: "flex",
                     gap: 10,
                     padding: "12px 12px",
-                    borderRadius: 14,
+                    borderRadius: "var(--raio-bloco)",
                     background: `color-mix(in oklab, ${b.tom} 10%, transparent)`,
                   }}
                 >
                   <div
                     style={{
                       width: 6,
-                      borderRadius: 3,
+                      borderRadius: "var(--raio-pilula)",
                       background: b.tom,
                       flexShrink: 0,
                     }}
@@ -448,7 +448,7 @@ export function SimularGastoModal({
             style={{
               marginTop: 14,
               padding: "10px 12px",
-              borderRadius: 12,
+              borderRadius: "var(--raio-controle)",
               background: "var(--card-2)",
               display: "flex",
               justifyContent: "space-between",

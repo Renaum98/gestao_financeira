@@ -103,7 +103,7 @@ function Linha({ rotulo, valor, cor, destaque }) {
         gap: 12,
         padding: destaque ? "10px 12px" : "9px 2px",
         margin: destaque ? "4px 0" : 0,
-        borderRadius: destaque ? 12 : 0,
+        borderRadius: destaque ? "var(--raio-controle)" : 0,
         background: destaque ? "rgba(255,255,255,0.12)" : undefined,
       }}
     >
@@ -149,7 +149,6 @@ export function ProjecaoAno({ txs, recorrentes = [], preferences, mesAtual, span
     <div className={spanAll} style={{ padding: "4px var(--pad-x) 0" }}>
       <CardDestaque
         style={{
-          borderRadius: 28,
           boxShadow: "0 4px 12px color-mix(in oklab, var(--primary) 10%, transparent)",
         }}
       >
@@ -175,7 +174,7 @@ export function ProjecaoAno({ txs, recorrentes = [], preferences, mesAtual, span
             <span
               style={{
                 padding: "4px 10px",
-                borderRadius: 999,
+                borderRadius: "var(--raio-pilula)",
                 background: "rgba(255,255,255,0.18)",
                 fontSize: 11,
                 fontWeight: 700,
@@ -220,7 +219,7 @@ export function ProjecaoAno({ txs, recorrentes = [], preferences, mesAtual, span
             <div
               style={{
                 height: 8,
-                borderRadius: 8,
+                borderRadius: "var(--raio-pilula)",
                 background: "rgba(255,255,255,0.2)",
                 overflow: "hidden",
               }}
@@ -230,7 +229,7 @@ export function ProjecaoAno({ txs, recorrentes = [], preferences, mesAtual, span
                 style={{
                   width: aberto ? `${pctGasto}%` : "0%",
                   height: "100%",
-                  borderRadius: 8,
+                  borderRadius: "var(--raio-pilula)",
                   background: estourou ? COR_NEG_SOBRE_FORTE : "#fff",
                 }}
               />

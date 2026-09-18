@@ -117,7 +117,7 @@ export function InstallPromptModal({ temAtalho, plataformaIOS, onInstalar, onDis
       onClose={onDispensar}
       maxWidth={380}
       padding="26px 22px 20px"
-      borderRadius={26}
+      borderRadius="var(--raio-superficie)"
       scrollable={false}
       center
       >
@@ -165,11 +165,11 @@ export function InstallPromptModal({ temAtalho, plataformaIOS, onInstalar, onDis
               ].map((b) => (
                 <div key={b.ico} style={{
                   display: 'flex', alignItems: 'center', gap: 10,
-                  padding: '8px 10px', borderRadius: 12,
+                  padding: '8px 10px', borderRadius: 'var(--raio-controle)',
                   background: 'var(--surface-sunken)',
                 }}>
                   <div style={{
-                    width: 28, height: 28, borderRadius: 14,
+                    width: 28, height: 28, borderRadius: 'var(--raio-pilula)',
                     background: 'color-mix(in oklab, var(--primary) 14%, transparent)',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     flexShrink: 0,
@@ -185,14 +185,14 @@ export function InstallPromptModal({ temAtalho, plataformaIOS, onInstalar, onDis
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 18 }}>
               <button onClick={acaoInstalar} style={{
-                width: '100%', padding: '14px 16px', borderRadius: 14, border: 'none',
+                width: '100%', padding: '14px 16px', borderRadius: 'var(--raio-bloco)', border: 'none',
                 background: 'var(--primary-degrade)',
                 color: '#fff', fontSize: 15, fontWeight: 800, fontFamily: 'inherit',
                 cursor: 'pointer',
                 boxShadow: '0 8px 20px color-mix(in oklab, var(--primary) 30%, transparent)',
               }}>{tr("Instalar app")}</button>
               <button onClick={onDispensar} style={{
-                width: '100%', padding: '12px', borderRadius: 14,
+                width: '100%', padding: '12px', borderRadius: 'var(--raio-bloco)',
                 border: '1.5px solid var(--linha)',
                 background: 'var(--card)', color: 'var(--ink)',
                 fontSize: 14, fontWeight: 700, fontFamily: 'inherit', cursor: 'pointer',
@@ -222,7 +222,7 @@ export function InstallPromptModal({ temAtalho, plataformaIOS, onInstalar, onDis
                 '3. Confirme em "Adicionar" no canto superior direito.',
               ].map((linha, i) => (
                 <div key={i} style={{
-                  padding: '10px 12px', borderRadius: 12,
+                  padding: '10px 12px', borderRadius: 'var(--raio-controle)',
                   background: 'var(--surface-sunken)',
                   fontSize: 12.5, fontWeight: 600, color: 'var(--ink)', lineHeight: 1.4,
                 }}>{tr(linha)}</div>
@@ -230,7 +230,7 @@ export function InstallPromptModal({ temAtalho, plataformaIOS, onInstalar, onDis
             </div>
 
             <button onClick={onDispensar} style={{
-              width: '100%', padding: '13px', borderRadius: 14, border: 'none',
+              width: '100%', padding: '13px', borderRadius: 'var(--raio-bloco)', border: 'none',
               background: 'var(--primary-degrade)',
               color: '#fff', fontSize: 14, fontWeight: 800, fontFamily: 'inherit',
               cursor: 'pointer', marginTop: 16,

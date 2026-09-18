@@ -254,7 +254,7 @@ export function GastosScreen({ ctx }) {
         gap: 8,
         padding: "10px 14px",
         background: "var(--card)",
-        borderRadius: 14,
+        borderRadius: "var(--raio-bloco)",
         boxShadow: "0 1px 2px rgba(0,0,0,0.04)",
       }}
     >
@@ -338,7 +338,7 @@ export function GastosScreen({ ctx }) {
                 onClick={() => setFiltro(c)}
                 style={{
                   padding: "6px 14px",
-                  borderRadius: 999,
+                  borderRadius: "var(--raio-pilula)",
                   border: "none",
                   background: sel ? bgSel : "var(--card)",
                   color: sel ? (ehEntradas ? "#fff" : "var(--bg)") : "var(--ink)",
@@ -359,7 +359,7 @@ export function GastosScreen({ ctx }) {
                     style={{
                       width: 8,
                       height: 8,
-                      borderRadius: 4,
+                      borderRadius: "var(--raio-pilula)",
                       background: sel && ehEntradas ? "#fff" : pontoCor,
                     }}
                   />
@@ -399,7 +399,7 @@ export function GastosScreen({ ctx }) {
                   onClick={() => setFiltroPag(p)}
                   style={{
                     padding: "6px 14px",
-                    borderRadius: 999,
+                    borderRadius: "var(--raio-pilula)",
                     border: "none",
                     background: sel ? "var(--ink)" : "var(--card)",
                     color: sel ? "var(--bg)" : "var(--ink)",
@@ -453,7 +453,7 @@ export function GastosScreen({ ctx }) {
                   onClick={() => setFiltroCartao(id)}
                   style={{
                     padding: "6px 14px",
-                    borderRadius: 999,
+                    borderRadius: "var(--raio-pilula)",
                     border: "none",
                     background: sel
                       ? cartao ? corDoCartao(cartao) : "var(--ink)"
@@ -479,7 +479,7 @@ export function GastosScreen({ ctx }) {
                       style={{
                         width: 8,
                         height: 8,
-                        borderRadius: 4,
+                        borderRadius: "var(--raio-pilula)",
                         background: corDoCartao(cartao),
                         flexShrink: 0,
                       }}
@@ -509,7 +509,7 @@ export function GastosScreen({ ctx }) {
             style={{
               width: 56,
               height: 56,
-              borderRadius: 28,
+              borderRadius: "var(--raio-pilula)",
               background: "var(--bg)",
               margin: "0 auto 12px",
               display: "flex",
@@ -572,7 +572,7 @@ export function GastosScreen({ ctx }) {
                     style={{
                       flex: 1,
                       padding: "8px 12px",
-                      borderRadius: 12,
+                      borderRadius: "var(--raio-controle)",
                       border: "none",
                       background: "var(--bg)",
                       color: "var(--ink)",
@@ -595,7 +595,7 @@ export function GastosScreen({ ctx }) {
                     style={{
                       flex: 1,
                       padding: "8px 12px",
-                      borderRadius: 12,
+                      borderRadius: "var(--raio-controle)",
                       border: "none",
                       background: COR_NEG_FUNDO,
                       color: COR_NEG,
@@ -629,7 +629,7 @@ export function GastosScreen({ ctx }) {
             style={{
               width: 36,
               height: 36,
-              borderRadius: 18,
+              borderRadius: "var(--raio-pilula)",
               background: "var(--card)",
               border: "none",
               display: "flex",

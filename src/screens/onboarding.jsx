@@ -120,12 +120,12 @@ export function Onboarding({ onFim }) {
         }}>
           <div className="tour-loop" style={{
             position: 'absolute', top: -30, left: -30, width: 110, height: 110,
-            borderRadius: '50%', background: 'rgba(255,255,255,0.22)',
+            borderRadius: 'var(--raio-pilula)', background: 'rgba(255,255,255,0.22)',
             animation: 'flutua 7s ease-in-out infinite',
           }} />
           <div className="tour-loop" style={{
             position: 'absolute', bottom: -20, right: -20, width: 70, height: 70,
-            borderRadius: '50%', background: 'rgba(255,255,255,0.16)',
+            borderRadius: 'var(--raio-pilula)', background: 'rgba(255,255,255,0.16)',
             animation: 'flutua 9s ease-in-out infinite reverse',
           }} />
           <Ilustracao cor={s.cor2} />
@@ -158,7 +158,7 @@ export function Onboarding({ onFim }) {
               onClick={() => irParaSlide(i)}
               aria-label={t('Ir para slide {n}', { n: i + 1 })}
               style={{
-                width: i === slide ? 22 : 6, height: 6, borderRadius: 3,
+                width: i === slide ? 22 : 6, height: 6, borderRadius: 'var(--raio-pilula)',
                 background: i === slide ? 'var(--primary)' : 'var(--linha)',
                 // Propriedades nomeadas em vez de `all`: a largura estica com a
                 // mesma curva das entradas e a cor troca junto, sem arrastar
@@ -174,7 +174,7 @@ export function Onboarding({ onFim }) {
           className="tour-botao"
           onClick={() => (ultimo ? onFim() : irParaSlide(slide + 1))}
           style={{
-            width: '100%', padding: '16px', borderRadius: 16,
+            width: '100%', padding: '16px', borderRadius: 'var(--raio-bloco)',
             background: 'var(--ink)', color: 'var(--bg)', border: 'none',
             fontSize: 15, fontWeight: 800, cursor: 'pointer',
             letterSpacing: '-0.01em', fontFamily: 'inherit',
@@ -400,7 +400,7 @@ function IlustracaoAdd({ cor }) {
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             animation: `contador .42s ${0.28 + 0.07 * i}s both cubic-bezier(0.22, 1, 0.36, 1)`,
           }}>
-            <div style={{ width: 8, height: 8, borderRadius: '50%', background: c }} />
+            <div style={{ width: 8, height: 8, borderRadius: 'var(--raio-pilula)', background: c }} />
           </div>
         ))}
       </div>
@@ -447,12 +447,12 @@ function IlustracaoCartoes({ cor }) {
       {/* Barra de limite — mesma leitura da tela: quanto da fatura aberta já
           comeu o limite. */}
       <div style={{
-        height: 6, background: 'var(--card-2)', borderRadius: 4,
+        height: 6, background: 'var(--card-2)', borderRadius: 'var(--raio-pilula)',
         overflow: 'hidden', marginTop: 12,
       }}>
         <div className="tour-barra" style={{
           height: '100%', background: `linear-gradient(90deg, ${cor}, ${cor}AA)`,
-          borderRadius: 4, width: '0%',
+          borderRadius: 'var(--raio-pilula)', width: '0%',
           animation: 'barraEnche 1.1s .45s forwards cubic-bezier(0.22, 1, 0.36, 1)',
           ['--pct']: '62%',
         }} />
@@ -461,7 +461,7 @@ function IlustracaoCartoes({ cor }) {
       <div style={{
         marginTop: 10, display: 'flex', alignItems: 'center',
         justifyContent: 'center', gap: 5, padding: '6px 10px',
-        borderRadius: 999, background: 'var(--card-2)',
+        borderRadius: 'var(--raio-pilula)', background: 'var(--card-2)',
         animation: 'contador .45s .6s both cubic-bezier(0.22, 1, 0.36, 1)',
       }}>
         <Icon name="card" size={12} color="var(--muted)" strokeWidth={2.2} />
@@ -529,7 +529,7 @@ function IlustracaoPlanejar({ cor }) {
       {[0, 0.9, 1.9].map((delay, i) => (
         <div key={i} className="tour-particula" style={{
           position: 'absolute', top: 0, left: 78, width: 22, height: 22,
-          borderRadius: '50%',
+          borderRadius: 'var(--raio-pilula)',
           background: `linear-gradient(135deg, #FFE9A8, ${COR_AVISO})`,
           boxShadow: '0 4px 10px rgba(224,138,0,0.4), inset 0 -2px 0 rgba(0,0,0,0.12)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -571,11 +571,11 @@ function IlustracaoPlanejar({ cor }) {
           <span>70%</span>
         </div>
         <div style={{
-          height: 6, background: 'var(--card-2)', borderRadius: 4, overflow: 'hidden',
+          height: 6, background: 'var(--card-2)', borderRadius: 'var(--raio-pilula)', overflow: 'hidden',
         }}>
           <div className="tour-barra" style={{
             height: '100%', background: `linear-gradient(90deg, ${cor}, ${cor}AA)`,
-            borderRadius: 4, width: '0%',
+            borderRadius: 'var(--raio-pilula)', width: '0%',
             animation: 'barraEnche 1.1s .35s forwards cubic-bezier(0.22, 1, 0.36, 1)',
             ['--pct']: '70%',
           }} />
@@ -609,7 +609,7 @@ function IlustracaoPronto({ cor }) {
 
       {/* Círculo do check */}
       <div style={{
-        width: 120, height: 120, borderRadius: '50%', background: 'var(--card)',
+        width: 120, height: 120, borderRadius: 'var(--raio-pilula)', background: 'var(--card)',
         boxShadow: '0 14px 32px rgba(0,0,0,0.16)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         margin: '10px auto',

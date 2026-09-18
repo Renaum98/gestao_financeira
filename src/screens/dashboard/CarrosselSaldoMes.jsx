@@ -71,7 +71,7 @@ function EsqueletoCard() {
       style={{
         height: "100%",
         minHeight: 168,
-        borderRadius: 28,
+        borderRadius: "var(--raio-superficie)",
         padding: 22,
         boxSizing: "border-box",
         background: "color-mix(in oklab, var(--ink) 5%, var(--card))",
@@ -80,11 +80,11 @@ function EsqueletoCard() {
       }}
     >
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <div className="skeleton" style={{ width: 92, height: 13, borderRadius: 6 }} />
-        <div className="skeleton" style={{ width: 116, height: 28, borderRadius: 999 }} />
+        <div className="skeleton" style={{ width: 92, height: 13, borderRadius: "var(--raio-miudo)" }} />
+        <div className="skeleton" style={{ width: 116, height: 28, borderRadius: "var(--raio-pilula)" }} />
       </div>
-      <div className="skeleton" style={{ width: "62%", height: 36, borderRadius: 10, marginTop: 12 }} />
-      <div className="skeleton" style={{ width: 132, height: 22, borderRadius: 999, marginTop: 8 }} />
+      <div className="skeleton" style={{ width: "62%", height: 36, borderRadius: "var(--raio-compacto)", marginTop: 12 }} />
+      <div className="skeleton" style={{ width: 132, height: 22, borderRadius: "var(--raio-pilula)", marginTop: 8 }} />
       <div
         style={{
           marginTop: 18,
@@ -95,12 +95,12 @@ function EsqueletoCard() {
         }}
       >
         <div>
-          <div className="skeleton" style={{ width: 66, height: 11, borderRadius: 6 }} />
-          <div className="skeleton" style={{ width: 88, height: 15, borderRadius: 7, marginTop: 5 }} />
+          <div className="skeleton" style={{ width: 66, height: 11, borderRadius: "var(--raio-miudo)" }} />
+          <div className="skeleton" style={{ width: 88, height: 15, borderRadius: "var(--raio-miudo)", marginTop: 5 }} />
         </div>
         <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end" }}>
-          <div className="skeleton" style={{ width: 58, height: 11, borderRadius: 6 }} />
-          <div className="skeleton" style={{ width: 80, height: 15, borderRadius: 7, marginTop: 5 }} />
+          <div className="skeleton" style={{ width: 58, height: 11, borderRadius: "var(--raio-miudo)" }} />
+          <div className="skeleton" style={{ width: 80, height: 15, borderRadius: "var(--raio-miudo)", marginTop: 5 }} />
         </div>
       </div>
     </div>

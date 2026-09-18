@@ -23,7 +23,7 @@ export function CardCaixinha({ cx, onClick, selecionada = false }) {
       className="clicavel"
       style={{
         background: "var(--card)",
-        borderRadius: 18,
+        borderRadius: "var(--raio-card)",
         padding: 16,
         boxShadow: "0 1px 2px rgba(20,16,24,0.04), 0 4px 12px rgba(20,16,24,0.03)",
         cursor: "pointer",
@@ -42,7 +42,7 @@ export function CardCaixinha({ cx, onClick, selecionada = false }) {
           style={{
             width: 36,
             height: 36,
-            borderRadius: 12,
+            borderRadius: "var(--raio-controle)",
             background: `${cx.cor}22`,
             display: "flex",
             alignItems: "center",
@@ -88,7 +88,7 @@ export function CardCaixinha({ cx, onClick, selecionada = false }) {
                   alignItems: "center",
                   gap: 4,
                   padding: "1px 6px",
-                  borderRadius: 999,
+                  borderRadius: "var(--raio-pilula)",
                   background: COR_POS_FUNDO,
                   color: COR_POS,
                   fontWeight: 800,
@@ -115,7 +115,7 @@ export function CardCaixinha({ cx, onClick, selecionada = false }) {
           style={{
             marginTop: 10,
             padding: "8px 10px",
-            borderRadius: 10,
+            borderRadius: "var(--raio-controle)",
             background: `${cx.cor}14`,
             fontSize: 11,
             fontWeight: 700,

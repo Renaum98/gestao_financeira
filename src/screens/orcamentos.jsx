@@ -113,7 +113,7 @@ export function OrcamentosScreen({ ctx }) {
         {!editandoTotal && (
           <button onClick={() => { setTempTotal(formatarValorInicial(orcBase)); setEditandoTotal(true); }} style={{
             background: 'rgba(255,255,255,0.18)', border: 'none', cursor: 'pointer',
-            color: '#fff', padding: '6px 10px', borderRadius: 999,
+            color: '#fff', padding: '6px 10px', borderRadius: 'var(--raio-pilula)',
             display: 'inline-flex', alignItems: 'center', gap: 5,
             fontSize: 11, fontWeight: 700, fontFamily: 'inherit',
           }}>
@@ -135,7 +135,7 @@ export function OrcamentosScreen({ ctx }) {
             onChange={(e) => setTempTotal(formatarValorDigitado(e.target.value))}
             onKeyDown={(e) => { if (e.key === 'Enter') salvarTotal(); if (e.key === 'Escape') setEditandoTotal(false); }}
             style={{
-              flex: 1, padding: '6px 10px', borderRadius: 10,
+              flex: 1, padding: '6px 10px', borderRadius: 'var(--raio-compacto)',
               border: 'none', background: 'rgba(255,255,255,0.18)',
               fontSize: 26, fontWeight: 800, color: '#fff',
               outline: 'none', fontFamily: 'inherit', letterSpacing: '-0.02em',
@@ -143,7 +143,7 @@ export function OrcamentosScreen({ ctx }) {
             }}
           />
           <button onClick={salvarTotal} style={{
-            width: 36, height: 36, borderRadius: 18, border: 'none', cursor: 'pointer',
+            width: 36, height: 36, borderRadius: 'var(--raio-pilula)', border: 'none', cursor: 'pointer',
             background: '#fff', color: 'var(--primary)',
             display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
           }}>
@@ -162,7 +162,7 @@ export function OrcamentosScreen({ ctx }) {
           {temOrcamento ? fmtBRL(orcMensal) : (
             <button onClick={() => { setTempTotal(formatarValorInicial(0)); setEditandoTotal(true); }} style={{
               background: 'transparent', border: '1.5px dashed rgba(255,255,255,0.6)',
-              color: '#fff', padding: '8px 14px', borderRadius: 12,
+              color: '#fff', padding: '8px 14px', borderRadius: 'var(--raio-controle)',
               fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
             }}>{t("Definir orçamento")}</button>
           )}
@@ -171,10 +171,10 @@ export function OrcamentosScreen({ ctx }) {
 
       {temOrcamento && (
         <div style={{ marginTop: 14 }}>
-          <div style={{ height: 8, background: 'rgba(255,255,255,0.2)', borderRadius: 8, overflow: 'hidden' }}>
+          <div style={{ height: 8, background: 'rgba(255,255,255,0.2)', borderRadius: 'var(--raio-pilula)', overflow: 'hidden' }}>
             <div style={{
               height: '100%', width: `${Math.min(100, pctGeral)}%`,
-              background: pctGeral > 100 ? COR_NEG_SOBRE_FORTE : '#fff', borderRadius: 8,
+              background: pctGeral > 100 ? COR_NEG_SOBRE_FORTE : '#fff', borderRadius: 'var(--raio-pilula)',
               transition: 'width .3s ease',
             }} />
           </div>
@@ -195,7 +195,7 @@ export function OrcamentosScreen({ ctx }) {
       <Card style={{ padding: '14px 16px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <div style={{
-            width: 36, height: 36, borderRadius: 12, background: 'var(--surface-sunken)',
+            width: 36, height: 36, borderRadius: 'var(--raio-controle)', background: 'var(--surface-sunken)',
             display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
           }}>
             <Icon name="card" size={18} color="var(--ink)" strokeWidth={2} />
@@ -219,14 +219,14 @@ export function OrcamentosScreen({ ctx }) {
                 onChange={(e) => setTempCartao(formatarValorDigitado(e.target.value))}
                 onKeyDown={(e) => { if (e.key === 'Enter') salvarCartao(); if (e.key === 'Escape') setEditandoCartao(false); }}
                 style={{
-                  width: 90, padding: '6px 10px', borderRadius: 10,
+                  width: 90, padding: '6px 10px', borderRadius: 'var(--raio-compacto)',
                   border: '1.5px solid var(--primary)', background: 'var(--card)',
                   fontSize: 13, fontWeight: 700, color: 'var(--ink)', outline: 'none',
                   fontFamily: 'inherit', textAlign: 'right',
                 }}
               />
               <button onClick={salvarCartao} style={{
-                width: 30, height: 30, borderRadius: 15, border: 'none',
+                width: 30, height: 30, borderRadius: 'var(--raio-pilula)', border: 'none',
                 background: 'var(--primary)', color: '#fff', cursor: 'pointer',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
               }}>
@@ -261,7 +261,7 @@ export function OrcamentosScreen({ ctx }) {
             style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid var(--linha)', display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer' }}
           >
             <div style={{
-              width: 36, height: 36, borderRadius: 12, background: 'var(--surface-sunken)',
+              width: 36, height: 36, borderRadius: 'var(--raio-controle)', background: 'var(--surface-sunken)',
               display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
             }}>
               <Icon name="card" size={18} color="var(--muted)" strokeWidth={2} />
@@ -279,7 +279,7 @@ export function OrcamentosScreen({ ctx }) {
            Não altera o saldo do mês, só o ciclo mostrado (lib/fatura.js). */
         <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid var(--linha)', display: 'flex', alignItems: 'center', gap: 12 }}>
           <div style={{
-            width: 36, height: 36, borderRadius: 12, background: 'var(--surface-sunken)',
+            width: 36, height: 36, borderRadius: 'var(--raio-controle)', background: 'var(--surface-sunken)',
             display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
           }}>
             <Icon name="calendar" size={18} color="var(--muted)" strokeWidth={2} />
@@ -305,14 +305,14 @@ export function OrcamentosScreen({ ctx }) {
                 onChange={(e) => setTempFech(e.target.value.replace(/[^0-9]/g, '').slice(0, 2))}
                 onKeyDown={(e) => { if (e.key === 'Enter') salvarFech(); if (e.key === 'Escape') setEditandoFech(false); }}
                 style={{
-                  width: 62, padding: '6px 10px', borderRadius: 10,
+                  width: 62, padding: '6px 10px', borderRadius: 'var(--raio-compacto)',
                   border: '1.5px solid var(--primary)', background: 'var(--card)',
                   fontSize: 13, fontWeight: 700, color: 'var(--ink)', outline: 'none',
                   fontFamily: 'inherit', textAlign: 'right',
                 }}
               />
               <button onClick={salvarFech} style={{
-                width: 30, height: 30, borderRadius: 15, border: 'none',
+                width: 30, height: 30, borderRadius: 'var(--raio-pilula)', border: 'none',
                 background: 'var(--primary)', color: '#fff', cursor: 'pointer',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
               }}>
@@ -368,14 +368,14 @@ export function OrcamentosScreen({ ctx }) {
                       onChange={(e) => setTempCat(formatarValorDigitado(e.target.value))}
                       onKeyDown={(e) => { if (e.key === 'Enter') salvarCat(c); if (e.key === 'Escape') setEditandoCat(null); }}
                       style={{
-                        width: 90, padding: '6px 10px', borderRadius: 10,
+                        width: 90, padding: '6px 10px', borderRadius: 'var(--raio-compacto)',
                         border: '1.5px solid var(--primary)', background: 'var(--card)',
                         fontSize: 13, fontWeight: 700, color: 'var(--ink)', outline: 'none',
                         fontFamily: 'inherit', textAlign: 'right',
                       }}
                     />
                     <button onClick={() => salvarCat(c)} style={{
-                      width: 30, height: 30, borderRadius: 15, border: 'none',
+                      width: 30, height: 30, borderRadius: 'var(--raio-pilula)', border: 'none',
                       background: 'var(--primary)', color: '#fff', cursor: 'pointer',
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                     }}>

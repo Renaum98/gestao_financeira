@@ -64,7 +64,7 @@ export function ModalOverlay({
   // mais espaço quem tem o que fazer com ele (formulário longo, duas colunas).
   maxWidthDesktop,
   padding = '16px 20px 22px',
-  borderRadius = 28,
+  borderRadius = 'var(--raio-superficie)',
   // Quando `scrollable` (default), o dialog limita a altura à viewport e
   // permite rolagem interna — apropriado pra forms longos. Modais curtos
   // (confirmar, instalar PWA) passam scrollable={false}.

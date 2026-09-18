@@ -39,6 +39,28 @@
   --esp-secao: 16px;
   --esp-titulo: 8px;
   --esp-pilha: 12px;
+  /* Raios de canto, por papel. Antes eram 26 números soltos (11, 13, 15, 17,
+     24, 26…) e o mesmo elemento mudava de raio de tela pra tela; agora é uma
+     escada com degraus nítidos, e quem monta layout escolhe o papel.
+     - superficie: modal, card de destaque (hero), tab bar.
+     - card:       Card e qualquer card solto na tela (lista, banner, painel).
+     - bloco:      o que mora dentro de um card: botão largo, input, linha de
+                   opção, chip selecionado, trilho do segmented, tile 42–44.
+     - controle:   botão pequeno, aviso, item da sidebar, tile 36–38.
+     - compacto:   botão dentro do segmented, campo curto, tile 30–32.
+     - etiqueta:   badge (4px 8px), tile 24, miniatura do cartão.
+     - miudo:      tag miúda (2px 6px), topo de barra de gráfico, linha de skeleton.
+     - minimo:     quadradinho de legenda.
+     - pilula:     pílula, círculo, barra de progresso, toggle. */
+  --raio-superficie: 28px;
+  --raio-card: 22px;
+  --raio-bloco: 14px;
+  --raio-controle: 12px;
+  --raio-compacto: 10px;
+  --raio-etiqueta: 8px;
+  --raio-miudo: 6px;
+  --raio-minimo: 4px;
+  --raio-pilula: 999px;
   color-scheme: light;
 }
 

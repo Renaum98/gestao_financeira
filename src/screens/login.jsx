@@ -81,7 +81,7 @@ function msgErro(code) {
 }
 
 const inputStyle = {
-  width: '100%', padding: '13px 14px', borderRadius: 14, border: '1.5px solid var(--linha)',
+  width: '100%', padding: '13px 14px', borderRadius: 'var(--raio-bloco)', border: '1.5px solid var(--linha)',
   background: 'var(--card)', outline: 'none', fontSize: 15, fontWeight: 600,
   color: 'var(--ink)', fontFamily: 'inherit', boxSizing: 'border-box',
 };
@@ -121,7 +121,7 @@ function CampoSenha({ label, value, onChange, ...props }) {
           style={{
             position: 'absolute',
             right: 6, top: '50%', transform: 'translateY(-50%)',
-            width: 36, height: 36, borderRadius: 10,
+            width: 36, height: 36, borderRadius: 'var(--raio-controle)',
             background: 'transparent', border: 'none', cursor: 'pointer',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             color: 'var(--muted)',
@@ -152,7 +152,7 @@ function Casca({ children }) {
 function BotaoPrimario({ children, ...props }) {
   return (
     <button {...props} style={{
-      width: '100%', padding: '14px 18px', borderRadius: 14, border: 'none',
+      width: '100%', padding: '14px 18px', borderRadius: 'var(--raio-bloco)', border: 'none',
       background: props.disabled ? 'var(--linha)' : 'var(--primary-degrade)',
       color: props.disabled ? 'var(--muted)' : '#fff',
       fontSize: 15, fontWeight: 800, fontFamily: 'inherit',
@@ -396,7 +396,7 @@ export function VerifyEmailScreen({ email, onAtualizar }) {
   return (
     <Casca>
       <div style={{
-        width: 72, height: 72, borderRadius: 22, background: 'color-mix(in oklab, var(--primary) 12%, transparent)',
+        width: 72, height: 72, borderRadius: 20, background: 'color-mix(in oklab, var(--primary) 12%, transparent)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
       }}>
         <Icon name="mail" size={32} color="var(--primary)" strokeWidth={2} />
@@ -418,7 +418,7 @@ export function VerifyEmailScreen({ email, onAtualizar }) {
           {carregando ? t('Verificando…') : t('Já confirmei, entrar')}
         </BotaoPrimario>
         <button type="button" onClick={reenviar} disabled={reenviando} style={{
-          width: '100%', padding: '12px', borderRadius: 14, border: '1.5px solid var(--linha)',
+          width: '100%', padding: '12px', borderRadius: 'var(--raio-bloco)', border: '1.5px solid var(--linha)',
           background: 'var(--card)', color: 'var(--ink)', fontSize: 14, fontWeight: 700,
           cursor: reenviando ? 'default' : 'pointer', fontFamily: 'inherit',
         }}>{reenviando ? t('Reenviando…') : t('Reenviar e-mail')}</button>

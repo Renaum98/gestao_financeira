@@ -24,12 +24,12 @@ export function ConfirmModal({
       onClose={onCancelar}
       maxWidth={360}
       padding="24px 22px 18px"
-      borderRadius={24}
+      borderRadius="var(--raio-superficie)"
       scrollable={false}
       center
     >
       <div style={{
-        width: 56, height: 56, borderRadius: 28,
+        width: 56, height: 56, borderRadius: 'var(--raio-pilula)',
         background: corFundoIcone,
         margin: '0 auto 14px',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -51,13 +51,13 @@ export function ConfirmModal({
 
       <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>
         <button onClick={onCancelar} style={{
-          flex: 1, padding: '12px', borderRadius: 14, border: 'none',
+          flex: 1, padding: '12px', borderRadius: 'var(--raio-bloco)', border: 'none',
           background: 'var(--card-2)', color: 'var(--ink)',
           fontSize: 14, fontWeight: 800, fontFamily: 'inherit', cursor: 'pointer',
           boxShadow: '0 1px 2px rgba(0,0,0,0.06)',
         }}>{t(textoCancelar)}</button>
         <button onClick={onConfirmar} style={{
-          flex: 1, padding: '12px', borderRadius: 14, border: 'none',
+          flex: 1, padding: '12px', borderRadius: 'var(--raio-bloco)', border: 'none',
           background: corAcao, color: '#fff',
           fontSize: 14, fontWeight: 800, fontFamily: 'inherit', cursor: 'pointer',
           boxShadow: destrutivo ? '0 4px 14px rgba(214,58,85,0.32)' : '0 4px 14px color-mix(in oklab, var(--primary) 32%, transparent)',

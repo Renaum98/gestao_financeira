@@ -34,14 +34,14 @@ function ExplicacaoConta({ onContinuar, onCancelar }) {
               gap: 10,
               padding: "8px 10px",
               background: "var(--card-2)",
-              borderRadius: 10,
+              borderRadius: "var(--raio-controle)",
             }}
           >
             <div
               style={{
                 width: 24,
                 height: 24,
-                borderRadius: 8,
+                borderRadius: "var(--raio-etiqueta)",
                 background: "color-mix(in oklab, var(--primary) 14%, transparent)",
                 display: "flex",
                 alignItems: "center",
@@ -79,7 +79,7 @@ function ExplicacaoConta({ onContinuar, onCancelar }) {
           style={{
             flex: 1,
             padding: 12,
-            borderRadius: 14,
+            borderRadius: "var(--raio-bloco)",
             border: "none",
             background: "var(--card-2)",
             color: "var(--ink)",
@@ -98,7 +98,7 @@ function ExplicacaoConta({ onContinuar, onCancelar }) {
           style={{
             flex: 1,
             padding: 12,
-            borderRadius: 14,
+            borderRadius: "var(--raio-bloco)",
             border: "none",
             background: "var(--primary-degrade)",
             color: "#fff",
@@ -170,7 +170,7 @@ export function ConvidarParceiroModal({ meuUid, meuNome, meuEmail, onFechar }) {
           maxHeight: "calc(100dvh - 40px)",
           overflowY: "auto",
           background: "var(--bg)",
-          borderRadius: 24,
+          borderRadius: "var(--raio-superficie)",
           padding: "20px 18px 16px",
           boxShadow: "0 24px 60px rgba(0,0,0,0.28), 0 4px 12px rgba(0,0,0,0.08)",
           animation: "scaleIn .34s cubic-bezier(0.22, 1, 0.36, 1)",
@@ -181,7 +181,7 @@ export function ConvidarParceiroModal({ meuUid, meuNome, meuEmail, onFechar }) {
             style={{
               width: 42,
               height: 42,
-              borderRadius: 14,
+              borderRadius: "var(--raio-bloco)",
               background: "var(--primary-degrade)",
               display: "flex",
               alignItems: "center",
@@ -212,7 +212,7 @@ export function ConvidarParceiroModal({ meuUid, meuNome, meuEmail, onFechar }) {
               textAlign: "center",
               background: `color-mix(in oklab, ${COR_POS} 10%, transparent)`,
               border: `1px solid color-mix(in oklab, ${COR_POS} 25%, transparent)`,
-              borderRadius: 14,
+              borderRadius: "var(--raio-bloco)",
             }}
           >
             <div style={{ fontSize: 14, fontWeight: 800, color: COR_POS }}>{t("Convite enviado!")}</div>
@@ -238,7 +238,7 @@ export function ConvidarParceiroModal({ meuUid, meuNome, meuEmail, onFechar }) {
                 style={{
                   width: "100%",
                   padding: "13px 14px",
-                  borderRadius: 14,
+                  borderRadius: "var(--raio-bloco)",
                   border: "1.5px solid var(--linha)",
                   background: "var(--card)",
                   outline: "none",
@@ -263,7 +263,7 @@ export function ConvidarParceiroModal({ meuUid, meuNome, meuEmail, onFechar }) {
                 style={{
                   flex: 1,
                   padding: 12,
-                  borderRadius: 14,
+                  borderRadius: "var(--raio-bloco)",
                   border: "none",
                   background: "var(--card-2)",
                   color: "var(--ink)",
@@ -283,7 +283,7 @@ export function ConvidarParceiroModal({ meuUid, meuNome, meuEmail, onFechar }) {
                 style={{
                   flex: 1,
                   padding: 12,
-                  borderRadius: 14,
+                  borderRadius: "var(--raio-bloco)",
                   border: "none",
                   background:
                     enviando || !email.trim()

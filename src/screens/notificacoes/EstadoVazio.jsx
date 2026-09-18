@@ -13,7 +13,7 @@ export function EstadoVazio() {
           style={{
             width: 56,
             height: 56,
-            borderRadius: 28,
+            borderRadius: 'var(--raio-pilula)',
             background: 'color-mix(in oklab, var(--primary) 14%, transparent)',
             margin: '0 auto 12px',
             display: 'flex',

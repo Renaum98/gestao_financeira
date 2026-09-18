@@ -87,11 +87,11 @@ export function useSplashInteiro(pedido, semTrava = false) {
 
 
 // Bloco primitivo. width/height aceitam número (px) ou string (CSS).
-// radius padrão segue o "card" do app.
+// raio padrão é o de etiqueta: a maioria dos skeletons imita linha de texto.
 function Skeleton({
   w = '100%',
   h = 16,
-  r = 8,
+  r = 'var(--raio-etiqueta)',
   style,
 }) {
   return (
@@ -195,7 +195,7 @@ const PAD_X = { padding: '0 var(--pad-x)' };
 // depender de um módulo que ele mesmo cobre enquanto carrega.
 const CARD = {
   background: 'var(--card)',
-  borderRadius: 22,
+  borderRadius: 'var(--raio-card)',
   padding: 18,
   boxShadow: '0 1px 2px rgba(20,16,24,0.04), 0 4px 12px rgba(20,16,24,0.03)',
 };
@@ -223,9 +223,9 @@ function TopoSkel({ acao = false, titulo = 180 }) {
         justifyContent: 'space-between', minHeight: 32,
       }}>
         <div style={{ width: 36 }} />
-        {acao ? <Skeleton w={36} h={36} r={18} /> : <div style={{ width: 36 }} />}
+        {acao ? <Skeleton w={36} h={36} r="var(--raio-pilula)" /> : <div style={{ width: 36 }} />}
       </div>
-      {titulo > 0 && <Skeleton w={titulo} h={28} r={8} style={{ marginTop: 6 }} />}
+      {titulo > 0 && <Skeleton w={titulo} h={28} r="var(--raio-etiqueta)" style={{ marginTop: 6 }} />}
     </div>
   );
 }
@@ -243,10 +243,10 @@ function LinhasSkel({ n = 4, icone = 42, r = 14, valor = 64 }) {
         }}>
           <Skeleton w={icone} h={icone} r={r} />
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 6 }}>
-            <Skeleton w={`${56 + ((i * 13) % 24)}%`} h={13} r={6} />
-            <Skeleton w={`${30 + ((i * 7) % 14)}%`} h={11} r={6} />
+            <Skeleton w={`${56 + ((i * 13) % 24)}%`} h={13} r="var(--raio-miudo)" />
+            <Skeleton w={`${30 + ((i * 7) % 14)}%`} h={11} r="var(--raio-miudo)" />
           </div>
-          {valor > 0 && <Skeleton w={valor} h={14} r={6} />}
+          {valor > 0 && <Skeleton w={valor} h={14} r="var(--raio-miudo)" />}
         </div>
       ))}
     </CardSkel>
@@ -262,8 +262,8 @@ function LinhasConfigSkel({ n = 5 }) {
           display: 'flex', alignItems: 'center', gap: 12, padding: '13px 0',
           borderTop: i === 0 ? 'none' : '1px solid var(--linha)',
         }}>
-          <Skeleton w={20} h={20} r={6} />
-          <Skeleton w={`${38 + ((i * 17) % 28)}%`} h={13} r={6} />
+          <Skeleton w={20} h={20} r="var(--raio-miudo)" />
+          <Skeleton w={`${38 + ((i * 17) % 28)}%`} h={13} r="var(--raio-miudo)" />
         </div>
       ))}
     </CardSkel>
@@ -276,7 +276,7 @@ function ChipsSkel({ larguras }) {
     <div style={{
       display: 'flex', gap: 6, padding: '2px var(--pad-x) 4px', overflow: 'hidden',
     }}>
-      {larguras.map((w, i) => <Skeleton key={i} w={w} h={28} r={999} />)}
+      {larguras.map((w, i) => <Skeleton key={i} w={w} h={28} r="var(--raio-pilula)" />)}
     </div>
   );
 }
@@ -285,7 +285,7 @@ function ChipsSkel({ larguras }) {
 function BarrasSkel({ alturas }) {
   return (
     <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8, height: 120 }}>
-      {alturas.map((h, i) => <Skeleton key={i} w={'100%'} h={h} r={8} />)}
+      {alturas.map((h, i) => <Skeleton key={i} w={'100%'} h={h} r="var(--raio-etiqueta)" />)}
     </div>
   );
 }
@@ -303,28 +303,28 @@ function SkelInicio() {
           display: 'flex', alignItems: 'center',
           justifyContent: 'space-between', minHeight: 32,
         }}>
-          <Skeleton w={96} h={13} r={6} />
+          <Skeleton w={96} h={13} r="var(--raio-miudo)" />
           {/* Sino e avatar */}
           <div style={{ display: 'flex', gap: 8 }}>
-            <Skeleton w={36} h={36} r={18} />
-            <Skeleton w={36} h={36} r={18} />
+            <Skeleton w={36} h={36} r="var(--raio-pilula)" />
+            <Skeleton w={36} h={36} r="var(--raio-pilula)" />
           </div>
         </div>
-        <Skeleton w={150} h={28} r={8} style={{ marginTop: 6 }} />
+        <Skeleton w={150} h={28} r="var(--raio-etiqueta)" style={{ marginTop: 6 }} />
       </div>
 
       <div style={{ padding: '4px var(--pad-x) 0' }}>
-        <CardSkel style={{ borderRadius: 28, padding: 22, gap: 10 }}>
+        <CardSkel style={{ borderRadius: 'var(--raio-superficie)', padding: 22, gap: 10 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <Skeleton w={120} h={13} r={6} />
-            <Skeleton w={96} h={38} r={999} />
+            <Skeleton w={120} h={13} r="var(--raio-miudo)" />
+            <Skeleton w={96} h={38} r="var(--raio-pilula)" />
           </div>
-          <Skeleton w={'55%'} h={34} r={8} />
-          <Skeleton w={150} h={12} r={6} />
-          <Skeleton w={'100%'} h={8} r={999} />
+          <Skeleton w={'55%'} h={34} r="var(--raio-etiqueta)" />
+          <Skeleton w={150} h={12} r="var(--raio-miudo)" />
+          <Skeleton w={'100%'} h={8} r="var(--raio-pilula)" />
           <div style={{ display: 'flex', gap: 12, marginTop: 2 }}>
-            <Skeleton w={'100%'} h={44} r={14} />
-            <Skeleton w={'100%'} h={44} r={14} />
+            <Skeleton w={'100%'} h={44} r="var(--raio-bloco)" />
+            <Skeleton w={'100%'} h={44} r="var(--raio-bloco)" />
           </div>
         </CardSkel>
       </div>
@@ -334,15 +334,15 @@ function SkelInicio() {
         display: 'flex', flexDirection: 'column', gap: 'var(--esp-secao)',
       }}>
         <CardSkel style={{ gap: 10 }}>
-          <Skeleton w={110} h={12} r={6} />
-          <Skeleton w={'86%'} h={13} r={6} />
-          <Skeleton w={'58%'} h={13} r={6} />
+          <Skeleton w={110} h={12} r="var(--raio-miudo)" />
+          <Skeleton w={'86%'} h={13} r="var(--raio-miudo)" />
+          <Skeleton w={'58%'} h={13} r="var(--raio-miudo)" />
         </CardSkel>
-        <Skeleton w={'100%'} h={40} r={14} />
+        <Skeleton w={'100%'} h={40} r="var(--raio-bloco)" />
       </div>
 
       <div style={{ padding: 'var(--esp-secao) var(--pad-x) 0' }}>
-        <Skeleton w={130} h={14} r={6} style={{ marginBottom: 12 }} />
+        <Skeleton w={130} h={14} r="var(--raio-miudo)" style={{ marginBottom: 12 }} />
         <LinhasSkel n={3} />
       </div>
     </>
@@ -358,13 +358,13 @@ function SkelTransacoes() {
         ...PAD_X, display: 'flex', alignItems: 'center', justifyContent: 'space-between',
       }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-          <Skeleton w={118} h={13} r={6} />
-          <Skeleton w={152} h={13} r={6} />
+          <Skeleton w={118} h={13} r="var(--raio-miudo)" />
+          <Skeleton w={152} h={13} r="var(--raio-miudo)" />
         </div>
-        <Skeleton w={96} h={38} r={999} />
+        <Skeleton w={96} h={38} r="var(--raio-pilula)" />
       </div>
       <div style={{ padding: 'var(--esp-secao) var(--pad-x) 0' }}>
-        <Skeleton w={'100%'} h={40} r={14} />
+        <Skeleton w={'100%'} h={40} r="var(--raio-bloco)" />
       </div>
       <div style={{ padding: '10px 0 0' }}>
         <ChipsSkel larguras={[62, 84, 90, 72, 66]} />
@@ -383,41 +383,41 @@ function SkelAnalise() {
       <TopoSkel titulo={140} />
       <div style={{ padding: '4px var(--pad-x) 0' }}>
         <CardSkel style={{ gap: 10 }}>
-          <Skeleton w={130} h={12} r={6} />
-          <Skeleton w={'48%'} h={24} r={8} />
-          <Skeleton w={'100%'} h={8} r={999} />
+          <Skeleton w={130} h={12} r="var(--raio-miudo)" />
+          <Skeleton w={'48%'} h={24} r="var(--raio-etiqueta)" />
+          <Skeleton w={'100%'} h={8} r="var(--raio-pilula)" />
         </CardSkel>
       </div>
       <div style={{
         padding: 'var(--esp-secao) var(--pad-x) var(--esp-titulo)', display: 'flex', justifyContent: 'flex-end',
       }}>
-        <Skeleton w={96} h={38} r={999} />
+        <Skeleton w={96} h={38} r="var(--raio-pilula)" />
       </div>
       <div style={{ ...PAD_X, display: 'flex', flexDirection: 'column', gap: 'var(--esp-secao)' }}>
         <CardSkel>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
             {[0, 1, 2, 3].map((i) => (
               <div key={i} style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                <Skeleton w={72} h={11} r={6} />
-                <Skeleton w={'68%'} h={18} r={6} />
+                <Skeleton w={72} h={11} r="var(--raio-miudo)" />
+                <Skeleton w={'68%'} h={18} r="var(--raio-miudo)" />
               </div>
             ))}
           </div>
         </CardSkel>
         {/* Pizza por categoria: o disco e a legenda ao lado */}
         <CardSkel style={{ gap: 14 }}>
-          <Skeleton w={120} h={13} r={6} />
+          <Skeleton w={120} h={13} r="var(--raio-miudo)" />
           <div style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
-            <Skeleton w={132} h={132} r={999} />
+            <Skeleton w={132} h={132} r="var(--raio-pilula)" />
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 10 }}>
               {[0, 1, 2, 3].map((i) => (
-                <Skeleton key={i} w={`${82 - i * 13}%`} h={11} r={6} />
+                <Skeleton key={i} w={`${82 - i * 13}%`} h={11} r="var(--raio-miudo)" />
               ))}
             </div>
           </div>
         </CardSkel>
         <CardSkel style={{ gap: 14 }}>
-          <Skeleton w={140} h={13} r={6} />
+          <Skeleton w={140} h={13} r="var(--raio-miudo)" />
           <BarrasSkel alturas={[52, 88, 40, 104, 68, 96]} />
         </CardSkel>
       </div>
@@ -433,17 +433,17 @@ function SkelPerfil() {
       <div style={{
         ...PAD_X, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10,
       }}>
-        <Skeleton w={88} h={88} r={999} />
-        <Skeleton w={140} h={18} r={8} />
-        <Skeleton w={182} h={12} r={6} />
+        <Skeleton w={88} h={88} r="var(--raio-pilula)" />
+        <Skeleton w={140} h={18} r="var(--raio-etiqueta)" />
+        <Skeleton w={182} h={12} r="var(--raio-miudo)" />
       </div>
       <div style={{
         padding: 'var(--esp-secao) var(--pad-x) 0',
         display: 'flex', flexDirection: 'column', gap: 'var(--esp-pilha)',
       }}>
         <CardSkel style={{ gap: 12 }}>
-          <Skeleton w={100} h={13} r={6} />
-          <Skeleton w={'100%'} h={38} r={12} />
+          <Skeleton w={100} h={13} r="var(--raio-miudo)" />
+          <Skeleton w={'100%'} h={38} r="var(--raio-controle)" />
         </CardSkel>
         <LinhasConfigSkel n={5} />
         <LinhasConfigSkel n={3} />
@@ -460,14 +460,14 @@ function SkelOrcamentos() {
       <TopoSkel titulo={200} />
       <div style={{ padding: '4px var(--pad-x) 0' }}>
         <CardSkel style={{ gap: 10 }}>
-          <Skeleton w={130} h={12} r={6} />
-          <Skeleton w={'50%'} h={28} r={8} />
-          <Skeleton w={'100%'} h={8} r={999} />
-          <Skeleton w={160} h={11} r={6} />
+          <Skeleton w={130} h={12} r="var(--raio-miudo)" />
+          <Skeleton w={'50%'} h={28} r="var(--raio-etiqueta)" />
+          <Skeleton w={'100%'} h={8} r="var(--raio-pilula)" />
+          <Skeleton w={160} h={11} r="var(--raio-miudo)" />
         </CardSkel>
       </div>
       <div style={{ padding: 'var(--esp-secao) var(--pad-x) 0' }}>
-        <Skeleton w={150} h={14} r={6} style={{ marginBottom: 12 }} />
+        <Skeleton w={150} h={14} r="var(--raio-miudo)" style={{ marginBottom: 12 }} />
         <CardSkel style={{ padding: '4px 16px', gap: 0 }}>
           {[0, 1, 2, 3, 4].map((i) => (
             <div key={i} style={{
@@ -476,12 +476,12 @@ function SkelOrcamentos() {
               display: 'flex', flexDirection: 'column', gap: 8,
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <Skeleton w={28} h={28} r={10} />
-                <Skeleton w={`${34 + ((i * 11) % 22)}%`} h={13} r={6} />
+                <Skeleton w={28} h={28} r="var(--raio-compacto)" />
+                <Skeleton w={`${34 + ((i * 11) % 22)}%`} h={13} r="var(--raio-miudo)" />
                 <div style={{ flex: 1 }} />
-                <Skeleton w={70} h={12} r={6} />
+                <Skeleton w={70} h={12} r="var(--raio-miudo)" />
               </div>
-              <Skeleton w={'100%'} h={7} r={999} />
+              <Skeleton w={'100%'} h={7} r="var(--raio-pilula)" />
             </div>
           ))}
         </CardSkel>
@@ -500,18 +500,18 @@ function SkelCaixinhas() {
           {[0, 1, 2].map((i) => (
             <CardSkel key={i} style={{ gap: 12 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <Skeleton w={38} h={38} r={12} />
+                <Skeleton w={38} h={38} r="var(--raio-controle)" />
                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 6 }}>
-                  <Skeleton w={'62%'} h={14} r={6} />
-                  <Skeleton w={'40%'} h={11} r={6} />
+                  <Skeleton w={'62%'} h={14} r="var(--raio-miudo)" />
+                  <Skeleton w={'40%'} h={11} r="var(--raio-miudo)" />
                 </div>
               </div>
-              <Skeleton w={'52%'} h={24} r={8} />
-              <Skeleton w={'100%'} h={8} r={999} />
+              <Skeleton w={'52%'} h={24} r="var(--raio-etiqueta)" />
+              <Skeleton w={'100%'} h={8} r="var(--raio-pilula)" />
             </CardSkel>
           ))}
         </div>
-        <Skeleton w={'100%'} h={48} r={16} style={{ marginTop: 16 }} />
+        <Skeleton w={'100%'} h={48} r="var(--raio-bloco)" style={{ marginTop: 16 }} />
       </div>
     </>
   );
@@ -523,18 +523,18 @@ function SkelCaixinha() {
     <>
       <TopoSkel titulo={0} />
       <div style={{ padding: '4px var(--pad-x) 0' }}>
-        <CardSkel style={{ borderRadius: 28, padding: 22, gap: 12, alignItems: 'center' }}>
-          <Skeleton w={56} h={56} r={18} />
-          <Skeleton w={160} h={18} r={8} />
-          <Skeleton w={200} h={32} r={8} />
-          <Skeleton w={'100%'} h={8} r={999} />
+        <CardSkel style={{ borderRadius: 'var(--raio-superficie)', padding: 22, gap: 12, alignItems: 'center' }}>
+          <Skeleton w={56} h={56} r="var(--raio-pilula)" />
+          <Skeleton w={160} h={18} r="var(--raio-etiqueta)" />
+          <Skeleton w={200} h={32} r="var(--raio-etiqueta)" />
+          <Skeleton w={'100%'} h={8} r="var(--raio-pilula)" />
         </CardSkel>
         <div style={{ display: 'flex', gap: 10, marginTop: 'var(--esp-secao)' }}>
-          <Skeleton w={'100%'} h={46} r={14} />
-          <Skeleton w={'100%'} h={46} r={14} />
+          <Skeleton w={'100%'} h={46} r="var(--raio-bloco)" />
+          <Skeleton w={'100%'} h={46} r="var(--raio-bloco)" />
         </div>
-        <Skeleton w={140} h={13} r={6} style={{ margin: 'var(--esp-secao) 0 var(--esp-titulo)' }} />
-        <LinhasSkel n={3} icone={36} r={12} valor={0} />
+        <Skeleton w={140} h={13} r="var(--raio-miudo)" style={{ margin: 'var(--esp-secao) 0 var(--esp-titulo)' }} />
+        <LinhasSkel n={3} icone={36} r="var(--raio-controle)" valor={0} />
       </div>
     </>
   );
@@ -550,8 +550,8 @@ function SkelCartoes() {
           <div style={{ display: 'flex', gap: 14 }}>
             {[0, 1].map((i) => (
               <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 6 }}>
-                <Skeleton w={80} h={11} r={6} />
-                <Skeleton w={'70%'} h={20} r={6} />
+                <Skeleton w={80} h={11} r="var(--raio-miudo)" />
+                <Skeleton w={'70%'} h={20} r="var(--raio-miudo)" />
               </div>
             ))}
           </div>
@@ -561,16 +561,16 @@ function SkelCartoes() {
               paddingTop: 14, borderTop: '1px solid var(--linha)',
             }}>
               {/* O retângulo do cartão, na proporção do CardCartao */}
-              <Skeleton w={66} h={42} r={9} />
+              <Skeleton w={66} h={42} r="var(--raio-etiqueta)" />
               <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 6 }}>
-                <Skeleton w={`${48 + i * 14}%`} h={13} r={6} />
-                <Skeleton w={'36%'} h={11} r={6} />
+                <Skeleton w={`${48 + i * 14}%`} h={13} r="var(--raio-miudo)" />
+                <Skeleton w={'36%'} h={11} r="var(--raio-miudo)" />
               </div>
-              <Skeleton w={70} h={14} r={6} />
+              <Skeleton w={70} h={14} r="var(--raio-miudo)" />
             </div>
           ))}
         </CardSkel>
-        <Skeleton w={'100%'} h={48} r={16} style={{ marginTop: 16 }} />
+        <Skeleton w={'100%'} h={48} r="var(--raio-bloco)" style={{ marginTop: 16 }} />
       </div>
     </>
   );
@@ -583,9 +583,9 @@ function SkelCategoria() {
       <TopoSkel titulo={0} />
       <div style={PAD_X}>
         <CardSkel style={{ padding: 20, gap: 12, alignItems: 'center' }}>
-          <Skeleton w={52} h={52} r={18} />
-          <Skeleton w={140} h={16} r={8} />
-          <Skeleton w={180} h={28} r={8} />
+          <Skeleton w={52} h={52} r="var(--raio-pilula)" />
+          <Skeleton w={140} h={16} r="var(--raio-etiqueta)" />
+          <Skeleton w={180} h={28} r="var(--raio-etiqueta)" />
         </CardSkel>
         <div style={{ marginTop: 'var(--esp-secao)' }}>
           <LinhasSkel n={4} />
@@ -603,7 +603,7 @@ function SkelLista() {
     <>
       <TopoSkel titulo={175} />
       <div style={PAD_X}>
-        <Skeleton w={130} h={13} r={6} style={{ marginBottom: 12 }} />
+        <Skeleton w={130} h={13} r="var(--raio-miudo)" style={{ marginBottom: 12 }} />
         <LinhasSkel n={5} />
       </div>
     </>
@@ -619,9 +619,9 @@ function SkelOnboarding() {
       padding: '0 30px',
     }}>
       <Skeleton w={240} h={240} r={60} />
-      <Skeleton w={220} h={24} r={8} style={{ marginTop: 12 }} />
-      <Skeleton w={260} h={13} r={6} />
-      <Skeleton w={'100%'} h={50} r={16} style={{ marginTop: 20, maxWidth: 360 }} />
+      <Skeleton w={220} h={24} r="var(--raio-etiqueta)" style={{ marginTop: 12 }} />
+      <Skeleton w={260} h={13} r="var(--raio-miudo)" />
+      <Skeleton w={'100%'} h={50} r="var(--raio-bloco)" style={{ marginTop: 20, maxWidth: 360 }} />
     </div>
   );
 }

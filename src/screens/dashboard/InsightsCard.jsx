@@ -90,7 +90,7 @@ export function InsightsCard({ insights, ehDesktop }) {
               style={{
                 width: 26,
                 height: 26,
-                borderRadius: 13,
+                borderRadius: "var(--raio-pilula)",
                 background: "color-mix(in oklab, var(--primary) 14%, transparent)",
                 display: "flex",
                 alignItems: "center",
@@ -114,7 +114,7 @@ export function InsightsCard({ insights, ehDesktop }) {
                   style={{
                     width: i === insightIdx ? 14 : 6,
                     height: 6,
-                    borderRadius: 3,
+                    borderRadius: "var(--raio-pilula)",
                     border: "none",
                     padding: 0,
                     background:
@@ -139,7 +139,7 @@ export function InsightsCard({ insights, ehDesktop }) {
               style={{
                 width: 8,
                 height: 8,
-                borderRadius: 4,
+                borderRadius: "var(--raio-pilula)",
                 background: insightAtual.cor,
                 marginTop: 6,
                 flexShrink: 0,

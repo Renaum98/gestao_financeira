@@ -61,7 +61,6 @@ function CardSaldoBase({
   return (
     <CardDestaque
       style={{
-        borderRadius: 28,
         padding: 22,
         boxShadow: "0 4px 12px color-mix(in oklab, var(--primary) 10%, transparent)",
       }}
@@ -105,7 +104,7 @@ function CardSaldoBase({
               alignItems: "center",
               gap: 4,
               padding: "4px 10px",
-              borderRadius: 999,
+              borderRadius: "var(--raio-pilula)",
               background: "rgba(255,255,255,0.18)",
               fontSize: 12,
               fontWeight: 700,
@@ -220,7 +219,7 @@ function CardSaldoBase({
             style={{
               marginTop: 10,
               padding: "8px 12px",
-              borderRadius: 12,
+              borderRadius: "var(--raio-controle)",
               background: "rgba(255,255,255,0.12)",
               display: "flex",
               alignItems: "center",

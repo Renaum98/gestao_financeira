@@ -285,7 +285,7 @@ export function AddExpenseModal({ ctx, params }) {
               color: valorNum > 0 ? "#fff" : "var(--muted)",
               border: "none",
               padding: "6px 14px",
-              borderRadius: 999,
+              borderRadius: "var(--raio-pilula)",
               fontWeight: 800,
               fontSize: 13,
               cursor: valorNum > 0 ? "pointer" : "default",
@@ -384,7 +384,7 @@ export function AddExpenseModal({ ctx, params }) {
               display: "flex",
               gap: 6,
               padding: 4,
-              borderRadius: 14,
+              borderRadius: "var(--raio-bloco)",
               background: "var(--card-2)",
               boxShadow: "0 1px 2px rgba(0,0,0,0.06)",
             }}
@@ -403,7 +403,7 @@ export function AddExpenseModal({ ctx, params }) {
                   style={{
                     flex: 1,
                     padding: "10px 8px",
-                    borderRadius: 10,
+                    borderRadius: "var(--raio-compacto)",
                     border: "none",
                     background: sel ? opt.bgSel : "transparent",
                     color: txtColor,
@@ -484,7 +484,7 @@ export function AddExpenseModal({ ctx, params }) {
                 alignItems: "center",
                 gap: 6,
                 padding: "8px 10px 6px",
-                borderRadius: 14,
+                borderRadius: "var(--raio-bloco)",
                 border: "none",
                 background: criandoCat ? "var(--card-2)" : "transparent",
                 cursor: "pointer",
@@ -500,7 +500,7 @@ export function AddExpenseModal({ ctx, params }) {
                 style={{
                   width: 32,
                   height: 32,
-                  borderRadius: 10,
+                  borderRadius: "var(--raio-compacto)",
                   border: "2px dashed var(--linha)",
                   display: "flex",
                   alignItems: "center",
@@ -524,7 +524,7 @@ export function AddExpenseModal({ ctx, params }) {
               style={{
                 margin: "2px 4px 4px",
                 padding: "12px 14px",
-                borderRadius: 14,
+                borderRadius: "var(--raio-bloco)",
                 background: "var(--card-2)",
                 boxShadow: "0 1px 2px rgba(0,0,0,0.06)",
                 display: "flex",
@@ -537,7 +537,7 @@ export function AddExpenseModal({ ctx, params }) {
                   style={{
                     width: 36,
                     height: 36,
-                    borderRadius: 11,
+                    borderRadius: "var(--raio-controle)",
                     background: novaCorCat + "22",
                     display: "flex",
                     alignItems: "center",
@@ -549,7 +549,7 @@ export function AddExpenseModal({ ctx, params }) {
                     style={{
                       width: 18,
                       height: 18,
-                      borderRadius: "50%",
+                      borderRadius: "var(--raio-pilula)",
                       background: novaCorCat,
                       color: "#fff",
                       fontWeight: 800,
@@ -573,7 +573,7 @@ export function AddExpenseModal({ ctx, params }) {
                     flex: 1,
                     minWidth: 0,
                     padding: "10px 12px",
-                    borderRadius: 10,
+                    borderRadius: "var(--raio-compacto)",
                     border: "none",
                     background: "var(--bg)",
                     outline: "none",
@@ -593,7 +593,7 @@ export function AddExpenseModal({ ctx, params }) {
                     style={{
                       width: 26,
                       height: 26,
-                      borderRadius: "50%",
+                      borderRadius: "var(--raio-pilula)",
                       background: cor,
                       border:
                         novaCorCat === cor
@@ -608,7 +608,7 @@ export function AddExpenseModal({ ctx, params }) {
                   style={{
                     width: 26,
                     height: 26,
-                    borderRadius: "50%",
+                    borderRadius: "var(--raio-pilula)",
                     border: "2px dashed var(--linha)",
                     display: "flex",
                     alignItems: "center",
@@ -658,7 +658,7 @@ export function AddExpenseModal({ ctx, params }) {
                     color: novoNomeCat.trim() ? "#fff" : "var(--muted)",
                     border: "none",
                     padding: "8px 16px",
-                    borderRadius: 999,
+                    borderRadius: "var(--raio-pilula)",
                     fontWeight: 800,
                     fontSize: 13,
                     cursor: novoNomeCat.trim() ? "pointer" : "default",
@@ -680,7 +680,7 @@ export function AddExpenseModal({ ctx, params }) {
             style={{
               marginTop: 12,
               padding: "10px 14px",
-              borderRadius: 12,
+              borderRadius: "var(--raio-controle)",
               background: (avisoOrcVis.excedeu ? COR_NEG : COR_AVISO) + "1A",
               border: `1px solid ${(avisoOrcVis.excedeu ? COR_NEG : COR_AVISO)}55`,
               display: "flex",
@@ -725,7 +725,7 @@ export function AddExpenseModal({ ctx, params }) {
             style={{
               width: "100%",
               padding: "14px 16px",
-              borderRadius: 14,
+              borderRadius: "var(--raio-bloco)",
               border: "none",
               background: "var(--card-2)",
               outline: "none",
@@ -748,7 +748,7 @@ export function AddExpenseModal({ ctx, params }) {
               alignItems: "center",
               gap: 10,
               padding: "12px 16px",
-              borderRadius: 14,
+              borderRadius: "var(--raio-bloco)",
               background: "var(--card-2)",
               boxShadow: "0 1px 2px rgba(0,0,0,0.06)",
             }}
@@ -801,7 +801,7 @@ export function AddExpenseModal({ ctx, params }) {
                 style={{
                   flex: 1,
                   padding: "10px 4px",
-                  borderRadius: 12,
+                  borderRadius: "var(--raio-controle)",
                   border: "none",
                   background: sel ? "var(--ink)" : "var(--card-2)",
                   color: sel ? "var(--bg)" : "var(--ink)",
@@ -849,7 +849,7 @@ export function AddExpenseModal({ ctx, params }) {
                     alignItems: "center",
                     gap: 6,
                     padding: "8px 12px",
-                    borderRadius: 999,
+                    borderRadius: "var(--raio-pilula)",
                     border: "none",
                     background: sel ? cor : "var(--card-2)",
                     color: tinta,
@@ -874,7 +874,7 @@ export function AddExpenseModal({ ctx, params }) {
                   alignItems: "center",
                   gap: 6,
                   padding: "8px 12px",
-                  borderRadius: 999,
+                  borderRadius: "var(--raio-pilula)",
                   border: "none",
                   background: cartaoId === null ? "var(--ink)" : "var(--card-2)",
                   color: cartaoId === null ? "var(--bg)" : "var(--muted)",
@@ -898,7 +898,7 @@ export function AddExpenseModal({ ctx, params }) {
             style={{
               marginTop: 10,
               padding: "9px 12px",
-              borderRadius: 12,
+              borderRadius: "var(--raio-controle)",
               background: "var(--surface-sunken)",
               display: "flex",
               alignItems: "center",
@@ -923,7 +923,7 @@ export function AddExpenseModal({ ctx, params }) {
             style={{
               marginTop: 10,
               padding: "10px 14px",
-              borderRadius: 12,
+              borderRadius: "var(--raio-controle)",
               background: (avisoCartaoVis.excedeu ? COR_NEG : COR_AVISO) + "1A",
               border: `1px solid ${(avisoCartaoVis.excedeu ? COR_NEG : COR_AVISO)}55`,
               display: "flex",
@@ -960,7 +960,7 @@ export function AddExpenseModal({ ctx, params }) {
             style={{
               marginTop: 10,
               padding: "10px 14px",
-              borderRadius: 12,
+              borderRadius: "var(--raio-controle)",
               background: COR_AVISO + "1A",
               border: `1px solid ${COR_AVISO}55`,
               display: "flex",
@@ -988,7 +988,7 @@ export function AddExpenseModal({ ctx, params }) {
               alignItems: "center",
               gap: 12,
               padding: "12px 14px",
-              borderRadius: 14,
+              borderRadius: "var(--raio-bloco)",
               background: "var(--card-2)",
               boxShadow: "0 1px 2px rgba(0,0,0,0.06)",
               cursor: "pointer",
@@ -998,7 +998,7 @@ export function AddExpenseModal({ ctx, params }) {
               style={{
                 width: 36,
                 height: 36,
-                borderRadius: 12,
+                borderRadius: "var(--raio-controle)",
                 background: ehRecorrente
                   ? "color-mix(in oklab, var(--primary) 14%, transparent)"
                   : "var(--surface-sunken)",
@@ -1046,7 +1046,7 @@ export function AddExpenseModal({ ctx, params }) {
               <div
                 style={{
                   padding: "12px 16px",
-                  borderRadius: 14,
+                  borderRadius: "var(--raio-bloco)",
                   background: "var(--card-2)",
                   boxShadow: "0 1px 2px rgba(0,0,0,0.06)",
                 }}
@@ -1106,7 +1106,7 @@ export function AddExpenseModal({ ctx, params }) {
                 alignItems: "center",
                 gap: 10,
                 padding: "12px 16px",
-                borderRadius: 14,
+                borderRadius: "var(--raio-bloco)",
                 background: "var(--card-2)",
                 boxShadow: "0 1px 2px rgba(0,0,0,0.06)",
               }}
@@ -1142,7 +1142,7 @@ export function AddExpenseModal({ ctx, params }) {
                 alignItems: "center",
                 gap: 10,
                 padding: "12px 16px",
-                borderRadius: 14,
+                borderRadius: "var(--raio-bloco)",
                 background: "var(--card-2)",
                 boxShadow: "0 1px 2px rgba(0,0,0,0.06)",
               }}
@@ -1216,7 +1216,7 @@ function ToggleSimples({ ativo, onChange }) {
       style={{
         width: 42,
         height: 26,
-        borderRadius: 14,
+        borderRadius: "var(--raio-pilula)",
         background: ativo ? "var(--primary)" : "var(--surface-sunken)",
         position: "relative",
         cursor: "pointer",
@@ -1231,7 +1231,7 @@ function ToggleSimples({ ativo, onChange }) {
           left: ativo ? 18 : 2,
           width: 22,
           height: 22,
-          borderRadius: 11,
+          borderRadius: "var(--raio-pilula)",
           background: "#fff",
           transition: "left .15s",
           boxShadow: "0 1px 3px rgba(0,0,0,0.15)",
@@ -1326,7 +1326,7 @@ function CategoriaBtn({
         alignItems: "center",
         gap: 6,
         padding: "8px 10px 6px",
-        borderRadius: 14,
+        borderRadius: "var(--raio-bloco)",
         border: "none",
         background: selecionado ? "var(--card-2)" : "transparent",
         boxShadow: selecionado

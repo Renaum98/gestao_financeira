@@ -8,7 +8,7 @@ import { useT } from "../../lib/i18n.jsx";
 const ACAO_BTN = {
   width: 36,
   height: 36,
-  borderRadius: 18,
+  borderRadius: "var(--raio-pilula)",
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
@@ -65,7 +65,7 @@ export function CabecalhoDashboard({
                   minWidth: 14,
                   height: 14,
                   padding: "0 3px",
-                  borderRadius: 7,
+                  borderRadius: "var(--raio-pilula)",
                   background: COR_NEG,
                   color: "#fff",
                   fontSize: 9,
@@ -99,7 +99,7 @@ export function CabecalhoDashboard({
                   height: "100%",
                   objectFit: "cover",
                   display: "block",
-                  borderRadius: 18,
+                  borderRadius: "var(--raio-pilula)",
                 }}
               />
             ) : (
@@ -107,7 +107,7 @@ export function CabecalhoDashboard({
                 style={{
                   width: "100%",
                   height: "100%",
-                  borderRadius: 18,
+                  borderRadius: "var(--raio-pilula)",
                   background: "var(--primary-degrade)",
                   display: "flex",
                   alignItems: "center",

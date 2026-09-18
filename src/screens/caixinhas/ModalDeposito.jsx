@@ -112,7 +112,7 @@ export function ModalDeposito({ cor, gruposEntrada = [], alocadoPorDescricao = {
             alignItems: "center",
             gap: 10,
             padding: "12px 14px",
-            borderRadius: 12,
+            borderRadius: "var(--raio-bloco)",
             background: "var(--card-2)",
             boxShadow: "0 1px 2px rgba(0,0,0,0.06)",
           }}
@@ -143,7 +143,7 @@ export function ModalDeposito({ cor, gruposEntrada = [], alocadoPorDescricao = {
             display: "flex",
             gap: 6,
             padding: 4,
-            borderRadius: 12,
+            borderRadius: "var(--raio-bloco)",
             background: "var(--card-2)",
             boxShadow: "0 1px 2px rgba(0,0,0,0.06)",
           }}
@@ -168,7 +168,7 @@ export function ModalDeposito({ cor, gruposEntrada = [], alocadoPorDescricao = {
                 style={{
                   flex: 1,
                   padding: "9px 8px",
-                  borderRadius: 10,
+                  borderRadius: "var(--raio-compacto)",
                   border: "none",
                   background: sel ? "var(--card)" : "transparent",
                   color: opt.disabled ? "var(--linha)" : sel ? "var(--ink)" : "var(--muted)",
@@ -225,7 +225,7 @@ export function ModalDeposito({ cor, gruposEntrada = [], alocadoPorDescricao = {
                     alignItems: "center",
                     gap: 10,
                     padding: "10px 12px",
-                    borderRadius: 12,
+                    borderRadius: "var(--raio-controle)",
                     border: sel ? `2px solid ${COR_POS}` : "2px solid transparent",
                     background: "var(--card-2)",
                     cursor: semSaldo ? "default" : "pointer",
@@ -238,7 +238,7 @@ export function ModalDeposito({ cor, gruposEntrada = [], alocadoPorDescricao = {
                     style={{
                       width: 30,
                       height: 30,
-                      borderRadius: 10,
+                      borderRadius: "var(--raio-compacto)",
                       background: COR_POS_FUNDO,
                       display: "flex",
                       alignItems: "center",

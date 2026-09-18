@@ -81,7 +81,7 @@ function BotaoVoltarFixo({ voltar, rolou, t }) {
           onClick={voltar}
           aria-label={t("Voltar")}
           style={{
-            width: 36, height: 36, borderRadius: 18,
+            width: 36, height: 36, borderRadius: 'var(--raio-pilula)',
             background: 'var(--card)', border: 'none', display: 'flex',
             alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
             // Só transform e box-shadow animam: nenhum dos dois faz layout,
@@ -122,11 +122,11 @@ export function SeletorMes({ mes, setMes, todosMeses }) {
   return (
     <div style={{
       display: 'inline-flex', alignItems: 'center', gap: 4,
-      background: 'var(--card)', borderRadius: 999, padding: 4,
+      background: 'var(--card)', borderRadius: 'var(--raio-pilula)', padding: 4,
       boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
     }}>
       <button onClick={() => podeAnt && setMes(todosMeses[idx + 1])} disabled={!podeAnt} aria-label={t("Mês anterior")} style={{
-        width: 30, height: 30, borderRadius: 999, border: 'none',
+        width: 30, height: 30, borderRadius: 'var(--raio-pilula)', border: 'none',
         background: 'transparent', cursor: podeAnt ? 'pointer' : 'default',
         opacity: podeAnt ? 1 : 0.3, display: 'flex', alignItems: 'center', justifyContent: 'center',
       }}>
@@ -136,7 +136,7 @@ export function SeletorMes({ mes, setMes, todosMeses }) {
         {rotuloMesT(t, mes)}
       </div>
       <button onClick={() => podeProx && setMes(todosMeses[idx - 1])} disabled={!podeProx} aria-label={t("Próximo mês")} style={{
-        width: 30, height: 30, borderRadius: 999, border: 'none',
+        width: 30, height: 30, borderRadius: 'var(--raio-pilula)', border: 'none',
         background: 'transparent', cursor: podeProx ? 'pointer' : 'default',
         opacity: podeProx ? 1 : 0.3, display: 'flex', alignItems: 'center', justifyContent: 'center',
       }}>
@@ -155,7 +155,7 @@ export function Card({ children, style = {}, onClick, className, ...rest }) {
       className={[className, onClick && "clicavel"].filter(Boolean).join(" ") || undefined}
       {...rest}
       style={{
-      background: 'var(--card)', borderRadius: 22, padding: 18,
+      background: 'var(--card)', borderRadius: 'var(--raio-card)', padding: 18,
       boxShadow: '0 1px 2px rgba(20,16,24,0.04), 0 4px 12px rgba(20,16,24,0.03)',
       cursor: onClick ? 'pointer' : 'default',
       ...style,
@@ -205,7 +205,7 @@ export function ItemTransacao({ tx, onClick, doParceiro = false, nomeParceiro = 
       <div style={{ position: 'relative', flexShrink: 0 }}>
         {ehGuardadoCx ? (
           <div style={{
-            width: 42, height: 42, borderRadius: 14,
+            width: 42, height: 42, borderRadius: 'var(--raio-bloco)',
             background: `color-mix(in oklab, ${corCx} 16%, transparent)`,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}>
@@ -213,7 +213,7 @@ export function ItemTransacao({ tx, onClick, doParceiro = false, nomeParceiro = 
           </div>
         ) : ehEntrada ? (
           <div style={{
-            width: 42, height: 42, borderRadius: 14,
+            width: 42, height: 42, borderRadius: 'var(--raio-bloco)',
             background: doParceiro ? 'var(--surface-sunken)' : COR_POS_FUNDO,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}>
@@ -227,7 +227,7 @@ export function ItemTransacao({ tx, onClick, doParceiro = false, nomeParceiro = 
             title={nomeParceiro ? t('Do(a) {nome}', { nome: nomeParceiro }) : t('Do parceiro')}
             style={{
               position: 'absolute', right: -3, bottom: -3,
-              width: 18, height: 18, borderRadius: 9,
+              width: 18, height: 18, borderRadius: 'var(--raio-pilula)',
               background: 'var(--card)',
               border: '2px solid var(--bg)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -250,7 +250,7 @@ export function ItemTransacao({ tx, onClick, doParceiro = false, nomeParceiro = 
               background: doParceiro
                 ? 'var(--surface-sunken)'
                 : 'color-mix(in oklab, var(--primary) 12%, transparent)',
-              padding: '2px 6px', borderRadius: 6, letterSpacing: '-0.01em',
+              padding: '2px 6px', borderRadius: 'var(--raio-miudo)', letterSpacing: '-0.01em',
               flexShrink: 0,
             }}>
               {parc.atual}/{parc.total}
@@ -263,7 +263,7 @@ export function ItemTransacao({ tx, onClick, doParceiro = false, nomeParceiro = 
               background: doParceiro
                 ? 'var(--surface-sunken)'
                 : 'color-mix(in oklab, var(--primary) 12%, transparent)',
-              padding: '2px 6px', borderRadius: 6, letterSpacing: '-0.01em',
+              padding: '2px 6px', borderRadius: 'var(--raio-miudo)', letterSpacing: '-0.01em',
               flexShrink: 0, display: 'inline-flex', alignItems: 'center', gap: 3,
             }}>
               <Icon name="history" size={9} color={doParceiro ? 'var(--muted)' : 'var(--primary)'} strokeWidth={2.6} /> {t('Mensal')}
@@ -274,7 +274,7 @@ export function ItemTransacao({ tx, onClick, doParceiro = false, nomeParceiro = 
               fontSize: 10, fontWeight: 800,
               color: 'var(--muted)',
               background: 'var(--surface-sunken)',
-              padding: '2px 6px', borderRadius: 6, letterSpacing: '-0.01em',
+              padding: '2px 6px', borderRadius: 'var(--raio-miudo)', letterSpacing: '-0.01em',
               flexShrink: 0, display: 'inline-flex', alignItems: 'center', gap: 3,
             }}>
               <Icon name="piggy" size={9} color="var(--muted)" strokeWidth={2.6} />
@@ -297,14 +297,14 @@ export function ItemTransacao({ tx, onClick, doParceiro = false, nomeParceiro = 
           ) : (
             <>
               <span>{t(cat?.nome || 'Outros')}</span>
-              <span style={{ width: 3, height: 3, borderRadius: 3, background: 'var(--muted)', opacity: 0.5 }} />
+              <span style={{ width: 3, height: 3, borderRadius: 'var(--raio-pilula)', background: 'var(--muted)', opacity: 0.5 }} />
               <Icon name={iconePagamento(tx.pagamento)} size={12} color="var(--muted)" strokeWidth={2} />
             </>
           )}
           {parc && <span style={{ fontWeight: 600 }}>· {parc.total}× {fmtBRLCompacto(parc.valorTotal)}</span>}
           {doParceiro && nomeParceiro && (
             <>
-              <span style={{ width: 3, height: 3, borderRadius: 3, background: 'var(--muted)', opacity: 0.5 }} />
+              <span style={{ width: 3, height: 3, borderRadius: 'var(--raio-pilula)', background: 'var(--muted)', opacity: 0.5 }} />
               <span style={{ fontWeight: 700, fontStyle: 'italic' }}>{nomeParceiro}</span>
             </>
           )}

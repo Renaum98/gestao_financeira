@@ -47,7 +47,7 @@ export function SecaoOrcamento({ orcEstourados, orcProximos, irPara, ehLida, mar
                     color: cor,
                     background: `color-mix(in oklab, ${cor} 14%, transparent)`,
                     padding: '4px 8px',
-                    borderRadius: 8,
+                    borderRadius: "var(--raio-etiqueta)",
                     flexShrink: 0,
                     letterSpacing: '-0.01em',
                   }}

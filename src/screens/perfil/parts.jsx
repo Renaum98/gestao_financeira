@@ -13,7 +13,7 @@ export function Toggle({ ativo, onChange }) {
       style={{
         width: 42,
         height: 26,
-        borderRadius: 14,
+        borderRadius: "var(--raio-pilula)",
         background: ativo ? "var(--primary)" : "var(--surface-sunken)",
         position: "relative",
         cursor: "pointer",
@@ -27,7 +27,7 @@ export function Toggle({ ativo, onChange }) {
           left: ativo ? 18 : 2,
           width: 22,
           height: 22,
-          borderRadius: 11,
+          borderRadius: "var(--raio-pilula)",
           background: "#fff",
           transition: "left .15s",
           boxShadow: "0 1px 3px rgba(0,0,0,0.15)",
@@ -49,7 +49,7 @@ export function Segmentado({ valor, onChange, opcoes, ariaLabel }) {
         display: "flex",
         gap: 6,
         padding: 4,
-        borderRadius: 12,
+        borderRadius: "var(--raio-bloco)",
         background: "var(--card-2)",
         boxShadow: "0 1px 2px rgba(0,0,0,0.06)",
       }}
@@ -68,7 +68,7 @@ export function Segmentado({ valor, onChange, opcoes, ariaLabel }) {
             style={{
               flex: 1,
               padding: "8px 8px",
-              borderRadius: 10,
+              borderRadius: "var(--raio-compacto)",
               border: "none",
               background: sel ? "var(--card)" : "transparent",
               color: sel ? "var(--ink)" : "var(--muted)",
@@ -106,7 +106,7 @@ export function SelectPerfil({ value, onChange, options, ariaLabel }) {
           WebkitAppearance: "none",
           MozAppearance: "none",
           padding: "12px 40px 12px 14px",
-          borderRadius: 12,
+          borderRadius: "var(--raio-bloco)",
           border: "none",
           background: "var(--card-2)",
           color: "var(--ink)",
@@ -158,7 +158,7 @@ export function ConfigItem({ icon, label, onClick, toggleAtivo, onToggle }) {
         style={{
           width: 36,
           height: 36,
-          borderRadius: 12,
+          borderRadius: "var(--raio-controle)",
           background: "var(--bg)",
           display: "flex",
           alignItems: "center",

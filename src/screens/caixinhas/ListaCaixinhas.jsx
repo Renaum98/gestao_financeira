@@ -29,7 +29,7 @@ export function CaixinhasScreen({ ctx, params }) {
               style={{
                 width: 56,
                 height: 56,
-                borderRadius: 28,
+                borderRadius: "var(--raio-pilula)",
                 background: "var(--primary-degrade)",
                 margin: "0 auto 12px",
                 display: "flex",
@@ -77,7 +77,7 @@ export function CaixinhasScreen({ ctx, params }) {
             width: "100%",
             marginTop: 16,
             padding: "14px",
-            borderRadius: 16,
+            borderRadius: "var(--raio-bloco)",
             border: "none",
             cursor: "pointer",
             background: "var(--primary-degrade)",

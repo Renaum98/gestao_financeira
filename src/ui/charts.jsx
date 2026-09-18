@@ -92,8 +92,8 @@ export function PieChart({ dados, total, tamanho = 200, ativo, onHover }) {
 export function BarraProgresso({ valor, max, cor, altura = 8, fundo = 'var(--surface-sunken)' }) {
   const pct = max > 0 ? Math.min(100, (valor / max) * 100) : 0;
   return (
-    <div style={{ width: '100%', height: altura, background: fundo, borderRadius: altura, overflow: 'hidden' }}>
-      <div style={{ width: `${pct}%`, height: '100%', background: cor, borderRadius: altura, transition: 'width .3s ease' }} />
+    <div style={{ width: '100%', height: altura, background: fundo, borderRadius: 'var(--raio-pilula)', overflow: 'hidden' }}>
+      <div style={{ width: `${pct}%`, height: '100%', background: cor, borderRadius: 'var(--raio-pilula)', transition: 'width .3s ease' }} />
     </div>
   );
 }

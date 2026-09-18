@@ -72,7 +72,7 @@ export function HistoricoDepositos({ depositos, cx, entradas, caixinhasCompartil
                     style={{
                       width: 36,
                       height: 36,
-                      borderRadius: 12,
+                      borderRadius: "var(--raio-controle)",
                       background: ehSaque ? COR_NEG_FUNDO : `${cx.cor}22`,
                       display: "flex",
                       alignItems: "center",
@@ -95,7 +95,7 @@ export function HistoricoDepositos({ depositos, cx, entradas, caixinhasCompartil
                         bottom: -3,
                         width: 16,
                         height: 16,
-                        borderRadius: 8,
+                        borderRadius: "var(--raio-pilula)",
                         background: "var(--card)",
                         border: "2px solid var(--bg)",
                         display: "flex",

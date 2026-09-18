@@ -59,7 +59,7 @@
   pointer-events: none;
   /* raio parelho nos quatro cantos. O valor vem do RAIO_GOTA (app.jsx) por
      style inline — é o mesmo raio dos botões, e mora num lugar só. */
-  border-radius: var(--raio-gota, 20px);
+  border-radius: var(--raio-gota, 22px);
   /* radial suave: denso atrás do ícone e dissolvendo antes da borda */
   background: radial-gradient(115% 95% at 50% 42%,
     color-mix(in oklab, var(--primary) 28%, transparent) 0%,
@@ -107,16 +107,16 @@
   0%   { border-radius: 50%; }
   30%  { border-radius: 30px 12px 26px 14px; }
   60%  { border-radius: 13px 28px 15px 26px; }
-  100% { border-radius: var(--raio-gota, 20px); }
+  100% { border-radius: var(--raio-gota, 22px); }
 }
 
 /* Variante da sidebar (desktop): leva só o deslize. O fundo e o canto voltam a
-   ser os de antes — chapado e 12px — sem gradiente, sem raio assimétrico e sem
-   deformação no caminho. Segurar e arrastar são gestos de dedo, não existem
-   aqui. */
+   ser os de antes — chapado e no raio dos itens da sidebar — sem gradiente,
+   sem raio assimétrico e sem deformação no caminho. Segurar e arrastar são
+   gestos de dedo, não existem aqui. */
 .nav-indicador--v {
   background: color-mix(in oklab, var(--primary) 12%, transparent);
-  border-radius: 12px;
+  border-radius: var(--raio-controle);
 }
 
 @media (prefers-reduced-motion: reduce) {

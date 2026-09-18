@@ -35,7 +35,7 @@ export function MiniCartao({ cor }) {
       style={{
         width: 62,
         height: 42,
-        borderRadius: 9,
+        borderRadius: "var(--raio-etiqueta)",
         flexShrink: 0,
         position: "relative",
         overflow: "hidden",
@@ -57,9 +57,9 @@ export function MiniCartao({ cor }) {
       />
       {/* par de círculos, no canto de cima */}
       <div style={{ position: "absolute", top: 8, right: 8, display: "flex" }}>
-        <div style={{ width: 11, height: 11, borderRadius: 6, background: tinta(0.55) }} />
+        <div style={{ width: 11, height: 11, borderRadius: "var(--raio-pilula)", background: tinta(0.55) }} />
         <div
-          style={{ width: 11, height: 11, borderRadius: 6, marginLeft: -4, background: tinta(0.3) }}
+          style={{ width: 11, height: 11, borderRadius: "var(--raio-pilula)", marginLeft: -4, background: tinta(0.3) }}
         />
       </div>
       {/* linhas do relevo */}

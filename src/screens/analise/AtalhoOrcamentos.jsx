@@ -21,7 +21,7 @@ export function AtalhoOrcamentos({ irPara, spanAll }) {
           style={{
             width: 44,
             height: 44,
-            borderRadius: 22,
+            borderRadius: "var(--raio-pilula)",
             background: "#fff",
             display: "flex",
             alignItems: "center",

@@ -153,7 +153,7 @@ export function PerfilScreen({ ctx }) {
           style={{
             width: "100%",
             padding: "14px",
-            borderRadius: 16,
+            borderRadius: "var(--raio-bloco)",
             border: "none",
             background: "var(--card)",
             color: COR_NEG,
@@ -181,7 +181,7 @@ export function PerfilScreen({ ctx }) {
             width: "100%",
             marginTop: 10,
             padding: "12px",
-            borderRadius: 14,
+            borderRadius: "var(--raio-bloco)",
             border: "none",
             background: "transparent",
             color: "var(--muted)",

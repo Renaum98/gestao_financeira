@@ -18,7 +18,7 @@ export function CardLembranca({ lembranca }) {
         style={{
           width: 38,
           height: 38,
-          borderRadius: 12,
+          borderRadius: "var(--raio-controle)",
           flexShrink: 0,
           background: lembranca.completo
             ? COR_POS_FUNDO

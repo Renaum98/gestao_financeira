@@ -69,7 +69,7 @@ export function ProximasVencer({ proximas, irPara, onSelecionar, ehDesktop }) {
                 style={{
                   width: 42,
                   height: 42,
-                  borderRadius: 12,
+                  borderRadius: "var(--raio-bloco)",
                   background: urgente
                     ? `color-mix(in oklab, ${COR_NEG} 12%, transparent)`
                     : "var(--surface-sunken)",

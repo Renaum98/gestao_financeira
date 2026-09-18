@@ -40,7 +40,7 @@ export function ContaCompartilhadaCard({
               style={{
                 width: 44,
                 height: 44,
-                borderRadius: 22,
+                borderRadius: "var(--raio-pilula)",
                 background: "var(--primary-degrade)",
                 display: "flex",
                 alignItems: "center",
@@ -68,7 +68,7 @@ export function ContaCompartilhadaCard({
             style={{
               marginTop: 14,
               padding: "9px 14px",
-              borderRadius: 12,
+              borderRadius: "var(--raio-controle)",
               border: "1.5px solid var(--linha)",
               background: "var(--card)",
               color: COR_NEG,
@@ -97,7 +97,7 @@ export function ContaCompartilhadaCard({
             onClick={() => onCancelarConvite(convitePendente.id)}
             style={{
               padding: "8px 14px",
-              borderRadius: 12,
+              borderRadius: "var(--raio-controle)",
               border: "1.5px solid var(--linha)",
               background: "var(--card)",
               color: COR_NEG,
@@ -119,7 +119,7 @@ export function ContaCompartilhadaCard({
             onClick={onConvidar}
             style={{
               padding: "10px 16px",
-              borderRadius: 12,
+              borderRadius: "var(--raio-controle)",
               border: "none",
               background: "var(--primary-degrade)",
               color: "#fff",

@@ -95,7 +95,7 @@ export function NotifParceriaItem({ notif, primeiro, onDispensar }) {
           style={{
             width: 44,
             height: 44,
-            borderRadius: 14,
+            borderRadius: "var(--raio-bloco)",
             background: `color-mix(in oklab, ${cfg.cor} 14%, transparent)`,
             display: "flex",
             alignItems: "center",
@@ -149,7 +149,7 @@ export function NotifParceriaItem({ notif, primeiro, onDispensar }) {
           marginTop: 10,
           width: "100%",
           padding: "8px 12px",
-          borderRadius: 12,
+          borderRadius: "var(--raio-controle)",
           border: "1.5px solid var(--linha)",
           background: "var(--card)",
           color: "var(--ink)",

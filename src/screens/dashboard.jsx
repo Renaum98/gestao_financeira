@@ -295,7 +295,7 @@ export function DashboardScreen({ ctx }) {
             justifyContent: "center",
             gap: 8,
             padding: "10px 14px",
-            borderRadius: 14,
+            borderRadius: "var(--raio-bloco)",
             border: "1px solid color-mix(in oklab, var(--primary) 35%, transparent)",
             background: "color-mix(in oklab, var(--primary) 6%, transparent)",
             color: "var(--primary)",

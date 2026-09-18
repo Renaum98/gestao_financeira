@@ -38,7 +38,7 @@ export function SecaoTerminando({ terminando, ehLida, marcarLida }) {
                     color: COR_POS,
                     background: `color-mix(in oklab, ${COR_POS} 14%, transparent)`,
                     padding: '4px 8px',
-                    borderRadius: 8,
+                    borderRadius: "var(--raio-etiqueta)",
                     letterSpacing: '-0.01em',
                     flexShrink: 0,
                   }}

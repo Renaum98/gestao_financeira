@@ -29,7 +29,7 @@ export function SecaoProximas({ proximas, ehLida, marcarLida }) {
                   style={{
                     width: 44,
                     height: 44,
-                    borderRadius: 14,
+                    borderRadius: 'var(--raio-bloco)',
                     background: urgente
                       ? `color-mix(in oklab, ${COR_NEG} 12%, transparent)`
                       : 'var(--surface-sunken)',

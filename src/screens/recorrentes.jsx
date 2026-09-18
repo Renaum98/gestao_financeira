@@ -28,7 +28,7 @@ export function RecorrentesScreen({ ctx }) {
   const conteudo = recorrentes.length === 0 ? (
     <Card style={{ padding: 28, textAlign: 'center' }}>
       <div style={{
-        width: 56, height: 56, borderRadius: 28,
+        width: 56, height: 56, borderRadius: 'var(--raio-pilula)',
         background: 'color-mix(in oklab, var(--primary) 14%, transparent)',
         margin: '0 auto 12px', display: 'flex', alignItems: 'center', justifyContent: 'center',
       }}>
@@ -192,7 +192,7 @@ function EditarRecorrenteModal({ rec, cartoes = [], onFechar, onSalvar }) {
         <button onClick={salvar} disabled={!podeSalvar} style={{
           background: podeSalvar ? 'var(--primary)' : 'var(--linha)',
           color: podeSalvar ? '#fff' : 'var(--muted)',
-          border: 'none', padding: '6px 14px', borderRadius: 999,
+          border: 'none', padding: '6px 14px', borderRadius: 'var(--raio-pilula)',
           fontWeight: 800, fontSize: 13, cursor: podeSalvar ? 'pointer' : 'default',
           fontFamily: 'inherit',
         }}>{t("Salvar")}</button>
@@ -200,7 +200,7 @@ function EditarRecorrenteModal({ rec, cartoes = [], onFechar, onSalvar }) {
 
       <div style={{
         fontSize: 11, color: 'var(--muted)', fontWeight: 600, lineHeight: 1.45,
-        background: 'var(--card-2)', padding: '10px 12px', borderRadius: 10,
+        background: 'var(--card-2)', padding: '10px 12px', borderRadius: 'var(--raio-controle)',
         marginBottom: 14,
       }}>
         {t("As mudanças valem do mês atual em diante.")}
@@ -247,7 +247,7 @@ function EditarRecorrenteModal({ rec, cartoes = [], onFechar, onSalvar }) {
           onChange={(e) => setDescricao(e.target.value)}
           placeholder={t("Descrição")}
           style={{
-            width: '100%', padding: '14px 16px', borderRadius: 14, border: 'none',
+            width: '100%', padding: '14px 16px', borderRadius: 'var(--raio-bloco)', border: 'none',
             background: 'var(--card-2)', outline: 'none', fontSize: 14, fontWeight: 600,
             color: 'var(--ink)', fontFamily: 'inherit',
             boxShadow: '0 1px 2px rgba(0,0,0,0.06)', boxSizing: 'border-box',
@@ -280,7 +280,7 @@ function EditarRecorrenteModal({ rec, cartoes = [], onFechar, onSalvar }) {
                   onClick={() => { vibrar(); setCategoria(c); }}
                   style={{
                     display: 'flex', flexDirection: 'column', alignItems: 'center',
-                    gap: 6, padding: '8px 10px 6px', borderRadius: 14, border: 'none',
+                    gap: 6, padding: '8px 10px 6px', borderRadius: 'var(--raio-bloco)', border: 'none',
                     background: sel ? 'var(--card-2)' : 'transparent',
                     boxShadow: sel ? '0 2px 8px rgba(0,0,0,0.18), 0 0 0 1.5px ' + cat.cor : 'none',
                     cursor: 'pointer', minWidth: 72, flexShrink: 0,
@@ -308,7 +308,7 @@ function EditarRecorrenteModal({ rec, cartoes = [], onFechar, onSalvar }) {
                 key={p}
                 onClick={() => { vibrar(); setPagamento(p); }}
                 style={{
-                  flex: 1, padding: '10px 4px', borderRadius: 12, border: 'none',
+                  flex: 1, padding: '10px 4px', borderRadius: 'var(--raio-controle)', border: 'none',
                   background: sel ? 'var(--ink)' : 'var(--card-2)',
                   color: sel ? 'var(--bg)' : 'var(--ink)',
                   fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
@@ -342,7 +342,7 @@ function EditarRecorrenteModal({ rec, cartoes = [], onFechar, onSalvar }) {
                 onClick={() => { vibrar(); setCartaoId(c.id); }}
                 style={{
                   display: 'inline-flex', alignItems: 'center', gap: 6,
-                  padding: '8px 12px', borderRadius: 999, border: 'none',
+                  padding: '8px 12px', borderRadius: 'var(--raio-pilula)', border: 'none',
                   background: sel ? cor : 'var(--card-2)',
                   color: tinta,
                   fontSize: 11.5, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
@@ -360,7 +360,7 @@ function EditarRecorrenteModal({ rec, cartoes = [], onFechar, onSalvar }) {
       {/* Dia de vencimento */}
       <label style={{
         marginTop: 10, display: 'flex', alignItems: 'center', gap: 10,
-        padding: '12px 16px', borderRadius: 14, background: 'var(--card-2)',
+        padding: '12px 16px', borderRadius: 'var(--raio-bloco)', background: 'var(--card-2)',
         boxShadow: '0 1px 2px rgba(0,0,0,0.06)',
       }}>
         <Icon name="calendar" size={18} color="var(--muted)" strokeWidth={2} />

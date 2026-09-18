@@ -99,9 +99,13 @@ const ACOES_QUE_ESCREVEM = [
   "desfazerParceria",
 ];
 
-// Raio de repouso da "gota" da tab bar — igual nos quatro cantos.
+// Afastamento entre a borda da tab bar e os botões (o padding da barra).
+const PAD_BARRA = 6;
+// Raio de repouso da "gota" da tab bar — igual nos quatro cantos. É o canto
+// da barra menos o afastamento: assim a curva de dentro acompanha a de fora
+// (canto concêntrico) e, se o raio da superfície mudar, a gota vai junto.
 // Acompanha o .nav-indicador em components.css.
-const RAIO_GOTA = 20;
+const RAIO_GOTA = `calc(var(--raio-superficie) - ${PAD_BARRA}px)`;
 
 // Lista vazia com identidade fixa, pros campos do `ctx` que caem num vazio.
 //
@@ -335,10 +339,10 @@ function TabBar({ tela, irPara, abrirAdd }) {
         style={{
           maxWidth: 480,
           margin: "0 auto",
-          borderRadius: 26,
+          borderRadius: "var(--raio-superficie)",
           boxShadow:
             "0 10px 30px rgba(20,16,24,0.12), inset 0 1px 0 rgba(255,255,255,0.25)",
-          padding: "6px 6px",
+          padding: PAD_BARRA,
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
@@ -361,7 +365,7 @@ function TabBar({ tela, irPara, abrirAdd }) {
             // e no último quadro do @keyframes nav-gota): assim RAIO_GOTA é o
             // único lugar a mexer, e a gota nunca assenta num raio diferente do
             // botão que ela preenche
-            "--raio-gota": `${RAIO_GOTA}px`,
+            "--raio-gota": RAIO_GOTA,
             opacity: pos ? 1 : 0,
             top: pos?.top ?? 0,
             width: pos?.width ?? 0,
@@ -382,7 +386,7 @@ function TabBar({ tela, irPara, abrirAdd }) {
                 style={{
                   width: 52,
                   height: 52,
-                  borderRadius: 26,
+                  borderRadius: "var(--raio-pilula)",
                   border: "none",
                   background:
                     "var(--primary-degrade)",
@@ -624,7 +628,7 @@ function Sidebar({ tela, irPara, abrirAdd, usuario, fotoPerfil }) {
           gap: 8,
           margin: "0 6px 14px",
           padding: "11px 12px",
-          borderRadius: 14,
+          borderRadius: "var(--raio-bloco)",
           border: "none",
           background:
             "var(--primary-degrade)",
@@ -676,7 +680,7 @@ function Sidebar({ tela, irPara, abrirAdd, usuario, fotoPerfil }) {
                 alignItems: "center",
                 gap: 12,
                 padding: "10px 12px",
-                borderRadius: 12,
+                borderRadius: "var(--raio-controle)",
                 border: "none",
                 cursor: "pointer",
                 background: "transparent", // o fundo agora é o indicador que desliza
@@ -710,7 +714,7 @@ function Sidebar({ tela, irPara, abrirAdd, usuario, fotoPerfil }) {
             alignItems: "center",
             gap: 10,
             padding: "10px",
-            borderRadius: 12,
+            borderRadius: "var(--raio-controle)",
             background: "var(--surface-sunken)",
           }}
         >
@@ -719,14 +723,14 @@ function Sidebar({ tela, irPara, abrirAdd, usuario, fotoPerfil }) {
               src={fotoPerfil || usuario.photoURL}
               alt=""
               referrerPolicy="no-referrer"
-              style={{ width: 30, height: 30, borderRadius: 15, objectFit: "cover" }}
+              style={{ width: 30, height: 30, borderRadius: "var(--raio-pilula)", objectFit: "cover" }}
             />
           ) : (
             <div
               style={{
                 width: 30,
                 height: 30,
-                borderRadius: 15,
+                borderRadius: "var(--raio-pilula)",
                 background: "var(--primary)",
               }}
             />

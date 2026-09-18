@@ -49,7 +49,7 @@ export function EvolucaoMeses({ evolucao, maxEvol, mediaEvol, mes, setMes }) {
                     width: "100%",
                     maxWidth: 34,
                     height: `${h}%`,
-                    borderRadius: 8,
+                    borderRadius: "var(--raio-miudo)",
                     background: atual
                       ? "linear-gradient(180deg, var(--primary), var(--primary-2))"
                       : "var(--surface-sunken)",

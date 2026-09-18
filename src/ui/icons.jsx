@@ -27,7 +27,7 @@ export function CatChip({ catId, size = 40, style = {}, raised = false }) {
       ...style,
     }}>
       <div style={{
-        width: size * 0.5, height: size * 0.5, borderRadius: '50%',
+        width: size * 0.5, height: size * 0.5, borderRadius: "var(--raio-pilula)",
         background: raised
           ? `radial-gradient(circle at 35% 28%, color-mix(in oklab, ${cat.cor} 60%, white) 0%, ${cat.cor} 55%, color-mix(in oklab, ${cat.cor} 75%, black) 100%)`
           : cat.cor,

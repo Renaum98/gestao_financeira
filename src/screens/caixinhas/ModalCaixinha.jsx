@@ -80,7 +80,7 @@ export function ModalCaixinha({ editando, onFechar, onSalvar }) {
                 style={{
                   width: 32,
                   height: 32,
-                  borderRadius: 16,
+                  borderRadius: "var(--raio-pilula)",
                   background: c,
                   border: sel ? "3px solid var(--ink)" : "3px solid transparent",
                   cursor: "pointer",
@@ -121,7 +121,7 @@ export function ModalCaixinha({ editando, onFechar, onSalvar }) {
                   alignItems: "center",
                   gap: 10,
                   padding: "12px 14px",
-                  borderRadius: 12,
+                  borderRadius: "var(--raio-bloco)",
                   background: "var(--card-2)",
                   boxShadow: "0 1px 2px rgba(0,0,0,0.06)",
                 }}
@@ -200,7 +200,7 @@ export function ModalCaixinha({ editando, onFechar, onSalvar }) {
             justifyContent: "space-between",
             gap: 8,
             padding: "12px 14px",
-            borderRadius: 12,
+            borderRadius: "var(--raio-bloco)",
             border: "none",
             background: "var(--card-2)",
             cursor: "pointer",
@@ -229,7 +229,7 @@ export function ModalCaixinha({ editando, onFechar, onSalvar }) {
             style={{
               marginTop: 10,
               padding: "12px 14px",
-              borderRadius: 12,
+              borderRadius: "var(--raio-bloco)",
               background: "var(--card-2)",
               boxShadow: "0 1px 2px rgba(0,0,0,0.06)",
             }}

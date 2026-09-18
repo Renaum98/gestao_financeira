@@ -63,7 +63,7 @@ export function CabecalhoPerfil({ preferences, setPreferences, usuario }) {
           position: "relative",
           width: 88,
           height: 88,
-          borderRadius: 44,
+          borderRadius: "var(--raio-pilula)",
           border: "none",
           padding: 0,
           cursor: "pointer",
@@ -77,14 +77,14 @@ export function CabecalhoPerfil({ preferences, setPreferences, usuario }) {
             src={foto}
             alt=""
             referrerPolicy="no-referrer"
-            style={{ width: "100%", height: "100%", borderRadius: 44, objectFit: "cover", display: "block" }}
+            style={{ width: "100%", height: "100%", borderRadius: "var(--raio-pilula)", objectFit: "cover", display: "block" }}
           />
         ) : (
           <div
             style={{
               width: "100%",
               height: "100%",
-              borderRadius: 44,
+              borderRadius: "var(--raio-pilula)",
               background: "var(--primary-degrade)",
               display: "flex",
               alignItems: "center",
@@ -107,7 +107,7 @@ export function CabecalhoPerfil({ preferences, setPreferences, usuario }) {
             bottom: -2,
             width: 30,
             height: 30,
-            borderRadius: 15,
+            borderRadius: "var(--raio-pilula)",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
@@ -153,7 +153,7 @@ export function CabecalhoPerfil({ preferences, setPreferences, usuario }) {
             placeholder={nomeConta || t("Seu nome")}
             style={{
               padding: "8px 12px",
-              borderRadius: 12,
+              borderRadius: "var(--raio-controle)",
               border: "1.5px solid var(--primary)",
               background: "var(--card)",
               fontSize: 16,
@@ -170,7 +170,7 @@ export function CabecalhoPerfil({ preferences, setPreferences, usuario }) {
             style={{
               width: 36,
               height: 36,
-              borderRadius: 18,
+              borderRadius: "var(--raio-pilula)",
               border: "none",
               cursor: "pointer",
               background: "var(--primary)",

@@ -109,7 +109,7 @@ export function CaixinhaScreen({ ctx, params }) {
             style={{
               width: 36,
               height: 36,
-              borderRadius: 18,
+              borderRadius: "var(--raio-pilula)",
               background: "var(--card)",
               border: "none",
               display: "flex",
@@ -143,7 +143,7 @@ export function CaixinhaScreen({ ctx, params }) {
             style={{
               flex: 1,
               padding: "14px",
-              borderRadius: 16,
+              borderRadius: "var(--raio-bloco)",
               border: "none",
               cursor: "pointer",
               background: `linear-gradient(135deg, ${cx.cor}, ${cx.cor}CC)`,
@@ -167,7 +167,7 @@ export function CaixinhaScreen({ ctx, params }) {
             style={{
               flex: 1,
               padding: "14px",
-              borderRadius: 16,
+              borderRadius: "var(--raio-bloco)",
               border: `1.5px solid ${atual > 0 ? cx.cor : "var(--linha)"}`,
               cursor: atual > 0 ? "pointer" : "default",
               background: "var(--card)",
@@ -203,7 +203,7 @@ export function CaixinhaScreen({ ctx, params }) {
             width: "100%",
             marginTop: 22,
             padding: "12px",
-            borderRadius: 14,
+            borderRadius: "var(--raio-bloco)",
             border: "none",
             cursor: "pointer",
             background: "transparent",

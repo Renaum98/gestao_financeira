@@ -92,7 +92,7 @@ export function ExcluirContaModal({ uid, meuEmail, meuNome, partnershipId, onFec
           maxHeight: "calc(100dvh - 40px)",
           overflowY: "auto",
           background: "var(--bg)",
-          borderRadius: 24,
+          borderRadius: "var(--raio-superficie)",
           padding: "22px 20px 18px",
           boxShadow: "0 24px 60px rgba(0,0,0,0.28), 0 4px 12px rgba(0,0,0,0.08)",
           animation: "scaleIn .34s cubic-bezier(0.22, 1, 0.36, 1)",
@@ -102,7 +102,7 @@ export function ExcluirContaModal({ uid, meuEmail, meuNome, partnershipId, onFec
           style={{
             width: 56,
             height: 56,
-            borderRadius: 28,
+            borderRadius: "var(--raio-pilula)",
             background: COR_NEG_FUNDO,
             margin: "0 auto 14px",
             display: "flex",
@@ -127,7 +127,7 @@ export function ExcluirContaModal({ uid, meuEmail, meuNome, partnershipId, onFec
                 style={{
                   marginTop: 10,
                   padding: "10px 12px",
-                  borderRadius: 12,
+                  borderRadius: "var(--raio-controle)",
                   background: `color-mix(in oklab, ${COR_NEG} 8%, transparent)`,
                   fontSize: 12,
                   color: "var(--muted)",
@@ -150,7 +150,7 @@ export function ExcluirContaModal({ uid, meuEmail, meuNome, partnershipId, onFec
                 style={{
                   flex: 1,
                   padding: 12,
-                  borderRadius: 14,
+                  borderRadius: "var(--raio-bloco)",
                   border: "none",
                   background: "var(--card-2)",
                   color: "var(--ink)",
@@ -169,7 +169,7 @@ export function ExcluirContaModal({ uid, meuEmail, meuNome, partnershipId, onFec
                 style={{
                   flex: 1,
                   padding: 12,
-                  borderRadius: 14,
+                  borderRadius: "var(--raio-bloco)",
                   border: "none",
                   background: COR_NEG,
                   color: "#fff",
@@ -205,7 +205,7 @@ export function ExcluirContaModal({ uid, meuEmail, meuNome, partnershipId, onFec
                 style={{
                   width: "100%",
                   padding: "13px 14px",
-                  borderRadius: 14,
+                  borderRadius: "var(--raio-bloco)",
                   border: "1.5px solid var(--linha)",
                   background: "var(--card)",
                   outline: "none",
@@ -229,7 +229,7 @@ export function ExcluirContaModal({ uid, meuEmail, meuNome, partnershipId, onFec
                 style={{
                   flex: 1,
                   padding: 12,
-                  borderRadius: 14,
+                  borderRadius: "var(--raio-bloco)",
                   border: "none",
                   background: "var(--card-2)",
                   color: "var(--ink)",
@@ -247,7 +247,7 @@ export function ExcluirContaModal({ uid, meuEmail, meuNome, partnershipId, onFec
                 style={{
                   flex: 1,
                   padding: 12,
-                  borderRadius: 14,
+                  borderRadius: "var(--raio-bloco)",
                   border: "none",
                   background: COR_NEG,
                   color: "#fff",

@@ -59,7 +59,7 @@ export function EvolucaoConjunta({ evolucaoConjunta, maxEvolConjunta, mes, setMe
                       flex: 1,
                       maxWidth: 16,
                       height: `${hMeu}%`,
-                      borderRadius: 6,
+                      borderRadius: "var(--raio-miudo)",
                       background: "linear-gradient(180deg, var(--primary), var(--primary-2))",
                       transition: "height .2s",
                       minHeight: e.meu > 0 ? 4 : 0,
@@ -71,7 +71,7 @@ export function EvolucaoConjunta({ evolucaoConjunta, maxEvolConjunta, mes, setMe
                       flex: 1,
                       maxWidth: 16,
                       height: `${hParc}%`,
-                      borderRadius: 6,
+                      borderRadius: "var(--raio-miudo)",
                       background: "var(--surface-sunken)",
                       border: "1px solid var(--linha)",
                       transition: "height .2s",
@@ -110,7 +110,7 @@ export function EvolucaoConjunta({ evolucaoConjunta, maxEvolConjunta, mes, setMe
               style={{
                 width: 12,
                 height: 12,
-                borderRadius: 4,
+                borderRadius: "var(--raio-minimo)",
                 background: "linear-gradient(180deg, var(--primary), var(--primary-2))",
               }}
             />
@@ -121,7 +121,7 @@ export function EvolucaoConjunta({ evolucaoConjunta, maxEvolConjunta, mes, setMe
               style={{
                 width: 12,
                 height: 12,
-                borderRadius: 4,
+                borderRadius: "var(--raio-minimo)",
                 background: "var(--surface-sunken)",
                 border: "1px solid var(--linha)",
               }}

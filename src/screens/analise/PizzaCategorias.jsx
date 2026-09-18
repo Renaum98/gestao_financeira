@@ -52,7 +52,7 @@ export function PizzaCategorias({ dados, total, comTitulo = false }) {
                 padding: "4px 0",
               }}
             >
-              <div style={{ width: 10, height: 10, borderRadius: 5, background: d.cor }} />
+              <div style={{ width: 10, height: 10, borderRadius: "var(--raio-pilula)", background: d.cor }} />
               <div style={{ minWidth: 0, flex: 1 }}>
                 <div
                   style={{

@@ -44,7 +44,7 @@ export function CardDestaque({ cor, corClara, style = {}, children, ...rest }) {
       style={{
         background: cor ? fundoProprio(cor, corClara) : HERO_DA_PALETA,
         color: "#fff",
-        borderRadius: 24,
+        borderRadius: "var(--raio-superficie)",
         padding: 20,
         position: "relative",
         overflow: "hidden",

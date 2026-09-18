@@ -34,7 +34,7 @@ function OpcaoBaixar({ label, descricao, selecionado, onClick }) {
         style={{
           width: 22,
           height: 22,
-          borderRadius: 11,
+          borderRadius: "var(--raio-pilula)",
           border: `2px solid ${selecionado ? "var(--primary)" : "var(--linha)"}`,
           background: selecionado ? "var(--primary)" : "transparent",
           display: "flex",
@@ -101,7 +101,7 @@ export function BaixarDadosModal({
           width: "100%",
           maxWidth: 400,
           background: "var(--bg)",
-          borderRadius: 24,
+          borderRadius: "var(--raio-superficie)",
           padding: "22px 20px 18px",
           boxShadow: "0 24px 60px rgba(0,0,0,0.28), 0 4px 12px rgba(0,0,0,0.08)",
           animation: "scaleIn .34s cubic-bezier(0.22, 1, 0.36, 1)",
@@ -115,7 +115,7 @@ export function BaixarDadosModal({
             style={{
               width: 42,
               height: 42,
-              borderRadius: 14,
+              borderRadius: "var(--raio-bloco)",
               background: "var(--primary-degrade)",
               display: "flex",
               alignItems: "center",
@@ -157,7 +157,7 @@ export function BaixarDadosModal({
             minHeight: 0,
             overflowY: "auto",
             border: "1px solid var(--linha)",
-            borderRadius: 14,
+            borderRadius: "var(--raio-bloco)",
             background: "var(--card)",
           }}
         >
@@ -223,7 +223,7 @@ export function BaixarDadosModal({
             style={{
               flex: 1,
               padding: 12,
-              borderRadius: 14,
+              borderRadius: "var(--raio-bloco)",
               border: "none",
               background: "var(--card-2)",
               color: "var(--ink)",
@@ -243,7 +243,7 @@ export function BaixarDadosModal({
             style={{
               flex: 1,
               padding: 12,
-              borderRadius: 14,
+              borderRadius: "var(--raio-bloco)",
               border: "none",
               background: "var(--primary-degrade)",
               color: "#fff",

@@ -22,7 +22,7 @@ function Bolinha({ pal, escuro, tamanho = 24 }) {
       style={{
         width: tamanho,
         height: tamanho,
-        borderRadius: tamanho / 2,
+        borderRadius: "var(--raio-pilula)",
         background: degradeDaPaleta(pal, escuro),
         flexShrink: 0,
       }}
@@ -95,7 +95,7 @@ function SeletorPaleta({ paletaAtual, escuro, onEscolher, t }) {
           alignItems: "center",
           gap: 10,
           padding: "10px 14px",
-          borderRadius: 12,
+          borderRadius: "var(--raio-bloco)",
           border: "none",
           background: "var(--card-2)",
           color: "var(--ink)",
@@ -133,7 +133,7 @@ function SeletorPaleta({ paletaAtual, escuro, onEscolher, t }) {
             // A cara de painel do app: canto redondo generoso, superfície de
             // card e uma sombra bem mais funda que a do card parado — é o que
             // faz a lista ler como algo que subiu, e não como mais um bloco.
-            borderRadius: 18,
+            borderRadius: "var(--raio-card)",
             background: "var(--card)",
             border: "1px solid var(--linha)",
             boxShadow: "0 14px 32px rgba(20,16,24,0.18), 0 3px 8px rgba(20,16,24,0.10)",
