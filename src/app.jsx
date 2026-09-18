@@ -426,7 +426,7 @@ function TabBar({ tela, irPara, abrirAdd }) {
                 background: "transparent",
                 border: "none",
                 borderRadius: RAIO_GOTA,
-                padding: "11px 4px",
+                padding: "14px 4px",
                 cursor: "pointer",
                 display: "flex",
                 alignItems: "center",
