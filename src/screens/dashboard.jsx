@@ -8,6 +8,7 @@ import { calcularNotificacoes } from "./notificacoes.jsx";
 import { dispararPendentes } from "../lib/notifications.js";
 import { SimularGastoModal } from "../modals/simular-gasto.jsx";
 import { vibrar } from "../lib/haptics.js";
+import { atualizarBadge } from "../lib/badge.js";
 import { useT } from "../lib/i18n.jsx";
 import { computeInsights } from "../lib/insights.jsx";
 import { calcularSaldoMes } from "../lib/saldo-mes.js";
@@ -66,6 +67,11 @@ export function DashboardScreen({ ctx }) {
     [txs, recorrentes, preferences?.notifLidas, convitesRecebidos, notificacoesParceria, orcamentos],
   );
   const totalNotif = notifInfo.naoLidas;
+
+  // Mesmo número do sininho, no ícone do app instalado.
+  React.useEffect(() => {
+    atualizarBadge(totalNotif);
+  }, [totalNotif]);
 
   // Dispara notificações nativas (se já houver permissão) ao abrir o app.
   React.useEffect(() => {

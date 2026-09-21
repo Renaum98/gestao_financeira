@@ -11,6 +11,7 @@ import {
   dispararPendentes,
 } from '../../lib/notifications.js';
 import { calcularNotificacoes } from './calcular.js';
+import { atualizarBadge } from '../../lib/badge.js';
 import { BannerPermissao } from './BannerPermissao.jsx';
 import { EstadoVazio } from './EstadoVazio.jsx';
 import { NotifParceriaItem } from './NotifParceriaItem.jsx';
@@ -43,7 +44,7 @@ export function NotificacoesScreen({ ctx }) {
   } = ctx;
   const t = useT();
   const lidas = preferences?.notifLidas || SEM_LIDAS;
-  const { proximas, terminando, recsRevisar, orcEstourados, orcProximos, idsAtivos } = React.useMemo(
+  const { proximas, terminando, recsRevisar, orcEstourados, orcProximos, idsAtivos, naoLidas } = React.useMemo(
     () => calcularNotificacoes(txs, recorrentes, lidas, convitesRecebidos, notificacoesParceria, orcamentos),
     [txs, recorrentes, lidas, convitesRecebidos, notificacoesParceria, orcamentos],
   );
@@ -57,6 +58,12 @@ export function NotificacoesScreen({ ctx }) {
     convitesRecebidos.length +
     notificacoesParceria.length;
   const setLidas = React.useMemo(() => new Set(lidas), [lidas]);
+
+  // Marcar como lida aqui baixa o número no ícone na hora, sem esperar voltar
+  // pro dashboard (que também sincroniza o badge).
+  React.useEffect(() => {
+    atualizarBadge(naoLidas);
+  }, [naoLidas]);
   const ehLida = (id) => setLidas.has(id);
 
   const marcarLida = (id) => {

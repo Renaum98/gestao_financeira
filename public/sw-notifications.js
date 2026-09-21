@@ -3,9 +3,13 @@
 //   • `push`: mostra a notificação que chegou do servidor (api/push/enviar.js).
 //   • `notificationclick`: foca a janela existente do app ou abre uma nova.
 
-// O payload é o JSON montado no servidor: { titulo, corpo, tag, urgente, data }.
-// Ícone e badge ficam fixos aqui e não viajam no payload — o serviço de push
-// limita o tamanho da mensagem (4 KB) e são sempre os mesmos.
+// O payload é o JSON montado no servidor:
+//   { titulo, corpo, tag, urgente, badge, data }.
+// Ícone e o `badge` da notificação (o desenho monocromático da barra de
+// status) ficam fixos aqui e não viajam no payload — o serviço de push limita
+// o tamanho da mensagem (4 KB) e são sempre os mesmos. O `badge` do payload é
+// outra coisa: o NÚMERO no ícone do app (Badging API), que o app fechado não
+// tem como calcular sozinho.
 self.addEventListener('push', (event) => {
   let dados = {};
   try {
@@ -27,8 +31,24 @@ self.addEventListener('push', (event) => {
   };
   // O waitUntil é obrigatório: a assinatura foi feita com userVisibleOnly, e
   // o Chrome pune push sem notificação visível trocando por um aviso genérico.
-  event.waitUntil(self.registration.showNotification(titulo, opcoes));
+  event.waitUntil(
+    Promise.all([
+      self.registration.showNotification(titulo, opcoes),
+      atualizarBadge(dados.badge),
+    ]),
+  );
 });
+
+// Número no ícone do app instalado. `setAppBadge` existe no escopo do SW no
+// Android/Chrome e no iOS 16.4+; onde não existe, ignora. Só mexe quando o
+// servidor mandou um número — payload antigo/sem o campo deixa como está.
+async function atualizarBadge(n) {
+  if (typeof n !== 'number' || typeof self.navigator?.setAppBadge !== 'function') return;
+  try {
+    if (n > 0) await self.navigator.setAppBadge(n);
+    else await self.navigator.clearAppBadge();
+  } catch {}
+}
 
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();

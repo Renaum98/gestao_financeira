@@ -63,8 +63,12 @@ function diasAte(yyyymmdd, hoje) {
   return Math.ceil((new Date(y, m - 1, d) - hoje) / (1000 * 60 * 60 * 24));
 }
 
-// Recebe o doc `users/{uid}` cru do Firestore e devolve a lista de
-// notificações pendentes: [{ id, titulo, corpo, tag, tipo, urgente }].
+// Recebe o doc `users/{uid}` cru do Firestore e devolve:
+//   lista     notificações pendentes: [{ id, titulo, corpo, tag, tipo, urgente }]
+//   naoLidas  o número do sininho do app (mesma conta de calcularNotificacoes),
+//             que viaja no push pro service worker pôr no ícone. Sem convites
+//             e avisos de parceria — vivem em outras coleções e o app corrige
+//             o número quando abre.
 // `lidas` (preferences.notifLidas) já fica de fora — o que o usuário marcou
 // como lido no app não vira push.
 export function montarNotificacoes(userDoc, { diasJanela = 7 } = {}) {
@@ -74,7 +78,7 @@ export function montarNotificacoes(userDoc, { diasJanela = 7 } = {}) {
   const t = (texto, vars) => traduzir(idioma, texto, vars);
   const fmt = (v) => formatarValor(moeda, v);
 
-  const { proximas, terminando, orcEstourados, orcProximos } = calcularNotificacoes(
+  const { proximas, terminando, orcEstourados, orcProximos, naoLidas } = calcularNotificacoes(
     userDoc.txs || [],
     userDoc.recorrentes || [],
     prefs.notifLidas || [],
@@ -152,5 +156,5 @@ export function montarNotificacoes(userDoc, { diasJanela = 7 } = {}) {
     });
   }
 
-  return lista;
+  return { lista, naoLidas };
 }

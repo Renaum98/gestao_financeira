@@ -65,7 +65,7 @@ async function processarUsuario(uid, assinaturas, resumo) {
     return;
   }
 
-  const lista = montarNotificacoes(userDoc);
+  const { lista, naoLidas } = montarNotificacoes(userDoc);
   const idsPendentes = new Set(lista.map((n) => n.id));
 
   await Promise.all(
@@ -80,6 +80,8 @@ async function processarUsuario(uid, assinaturas, resumo) {
           corpo: n.corpo,
           tag: n.tag,
           urgente: n.urgente,
+          // Número pro ícone do app; o SW aplica ao receber.
+          badge: naoLidas,
           data: { url: '/', tipo: n.tipo, id: n.id },
         });
         if (r.ok) {
