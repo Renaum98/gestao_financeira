@@ -135,6 +135,10 @@ const ITENS_TAB = [
 // é secundária: entra por cima, e no mobile a barra desce pra fora da tela —
 // sem aba pra acender embaixo, quem leva de volta é só o botão do topo.
 const ABAS = ITENS_TAB.filter((it) => !it.destaque).map((it) => it.id);
+// Telas secundárias que um atalho do ícone (`?atalho=`) pode abrir direto.
+// Lista fechada de propósito: o parâmetro vem da URL, e qualquer string ali
+// não pode virar tela.
+const TELAS_ATALHO = ["caixinhas", "notificacoes", "orcamentos", "cartoes", "recorrentes", "historico"];
 
 // Mede o botão ativo da tab bar e devolve onde o indicador (a "gota" de fundo)
 // precisa parar. Como o indicador é um único elemento que se move, ele desliza
@@ -1153,6 +1157,38 @@ export function App() {
     );
   }, [offline]);
   const [addModal, setAddModal] = React.useState(null);
+
+  // Atalho do ícone (manifest.shortcuts): o app abre em `/?atalho=add|gastos|…`.
+  // Lemos o parâmetro uma vez, na montagem, e já limpamos a URL — senão um
+  // F5 depois reabriria o atalho. Só é consumido quando há usuário: antes
+  // disso a tela é a de login, e o efeito acima acabou de zerar a navegação
+  // pra "inicio", então este roda depois dele e ganha.
+  const atalhoPendente = React.useRef(
+    (() => {
+      try {
+        const url = new URL(window.location.href);
+        const a = url.searchParams.get("atalho");
+        if (!a) return null;
+        url.searchParams.delete("atalho");
+        window.history.replaceState(null, "", url.pathname + url.search + url.hash);
+        return a;
+      } catch {
+        return null;
+      }
+    })(),
+  );
+  React.useEffect(() => {
+    if (!uid || !atalhoPendente.current) return;
+    const a = atalhoPendente.current;
+    atalhoPendente.current = null;
+    if (a === "add") setAddModal({});
+    else if (ABAS.includes(a)) setTela(a);
+    else if (TELAS_ATALHO.includes(a)) {
+      // Tela secundária: entra empilhada sobre "inicio" pra o voltar ter destino.
+      setStack([{ tela: "inicio", params: {} }]);
+      setTela(a);
+    }
+  }, [uid]);
   const [onboarding, setOnboarding] = React.useState(
     () => !localStorage.getItem(ONBOARDING_KEY),
   );

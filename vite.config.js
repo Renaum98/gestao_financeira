@@ -54,6 +54,39 @@ export default defineConfig({
           { src: 'icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
           { src: 'icon-maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
         ],
+        // Atalhos ao segurar o ícone (Android/Chrome e Windows; o iOS ignora).
+        // Cada um abre o app com `?atalho=` e quem resolve é o efeito em
+        // app.jsx, depois do login. O Android mostra até 4.
+        shortcuts: [
+          {
+            name: 'Novo gasto',
+            short_name: 'Gasto',
+            description: 'Lançar uma transação',
+            url: `${base}?atalho=add`,
+            icons: [{ src: 'icon-192.png', sizes: '192x192', type: 'image/png' }],
+          },
+          {
+            name: 'Transações',
+            short_name: 'Transações',
+            description: 'Gastos do mês',
+            url: `${base}?atalho=gastos`,
+            icons: [{ src: 'icon-192.png', sizes: '192x192', type: 'image/png' }],
+          },
+          {
+            name: 'Caixinhas',
+            short_name: 'Caixinhas',
+            description: 'Dinheiro guardado',
+            url: `${base}?atalho=caixinhas`,
+            icons: [{ src: 'icon-192.png', sizes: '192x192', type: 'image/png' }],
+          },
+          {
+            name: 'Notificações',
+            short_name: 'Avisos',
+            description: 'Contas vencendo e alertas',
+            url: `${base}?atalho=notificacoes`,
+            icons: [{ src: 'icon-192.png', sizes: '192x192', type: 'image/png' }],
+          },
+        ],
       },
       workbox: {
         cacheId: `finca-${buildId}`,
