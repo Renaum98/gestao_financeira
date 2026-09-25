@@ -18,6 +18,7 @@ import { calcularNotificacoes } from '../../src/screens/notificacoes/calcular.js
 import { EN } from '../../src/lib/i18n-dict.js';
 import { MOEDAS } from '../../src/lib/moeda.js';
 import { CATEGORIAS } from '../../src/data.js';
+import { atividadeDoParceiro, textoAtividade } from '../../src/lib/atividade-caixinhas.js';
 
 const DICIONARIOS = { en: EN };
 
@@ -71,7 +72,11 @@ function diasAte(yyyymmdd, hoje) {
 //             o número quando abre.
 // `lidas` (preferences.notifLidas) já fica de fora — o que o usuário marcou
 // como lido no app não vira push.
-export function montarNotificacoes(userDoc, { diasJanela = 7 } = {}) {
+//
+// `atividade` é o registro `partnerships/{pId}.atividade` de quem tem conta
+// compartilhada: o que o parceiro fez nas caixinhas e o app ainda não trouxe
+// pra dentro (ver src/lib/atividade-caixinhas.js).
+export function montarNotificacoes(userDoc, { diasJanela = 7, atividade = [], uid } = {}) {
   const prefs = userDoc.preferences || {};
   const idioma = prefs.idioma || 'pt';
   const moeda = prefs.moeda || 'BRL';
@@ -83,7 +88,7 @@ export function montarNotificacoes(userDoc, { diasJanela = 7 } = {}) {
     userDoc.recorrentes || [],
     prefs.notifLidas || [],
     [],
-    [],
+    userDoc.notificacoesParceria || [],
     userDoc.orcamentos || {},
   );
 
@@ -156,5 +161,13 @@ export function montarNotificacoes(userDoc, { diasJanela = 7 } = {}) {
     });
   }
 
-  return { lista, naoLidas };
+  // Só o que o app ainda não trouxe: se trouxe, o usuário já viu o aviso lá
+  // dentro (e o sininho já conta ele em `notificacoesParceria`).
+  const doParceiro = atividadeDoParceiro(atividade, uid, userDoc.atividadeParceriaVista);
+  for (const ev of doParceiro) {
+    const { titulo, corpo } = textoAtividade(ev, userDoc.partnerNome, t, fmt);
+    incluir({ id: ev.id, titulo, corpo, tag: `parceria-${ev.id}`, tipo: ev.tipo, urgente: false });
+  }
+
+  return { lista, naoLidas: naoLidas + doParceiro.length };
 }

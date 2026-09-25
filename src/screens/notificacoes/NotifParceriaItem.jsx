@@ -56,6 +56,26 @@ function configNotif(notif, t) {
         ),
         subtitulo: notif.caixinhaNome ? t('Na caixinha "{nome}"', { nome: notif.caixinhaNome }) : null,
       };
+    case "caixinha-editada":
+      return {
+        cor: "var(--primary)",
+        titulo: (
+          <>
+            <strong>{notif.por}</strong>{t(' editou uma caixinha')}
+          </>
+        ),
+        subtitulo: notif.caixinhaNome ? `"${notif.caixinhaNome}"` : null,
+      };
+    case "caixinha-excluida":
+      return {
+        cor: COR_NEG,
+        titulo: (
+          <>
+            <strong>{notif.por}</strong>{t(' excluiu uma caixinha')}
+          </>
+        ),
+        subtitulo: notif.caixinhaNome ? `"${notif.caixinhaNome}"` : null,
+      };
     case "parceria-desfeita":
     default:
       return {

@@ -65,7 +65,16 @@ async function processarUsuario(uid, assinaturas, resumo) {
     return;
   }
 
-  const { lista, naoLidas } = montarNotificacoes(userDoc);
+  // Conta compartilhada: o que o parceiro fez nas caixinhas mora no doc da
+  // parceria. Se a leitura falhar, os lembretes do próprio usuário saem mesmo
+  // assim.
+  let atividade = [];
+  if (userDoc.partnershipId) {
+    const parceria = await lerDoc(`partnerships/${userDoc.partnershipId}`).catch(() => null);
+    atividade = parceria?.atividade || [];
+  }
+
+  const { lista, naoLidas } = montarNotificacoes(userDoc, { atividade, uid });
   const idsPendentes = new Set(lista.map((n) => n.id));
 
   await Promise.all(

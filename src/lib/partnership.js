@@ -2,8 +2,8 @@
 //
 // Modelo de dados (resumo):
 //   invites/{id}    { fromUid, fromNome, fromEmail, toUid, toNome, status, partnershipId?, criadoEm }
-//   partnerships/{pId} { members: [uidA, uidB], caixinhas: [], criadoEm }
-//   users/{uid}     { ..., partnerUid, partnerNome, partnershipId }
+//   partnerships/{pId} { members: [uidA, uidB], caixinhas: [], atividade: [], criadoEm }
+//   users/{uid}     { ..., partnerUid, partnerNome, partnershipId, atividadeParceriaVista }
 //   userIndex/{emailLower} { uid, nome }
 //
 // Etapa 2 (este arquivo agora): cria o vínculo entre dois usuários.
@@ -36,6 +36,12 @@ import {
   arrayUnion,
 } from "./firebase.js";
 import { compactarCaixinha, compactarCaixinhas } from "./compact.js";
+import {
+  novaAtividade,
+  podarAtividade,
+  atividadeDoParceiro,
+  paraNotifParceria,
+} from "./atividade-caixinhas.js";
 
 const INVITES = "invites";
 const USERS = "users";
@@ -136,22 +142,6 @@ export async function convidarPorEmail({
     status: "pendente",
     criadoEm: serverTimestamp(),
   });
-}
-
-// ─── Notificações de parceria ─────────────────────────────────────────────
-
-// Anexa uma notificação ao MEU próprio user doc. `notif.id` deve ser
-// determinístico (ex: `np-<tipo>-<entityId>`) — assim `arrayUnion` dedup
-// previne duplicatas se a mesma operação for detectada mais de uma vez.
-async function adicionarNotifParceria(uid, notif) {
-  if (!uid || !notif?.id) return;
-  try {
-    await updateDoc(doc(db, USERS, uid), {
-      notificacoesParceria: arrayUnion(notif),
-    });
-  } catch (err) {
-    console.warn("[notif parceria]", err);
-  }
 }
 
 // ─── Aceitar / Recusar ─────────────────────────────────────────────────────
@@ -479,15 +469,12 @@ export function useSharedCaixinhas({ partnershipId, uid, partnerNome }) {
   const [desfeito, setDesfeito] = useState(null);
   const caixinhasRef = useRef([]);
 
-  // Detecção de eventos pra gerar notificações ao parceiro:
-  //  • inicializadoRef → primeira snapshot é "estado conhecido", não gera notif
-  //  • idsConhecidosRef / depsConhecidosRef → conjuntos de IDs já vistos
-  //  • Heurística antimigração: se MAIS DE UMA caixinha (ou depósito) novo
-  //    chega numa única snapshot, é provável uma migração (ex: parceiro
-  //    finalizando pareamento depois) — silenciamos as notifs nesse caso.
-  const inicializadoRef = useRef(false);
-  const idsConhecidosRef = useRef(new Set());
-  const depsConhecidosRef = useRef(new Set());
+  // Registro do que cada um fez nas caixinhas (ver lib/atividade-caixinhas).
+  // `atividadeRef` é o registro atual, pra quem escreve acrescentar o seu
+  // evento; `vistaRef` é até onde este usuário já trouxe os eventos do outro
+  // (null = ainda não leu o marco do user doc).
+  const atividadeRef = useRef([]);
+  const vistaRef = useRef(null);
   // Lê partnerNome via ref pra não re-subscrever quando ele muda.
   const partnerNomeRef = useRef(partnerNome);
   useEffect(() => {
@@ -499,10 +486,31 @@ export function useSharedCaixinhas({ partnershipId, uid, partnerNome }) {
   }, [caixinhas]);
 
   useEffect(() => {
-    // Reseta o estado de detecção sempre que troca de partnership.
-    inicializadoRef.current = false;
-    idsConhecidosRef.current = new Set();
-    depsConhecidosRef.current = new Set();
+    atividadeRef.current = [];
+    vistaRef.current = null;
+    let cancelado = false;
+    // Enfileira as importações: duas snapshots seguidas não podem trazer o
+    // mesmo evento duas vezes nem regredir o marco.
+    let fila = Promise.resolve();
+    const importar = (atividade) => {
+      fila = fila.then(async () => {
+        if (cancelado) return;
+        if (vistaRef.current === null) {
+          const snap = await getDoc(doc(db, USERS, uid));
+          vistaRef.current = snap.data()?.atividadeParceriaVista || "";
+        }
+        const novos = atividadeDoParceiro(atividade, uid, vistaRef.current);
+        if (novos.length === 0 || cancelado) return;
+        const vista = novos.reduce((m, e) => (e.em > m ? e.em : m), vistaRef.current);
+        vistaRef.current = vista;
+        await updateDoc(doc(db, USERS, uid), {
+          notificacoesParceria: arrayUnion(
+            ...novos.map((e) => paraNotifParceria(e, partnerNomeRef.current)),
+          ),
+          atividadeParceriaVista: vista,
+        });
+      }).catch((err) => console.warn("[atividade parceria]", err));
+    };
 
     if (!partnershipId) {
       setCaixinhas([]);
@@ -525,62 +533,8 @@ export function useSharedCaixinhas({ partnershipId, uid, partnerNome }) {
         const d = snap.data();
         const novas = d.caixinhas || [];
 
-        // ── Detecção de eventos ──
-        const cxNovas = [];
-        const depsNovos = [];
-        for (const cx of novas) {
-          if (!idsConhecidosRef.current.has(cx.id)) cxNovas.push(cx);
-          for (const dep of cx.depositos || []) {
-            if (!depsConhecidosRef.current.has(dep.id)) {
-              depsNovos.push({ cx, dep });
-            }
-          }
-        }
-
-        // Atualiza conjuntos antes de qualquer notif.
-        for (const cx of novas) {
-          idsConhecidosRef.current.add(cx.id);
-          for (const dep of cx.depositos || []) {
-            depsConhecidosRef.current.add(dep.id);
-          }
-        }
-
-        // Só emite notif depois da primeira snapshot, e só pra UMA novidade por
-        // vez (mais que isso costuma ser migração no aceite, não criação real).
-        if (inicializadoRef.current) {
-          const nome = partnerNomeRef.current || "Seu parceiro";
-
-          if (cxNovas.length === 1) {
-            const cx = cxNovas[0];
-            if (cx.criadoPor && cx.criadoPor !== uid) {
-              adicionarNotifParceria(uid, {
-                id: `np-cx-criada-${cx.id}`,
-                tipo: "caixinha-criada",
-                por: nome,
-                caixinhaNome: cx.nome,
-                em: new Date().toISOString(),
-              });
-            }
-          }
-          if (depsNovos.length === 1) {
-            const { cx, dep } = depsNovos[0];
-            if (dep.feitoPor && dep.feitoPor !== uid) {
-              // Resgates entram em `depositos` como valor negativo (ou
-              // tipo "saque"). Notificamos como saque e guardamos o valor
-              // absoluto pra não exibir "depositou -100".
-              const ehSaque = dep.tipo === "saque" || dep.valor < 0;
-              adicionarNotifParceria(uid, {
-                id: `np-dep-${dep.id}`,
-                tipo: ehSaque ? "caixinha-saque" : "caixinha-deposito",
-                por: nome,
-                caixinhaNome: cx.nome,
-                valor: Math.abs(dep.valor),
-                em: new Date().toISOString(),
-              });
-            }
-          }
-        }
-        inicializadoRef.current = true;
+        atividadeRef.current = d.atividade || [];
+        importar(atividadeRef.current);
 
         // Atualiza estado/UI.
         setCaixinhas(novas);
@@ -594,26 +548,44 @@ export function useSharedCaixinhas({ partnershipId, uid, partnerNome }) {
       },
       (err) => console.error("[shared caixinhas]", err),
     );
-    return unsub;
+    return () => {
+      cancelado = true;
+      unsub();
+    };
   }, [partnershipId, uid]);
 
   const ref = partnershipId ? doc(db, PARTNERSHIPS, partnershipId) : null;
 
-  const persistir = (novaLista) =>
-    updateDoc(ref, {
+  // `evento` (opcional) vai pro registro de atividade no mesmo write da
+  // mudança — o parceiro nunca vê a caixinha mudada sem o aviso, nem o
+  // contrário.
+  const persistir = (novaLista, evento) => {
+    const campos = {
       caixinhas:
         novaLista.length > 0 ? compactarCaixinhas(novaLista) : deleteField(),
-    });
+    };
+    if (evento) campos.atividade = podarAtividade(atividadeRef.current, evento);
+    return updateDoc(ref, campos);
+  };
 
-  const salvarCaixinha = async (dados) => {
+  // `silencioso`: ajuste automático (ex.: entrada editada devolvendo o que ela
+  // não banca mais — ver sincronizarGuardado no app), não algo que a pessoa
+  // fez na caixinha. Não vira aviso pro parceiro.
+  const salvarCaixinha = async (dados, { silencioso = false } = {}) => {
     if (!ref) return;
     const lista = caixinhasRef.current;
     let novaLista;
+    let evento = null;
     if (dados.id) {
       const { saldoInicial, ...resto } = dados;
       novaLista = lista.map((c) =>
         c.id === dados.id ? { ...c, ...resto } : c,
       );
+      const cx = novaLista.find((c) => c.id === dados.id);
+      if (cx && !silencioso) {
+        const tipo = dados.excluidaEm ? "caixinha-excluida" : "caixinha-editada";
+        evento = novaAtividade({ tipo, por: uid, cx });
+      }
     } else {
       const { saldoInicial, ...resto } = dados;
       const hoje = hojeISO();
@@ -630,10 +602,12 @@ export function useSharedCaixinhas({ partnershipId, uid, partnerNome }) {
         ...resto,
       };
       novaLista = [nova, ...lista];
+      evento = novaAtividade({ tipo: "caixinha-criada", por: uid, cx: nova });
     }
-    await persistir(novaLista);
+    await persistir(novaLista, evento);
   };
 
+  // Serve pro depósito e pro resgate (saque = valor negativo).
   const depositarCaixinha = async (id, deposito) => {
     if (!ref) return;
     const novaLista = caixinhasRef.current.map((c) =>
@@ -647,7 +621,16 @@ export function useSharedCaixinhas({ partnershipId, uid, partnerNome }) {
           }
         : c,
     );
-    await persistir(novaLista);
+    const cx = novaLista.find((c) => c.id === id);
+    const evento = cx
+      ? novaAtividade({
+          tipo: deposito.valor < 0 ? "caixinha-saque" : "caixinha-deposito",
+          por: uid,
+          cx,
+          valor: Math.abs(deposito.valor),
+        })
+      : null;
+    await persistir(novaLista, evento);
   };
 
   return {

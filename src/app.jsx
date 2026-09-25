@@ -1489,7 +1489,7 @@ export function App() {
       const { caixinhas: novas } = ajustarGuardado(shared.caixinhas, txsDepois, txAntes, txDepois);
       for (const d of detalhes) {
         const cx = novas.find((c) => c.id === d.id);
-        if (cx) shared.salvarCaixinha({ id: cx.id, depositos: cx.depositos });
+        if (cx) shared.salvarCaixinha({ id: cx.id, depositos: cx.depositos }, { silencioso: true });
       }
     } else {
       cloud.setCaixinhas(
