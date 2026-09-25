@@ -2,7 +2,6 @@
 // CTAs (depositar/resgatar), histórico e os modais.
 
 import React from "react";
-import { fmtBRL } from "../../data.js";
 import { chaveMes } from "../../lib/datas.js";
 import { Icon } from "../../ui/icons.jsx";
 import { COR_NEG } from "../../lib/colors.js";
@@ -11,7 +10,7 @@ import { ConfirmModal } from "../../ui/confirm-modal.jsx";
 import { useSelic, calcularRendimento, rendimentoDesdeSempre } from "../../lib/selic.js";
 import { alocadoPorDescricao } from "../../lib/guardado-entradas.js";
 import { calcularLembranca } from "./utils.js";
-import { valorAtual } from "../../lib/caixinhas.js";
+import { valorAtual, caixinhaVisivel } from "../../lib/caixinhas.js";
 import { CabecalhoCaixinha } from "./CabecalhoCaixinha.jsx";
 import { CardLembranca } from "./CardLembranca.jsx";
 import { HistoricoDepositos } from "./HistoricoDepositos.jsx";
@@ -63,7 +62,9 @@ export function CaixinhaScreen({ ctx, params }) {
     () => alocadoPorDescricao(caixinhas, entradas, mesAtual),
     [caixinhas, entradas, mesAtual],
   );
-  const cx = caixinhas.find((c) => c.id === params.id);
+  // `caixinhas` inclui as excluídas (pra `alocado` acima continuar certo); a
+  // tela em si trata uma excluída como inexistente.
+  const cx = caixinhas.find((c) => c.id === params.id && caixinhaVisivel(c));
   const [modalDeposito, setModalDeposito] = React.useState(false);
   const [modalResgate, setModalResgate] = React.useState(false);
   const [modalEditar, setModalEditar] = React.useState(false);
@@ -262,9 +263,7 @@ export function CaixinhaScreen({ ctx, params }) {
           titulo={tr("Excluir \"{nome}\"?", { nome: cx.nome })}
           mensagem={
             (cx.depositos || []).length > 0
-              ? (cx.depositos.length === 1
-                  ? tr("Os {n} depósito guardado ({x}) serão perdidos.", { n: cx.depositos.length, x: fmtBRL(valorAtual(cx)) })
-                  : tr("Os {n} depósitos guardados ({x}) serão perdidos.", { n: cx.depositos.length, x: fmtBRL(valorAtual(cx)) }))
+              ? tr("A caixinha some da lista, mas o saldo deste mês e dos anteriores continua igual.")
               : tr("Essa caixinha será removida permanentemente.")
           }
           onCancelar={() => setConfirmarExclusao(false)}

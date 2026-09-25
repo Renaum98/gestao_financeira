@@ -6,12 +6,14 @@ import { Card, TopBar } from "../../ui/common.jsx";
 import { CardCaixinha } from "./CardCaixinha.jsx";
 import { ModalCaixinha } from "./ModalCaixinha.jsx";
 import { useT } from "../../lib/i18n.jsx";
+import { caixinhasVisiveis } from "../../lib/caixinhas.js";
 
 // `params` só chega quando a lista está servindo de mestre ao lado do detalhe
 // (desktop): é o que permite marcar qual caixinha está aberta. Na navegação
 // normal ela vem vazia e nenhuma fica marcada.
 export function CaixinhasScreen({ ctx, params }) {
-  const { caixinhas, salvarCaixinha, voltar, irPara, ehDesktop } = ctx;
+  const { salvarCaixinha, voltar, irPara, ehDesktop } = ctx;
+  const caixinhas = React.useMemo(() => caixinhasVisiveis(ctx.caixinhas), [ctx.caixinhas]);
   const t = useT();
   const [modal, setModal] = React.useState(null); // null | 'nova' | { editando: caixinha }
 

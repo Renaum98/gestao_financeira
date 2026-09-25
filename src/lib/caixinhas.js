@@ -12,6 +12,20 @@ export function valorAtual(cx) {
   return (cx?.depositos || []).reduce((s, d) => s + (Number(d.valor) || 0), 0);
 }
 
+// Excluir uma caixinha só a esconde. Os depósitos dela já abateram o saldo dos
+// meses em que foram feitos (`guardadoNoMes`), já aparecem em Transações e já
+// marcam as entradas que os financiaram — apagá-los de verdade reescreveria o
+// passado: o "Restante" desses meses subiria como se o dinheiro nunca tivesse
+// sido guardado. Por isso `ctx.caixinhas` segue com a lista inteira (é ela que
+// alimenta as contas) e só as telas que LISTAM caixinhas filtram por aqui.
+export function caixinhaVisivel(cx) {
+  return !!cx && !cx.excluidaEm;
+}
+
+export function caixinhasVisiveis(caixinhas) {
+  return (caixinhas || []).filter(caixinhaVisivel);
+}
+
 // Depósitos do mês no formato que a lista de Transações consome.
 //
 // Guardar dinheiro é um movimento como outro qualquer: sai do que estava
@@ -45,6 +59,8 @@ export function depositosDoMes(caixinhas, mes, meuUid) {
         data: d.data,
         caixinhaId: c.id,
         caixinhaCor: c.cor,
+        // Linha de caixinha excluída não tem pra onde levar ao tocar.
+        caixinhaExcluida: !!c.excluidaEm,
         origem: d.origem || null,
       });
     }

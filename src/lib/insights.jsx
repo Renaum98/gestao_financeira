@@ -7,7 +7,7 @@
 // um array de { icon, cor, texto }. O `texto` é JSX (com strongs/cores) pra
 // a tela renderizar direto.
 
-import { valorAtual } from "./caixinhas.js";
+import { valorAtual, caixinhasVisiveis } from "./caixinhas.js";
 import { CATEGORIAS, fmtBRLCompacto, totalPorCategoria } from '../data.js';
 import { COR_POS, COR_NEG, COR_AVISO } from './colors.js';
 
@@ -182,7 +182,9 @@ export function computeInsights({
   }
 
   // ─── 7) Caixinhas: total guardado ou progresso de meta ───
-  if (caixinhas && caixinhas.length > 0) {
+  // Só as que existem na tela: uma excluída não entra no "você já guardou".
+  caixinhas = caixinhasVisiveis(caixinhas);
+  if (caixinhas.length > 0) {
     const guardadoTotal = caixinhas.reduce(
       (s, c) =>
         s + (c.depositos || []).reduce((s2, d) => s2 + (d.valor > 0 ? d.valor : 0), 0),

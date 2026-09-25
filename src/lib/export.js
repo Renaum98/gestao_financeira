@@ -2,7 +2,7 @@
 // A biblioteca `xlsx` é carregada sob demanda (dynamic import) para não
 // pesar o bundle inicial — só quem clica em "Baixar dados" paga o custo.
 
-import { valorAtual } from './caixinhas.js';
+import { valorAtual, caixinhasVisiveis } from './caixinhas.js';
 import { CATEGORIAS, txDoMes } from '../data.js';
 
 function nomeCategoria(catId) {
@@ -157,6 +157,9 @@ export async function baixarDadosXLSX({
 }) {
   const XLSX = await import('xlsx');
   const wb = XLSX.utils.book_new();
+  // Caixinha excluída só fica guardada pra não mexer no saldo dos meses; na
+  // planilha ela não existe mais.
+  caixinhas = caixinhasVisiveis(caixinhas);
 
   if (mes) {
     const filtradas = txDoMes(txs, mes);

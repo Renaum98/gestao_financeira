@@ -570,8 +570,7 @@ export const EN = {
   "Resgatar": "Withdraw",
   "Excluir caixinha": "Delete savings",
   "Essa caixinha será removida permanentemente.": "This savings jar will be permanently removed.",
-  "Os {n} depósito guardado ({x}) serão perdidos.": "The {n} saved deposit ({x}) will be lost.",
-  "Os {n} depósitos guardados ({x}) serão perdidos.": "The {n} saved deposits ({x}) will be lost.",
+  "A caixinha some da lista, mas o saldo deste mês e dos anteriores continua igual.": "The jar leaves the list, but this month's and past months' balances stay the same.",
   // CabecalhoCaixinha
   "Você já juntou": "You've saved",
   "Já rendeu": "Earned so far",

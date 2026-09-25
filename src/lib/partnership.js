@@ -634,11 +634,6 @@ export function useSharedCaixinhas({ partnershipId, uid, partnerNome }) {
     await persistir(novaLista);
   };
 
-  const excluirCaixinha = async (id) => {
-    if (!ref) return;
-    await persistir(caixinhasRef.current.filter((c) => c.id !== id));
-  };
-
   const depositarCaixinha = async (id, deposito) => {
     if (!ref) return;
     const novaLista = caixinhasRef.current.map((c) =>
@@ -661,7 +656,6 @@ export function useSharedCaixinhas({ partnershipId, uid, partnerNome }) {
     existe,
     desfeito,
     salvarCaixinha,
-    excluirCaixinha,
     depositarCaixinha,
   };
 }

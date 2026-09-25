@@ -1546,12 +1546,17 @@ export function App() {
       return [nova, ...atual];
     });
   };
+  // Excluir só esconde: os depósitos seguem contando nos meses em que foram
+  // feitos, pra nenhum saldo mudar (ver `caixinhaVisivel` em lib/caixinhas).
   const excluirCaixinha = (id) => {
+    const excluidaEm = hojeISO();
     if (ehCompartilhado) {
-      shared.excluirCaixinha(id);
+      shared.salvarCaixinha({ id, excluidaEm });
       return;
     }
-    cloud.setCaixinhas((atual) => atual.filter((c) => c.id !== id));
+    cloud.setCaixinhas((atual) =>
+      atual.map((c) => (c.id === id ? { ...c, excluidaEm } : c)),
+    );
   };
   const depositarCaixinha = (id, deposito) => {
     if (ehCompartilhado) {

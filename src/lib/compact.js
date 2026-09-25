@@ -52,6 +52,9 @@ export function compactarCaixinha(cx) {
   if (cx.depositos && cx.depositos.length > 0) {
     out.depositos = cx.depositos.map(compactarDeposito);
   }
+  // Caixinha excluída continua no doc (ver `caixinhaVisivel` em lib/caixinhas):
+  // sem este campo ela voltaria a aparecer depois de recarregar.
+  if (cx.excluidaEm) out.excluidaEm = cx.excluidaEm;
   return out;
 }
 

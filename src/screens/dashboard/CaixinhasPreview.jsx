@@ -3,10 +3,12 @@
 
 import { CardCaixinha } from "../caixinhas.jsx";
 import { useT } from "../../lib/i18n.jsx";
+import { caixinhasVisiveis } from "../../lib/caixinhas.js";
 
-export function CaixinhasPreview({ caixinhas, irPara }) {
+export function CaixinhasPreview({ caixinhas: todas, irPara }) {
   const t = useT();
-  if (!caixinhas || caixinhas.length === 0) return null;
+  const caixinhas = caixinhasVisiveis(todas);
+  if (caixinhas.length === 0) return null;
 
   return (
     <div style={{ padding: "var(--esp-secao) var(--pad-x) 0" }}>

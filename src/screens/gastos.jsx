@@ -549,10 +549,11 @@ export function GastosScreen({ ctx }) {
                 tx={tx}
                 guardado={guardadoTx[tx.id]}
                 // Depósito não é tx: não há o que editar nem excluir aqui — o
-                // toque leva pra caixinha, que é onde ele se desfaz.
+                // toque leva pra caixinha, que é onde ele se desfaz. Se ela foi
+                // excluída, a linha fica só como registro.
                 onClick={() =>
                   tx.tipo === "guardado"
-                    ? irPara("caixinha", { id: tx.caixinhaId })
+                    ? !tx.caixinhaExcluida && irPara("caixinha", { id: tx.caixinhaId })
                     : setAcaoAberta(tx.id)
                 }
               />
