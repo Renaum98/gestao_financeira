@@ -454,6 +454,18 @@ export const EN = {
   "Personalizada": "Custom",
   "Dia em que a fatura fecha": "Statement closing day",
   "Último dia do mês": "Last day of the month",
+  "Dia em que a fatura vence": "Statement due day",
+  "Não informado": "Not set",
+  "Você recebe um lembrete antes do dia {dia} com o valor da fatura. As contas no cartão não têm lembrete próprio.":
+    "You'll get a reminder before the {dia}th with the statement amount. Bills on the card don't get their own reminder.",
+  "Com o dia preenchido, você recebe um lembrete da fatura antes de vencer.":
+    "Fill in the day to get a reminder before the statement is due.",
+  // Recorrente no crédito / lembrete de fatura
+  "Entra na fatura do cartão todo mês — o vencimento é o da fatura.":
+    "Goes on the card statement every month — it's due when the statement is.",
+  "{cat} · na fatura do cartão · desde {inicio}": "{cat} · on the card statement · since {inicio}",
+  "Fatura {cartao}": "{cartao} statement",
+  "Compras de {mes}": "{mes} purchases",
   "Compras a partir do dia {dia} já entram na fatura seguinte. Não muda o saldo do mês.":
     "Purchases from the {dia}th on go to the next statement. Doesn't change the month's balance.",
   "Em branco, a fatura fecha no último dia do mês. Não muda o saldo do mês.":
@@ -570,7 +582,17 @@ export const EN = {
   "Resgatar": "Withdraw",
   "Excluir caixinha": "Delete savings",
   "Essa caixinha será removida permanentemente.": "This savings jar will be permanently removed.",
-  "A caixinha some da lista, mas o saldo deste mês e dos anteriores continua igual.": "The jar leaves the list, but this month's and past months' balances stay the same.",
+  "O que fazer com o dinheiro que passou por ela?": "What should happen to the money that went through it?",
+  "Só apagar a caixinha": "Just delete the jar",
+  "Nada muda nos meses: o que foi guardado continua descontado onde saiu.":
+    "Nothing changes in your months: what was saved stays deducted where it came from.",
+  "Apagar e devolver": "Delete and give back",
+  "{x} voltam pros meses e entradas de onde saíram, e os resgates ({y}) saem de Transações. Como se ela nunca tivesse existido.":
+    "{x} goes back to the months and income it came from, and the withdrawals ({y}) leave Transactions. As if it never existed.",
+  "{x} voltam pros meses e entradas de onde saíram. Como se ela nunca tivesse existido.":
+    "{x} goes back to the months and income it came from. As if it never existed.",
+  "Só os seus lançamentos voltam. Os de {nome} continuam como estão.":
+    "Only your entries are given back. {nome}'s stay as they are.",
   // CabecalhoCaixinha
   "Você já juntou": "You've saved",
   "Já rendeu": "Earned so far",

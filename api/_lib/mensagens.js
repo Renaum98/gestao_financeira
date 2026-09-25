@@ -90,6 +90,7 @@ export function montarNotificacoes(userDoc, { diasJanela = 7, atividade = [], ui
     [],
     userDoc.notificacoesParceria || [],
     userDoc.orcamentos || {},
+    userDoc.cartoes || [],
   );
 
   const lidas = new Set(prefs.notifLidas || []);
@@ -115,7 +116,7 @@ export function montarNotificacoes(userDoc, { diasJanela = 7, atividade = [], ui
     if (n > diasJanela) continue;
     incluir({
       id: tx.id,
-      titulo: tx.descricao,
+      titulo: tx.fatura ? t('Fatura {cartao}', { cartao: tx.descricao }) : tx.descricao,
       corpo: `${rotulo(n)} · ${fmt(tx.valor)}`,
       tag: `vencimento-${tx.id}`,
       tipo: 'vencimento',

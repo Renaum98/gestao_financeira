@@ -86,6 +86,49 @@ export function faturasEmAberto(txs, diaFechamento, hoje, cartaoId) {
   return { aberta, fechada };
 }
 
+// Data (yyyy-mm-dd) em que a fatura de `faturaMes` vence, pelo dia de
+// vencimento do cartão. Cai no mês de pagamento (o seguinte ao do fechamento);
+// um dia que o mês não comporta vira o último. null = cartão sem vencimento
+// informado.
+export function dataVencimentoFatura(faturaMes, diaVencimento) {
+  const dia = Number(diaVencimento) || 0;
+  if (dia < 1) return null;
+  const mes = mesPagamentoDaFatura(faturaMes);
+  return `${mes}-${String(Math.min(dia, diasNoMes(mes))).padStart(2, "0")}`;
+}
+
+// Faturas que vencem entre hoje e `diasJanela` dias, uma por cartão com
+// vencimento informado. É o lembrete que substitui o "vence em N dias" de cada
+// conta no crédito: no cartão quem vence é a fatura, não a compra.
+//   [{ id, cartaoId, cartaoNome, mes, data, valor }]
+// O id leva o mês da fatura — o lembrete de outubro não herda o "lido" do de
+// setembro.
+export function faturasAVencer(txs, cartoes, hoje, diasJanela = 7) {
+  const lim = new Date(`${hoje}T12:00:00`);
+  lim.setDate(lim.getDate() + diasJanela);
+  const limite = `${lim.getFullYear()}-${String(lim.getMonth() + 1).padStart(2, "0")}-${String(lim.getDate()).padStart(2, "0")}`;
+  const out = [];
+  for (const cartao of cartoes || []) {
+    if (!(cartao.diaVencimento > 0)) continue;
+    const { aberta, fechada } = faturasEmAberto(txs, cartao.diaFechamento || 0, hoje, cartao.id);
+    for (const f of [fechada, aberta]) {
+      if (!f || !(f.total > 0)) continue;
+      const data = dataVencimentoFatura(f.mes, cartao.diaVencimento);
+      if (data < hoje || data > limite) continue;
+      out.push({
+        id: `fatura-${cartao.id}-${f.mes}`,
+        cartaoId: cartao.id,
+        cartaoNome: cartao.nome,
+        mes: f.mes,
+        data,
+        valor: f.total,
+      });
+      break; // uma fatura por cartão: a mais antiga que ainda vai vencer
+    }
+  }
+  return out;
+}
+
 // As faturas de cada cartão cadastrado, na ordem da lista. Com zero cartões,
 // devolve um grupo único sem cartão — o card do Dashboard de antes. Um grupo
 // "sem cartão" também aparece no fim quando sobrou tx órfã (cartão apagado com

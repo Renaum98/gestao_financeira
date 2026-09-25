@@ -56,7 +56,9 @@ export function RecorrentesScreen({ ctx }) {
                 {r.descricao}
               </div>
               <div style={{ fontSize: 11, color: 'var(--muted)', fontWeight: 600, marginTop: 2 }}>
-                {t("{cat} · todo dia {dia} · desde {inicio}", { cat: t(cat.nome), dia: r.dia, inicio: rotuloMesCurtoT(t, r.inicio) })}
+                {r.pagamento === PAG_CARTAO
+                  ? t("{cat} · na fatura do cartão · desde {inicio}", { cat: t(cat.nome), inicio: rotuloMesCurtoT(t, r.inicio) })
+                  : t("{cat} · todo dia {dia} · desde {inicio}", { cat: t(cat.nome), dia: r.dia, inicio: rotuloMesCurtoT(t, r.inicio) })}
                 {r.fim ? t(" · até {fim}", { fim: rotuloMesCurtoT(t, r.fim) }) : ''}
                 {r.crescimento ? t(" · reajuste {pct}% por parcela", { pct: (r.crescimento * 100).toLocaleString('pt-BR', { maximumFractionDigits: 2 }) }) : ''}
               </div>
@@ -357,7 +359,18 @@ function EditarRecorrenteModal({ rec, cartoes = [], onFechar, onSalvar }) {
         </div>
       )}
 
-      {/* Dia de vencimento */}
+      {/* Dia de vencimento. No crédito não existe: a conta entra na fatura, e
+          quem vence é ela (dia de vencimento do cartão). O `dia` guardado
+          continua valendo pra data do lançamento. */}
+      {!ehEntrada && pagamento === PAG_CARTAO ? (
+        <div style={{
+          marginTop: 10, padding: '12px 16px', borderRadius: 'var(--raio-bloco)',
+          background: 'var(--card-2)', fontSize: 12, fontWeight: 600,
+          color: 'var(--muted)', lineHeight: 1.45,
+        }}>
+          {t("Entra na fatura do cartão todo mês — o vencimento é o da fatura.")}
+        </div>
+      ) : (
       <label style={{
         marginTop: 10, display: 'flex', alignItems: 'center', gap: 10,
         padding: '12px 16px', borderRadius: 'var(--raio-bloco)', background: 'var(--card-2)',
@@ -381,6 +394,7 @@ function EditarRecorrenteModal({ rec, cartoes = [], onFechar, onSalvar }) {
           ))}
         </select>
       </label>
+      )}
     </ModalOverlay>
   );
 }

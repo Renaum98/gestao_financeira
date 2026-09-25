@@ -1100,7 +1100,24 @@ export function AddExpenseModal({ ctx, params }) {
               </div>
             )}
 
-            {/* Vence todo dia */}
+            {/* Vence todo dia. No crédito não pergunta: a conta entra na
+                fatura e quem vence é ela. O lançamento fica no dia de hoje
+                (o padrão de `diaVenc`) todo mês. */}
+            {!ehEntrada && pagamento === PAG_CARTAO ? (
+              <div
+                style={{
+                  padding: "12px 16px",
+                  borderRadius: "var(--raio-bloco)",
+                  background: "var(--card-2)",
+                  fontSize: 12,
+                  fontWeight: 600,
+                  color: "var(--muted)",
+                  lineHeight: 1.45,
+                }}
+              >
+                {t("Entra na fatura do cartão todo mês — o vencimento é o da fatura.")}
+              </div>
+            ) : (
             <label
               style={{
                 display: "flex",
@@ -1135,6 +1152,7 @@ export function AddExpenseModal({ ctx, params }) {
                 ))}
               </select>
             </label>
+            )}
 
             {/* Até mês/ano */}
             <label

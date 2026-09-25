@@ -11,6 +11,7 @@ import { useSelic, calcularRendimento, rendimentoDesdeSempre } from "../../lib/s
 import { alocadoPorDescricao } from "../../lib/guardado-entradas.js";
 import { calcularLembranca } from "./utils.js";
 import { valorAtual, caixinhaVisivel } from "../../lib/caixinhas.js";
+import { fmtBRL } from "../../data.js";
 import { CabecalhoCaixinha } from "./CabecalhoCaixinha.jsx";
 import { CardLembranca } from "./CardLembranca.jsx";
 import { HistoricoDepositos } from "./HistoricoDepositos.jsx";
@@ -69,6 +70,8 @@ export function CaixinhaScreen({ ctx, params }) {
   const [modalResgate, setModalResgate] = React.useState(false);
   const [modalEditar, setModalEditar] = React.useState(false);
   const [confirmarExclusao, setConfirmarExclusao] = React.useState(false);
+  // Na exclusão: false = só apagar (meses intactos), true = devolver o dinheiro.
+  const [devolver, setDevolver] = React.useState(false);
   const selic = useSelic();
 
   if (!cx) {
@@ -92,8 +95,18 @@ export function CaixinhaScreen({ ctx, params }) {
   const pct = cx.meta > 0 ? Math.min(100, (comRendimento / cx.meta) * 100) : 0;
   const depositos = [...(cx.depositos || [])].sort((a, b) => b.data.localeCompare(a.data));
 
+  // O que "devolver" desfaz — só os lançamentos de quem está excluindo (ver
+  // excluirCaixinha no app). Saldo inicial não saiu de mês nenhum.
+  const meuUid = usuario?.uid;
+  const meus = (cx.depositos || []).filter(
+    (d) => d.tipo !== "inicial" && (!d.feitoPor || d.feitoPor === meuUid),
+  );
+  const guardadoMeu = meus.reduce((s, d) => s + (d.valor > 0 ? d.valor : 0), 0);
+  const resgatadoMeu = meus.reduce((s, d) => s + (d.valor < 0 ? -d.valor : 0), 0);
+  const temOQueDevolver = meus.length > 0;
+
   const onConfirmarExclusao = () => {
-    excluirCaixinha(cx.id);
+    excluirCaixinha(cx.id, { devolver: temOQueDevolver && devolver });
     setConfirmarExclusao(false);
     voltar();
   };
@@ -262,14 +275,85 @@ export function CaixinhaScreen({ ctx, params }) {
         <ConfirmModal
           titulo={tr("Excluir \"{nome}\"?", { nome: cx.nome })}
           mensagem={
-            (cx.depositos || []).length > 0
-              ? tr("A caixinha some da lista, mas o saldo deste mês e dos anteriores continua igual.")
+            temOQueDevolver
+              ? tr("O que fazer com o dinheiro que passou por ela?")
               : tr("Essa caixinha será removida permanentemente.")
           }
-          onCancelar={() => setConfirmarExclusao(false)}
+          onCancelar={() => {
+            setConfirmarExclusao(false);
+            setDevolver(false);
+          }}
           onConfirmar={onConfirmarExclusao}
-        />
+        >
+          {temOQueDevolver && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 14, textAlign: "left" }}>
+              <OpcaoExclusao
+                selecionada={!devolver}
+                onClick={() => setDevolver(false)}
+                titulo={tr("Só apagar a caixinha")}
+                descricao={tr("Nada muda nos meses: o que foi guardado continua descontado onde saiu.")}
+              />
+              <OpcaoExclusao
+                selecionada={devolver}
+                onClick={() => setDevolver(true)}
+                titulo={tr("Apagar e devolver")}
+                descricao={
+                  resgatadoMeu > 0
+                    ? tr("{x} voltam pros meses e entradas de onde saíram, e os resgates ({y}) saem de Transações. Como se ela nunca tivesse existido.", { x: fmtBRL(guardadoMeu), y: fmtBRL(resgatadoMeu) })
+                    : tr("{x} voltam pros meses e entradas de onde saíram. Como se ela nunca tivesse existido.", { x: fmtBRL(guardadoMeu) })
+                }
+              />
+              {caixinhasCompartilhadas && (
+                <div style={{ fontSize: 11, color: "var(--muted)", fontWeight: 600, lineHeight: 1.4 }}>
+                  {tr("Só os seus lançamentos voltam. Os de {nome} continuam como estão.", { nome: partnerNome || tr("seu parceiro") })}
+                </div>
+              )}
+            </div>
+          )}
+        </ConfirmModal>
       )}
     </div>
+  );
+}
+
+// Uma das duas saídas da exclusão, no formato de opção marcável.
+function OpcaoExclusao({ selecionada, onClick, titulo, descricao }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={selecionada}
+      style={{
+        display: "flex",
+        gap: 10,
+        alignItems: "flex-start",
+        width: "100%",
+        padding: "10px 12px",
+        borderRadius: "var(--raio-bloco)",
+        border: selecionada ? "2px solid var(--primary)" : "2px solid var(--linha)",
+        background: selecionada ? "color-mix(in oklab, var(--primary) 8%, transparent)" : "var(--card)",
+        cursor: "pointer",
+        fontFamily: "inherit",
+        textAlign: "left",
+      }}
+    >
+      <span
+        style={{
+          width: 16,
+          height: 16,
+          marginTop: 2,
+          flexShrink: 0,
+          borderRadius: "var(--raio-pilula)",
+          border: selecionada ? "5px solid var(--primary)" : "2px solid var(--muted)",
+          boxSizing: "border-box",
+        }}
+      />
+      <span>
+        <span style={{ display: "block", fontSize: 13, fontWeight: 800, color: "var(--ink)" }}>{titulo}</span>
+        <span style={{ display: "block", fontSize: 11.5, fontWeight: 500, color: "var(--muted)", lineHeight: 1.4, marginTop: 2 }}>
+          {descricao}
+        </span>
+      </span>
+    </button>
   );
 }

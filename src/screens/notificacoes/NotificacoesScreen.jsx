@@ -40,13 +40,13 @@ export function NotificacoesScreen({ ctx }) {
   const {
     txs, recorrentes, voltar, irPara, preferences, setPreferences,
     convitesRecebidos = [], usuario, orcamentos = {},
-    notificacoesParceria = [], dispensarNotifParceria,
+    notificacoesParceria = [], dispensarNotifParceria, cartoes,
   } = ctx;
   const t = useT();
   const lidas = preferences?.notifLidas || SEM_LIDAS;
   const { proximas, terminando, recsRevisar, orcEstourados, orcProximos, idsAtivos, naoLidas } = React.useMemo(
-    () => calcularNotificacoes(txs, recorrentes, lidas, convitesRecebidos, notificacoesParceria, orcamentos),
-    [txs, recorrentes, lidas, convitesRecebidos, notificacoesParceria, orcamentos],
+    () => calcularNotificacoes(txs, recorrentes, lidas, convitesRecebidos, notificacoesParceria, orcamentos, cartoes),
+    [txs, recorrentes, lidas, convitesRecebidos, notificacoesParceria, orcamentos, cartoes],
   );
 
   const total =

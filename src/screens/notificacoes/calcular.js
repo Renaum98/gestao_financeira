@@ -5,7 +5,8 @@
 // `orcamentos` é opcional — só geram alerta as categorias com valor > 0
 // definido pelo usuário (orçamento por categoria é uma medida opcional).
 
-import { chaveMes, mesSeguinteDe } from '../../lib/datas.js';
+import { chaveMes, hojeISO, mesSeguinteDe } from '../../lib/datas.js';
+import { PAG_CARTAO, faturasAVencer } from '../../lib/fatura.js';
 
 export function calcularNotificacoes(
   txs,
@@ -14,6 +15,7 @@ export function calcularNotificacoes(
   convites = [],
   notifsParceria = [],
   orcamentos = {},
+  cartoes = [],
 ) {
   const hoje = new Date();
   hoje.setHours(0, 0, 0, 0);
@@ -27,13 +29,26 @@ export function calcularNotificacoes(
     return new Date(y, m - 1, d);
   };
 
+  // Conta no crédito não tem vencimento próprio: entra na fatura, e quem vence
+  // é ela. No lugar de um aviso por compra, vem um por fatura (`fatura` no
+  // item, com o cartão e o mês) — só de cartão com dia de vencimento.
   const proximas = txs
     .filter((t) => {
       if (t.tipo === 'entrada') return false;
+      if (t.pagamento === PAG_CARTAO) return false;
       if (!t.recorrenteId && !t.parcelas) return false;
       const dt = dataDe(t.data);
       return dt >= hoje && dt <= lim7;
     })
+    .concat(
+      faturasAVencer(txs, cartoes, hojeISO()).map((f) => ({
+        id: f.id,
+        data: f.data,
+        valor: f.valor,
+        descricao: f.cartaoNome,
+        fatura: { cartaoId: f.cartaoId, mes: f.mes },
+      })),
+    )
     .sort((a, b) => a.data.localeCompare(b.data));
 
   const terminando = txs

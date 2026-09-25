@@ -14,7 +14,7 @@ import { computeInsights } from "../lib/insights.jsx";
 import { calcularSaldoMes } from "../lib/saldo-mes.js";
 import { guardadoPorTx } from "../lib/guardado-entradas.js";
 import { chaveMes, hojeISO, mesAnteriorDe } from "../lib/datas.js";
-import { faturasPorCartao } from "../lib/fatura.js";
+import { faturasPorCartao, PAG_CARTAO } from "../lib/fatura.js";
 import { DiferencaMesModal } from "./dashboard/DiferencaMesModal.jsx";
 import { CabecalhoDashboard } from "./dashboard/CabecalhoDashboard.jsx";
 import { CardSaldo } from "./dashboard/CardSaldo.jsx";
@@ -63,8 +63,9 @@ export function DashboardScreen({ ctx }) {
         convitesRecebidos,
         notificacoesParceria,
         orcamentos,
+        cartoes,
       ),
-    [txs, recorrentes, preferences?.notifLidas, convitesRecebidos, notificacoesParceria, orcamentos],
+    [txs, recorrentes, preferences?.notifLidas, convitesRecebidos, notificacoesParceria, orcamentos, cartoes],
   );
   const totalNotif = notifInfo.naoLidas;
 
@@ -181,6 +182,8 @@ export function DashboardScreen({ ctx }) {
     const candidatas = txs.filter((t) => {
       if (t.tipo === "entrada") return false;
       if (t.pago) return false;
+      // No crédito quem vence é a fatura (card de faturas logo abaixo).
+      if (t.pagamento === PAG_CARTAO) return false;
       if (!t.recorrenteId && !t.parcelas) return false;
       const [y, m, d] = t.data.split("-").map(Number);
       const dt = new Date(y, m - 1, d);

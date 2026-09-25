@@ -70,6 +70,7 @@ export function compactarCaixinhas(lista) {
 function compactarCartao(c) {
   const out = { id: c.id, nome: c.nome, cor: c.cor };
   if (c.diaFechamento > 0) out.diaFechamento = c.diaFechamento;
+  if (c.diaVencimento > 0) out.diaVencimento = c.diaVencimento;
   if (c.limite > 0) out.limite = c.limite;
   if (c.criadoEm) out.criadoEm = c.criadoEm;
   return out;

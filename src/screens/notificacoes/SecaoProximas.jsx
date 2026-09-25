@@ -1,6 +1,7 @@
-// SecaoProximas.jsx — cobranças (recorrentes/parcelas) nos próximos 7 dias.
+// SecaoProximas.jsx — cobranças (recorrentes/parcelas fora do crédito e
+// faturas de cartão) nos próximos 7 dias.
 
-import { MESES_CURTO, fmtBRL } from '../../data.js';
+import { MESES, MESES_CURTO, fmtBRL } from '../../data.js';
 import { Card } from '../../ui/common.jsx';
 import { COR_NEG } from '../../lib/colors.js';
 import { NotifItem, Secao } from './parts.jsx';
@@ -64,13 +65,17 @@ export function SecaoProximas({ proximas, ehLida, marcarLida }) {
                   </div>
                 </div>
               }
-              titulo={tx.descricao}
+              titulo={tx.fatura ? t('Fatura {cartao}', { cartao: tx.descricao }) : tx.descricao}
               subtituloCor={urgente ? COR_NEG : undefined}
               subtitulo={
                 <>
                   {rotuloPrazoT(t, n)}
                   <span style={{ opacity: 0.5 }}>·</span>
-                  {tx.parcelas ? t('Parcela {atual}/{total}', { atual: tx.parcelas.atual, total: tx.parcelas.total }) : t('Mensal')}
+                  {tx.fatura
+                    ? t('Compras de {mes}', { mes: t(MESES[Number(tx.fatura.mes.slice(5, 7)) - 1]) })
+                    : tx.parcelas
+                      ? t('Parcela {atual}/{total}', { atual: tx.parcelas.atual, total: tx.parcelas.total })
+                      : t('Mensal')}
                 </>
               }
               trailing={

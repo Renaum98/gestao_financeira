@@ -14,6 +14,8 @@ export function ConfirmModal({
   destrutivo = true,
   onConfirmar,
   onCancelar,
+  // Conteúdo extra entre a mensagem e os botões (ex.: uma escolha).
+  children,
 }) {
   const t = useT();
   const corAcao = destrutivo ? COR_NEG : 'var(--primary)';
@@ -48,6 +50,8 @@ export function ConfirmModal({
           marginTop: 6, lineHeight: 1.45,
         }}>{mensagem}</div>
       )}
+
+      {children}
 
       <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>
         <button onClick={onCancelar} style={{

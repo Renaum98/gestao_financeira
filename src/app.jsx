@@ -1546,16 +1546,59 @@ export function App() {
       return [nova, ...atual];
     });
   };
-  // Excluir só esconde: os depósitos seguem contando nos meses em que foram
-  // feitos, pra nenhum saldo mudar (ver `caixinhaVisivel` em lib/caixinhas).
-  const excluirCaixinha = (id) => {
+  // Excluir sempre esconde a caixinha (ver `caixinhaVisivel` em lib/caixinhas).
+  // O usuário escolhe o que acontece com o dinheiro:
+  //
+  //   • devolver = false → nada muda nos meses: os depósitos seguem contando
+  //     onde foram feitos.
+  //   • devolver = true → como se ela nunca tivesse existido. Saem os depósitos
+  //     (o valor volta pro mês de onde saiu, e a entrada que os bancava fica
+  //     livre de novo) e os resgates junto com a entrada "Resgate: …" que cada
+  //     um criou — senão o que já foi resgatado voltaria duas vezes: no mês do
+  //     depósito e no mês do resgate.
+  //
+  // Na conta compartilhada só sai o que é MEU: os lançamentos do parceiro são
+  // dele, e mexer neles mudaria os meses dele sem ele pedir. A caixinha fica
+  // guardada (escondida) com o que sobrar. Saldo inicial não sai de mês nenhum,
+  // então fica também.
+  const excluirCaixinha = (id, { devolver = false } = {}) => {
     const excluidaEm = hojeISO();
+    const ehMeu = (d) => !d.feitoPor || d.feitoPor === uid;
+    const fica = (d) => d.tipo === "inicial" || !ehMeu(d);
+
+    if (devolver) {
+      const resgates = (cloud.txs || []).filter(
+        (t) => t.tipo === "entrada" && t.caixinhaId === id,
+      );
+      if (resgates.length > 0) {
+        // Uma entrada de resgate pode ter bancado depósito em OUTRA caixinha;
+        // tirá-la precisa devolver esse depósito também (igual a excluirTx).
+        const idsResgate = new Set(resgates.map((t) => t.id));
+        const txsDepois = (cloud.txs || []).filter((t) => !idsResgate.has(t.id));
+        for (const r of resgates) sincronizarGuardado(txsDepois, r, null);
+        cloud.setTxs((atual) => atual.filter((t) => !idsResgate.has(t.id)));
+      }
+    }
+
     if (ehCompartilhado) {
-      shared.salvarCaixinha({ id, excluidaEm });
+      const cx = shared.caixinhas.find((c) => c.id === id);
+      shared.salvarCaixinha({
+        id,
+        excluidaEm,
+        ...(devolver && cx ? { depositos: (cx.depositos || []).filter(fica) } : {}),
+      });
       return;
     }
     cloud.setCaixinhas((atual) =>
-      atual.map((c) => (c.id === id ? { ...c, excluidaEm } : c)),
+      atual.map((c) =>
+        c.id === id
+          ? {
+              ...c,
+              excluidaEm,
+              ...(devolver ? { depositos: (c.depositos || []).filter(fica) } : {}),
+            }
+          : c,
+      ),
     );
   };
   const depositarCaixinha = (id, deposito) => {

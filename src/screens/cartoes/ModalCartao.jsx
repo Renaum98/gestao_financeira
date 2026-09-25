@@ -1,4 +1,5 @@
-// ModalCartao.jsx — criar / editar cartão (nome, cor, fechamento, limite).
+// ModalCartao.jsx — criar / editar cartão (nome, cor, fechamento, vencimento,
+// limite).
 //
 // Nenhum campo de número nem de bandeira, por decisão explícita: o que
 // identifica o cartão aqui é o nome e a cor (ver lib/cartoes.js).
@@ -27,10 +28,18 @@ export function ModalCartao({ editando, ehPrimeiro, diaFechamentoGlobal, onFecha
     return dia > 0 ? String(dia) : "";
   });
 
+  const [venc, setVenc] = React.useState(() =>
+    editando?.diaVencimento > 0 ? String(editando.diaVencimento) : "",
+  );
+
   const [limite, setLimite] = React.useState(formatarValorInicial(editando?.limite || 0));
 
-  const diaNum = Math.trunc(Number(fech.replace(/[^0-9]/g, "")) || 0);
-  const diaValido = diaNum >= 1 && diaNum <= 31 ? diaNum : 0;
+  const diaDe = (texto) => {
+    const n = Math.trunc(Number(texto.replace(/[^0-9]/g, "")) || 0);
+    return n >= 1 && n <= 31 ? n : 0;
+  };
+  const diaValido = diaDe(fech);
+  const vencValido = diaDe(venc);
   const limiteNum = parseValorBR(limite);
   const valido = nome.trim().length > 0;
 
@@ -41,6 +50,7 @@ export function ModalCartao({ editando, ehPrimeiro, diaFechamentoGlobal, onFecha
       nome: nome.trim(),
       cor,
       diaFechamento: diaValido,
+      diaVencimento: vencValido,
       limite: limiteNum > 0 ? limiteNum : 0,
     });
   };
@@ -131,6 +141,31 @@ export function ModalCartao({ editando, ehPrimeiro, diaFechamentoGlobal, onFecha
           {diaValido > 0
             ? t("Compras a partir do dia {dia} já entram na fatura seguinte. Não muda o saldo do mês.", { dia: diaValido })
             : t("Em branco, a fatura fecha no último dia do mês. Não muda o saldo do mês.")}
+        </div>
+      </Campo>
+
+      <Campo label={t("Dia em que a fatura vence")}>
+        <input
+          type="text"
+          inputMode="numeric"
+          pattern="[0-9]*"
+          value={venc}
+          placeholder={t("Não informado")}
+          onChange={(e) => setVenc(e.target.value.replace(/[^0-9]/g, "").slice(0, 2))}
+          style={inputStyle}
+        />
+        <div
+          style={{
+            marginTop: 8,
+            fontSize: 11,
+            color: "var(--muted)",
+            fontWeight: 500,
+            lineHeight: 1.45,
+          }}
+        >
+          {vencValido > 0
+            ? t("Você recebe um lembrete antes do dia {dia} com o valor da fatura. As contas no cartão não têm lembrete próprio.", { dia: vencValido })
+            : t("Com o dia preenchido, você recebe um lembrete da fatura antes de vencer.")}
         </div>
       </Campo>
 

@@ -88,12 +88,14 @@ export function ehRecorrenteNoCartao(rec) {
   return !!rec && rec.pagamento === PAG_CARTAO;
 }
 
-export function novoCartao({ nome, cor, diaFechamento, limite }) {
+export function novoCartao({ nome, cor, diaFechamento, diaVencimento, limite }) {
   return {
     id: `ct-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
     nome: String(nome || "").trim() || "Cartão",
     cor: cor || COR_CARTAO_PADRAO,
     diaFechamento: Number(diaFechamento) || 0, // 0 = último dia do mês
+    // 0 = não informado: sem lembrete de fatura (ver faturasAVencer).
+    diaVencimento: Number(diaVencimento) || 0,
     limite: Number(limite) > 0 ? Number(limite) : 0, // 0 = sem limite informado
     criadoEm: hojeISO(),
   };

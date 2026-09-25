@@ -92,7 +92,8 @@ export async function dispararPendentes({
     if (enviadas.has(tx.id) || lidasSet.has(tx.id)) continue;
     const n = diasAte(tx.data);
     if (n > diasJanela) continue;
-    const ok = await mostrarNotificacao(tx.descricao, {
+    const titulo = tx.fatura ? t('Fatura {cartao}', { cartao: tx.descricao }) : tx.descricao;
+    const ok = await mostrarNotificacao(titulo, {
       body: `${rotulo(n)} · ${fmtBRL(tx.valor)}`,
       icon: '/icon-192.png',
       badge: '/icon-192.png',
