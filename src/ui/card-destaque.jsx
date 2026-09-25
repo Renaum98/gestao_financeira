@@ -1,6 +1,6 @@
 // card-destaque.jsx — o card "herói" do app. Cada tela tem no máximo um: o
-// saldo do mês (Início), o orçamento mensal (Orçamentos), a projeção do ano
-// (Análise) e o cabeçalho da caixinha.
+// saldo do mês (Início), o orçamento mensal (Orçamentos)
+// e o cabeçalho da caixinha.
 //
 // A receita, que antes vivia copiada nos quatro: gradiente vertical do tom
 // claro no topo até o escuro na base, mais uma faixa de brilho diagonal por
