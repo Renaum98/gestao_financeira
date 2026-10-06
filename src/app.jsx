@@ -15,6 +15,7 @@ import {
 } from "./data.js";
 import { Icon } from "./ui/icons.jsx";
 import { IconeTab } from "./ui/icones-tab.jsx";
+import { criarGota } from "./ui/gota-liquida.js";
 import { escutarAuth, sair as sairFirebase } from "./lib/firebase.js";
 import { haviaSessao, lembrarSessao } from "./lib/sessao.js";
 import { useCloudState } from "./lib/storage.js";
@@ -174,6 +175,11 @@ function TabBar({ tela, irPara, abrirAdd }) {
   const indicadorRef = React.useRef(null);
   const pos = usePosicaoIndicador(tela, barraRef, itemRefs);
   const posAnterior = React.useRef(null);
+  // A geometria da gota (largura e posição) é do criarGota, não do React: as
+  // molas escrevem direto no elemento a cada quadro, e um re-render no meio
+  // passaria por cima delas.
+  const gotaRef = React.useRef(null);
+  const gota = () => (gotaRef.current ??= criarGota(indicadorRef.current));
 
   const dispararGota = React.useCallback(() => {
     const el = indicadorRef.current;
@@ -183,13 +189,17 @@ function TabBar({ tela, irPara, abrirAdd }) {
     el.classList.add("is-deslizando");
   }, []);
 
-  // Reinicia a animação de deformação a cada troca de aba (só quando o
-  // indicador realmente muda de lugar — não na primeira medição nem num resize).
+  // A cada troca de aba a gota escorre até a nova e reinicia a deformação do
+  // canto. Na primeira medição e num resize ela só é posta no lugar.
   React.useLayoutEffect(() => {
     const antes = posAnterior.current;
     posAnterior.current = pos;
-    if (!pos || !antes || antes.left === pos.left) return;
-    dispararGota();
+    if (!pos) return;
+    if (!antes || antes.left === pos.left) {
+      gota().colocar(pos.left, pos.width);
+      return;
+    }
+    if (gota().escorrer(pos.left, pos.width)) dispararGota();
   }, [pos, dispararGota]);
 
   // ─── Arrastar a gota de uma aba pra outra (só no toque) ───
@@ -217,16 +227,14 @@ function TabBar({ tela, irPara, abrirAdd }) {
   // uma elipse. Então o círculo é a gota encolhida à própria altura, centrada em
   // cima do botão — só assim o 50% vira circunferência de verdade.
   const virarBolha = (el, left, width) => {
+    gota().parar(); // o dedo manda: interrompe qualquer escorrida no meio
     const d = el.offsetHeight;
     el.style.width = `${d}px`;
     el.style.transform = `translateX(${left + (width - d) / 2}px)`;
     return d;
   };
 
-  const encaixar = (el, left, width) => {
-    el.style.width = `${width}px`;
-    el.style.transform = `translateX(${left}px)`;
-  };
+  const encaixar = (left, width) => gota().escorrer(left, width);
 
   const aoApontar = (e) => {
     // "somente no mobile": mouse e caneta seguem só com o clique normal
@@ -294,15 +302,14 @@ function TabBar({ tela, irPara, abrirAdd }) {
 
     if (!a || !a.ativo) {
       // foi só um toque parado: desfaz a bolha de volta no encaixe da aba
-      if (eraBolha && pos) encaixar(el, pos.left, pos.width);
+      if (eraBolha && pos) encaixar(pos.left, pos.width);
       return;
     }
     el.classList.remove("is-arrastando");
     // devolve a gota ao encaixe da aba escolhida; se for a mesma de onde saiu, o
     // React não re-renderiza, então largura e posição são repostas aqui na mão
     const destino = a.abas.find((ab) => ab.id === a.id);
-    if (destino) encaixar(el, destino.left, destino.width);
-    dispararGota();
+    if (destino && encaixar(destino.left, destino.width)) dispararGota();
     if (a.id !== tela) irPara(a.id);
     const barra = e.currentTarget;
     if (barra.hasPointerCapture?.(e.pointerId)) barra.releasePointerCapture(e.pointerId);
@@ -313,7 +320,7 @@ function TabBar({ tela, irPara, abrirAdd }) {
     arraste.current = null;
     if (!el) return;
     el.classList.remove("is-segurando", "is-arrastando");
-    if (pos) encaixar(el, pos.left, pos.width);
+    if (pos) encaixar(pos.left, pos.width);
   };
 
   const itens = ITENS_TAB.map((it) => ({ ...it, label: t(it.label) }));
@@ -372,9 +379,7 @@ function TabBar({ tela, irPara, abrirAdd }) {
             "--raio-gota": RAIO_GOTA,
             opacity: pos ? 1 : 0,
             top: pos?.top ?? 0,
-            width: pos?.width ?? 0,
             height: pos?.height ?? 0,
-            transform: `translateX(${pos?.left ?? 0}px)`,
           }}
         />
         {itens.map((it) => {

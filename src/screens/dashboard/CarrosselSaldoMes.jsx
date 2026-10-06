@@ -18,8 +18,17 @@
 // A borda dos cards vizinhos fica de fora de propósito (ver ESPIADA): é o que
 // avisa, sem texto nenhum, que dá pra arrastar pro lado — e por isso aqui não
 // tem pontinho de paginação nenhum, seria dizer duas vezes a mesma coisa.
+//
+// Por cima da escala vem o balanço "líquido", o mesmo da gota da tab bar (ver
+// ui/gota-liquida.js): enquanto o carrossel anda, os cards esticam no sentido do
+// movimento — a borda da frente se adianta, a de trás fica — e afinam na altura;
+// quando o snap assenta, uma mola do anime.js desfaz o esticão passando do
+// ponto, e o card balança antes de parar. Aqui não dá pra soltar as bordas de
+// verdade como na gota (quem move o card é o scroll nativo), então o esticão é
+// uma deformação da face, puxada pela velocidade do gesto.
 
 import React from "react";
+import { anime, carregarAnime, semMovimento } from "../../lib/anime.js";
 
 // Quantos slides de cada lado do ativo têm o card renderizado de verdade. O
 // resto mostra o esqueleto. Abaixar aperta mais a tela de entrada; subir dá mais
@@ -59,6 +68,24 @@ const ESCALA_MIN = 0.88;
 // arrastar. Se a dica ficar fraca, o conserto é subir a espiada, não voltar a
 // opacidade.
 const OPACIDADE_MIN = 0.55;
+
+// ─── Balanço líquido ───
+// Esticão máximo (fração da largura) e quanto dele vira afinamento na altura.
+// O teto é o ESPACO: a 5% de ~300px a borda da frente avança ~15px, ainda
+// dentro dos 18 de respiro — mais que isso e um card entra no vizinho.
+const ESTICA_MAX = 0.05;
+const AFINA = 0.6;
+// Esticão por px/ms de velocidade do scroll. Um swipe comum anda 1–3 px/ms.
+const ESTICA_POR_VEL = 0.03;
+// Seguir a velocidade: rápido pra esticar, devagar pra desinchar. Desinchando
+// devagar, sobra esticão quando o snap assenta — e é ele que a mola transforma
+// no balanço. Desinchando rápido, a desaceleração do snap zera tudo antes.
+const SEGUE_ESTICANDO = 0.4;
+const SEGUE_SOLTANDO = 0.06;
+// Sem evento de scroll por este tempo = o carrossel parou (o `scrollend` não
+// existe em todo Safari que ainda roda o app).
+const PAROU_MS = 110;
+const MOLA = { bounce: 0.55, duration: 480 };
 
 // Esqueleto do CardSaldo, exibido nos slides fora da janela. Repete o desenho do
 // card — cabeçalho, valor grande, chip de variação e o rodapé em duas colunas —
@@ -128,6 +155,9 @@ export function CarrosselSaldoMes({ todosMeses, mes, setMes, renderCard }) {
   // nesse caso o scroll-snap nativo já está centralizando, então o layoutEffect
   // NÃO deve disparar um scrollTo programático (que brigaria com o dedo).
   const mudouPorSwipeRef = React.useRef(false);
+  // Balanço líquido: `s` é o esticão atual, com sinal (+ = conteúdo indo pra
+  // esquerda). O resto é o que mede a velocidade e a mola que solta no fim.
+  const liquido = React.useRef({ s: 0, x: 0, t: 0, mola: null, parou: 0 });
 
   // Altura reservada pros slides sem card. Sem ela, a altura da fileira passaria
   // a ser ditada só pelos cards renderizados e mudaria conforme a janela desliza
@@ -191,6 +221,12 @@ export function CarrosselSaldoMes({ todosMeses, mes, setMes, renderCard }) {
       if (!face) continue;
       medidas.push({ face, centroSlide: s.offsetLeft + s.clientWidth / 2, largura: s.clientWidth });
     }
+    const s = liquido.current.s;
+    const kx = 1 + Math.abs(s);
+    const ky = 1 - Math.abs(s) * AFINA;
+    // A borda de trás é a âncora do esticão: com o conteúdo indo pra esquerda
+    // (s > 0) é a direita do card.
+    const ancora = s > 0 ? 1 : 0;
     for (const { face, centroSlide, largura } of medidas) {
       // com sinal: -1 = encostado à esquerda, 0 = centrado, +1 = à direita
       const pos = Math.max(-1, Math.min(1, (centroSlide - centro) / largura));
@@ -211,7 +247,16 @@ export function CarrosselSaldoMes({ todosMeses, mes, setMes, renderCard }) {
       const origemX = 50 - 50 * pos;
       face.style.opacity = op.toFixed(3);
       face.style.transformOrigin = `${origemX.toFixed(1)}% center`;
-      face.style.transform = `scale(${escala.toFixed(4)})`;
+      // O esticão tem a âncora dele (a borda de trás) e a escala tem a dela
+      // (origemX). Como transform-origin é um só, a diferença entre as duas
+      // âncoras vira um translate: esticar kx em volta de A e depois escalar em
+      // volta de O é o mesmo que escalar e·kx em volta de O e deslocar
+      // e·(1−kx)·(A−O).
+      const desloca = escala * (1 - kx) * (ancora - origemX / 100) * largura;
+      face.style.transform =
+        s === 0
+          ? `scale(${escala.toFixed(4)})`
+          : `translateX(${desloca.toFixed(2)}px) scale(${escala.toFixed(4)}) scale(${kx.toFixed(4)}, ${ky.toFixed(4)})`;
     }
   }, []);
 
@@ -283,14 +328,74 @@ export function CarrosselSaldoMes({ todosMeses, mes, setMes, renderCard }) {
     }
   }, [idxAtivo, mesesAsc, setMes]);
 
+  // Parou de rolar: a mola leva o esticão que sobrou a zero, passando do ponto.
+  // Sem o anime.js ainda (ou com o movimento reduzido), só desfaz.
+  const soltarEsticao = React.useCallback(() => {
+    const L = liquido.current;
+    L.t = 0;
+    if (L.s === 0) return;
+    const lib = anime();
+    if (!lib) {
+      L.s = 0;
+      aplicarEfeitos();
+      return;
+    }
+    L.mola = lib.animate(L, {
+      s: 0,
+      ease: lib.spring(MOLA),
+      onRender: aplicarEfeitos,
+      onComplete: () => {
+        L.mola = null;
+        L.s = 0;
+        aplicarEfeitos();
+      },
+    });
+  }, [aplicarEfeitos]);
+
+  // A cada frame de scroll: velocidade → esticão alvo, e o esticão atual vai
+  // atrás dele. Também rearma o "parou".
+  const medirEsticao = React.useCallback(() => {
+    const el = ref.current;
+    const L = liquido.current;
+    if (!el || semMovimento()) return;
+    if (L.mola) {
+      // o dedo voltou no meio do balanço: continua de onde a mola estava
+      L.mola.cancel();
+      L.mola = null;
+    }
+    const agora = performance.now();
+    const x = el.scrollLeft;
+    if (L.t) {
+      const dt = Math.max(1, agora - L.t);
+      const v = (x - L.x) / dt;
+      const alvo = Math.max(-ESTICA_MAX, Math.min(ESTICA_MAX, v * ESTICA_POR_VEL));
+      const segue = Math.abs(alvo) > Math.abs(L.s) ? SEGUE_ESTICANDO : SEGUE_SOLTANDO;
+      L.s += (alvo - L.s) * segue;
+    }
+    L.x = x;
+    L.t = agora;
+    clearTimeout(L.parou);
+    L.parou = setTimeout(soltarEsticao, PAROU_MS);
+  }, [soltarEsticao]);
+
+  React.useEffect(() => {
+    carregarAnime();
+    const L = liquido.current;
+    return () => {
+      clearTimeout(L.parou);
+      L.mola?.cancel();
+    };
+  }, []);
+
   // Um frame do gesto: repinta a escala e vê se o mês ativo mudou. Os eventos
   // de scroll chegam vários por frame, então o rAF é o que garante uma passada
   // só — e ela acontece no momento certo, junto do paint.
   const passo = React.useCallback(() => {
     pendenteRef.current = false;
+    medirEsticao();
     aplicarEfeitos();
     sincronizarMes();
-  }, [aplicarEfeitos, sincronizarMes]);
+  }, [medirEsticao, aplicarEfeitos, sincronizarMes]);
 
   const onScroll = React.useCallback(() => {
     if (pendenteRef.current) return;

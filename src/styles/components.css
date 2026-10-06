@@ -99,6 +99,13 @@
   animation: none;
 }
 
+/* Escorrendo de uma aba pra outra: a posição e a largura são das molas do
+   anime.js (ui/gota-liquida.js), escritas a cada quadro. Uma transição CSS por
+   cima ficaria correndo atrás de cada valor e amoleceria o efeito. */
+.nav-indicador.is-escorrendo {
+  transition: border-radius .18s ease, opacity .2s ease;
+}
+
 /* Começa redonda porque no toque a gota vem do estado "segurando" (50%): ela
    desincha passando por duas deformações antes de assentar no formato da aba.
    O quadro final tem que ser o raio de repouso: se ficar diferente, a gota
@@ -456,8 +463,11 @@
    z-index 30: acima do conteúdo, abaixo da tab bar (40) e da faixa de
    offline (60). */
 .voltar-fixo {
+  /* Altura da barra que se forma ao rolar, e onde o botão para dentro dela. */
+  --barra-altura: 56px;
+  --barra-topo-botao: 10px;
   position: fixed;
-  top: calc(var(--pad-top) + var(--offset-topo, 0px));
+  top: var(--offset-topo, 0px);
   left: 0;
   right: 0;
   z-index: 30;
@@ -467,15 +477,67 @@
   pointer-events: none;
 }
 .voltar-fixo-coluna {
+  position: relative; /* acima da barra */
   width: 100%;
   max-width: 480px;
-  padding: 0 20px;
+  padding: var(--pad-top) 20px 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  /* Só transform anima: subir o botão não custa reflow. */
+  transition: transform .28s cubic-bezier(.22, 1, .36, 1);
 }
 .voltar-fixo button {
   pointer-events: auto;
 }
+
+/* Barra de vidro atrás do botão: nasce transparente e se forma ao rolar. Só a
+   borda de baixo — as laterais encostam na viewport e o topo, no sistema. */
+.voltar-fixo-barra {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--barra-altura);
+  border-width: 0 0 1px;
+  opacity: 0;
+  transition: opacity .2s ease;
+}
+
+/* Nome da página ao lado da seta. Uma linha só: título longo vira reticências
+   em vez de empurrar a barra pra duas linhas. */
+.voltar-fixo-titulo {
+  flex: 1;
+  min-width: 0;
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity .2s ease, transform .28s cubic-bezier(.22, 1, .36, 1);
+}
+
+.voltar-fixo.is-rolou .voltar-fixo-coluna {
+  /* do --pad-top até o meio da barra: 10px de folga em cima do botão de 36 */
+  transform: translateY(calc(var(--barra-topo-botao) - var(--pad-top)));
+}
+.voltar-fixo.is-rolou .voltar-fixo-barra {
+  opacity: 1;
+  pointer-events: auto;
+}
+.voltar-fixo.is-rolou .voltar-fixo-titulo {
+  opacity: 1;
+  transform: none;
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .voltar-fixo button { transition: none; }
+  .voltar-fixo-coluna,
+  .voltar-fixo-titulo { transition: opacity .2s ease; }
+  .voltar-fixo.is-rolou .voltar-fixo-titulo { transform: none; }
 }
 
 /* ── Bloco expansível (ui/expansivel.jsx) ──────────────────────────────────

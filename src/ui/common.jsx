@@ -8,8 +8,8 @@ import { COR_POS, COR_POS_FUNDO } from '../lib/colors.js';
 import { useT } from '../lib/i18n.jsx';
 import { vibrar } from '../lib/haptics.js';
 
-// Quanto a página precisa descer pra o botão de voltar encolher. Baixo de
-// propósito: o gesto de descer já começou, o botão sai da frente junto.
+// Quanto a página precisa descer pra o botão de voltar subir pra barra do topo.
+// Baixo de propósito: o gesto de descer já começou, o botão sai da frente junto.
 const LIMIAR_SCROLL = 24;
 
 // `true` depois que a página desceu do limiar. O estado só troca ao CRUZAR o
@@ -59,13 +59,15 @@ export function TopBar({ titulo, voltar, acao, subtitulo }) {
         </div>
       )}
 
-      {voltar && <BotaoVoltarFixo voltar={voltar} rolou={rolou} t={t} />}
+      {voltar && <BotaoVoltarFixo voltar={voltar} titulo={titulo} rolou={rolou} t={t} />}
     </div>
   );
 }
 
-// Botão de voltar que flutua sobre a tela. Encolhe ao rolar pra ocupar menos
-// espaço enquanto paira sobre o conteúdo.
+// Botão de voltar fixo na tela. Parado, ele fica onde sempre esteve, em cima do
+// título grande. Ao rolar, sobe e encosta no topo, e uma barra de vidro se forma
+// atrás dele com o nome da página ao lado: quando o título grande já subiu, a
+// barra é que diz em que tela você está.
 //
 // PORTALIZADO em document.body, e não é detalhe: `position: fixed` só é
 // relativo à viewport se NENHUM ancestral tiver transform/filter/will-change de
@@ -74,9 +76,12 @@ export function TopBar({ titulo, voltar, acao, subtitulo }) {
 // botão nasce, "fixo" virava "absoluto dentro da página inteira": ele subia
 // junto com o conteúdo e sumia ao descer a tela. É o mesmo motivo que
 // portaliza o ModalOverlay (ver ui/modal-base.jsx).
-function BotaoVoltarFixo({ voltar, rolou, t }) {
+function BotaoVoltarFixo({ voltar, titulo, rolou, t }) {
   const botao = (
-    <div className="voltar-fixo">
+    <div className={`voltar-fixo${rolou ? ' is-rolou' : ''}`}>
+      {/* A barra: só aparece rolando. Fica atrás da coluna e, visível, segura
+          os toques pra eles não vazarem pro conteúdo que passa por baixo. */}
+      <div className="voltar-fixo-barra glass-surface" aria-hidden="true" />
       <div className="voltar-fixo-coluna">
         <button
           onClick={voltar}
@@ -85,28 +90,15 @@ function BotaoVoltarFixo({ voltar, rolou, t }) {
             width: 36, height: 36, borderRadius: 'var(--raio-pilula)',
             background: 'var(--card)', border: 'none', display: 'flex',
             alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
-            // Só transform e box-shadow animam: nenhum dos dois faz layout,
-            // então rolar não custa reflow.
-            transform: rolou ? 'scale(0.8)' : 'none',
-            // Rolando, o botão para de ter o fundo da tela atrás e passa a
-            // pairar sobre o conteúdo — daí o anel, que recorta a borda dele do
-            // que estiver embaixo. É box-shadow e não `border`: borda mudaria o
-            // tamanho da caixa (reflow a cada troca) e apertaria o ícone.
-            //
-            // A cor sai do --ink, então o anel é escuro no tema claro e claro
-            // no escuro sem precisar de duas regras. O --linha do app é fraco
-            // demais (6-8% de alfa) pra separar de um conteúdo qualquer.
-            //
-            // Os dois estados têm DUAS sombras, o anel apenas nasce sem raio e
-            // transparente: listas do mesmo tamanho interpolam sem salto.
-            boxShadow: rolou
-              ? '0 0 0 1.5px color-mix(in oklab, var(--ink) 18%, transparent), 0 4px 14px rgba(20,16,24,0.16)'
-              : '0 0 0 0 transparent, 0 1px 2px rgba(0,0,0,0.04)',
-            transition: 'transform .22s cubic-bezier(.22,1,.36,1), box-shadow .22s ease',
+            flexShrink: 0,
+            boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
           }}
         >
           <Icon name="arrow-left" size={18} color="var(--ink)" strokeWidth={2.2} />
         </button>
+        {/* Repete o título grande, que o leitor de tela já leu: aqui é só
+            visual. */}
+        {titulo && <div className="voltar-fixo-titulo" aria-hidden="true">{titulo}</div>}
       </div>
     </div>
   );
