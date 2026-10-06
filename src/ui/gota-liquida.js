@@ -43,7 +43,7 @@ export function criarGota(el) {
   let base = 0; // largura de repouso contra a qual o esticão é medido; 0 = sem achatar
   let anims = [];
   let alvo = null;
-  let segue = null; // { centro, d, vl, vr, t, raf } enquanto segue o dedo
+  let segue = null; // { tl, tr, vl, vr, t, raf, soltando } enquanto segue o dedo e ao soltar
 
   const pintar = () => {
     const w = Math.max(0, g.r - g.l);
@@ -130,13 +130,30 @@ export function criarGota(el) {
     if (!s) return;
     const dt = Math.min(0.032, Math.max(0, (agora - s.t) / 1000));
     s.t = agora;
-    // a borda do lado pra onde o dedo está indo é a da frente
-    const indo = Math.sign(s.centro - (g.l + g.r) / 2);
+    // a borda do lado pra onde a gota está indo é a da frente
+    const indo = Math.sign((s.tl + s.tr) / 2 - (g.l + g.r) / 2);
     const [mL, mR] = indo < 0 ? [DEDO_FRENTE, DEDO_TRAS] : indo > 0 ? [DEDO_TRAS, DEDO_FRENTE] : [DEDO_FRENTE, DEDO_FRENTE];
-    s.vl += (mL.k * (s.centro - s.d / 2 - g.l) - mL.c * s.vl) * dt;
-    s.vr += (mR.k * (s.centro + s.d / 2 - g.r) - mR.c * s.vr) * dt;
+    s.vl += (mL.k * (s.tl - g.l) - mL.c * s.vl) * dt;
+    s.vr += (mR.k * (s.tr - g.r) - mR.c * s.vr) * dt;
     g.l += s.vl * dt;
     g.r += s.vr * dt;
+    // soltou o dedo e as duas bordas assentaram: crava no encaixe e encerra
+    if (
+      s.soltando &&
+      Math.abs(s.tl - g.l) < 0.5 && Math.abs(s.tr - g.r) < 0.5 &&
+      Math.abs(s.vl) < 12 && Math.abs(s.vr) < 12
+    ) {
+      const l = s.tl;
+      const w = s.tr - s.tl;
+      segue = null;
+      alvo = null;
+      el.classList.remove("is-escorrendo");
+      g.l = l;
+      g.r = l + w;
+      base = w;
+      pintar();
+      return;
+    }
     pintar();
     s.raf = requestAnimationFrame(passoDedo);
   };
@@ -150,17 +167,32 @@ export function criarGota(el) {
       return;
     }
     if (segue) {
-      segue.centro = centro;
-      segue.d = d;
+      segue.tl = centro - d / 2;
+      segue.tr = centro + d / 2;
       return;
     }
     parar();
     ler();
     base = d;
     el.classList.add("is-escorrendo");
-    segue = { centro, d, vl: 0, vr: 0, t: performance.now(), raf: 0 };
+    segue = { tl: centro - d / 2, tr: centro + d / 2, vl: 0, vr: 0, t: performance.now(), raf: 0 };
     segue.raf = requestAnimationFrame(passoDedo);
   };
 
-  return { colocar, escorrer, seguir, parar };
+  // O dedo soltou: em vez de recomeçar outra animação (que partiria do repouso
+  // e cortaria o embalo do arraste), as mesmas molas do seguir só trocam o alvo
+  // pro encaixe da aba e levam a gota até lá, abrindo da bolha pro formato dela.
+  // Sem arraste em curso, cai no escorrer de sempre.
+  const soltar = (l, w) => {
+    if (!segue) return escorrer(l, w);
+    segue.tl = l;
+    segue.tr = l + w;
+    segue.soltando = true;
+    base = w;
+    // a troca de aba logo depois pede o mesmo destino ao escorrer: não reinicia
+    alvo = { l, w };
+    return true;
+  };
+
+  return { colocar, escorrer, seguir, soltar, parar };
 }

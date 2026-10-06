@@ -310,8 +310,11 @@ function TabBar({ tela, irPara, abrirAdd }) {
     el.classList.remove("is-arrastando");
     // devolve a gota ao encaixe da aba escolhida; se for a mesma de onde saiu, o
     // React não re-renderiza, então largura e posição são repostas aqui na mão
+    // Continua nas molas do arraste, sem a deformação de canto do nav-gota: a
+    // bolha já vem esticando e balançando, e o keyframe por cima era o efeito
+    // antigo voltando no fim.
     const destino = a.abas.find((ab) => ab.id === a.id);
-    if (destino && encaixar(destino.left, destino.width)) dispararGota();
+    if (destino) gota().soltar(destino.left, destino.width);
     if (a.id !== tela) irPara(a.id);
     const barra = e.currentTarget;
     if (barra.hasPointerCapture?.(e.pointerId)) barra.releasePointerCapture(e.pointerId);
