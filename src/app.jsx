@@ -265,10 +265,10 @@ function TabBar({ tela, irPara, abrirAdd }) {
       arrastou.current = true;
       e.currentTarget.setPointerCapture(e.pointerId);
       // a gota passa a estar sob o dedo, então vira bolha mesmo se o toque
-      // tiver começado em outra aba
+      // tiver começado em outra aba. Quem encolhe ela até a bolha são as
+      // próprias molas do seguir, abaixo.
       el.classList.add("is-arrastando", "is-segurando");
-      const daVez = a.abas.find((ab) => ab.id === tela) ?? a.abas[0];
-      a.diametro = virarBolha(el, daVez.left, daVez.width);
+      a.diametro = el.offsetHeight;
     }
 
     const abas = a.abas;
@@ -281,7 +281,9 @@ function TabBar({ tela, irPara, abrirAdd }) {
     const minC = primeira.left + primeira.width / 2;
     const maxC = ultima.left + ultima.width / 2;
     const centro = Math.min(maxC, Math.max(minC, e.clientX - a.base));
-    el.style.transform = `translateX(${centro - d / 2}px)`;
+    // vai atrás do dedo por molas, não grudada nele: estica no sentido do
+    // movimento e balança quando o dedo para
+    gota().seguir(centro, d);
 
     const perto = abas.reduce((m, ab) =>
       Math.abs(ab.centro - e.clientX) < Math.abs(m.centro - e.clientX) ? ab : m

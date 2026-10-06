@@ -25,6 +25,15 @@ const NO_LUGAR = { bounce: 0.4, duration: 420 };
 // Quanto a gota afina pra cada 100% que estica, e os limites — passar disso
 // deixa de parecer líquido e vira um risco.
 const ACHATA = 0.35;
+
+// Seguindo o dedo no arraste. Aqui o alvo muda a cada pointermove, e reiniciar
+// uma animação a cada evento jogaria fora a velocidade que a gota já tinha — o
+// movimento sairia aos trancos. Então cada borda é uma mola integrada quadro a
+// quadro, que só troca de alvo e continua com o embalo que tinha.
+// k = rigidez, c = amortecimento. A frente quase crítica (2√k ≈ 60) vai firme;
+// a de trás, solta e abaixo do crítico (2√k ≈ 39), atrasa e balança.
+const DEDO_FRENTE = { k: 900, c: 48 };
+const DEDO_TRAS = { k: 380, c: 24 };
 const ACHATA_MIN = 0.78;
 const INCHA_MAX = 1.08;
 
@@ -34,6 +43,7 @@ export function criarGota(el) {
   let base = 0; // largura de repouso contra a qual o esticão é medido; 0 = sem achatar
   let anims = [];
   let alvo = null;
+  let segue = null; // { centro, d, vl, vr, t, raf } enquanto segue o dedo
 
   const pintar = () => {
     const w = Math.max(0, g.r - g.l);
@@ -44,6 +54,10 @@ export function criarGota(el) {
   };
 
   const parar = () => {
+    if (segue) {
+      cancelAnimationFrame(segue.raf);
+      segue = null;
+    }
     anims.forEach((a) => a.cancel());
     anims = [];
     alvo = null;
@@ -111,5 +125,42 @@ export function criarGota(el) {
     return true;
   };
 
-  return { colocar, escorrer, parar };
+  const passoDedo = (agora) => {
+    const s = segue;
+    if (!s) return;
+    const dt = Math.min(0.032, Math.max(0, (agora - s.t) / 1000));
+    s.t = agora;
+    // a borda do lado pra onde o dedo está indo é a da frente
+    const indo = Math.sign(s.centro - (g.l + g.r) / 2);
+    const [mL, mR] = indo < 0 ? [DEDO_FRENTE, DEDO_TRAS] : indo > 0 ? [DEDO_TRAS, DEDO_FRENTE] : [DEDO_FRENTE, DEDO_FRENTE];
+    s.vl += (mL.k * (s.centro - s.d / 2 - g.l) - mL.c * s.vl) * dt;
+    s.vr += (mR.k * (s.centro + s.d / 2 - g.r) - mR.c * s.vr) * dt;
+    g.l += s.vl * dt;
+    g.r += s.vr * dt;
+    pintar();
+    s.raf = requestAnimationFrame(passoDedo);
+  };
+
+  // Gota (já bolha, de diâmetro d) indo atrás do dedo. Chamado a cada
+  // pointermove; só o primeiro liga o laço, os outros trocam o alvo. Termina no
+  // escorrer/colocar/parar seguinte, que é o que o soltar do dedo chama.
+  const seguir = (centro, d) => {
+    if (semMovimento()) {
+      colocar(centro - d / 2, d);
+      return;
+    }
+    if (segue) {
+      segue.centro = centro;
+      segue.d = d;
+      return;
+    }
+    parar();
+    ler();
+    base = d;
+    el.classList.add("is-escorrendo");
+    segue = { centro, d, vl: 0, vr: 0, t: performance.now(), raf: 0 };
+    segue.raf = requestAnimationFrame(passoDedo);
+  };
+
+  return { colocar, escorrer, seguir, parar };
 }
