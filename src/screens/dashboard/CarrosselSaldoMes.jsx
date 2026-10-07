@@ -20,16 +20,14 @@
 // tem pontinho de paginação nenhum, seria dizer duas vezes a mesma coisa.
 //
 // Por cima da escala vem o balanço "líquido", o mesmo da gota da tab bar (ver
-// ui/gota-liquida.js): enquanto o carrossel anda, os cards esticam no sentido do
-// movimento — a borda da frente se adianta, a de trás fica — e afinam na altura;
-// quando o snap assenta, uma mola do anime.js desfaz o esticão passando do
-// ponto, e o card balança antes de parar. Aqui não dá pra soltar as bordas de
-// verdade como na gota (quem move o card é o scroll nativo), então o esticão é
-// uma deformação da face, puxada pela velocidade do gesto.
+// ui/gota-liquida.js): enquanto o carrossel anda, os cards estreitam na
+// horizontal conforme a velocidade do gesto (e crescem um pouco na altura);
+// quando o snap assenta, uma mola do anime.js desfaz a deformação passando do
+// ponto, e o card balança antes de parar.
 //
-// E o dedo também é sentido: ao encostar, o card afunda um pouco (o "aperto"),
-// e ao soltar ele volta numa mola com repique — o carrossel responde ao toque
-// antes mesmo de começar a andar.
+// E o dedo também é sentido: ao encostar, o card afunda, mais na largura que na
+// altura (o "aperto"), e ao soltar volta numa mola com repique — o carrossel
+// responde ao toque antes mesmo de começar a andar.
 
 import React from "react";
 import { anime, carregarAnime, semMovimento } from "../../lib/anime.js";
@@ -74,18 +72,17 @@ const ESCALA_MIN = 0.88;
 const OPACIDADE_MIN = 0.55;
 
 // ─── Balanço líquido ───
-// Esticão máximo (fração da largura) e quanto dele vira afinamento na altura.
-// O teto é o ESPACO: a 5% de ~300px a borda da frente avança ~15px, ainda
-// dentro dos 18 de respiro — mais que isso e um card entra no vizinho.
-const ESTICA_MAX = 0.05;
-// O afinamento não tem o teto do ESPACO (a altura não encosta em nada), então é
-// por ele que o efeito ganha corpo sem um card entrar no vizinho.
-const AFINA = 0.9;
-// Esticão por px/ms de velocidade do scroll. Um swipe comum anda 1–3 px/ms.
+// A deformação é um aperto na horizontal: o card estreita com a velocidade do
+// gesto e, pra parecer que o volume se conserva, cresce um pouco na altura.
+// Estreitar nunca encosta no vizinho, então o teto aqui é só o de gosto (antes
+// era um esticão, preso aos 18px do ESPACO, e por isso mal aparecia).
+const ESTICA_MAX = 0.14;
+const AFINA = 0.3; // quanto do estreitamento volta como altura
+// Deformação por px/ms de velocidade do scroll. Um swipe comum anda 1–3 px/ms.
 // Passa por uma tangente hiperbólica (ver medirEsticao): na largada, com o dedo
-// ainda devagar, o esticão já aparece, e perto do teto ele satura macio em vez
-// de bater no limite.
-const ESTICA_POR_VEL = 0.07;
+// ainda devagar, ela já aparece, e perto do teto satura macio em vez de bater
+// no limite.
+const ESTICA_POR_VEL = 0.12;
 // Seguir a velocidade: rápido pra esticar, devagar pra desinchar. Desinchando
 // devagar, sobra esticão quando o snap assenta — e é ele que a mola transforma
 // no balanço. Desinchando rápido, a desaceleração do snap zera tudo antes.
@@ -97,9 +94,11 @@ const PAROU_MS = 110;
 const MOLA = { bounce: 0.55, duration: 480 };
 
 // ─── Aperto do dedo ───
-// Quanto o card afunda com o dedo encostado. Afundar é firme (responde ao
-// toque); voltar é solto, e o repique é o que faz o soltar parecer elástico.
-const APERTO = 0.035;
+// Quanto o card afunda com o dedo encostado — mais na largura que na altura,
+// pra ler como um aperto e não só um zoom. Afundar é firme (responde ao toque);
+// voltar é solto, e o repique é o que faz o soltar parecer elástico.
+const APERTO_X = 0.08;
+const APERTO_Y = 0.03;
 const MOLA_APERTA = { bounce: 0.2, duration: 220 };
 const MOLA_SOLTA = { bounce: 0.6, duration: 520 };
 
@@ -239,12 +238,10 @@ export function CarrosselSaldoMes({ todosMeses, mes, setMes, renderCard }) {
       medidas.push({ face, centroSlide: s.offsetLeft + s.clientWidth / 2, largura: s.clientWidth });
     }
     const s = liquido.current.s;
-    const aperto = 1 - liquido.current.a * APERTO;
-    const kx = 1 + Math.abs(s);
-    const ky = 1 - Math.abs(s) * AFINA;
-    // A borda de trás é a âncora do esticão: com o conteúdo indo pra esquerda
-    // (s > 0) é a direita do card.
-    const ancora = s > 0 ? 1 : 0;
+    const a = liquido.current.a;
+    const kx = (1 - Math.abs(s)) * (1 - a * APERTO_X);
+    const ky = (1 + Math.abs(s) * AFINA) * (1 - a * APERTO_Y);
+    const deformado = s !== 0 || a !== 0;
     for (const { face, centroSlide, largura } of medidas) {
       // com sinal: -1 = encostado à esquerda, 0 = centrado, +1 = à direita
       const pos = Math.max(-1, Math.min(1, (centroSlide - centro) / largura));
@@ -253,7 +250,7 @@ export function CarrosselSaldoMes({ todosMeses, mes, setMes, renderCard }) {
       // e o encolhimento acelera no meio do caminho. A rampa linear dá o ar de
       // persiana andando em passo constante.
       const q = d * d * (3 - 2 * d);
-      const escala = (1 - q * (1 - ESCALA_MIN)) * aperto;
+      const escala = 1 - q * (1 - ESCALA_MIN);
       // Mesma curva da escala: as duas andam juntas, então o card não some
       // antes de encolher nem o contrário.
       const op = 1 - q * (1 - OPACIDADE_MIN);
@@ -265,16 +262,12 @@ export function CarrosselSaldoMes({ todosMeses, mes, setMes, renderCard }) {
       const origemX = 50 - 50 * pos;
       face.style.opacity = op.toFixed(3);
       face.style.transformOrigin = `${origemX.toFixed(1)}% center`;
-      // O esticão tem a âncora dele (a borda de trás) e a escala tem a dela
-      // (origemX). Como transform-origin é um só, a diferença entre as duas
-      // âncoras vira um translate: esticar kx em volta de A e depois escalar em
-      // volta de O é o mesmo que escalar e·kx em volta de O e deslocar
-      // e·(1−kx)·(A−O).
-      const desloca = escala * (1 - kx) * (ancora - origemX / 100) * largura;
-      face.style.transform =
-        s === 0
-          ? `scale(${escala.toFixed(4)})`
-          : `translateX(${desloca.toFixed(2)}px) scale(${escala.toFixed(4)}) scale(${kx.toFixed(4)}, ${ky.toFixed(4)})`;
+      // O aperto usa a mesma âncora da escala: no card do centro é o meio dele,
+      // então ele estreita pros dois lados por igual; nos vizinhos é a borda
+      // virada pro centro, e a espiada continua no lugar.
+      face.style.transform = deformado
+        ? `scale(${(escala * kx).toFixed(4)}, ${(escala * ky).toFixed(4)})`
+        : `scale(${escala.toFixed(4)})`;
     }
   }, []);
 
@@ -396,8 +389,8 @@ export function CarrosselSaldoMes({ todosMeses, mes, setMes, renderCard }) {
     L.parou = setTimeout(soltarEsticao, PAROU_MS);
   }, [soltarEsticao]);
 
-  // Leva o aperto até `alvo` numa mola; sem o anime.js (ou com o movimento
-  // reduzido), não afunda.
+  // Leva o aperto até `alvo` numa mola. Sem o anime.js ainda, vai direto; com o
+  // movimento reduzido, não afunda.
   const molaAperto = React.useCallback(
     (alvo, mola) => {
       const L = liquido.current;
@@ -405,8 +398,9 @@ export function CarrosselSaldoMes({ todosMeses, mes, setMes, renderCard }) {
       L.molaA?.cancel();
       L.molaA = null;
       if (!lib || semMovimento()) {
-        if (L.a === 0) return;
-        L.a = 0;
+        const v = semMovimento() ? 0 : alvo;
+        if (L.a === v) return;
+        L.a = v;
         aplicarEfeitos();
         return;
       }
