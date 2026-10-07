@@ -280,7 +280,6 @@ export function SimularGastoModal({
             {valor}
           </div>
           <input
-            autoFocus
             type="text"
             inputMode="numeric"
             pattern="[0-9]*"

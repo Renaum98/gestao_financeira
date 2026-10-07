@@ -196,7 +196,6 @@ export function ExcluirContaModal({ uid, meuEmail, meuNome, partnershipId, onFec
                 {t("Senha")}
               </div>
               <input
-                autoFocus
                 type="password"
                 autoComplete="current-password"
                 value={senha}

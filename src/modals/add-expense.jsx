@@ -358,7 +358,6 @@ export function AddExpenseModal({ ctx, params }) {
           </div>
           {/* input invisível que dispara o teclado numérico nativo */}
           <input
-            autoFocus
             type="text"
             inputMode="numeric"
             pattern="[0-9]*"
@@ -569,7 +568,6 @@ export function AddExpenseModal({ ctx, params }) {
                   onKeyDown={(e) => e.key === "Enter" && confirmarNovaCat()}
                   placeholder={t("Nome da categoria")}
                   maxLength={20}
-                  autoFocus
                   style={{
                     flex: 1,
                     minWidth: 0,

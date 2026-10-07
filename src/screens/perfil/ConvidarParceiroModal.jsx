@@ -227,7 +227,6 @@ export function ConvidarParceiroModal({ meuUid, meuNome, meuEmail, onFechar }) {
                 {t("E-mail do parceiro")}
               </div>
               <input
-                autoFocus
                 type="email"
                 inputMode="email"
                 autoComplete="email"
