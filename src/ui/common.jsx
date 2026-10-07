@@ -12,11 +12,14 @@ import { vibrar } from '../lib/haptics.js';
 // Baixo de propósito: o gesto de descer já começou, o botão sai da frente junto.
 const LIMIAR_SCROLL = 24;
 
-// `true` depois que a página desceu do limiar. O estado só troca ao CRUZAR o
-// limiar, não a cada pixel — quem redesenha por scroll aqui é o CSS, via
-// transform, e não o React.
-function useRolou(ativo) {
+// `rolou`: a página desceu do limiar. `tituloSumiu`: o título grande já passou
+// inteiro por baixo da barra do topo — só então o nome pequeno aparece ao lado
+// da seta, senão a tela mostra o título duas vezes. Os estados só trocam ao
+// CRUZAR cada ponto, não a cada pixel — quem redesenha por scroll aqui é o CSS,
+// via transform, e não o React.
+function useRolou(ativo, tituloRef, barraRef) {
   const [rolou, setRolou] = React.useState(false);
+  const [tituloSumiu, setTituloSumiu] = React.useState(false);
   React.useEffect(() => {
     if (!ativo) return;
     let agendado = false;
@@ -25,20 +28,29 @@ function useRolou(ativo) {
       agendado = true;
       requestAnimationFrame(() => {
         agendado = false;
-        setRolou(window.scrollY > LIMIAR_SCROLL);
+        const desceu = window.scrollY > LIMIAR_SCROLL;
+        setRolou(desceu);
+        const titulo = tituloRef.current;
+        const barra = barraRef.current;
+        // Sem título grande não há o que esperar: segue o limiar.
+        setTituloSumiu(titulo && barra
+          ? titulo.getBoundingClientRect().bottom <= barra.getBoundingClientRect().bottom
+          : desceu);
       });
     };
     aoRolar(); // a tela pode abrir já rolada (voltar pra uma lista longa)
     window.addEventListener('scroll', aoRolar, { passive: true });
     return () => window.removeEventListener('scroll', aoRolar);
-  }, [ativo]);
+  }, [ativo, tituloRef, barraRef]);
   // Sem botão não há o que encolher — e o listener nem chega a existir.
-  return ativo && rolou;
+  return { rolou: ativo && rolou, tituloSumiu: ativo && tituloSumiu };
 }
 
 export function TopBar({ titulo, voltar, acao, subtitulo }) {
   const t = useT();
-  const rolou = useRolou(!!voltar);
+  const tituloRef = React.useRef(null);
+  const barraRef = React.useRef(null);
+  const { rolou, tituloSumiu } = useRolou(!!voltar, tituloRef, barraRef);
   return (
     <div style={{
       padding: 'var(--pad-top) var(--pad-x) 12px', display: 'flex',
@@ -54,12 +66,12 @@ export function TopBar({ titulo, voltar, acao, subtitulo }) {
         {acao || <div style={{ width: 36 }} />}
       </div>
       {titulo && (
-        <div style={{ fontSize: 28, fontWeight: 800, color: 'var(--ink)', letterSpacing: '-0.02em', marginTop: 6 }}>
+        <div ref={tituloRef} style={{ fontSize: 28, fontWeight: 800, color: 'var(--ink)', letterSpacing: '-0.02em', marginTop: 6 }}>
           {titulo}
         </div>
       )}
 
-      {voltar && <BotaoVoltarFixo voltar={voltar} titulo={titulo} rolou={rolou} t={t} />}
+      {voltar && <BotaoVoltarFixo voltar={voltar} titulo={titulo} rolou={rolou} tituloSumiu={tituloSumiu} barraRef={barraRef} t={t} />}
     </div>
   );
 }
@@ -76,12 +88,12 @@ export function TopBar({ titulo, voltar, acao, subtitulo }) {
 // botão nasce, "fixo" virava "absoluto dentro da página inteira": ele subia
 // junto com o conteúdo e sumia ao descer a tela. É o mesmo motivo que
 // portaliza o ModalOverlay (ver ui/modal-base.jsx).
-function BotaoVoltarFixo({ voltar, titulo, rolou, t }) {
+function BotaoVoltarFixo({ voltar, titulo, rolou, tituloSumiu, barraRef, t }) {
   const botao = (
-    <div className={`voltar-fixo${rolou ? ' is-rolou' : ''}`}>
+    <div className={`voltar-fixo${rolou ? ' is-rolou' : ''}${tituloSumiu ? ' is-titulo-sumiu' : ''}`}>
       {/* A barra: só aparece rolando. Fica atrás da coluna e, visível, segura
           os toques pra eles não vazarem pro conteúdo que passa por baixo. */}
-      <div className="voltar-fixo-barra glass-surface" aria-hidden="true" />
+      <div ref={barraRef} className="voltar-fixo-barra glass-surface" aria-hidden="true" />
       <div className="voltar-fixo-coluna">
         <button
           onClick={voltar}
@@ -97,7 +109,7 @@ function BotaoVoltarFixo({ voltar, titulo, rolou, t }) {
           <Icon name="arrow-left" size={18} color="var(--ink)" strokeWidth={2.2} />
         </button>
         {/* Repete o título grande, que o leitor de tela já leu: aqui é só
-            visual. */}
+            visual. Só aparece depois que o grande sumiu debaixo da barra. */}
         {titulo && <div className="voltar-fixo-titulo" aria-hidden="true">{titulo}</div>}
       </div>
     </div>

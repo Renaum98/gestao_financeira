@@ -529,7 +529,7 @@
   opacity: 1;
   pointer-events: auto;
 }
-.voltar-fixo.is-rolou .voltar-fixo-titulo {
+.voltar-fixo.is-titulo-sumiu .voltar-fixo-titulo {
   opacity: 1;
   transform: none;
 }
@@ -537,7 +537,7 @@
 @media (prefers-reduced-motion: reduce) {
   .voltar-fixo-coluna,
   .voltar-fixo-titulo { transition: opacity .2s ease; }
-  .voltar-fixo.is-rolou .voltar-fixo-titulo { transform: none; }
+  .voltar-fixo.is-titulo-sumiu .voltar-fixo-titulo { transform: none; }
 }
 
 /* ── Bloco expansível (ui/expansivel.jsx) ──────────────────────────────────
