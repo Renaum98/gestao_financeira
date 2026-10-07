@@ -100,11 +100,12 @@ export function DashboardScreen({ ctx }) {
   const somaOrcCatsParceiro = Object.values(partnerOrcamentos).reduce((s, v) => s + v, 0);
   const orcBaseParceiro = partnerOrcamentoMensal > 0 ? partnerOrcamentoMensal : somaOrcCatsParceiro;
 
-  // Agregados do mês ativo — mesma conta dos cards, reusada aqui pra insights e
-  // pelo modal de simulação.
-  const saldo = React.useMemo(
-    () =>
-      calcularSaldoMes(mes, {
+  // Agregados de um mês — mesma conta dos cards. O do mês ativo é reusado pra
+  // insights; a função em si vai pro modal de simulação, que pesa compras que
+  // só começam mais à frente.
+  const saldoDoMes = React.useCallback(
+    (m) =>
+      calcularSaldoMes(m, {
         txs,
         partnerTxs,
         todosMeses,
@@ -114,8 +115,9 @@ export function DashboardScreen({ ctx }) {
         partnerUid,
         orcBaseParceiro,
       }),
-    [mes, txs, partnerTxs, todosMeses, preferences, caixinhas, meuUid, partnerUid, orcBaseParceiro],
+    [txs, partnerTxs, todosMeses, preferences, caixinhas, meuUid, partnerUid, orcBaseParceiro],
   );
+  const saldo = React.useMemo(() => saldoDoMes(mes), [saldoDoMes, mes]);
   const { txMes, txMesAnt, total, totalAnt, entradasDisponiveis, delta, orcTotal, restante } = saldo;
 
   // Entradas que já foram pra uma caixinha: sinalizadas na lista de gastos
@@ -343,6 +345,7 @@ export function DashboardScreen({ ctx }) {
           restante={restante}
           orcTotal={orcTotal}
           mes={mes}
+          saldoDoMes={saldoDoMes}
           fechar={() => setSimularAberto(false)}
         />
       )}

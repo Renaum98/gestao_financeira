@@ -2,6 +2,10 @@
 // O usuário informa valor + parcelas e recebe uma análise textual de
 // como esse gasto cabe (ou não) no orçamento do mês atual e nos meses
 // seguintes, no caso de parcelamento.
+//
+// "Começando em" adia a compra pra um mês à frente: a análise passa a pesar
+// contra o saldo PREVISTO daquele mês (orçamento − o que já está lançado lá,
+// como parcelas e recorrências), e o período do parcelamento conta dali.
 
 import React from "react";
 import { fmtBRL, MESES_CURTO } from "../data.js";
@@ -11,17 +15,40 @@ import { vibrar } from "../lib/haptics.js";
 import { COR_POS, COR_NEG, COR_AVISO } from "../lib/colors.js";
 import { formatarValorDigitado, parseValorBR, valorZero } from "../lib/money-input.js";
 import { simboloMoeda } from "../lib/moeda.js";
+import { mesShift } from "../lib/datas.js";
 import { useT } from "../lib/i18n.jsx";
+
+// Até onde dá pra adiar o início: um ano pra frente.
+const INICIO_MAX = 12;
 
 export function SimularGastoModal({
   restante = 0,
   orcTotal = 0,
   mes,
+  saldoDoMes,
   fechar,
 }) {
   const t = useT();
   const [valor, setValor] = React.useState(valorZero());
   const [parcelas, setParcelas] = React.useState(1);
+  // Meses à frente de `mes` em que a compra começa. 0 = o próprio mês.
+  const [inicio, setInicio] = React.useState(0);
+  const ehAgora = inicio === 0;
+  const mesInicio = mes ? mesShift(mes, inicio) : mes;
+  const rotuloInicio = React.useMemo(() => {
+    if (!mesInicio) return "";
+    const [y, m] = mesInicio.split("-").map(Number);
+    return `${t(MESES_CURTO[m - 1])}/${String(y).slice(2)}`;
+  }, [mesInicio, t]);
+
+  // No próprio mês valem os números que o card mostra; à frente, o saldo
+  // previsto daquele mês.
+  const saldoInicio = React.useMemo(
+    () => (ehAgora || !saldoDoMes ? { restante, orcTotal } : saldoDoMes(mesInicio)),
+    [ehAgora, saldoDoMes, mesInicio, restante, orcTotal],
+  );
+  const restanteIni = saldoInicio.restante;
+  const orcTotalIni = saldoInicio.orcTotal;
 
   const aoDigitar = (texto) => setValor(formatarValorDigitado(texto));
   const valorNum = parseValorBR(valor);
@@ -29,8 +56,11 @@ export function SimularGastoModal({
   const valorParcela = valorNum / n;
 
   const blocos = React.useMemo(() => {
-    if (valorNum <= 0 || !mes) return [];
-    const [y, m] = mes.split("-").map(Number);
+    if (valorNum <= 0 || !mesInicio) return [];
+    const [y, m] = mesInicio.split("-").map(Number);
+    const restante = restanteIni;
+    const orcTotal = orcTotalIni;
+    const mesTxt = rotuloInicio;
     const out = [];
 
     if (n === 1) {
@@ -40,7 +70,9 @@ export function SimularGastoModal({
           tom: COR_NEG,
           texto: (
             <>
-              {t("Seu orçamento deste mês já está ")}
+              {ehAgora
+                ? t("Seu orçamento deste mês já está ")
+                : t("Seu orçamento de {mes} já está ", { mes: mesTxt })}
               <strong>{t("negativo em {x}", { x: fmtBRL(Math.abs(restante)) })}</strong>
               {t(". Esse gasto aumentaria o déficit em ")}
               <strong>{fmtBRL(valorNum)}</strong>.
@@ -57,7 +89,7 @@ export function SimularGastoModal({
               <strong>{t("Cabe no orçamento.")}</strong>
               {t(" Compromete {pct}% do mês e ainda sobrariam ", { pct })}
               <strong>{fmtBRL(sobra)}</strong>
-              {t(" até o fim do mês.")}
+              {ehAgora ? t(" até o fim do mês.") : t(" em {mes}.", { mes: mesTxt })}
             </>
           ),
         });
@@ -68,7 +100,9 @@ export function SimularGastoModal({
           texto: (
             <>
               <strong>{t("Estoura o orçamento em {x}.", { x: fmtBRL(estouro) })}</strong>
-              {t(" Você só tem {restante} disponíveis no mês — o restante teria que sair de outra fonte.", { restante: fmtBRL(restante) })}
+              {ehAgora
+                ? t(" Você só tem {restante} disponíveis no mês — o restante teria que sair de outra fonte.", { restante: fmtBRL(restante) })
+                : t(" Você só tem {restante} previstos para {mes} — o restante teria que sair de outra fonte.", { restante: fmtBRL(restante), mes: mesTxt })}
             </>
           ),
         });
@@ -89,13 +123,15 @@ export function SimularGastoModal({
         ),
       });
 
-      // Impacto da 1ª parcela no mês atual.
+      // Impacto da 1ª parcela no mês de início.
       if (restante <= 0) {
         out.push({
           tom: COR_NEG,
           texto: (
             <>
-              {t("Este mês já está com orçamento ")}
+              {ehAgora
+                ? t("Este mês já está com orçamento ")
+                : t("{mes} já está com orçamento ", { mes: mesTxt })}
               <strong>{t("negativo")}</strong>
               {t(" — a 1ª parcela aumentaria o déficit em ")}
               <strong>{fmtBRL(valorParcela)}</strong>.
@@ -109,7 +145,7 @@ export function SimularGastoModal({
           texto: (
             <>
               {t("A 1ª parcela ")}
-              <strong>{t("cabe neste mês")}</strong>
+              <strong>{ehAgora ? t("cabe neste mês") : t("cabe em {mes}", { mes: mesTxt })}</strong>
               {t(" — restarão {sobra} depois dela.", { sobra: fmtBRL(sobra) })}
             </>
           ),
@@ -121,7 +157,9 @@ export function SimularGastoModal({
           texto: (
             <>
               {t("A parcela de {vp} já ", { vp: fmtBRL(valorParcela) })}
-              <strong>{t("estoura o restante deste mês")}</strong>
+              <strong>
+                {ehAgora ? t("estoura o restante deste mês") : t("estoura o previsto para {mes}", { mes: mesTxt })}
+              </strong>
               {t(" em {estouro}.", { estouro: fmtBRL(estouro) })}
             </>
           ),
@@ -170,7 +208,26 @@ export function SimularGastoModal({
     }
 
     return out;
-  }, [valorNum, n, restante, orcTotal, mes, valorParcela, t]);
+  }, [valorNum, n, restanteIni, orcTotalIni, mesInicio, rotuloInicio, ehAgora, valorParcela, t]);
+
+  const passoInicio = (delta) => {
+    vibrar(8);
+    setInicio((i) => Math.max(0, Math.min(INICIO_MAX, i + delta)));
+  };
+  const botaoPasso = (desligado) => ({
+    width: 36,
+    height: 36,
+    borderRadius: "var(--raio-controle)",
+    border: "none",
+    background: "var(--card-2)",
+    color: "var(--ink)",
+    cursor: desligado ? "default" : "pointer",
+    opacity: desligado ? 0.4 : 1,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    fontFamily: "inherit",
+  });
 
   return (
     <ModalOverlay onClose={fechar} maxWidth={420}>
@@ -387,6 +444,52 @@ export function SimularGastoModal({
           </div>
         </div>
 
+        {/* Começando em */}
+        <div
+          style={{
+            marginTop: 14,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: 10,
+          }}
+        >
+          <div style={{ fontSize: 13, fontWeight: 700, color: "var(--ink)" }}>
+            {t("Começando em")}
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <button
+              onClick={() => passoInicio(-1)}
+              disabled={ehAgora}
+              aria-label={t("Mês anterior")}
+              style={botaoPasso(ehAgora)}
+            >
+              <Icon name="arrow-left" size={16} />
+            </button>
+            <div
+              aria-live="polite"
+              style={{
+                minWidth: 72,
+                textAlign: "center",
+                fontSize: 13,
+                fontWeight: 800,
+                color: "var(--primary)",
+                fontVariantNumeric: "tabular-nums",
+              }}
+            >
+              {ehAgora ? t("este mês") : rotuloInicio}
+            </div>
+            <button
+              onClick={() => passoInicio(1)}
+              disabled={inicio >= INICIO_MAX}
+              aria-label={t("Próximo mês")}
+              style={botaoPasso(inicio >= INICIO_MAX)}
+            >
+              <Icon name="arrow-right" size={16} />
+            </button>
+          </div>
+        </div>
+
         {/* Análise textual */}
         <div style={{ marginTop: 18 }}>
           {valorNum <= 0 ? (
@@ -441,8 +544,8 @@ export function SimularGastoModal({
           )}
         </div>
 
-        {/* Contexto: orçamento atual */}
-        {orcTotal > 0 && (
+        {/* Contexto: orçamento do mês de início */}
+        {orcTotalIni > 0 && (
           <div
             style={{
               marginTop: 14,
@@ -456,14 +559,14 @@ export function SimularGastoModal({
               fontWeight: 600,
             }}
           >
-            <span>{t("Restante deste mês")}</span>
+            <span>{ehAgora ? t("Restante deste mês") : t("Previsto para {mes}", { mes: rotuloInicio })}</span>
             <span
               style={{
-                color: restante >= 0 ? COR_POS : COR_NEG,
+                color: restanteIni >= 0 ? COR_POS : COR_NEG,
                 fontVariantNumeric: "tabular-nums",
               }}
             >
-              {fmtBRL(restante)}
+              {fmtBRL(restanteIni)}
             </span>
           </div>
         )}
