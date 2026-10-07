@@ -18,19 +18,8 @@
 // A borda dos cards vizinhos fica de fora de propósito (ver ESPIADA): é o que
 // avisa, sem texto nenhum, que dá pra arrastar pro lado — e por isso aqui não
 // tem pontinho de paginação nenhum, seria dizer duas vezes a mesma coisa.
-//
-// Por cima da escala vem o balanço "líquido", o mesmo da gota da tab bar (ver
-// ui/gota-liquida.js): enquanto o carrossel anda, os cards estreitam na
-// horizontal conforme a velocidade do gesto (e crescem um pouco na altura);
-// quando o snap assenta, uma mola do anime.js desfaz a deformação passando do
-// ponto, e o card balança antes de parar.
-//
-// E o dedo também é sentido: ao encostar, o card afunda, mais na largura que na
-// altura (o "aperto"), e ao soltar volta numa mola com repique — o carrossel
-// responde ao toque antes mesmo de começar a andar.
 
 import React from "react";
-import { anime, carregarAnime, semMovimento } from "../../lib/anime.js";
 
 // Quantos slides de cada lado do ativo têm o card renderizado de verdade. O
 // resto mostra o esqueleto. Abaixar aperta mais a tela de entrada; subir dá mais
@@ -70,37 +59,6 @@ const ESCALA_MIN = 0.88;
 // arrastar. Se a dica ficar fraca, o conserto é subir a espiada, não voltar a
 // opacidade.
 const OPACIDADE_MIN = 0.55;
-
-// ─── Balanço líquido ───
-// A deformação é um aperto na horizontal: o card estreita com a velocidade do
-// gesto e, pra parecer que o volume se conserva, cresce um pouco na altura.
-// Estreitar nunca encosta no vizinho, então o teto aqui é só o de gosto (antes
-// era um esticão, preso aos 18px do ESPACO, e por isso mal aparecia).
-const ESTICA_MAX = 0.14;
-const AFINA = 0.3; // quanto do estreitamento volta como altura
-// Deformação por px/ms de velocidade do scroll. Um swipe comum anda 1–3 px/ms.
-// Passa por uma tangente hiperbólica (ver medirEsticao): na largada, com o dedo
-// ainda devagar, ela já aparece, e perto do teto satura macio em vez de bater
-// no limite.
-const ESTICA_POR_VEL = 0.12;
-// Seguir a velocidade: rápido pra esticar, devagar pra desinchar. Desinchando
-// devagar, sobra esticão quando o snap assenta — e é ele que a mola transforma
-// no balanço. Desinchando rápido, a desaceleração do snap zera tudo antes.
-const SEGUE_ESTICANDO = 0.65;
-const SEGUE_SOLTANDO = 0.06;
-// Sem evento de scroll por este tempo = o carrossel parou (o `scrollend` não
-// existe em todo Safari que ainda roda o app).
-const PAROU_MS = 110;
-const MOLA = { bounce: 0.55, duration: 480 };
-
-// ─── Aperto do dedo ───
-// Quanto o card afunda com o dedo encostado — mais na largura que na altura,
-// pra ler como um aperto e não só um zoom. Afundar é firme (responde ao toque);
-// voltar é solto, e o repique é o que faz o soltar parecer elástico.
-const APERTO_X = 0.08;
-const APERTO_Y = 0.03;
-const MOLA_APERTA = { bounce: 0.2, duration: 220 };
-const MOLA_SOLTA = { bounce: 0.6, duration: 520 };
 
 // Esqueleto do CardSaldo, exibido nos slides fora da janela. Repete o desenho do
 // card — cabeçalho, valor grande, chip de variação e o rodapé em duas colunas —
@@ -170,10 +128,6 @@ export function CarrosselSaldoMes({ todosMeses, mes, setMes, renderCard }) {
   // nesse caso o scroll-snap nativo já está centralizando, então o layoutEffect
   // NÃO deve disparar um scrollTo programático (que brigaria com o dedo).
   const mudouPorSwipeRef = React.useRef(false);
-  // Balanço líquido: `s` é o esticão atual, com sinal (+ = conteúdo indo pra
-  // esquerda). O resto é o que mede a velocidade e a mola que solta no fim.
-  // `a` é o aperto do dedo (0 solto, 1 afundado), com a mola dele à parte.
-  const liquido = React.useRef({ s: 0, x: 0, t: 0, mola: null, parou: 0, a: 0, molaA: null });
 
   // Altura reservada pros slides sem card. Sem ela, a altura da fileira passaria
   // a ser ditada só pelos cards renderizados e mudaria conforme a janela desliza
@@ -237,11 +191,6 @@ export function CarrosselSaldoMes({ todosMeses, mes, setMes, renderCard }) {
       if (!face) continue;
       medidas.push({ face, centroSlide: s.offsetLeft + s.clientWidth / 2, largura: s.clientWidth });
     }
-    const s = liquido.current.s;
-    const a = liquido.current.a;
-    const kx = (1 - Math.abs(s)) * (1 - a * APERTO_X);
-    const ky = (1 + Math.abs(s) * AFINA) * (1 - a * APERTO_Y);
-    const deformado = s !== 0 || a !== 0;
     for (const { face, centroSlide, largura } of medidas) {
       // com sinal: -1 = encostado à esquerda, 0 = centrado, +1 = à direita
       const pos = Math.max(-1, Math.min(1, (centroSlide - centro) / largura));
@@ -262,12 +211,7 @@ export function CarrosselSaldoMes({ todosMeses, mes, setMes, renderCard }) {
       const origemX = 50 - 50 * pos;
       face.style.opacity = op.toFixed(3);
       face.style.transformOrigin = `${origemX.toFixed(1)}% center`;
-      // O aperto usa a mesma âncora da escala: no card do centro é o meio dele,
-      // então ele estreita pros dois lados por igual; nos vizinhos é a borda
-      // virada pro centro, e a espiada continua no lugar.
-      face.style.transform = deformado
-        ? `scale(${(escala * kx).toFixed(4)}, ${(escala * ky).toFixed(4)})`
-        : `scale(${escala.toFixed(4)})`;
+      face.style.transform = `scale(${escala.toFixed(4)})`;
     }
   }, []);
 
@@ -339,116 +283,14 @@ export function CarrosselSaldoMes({ todosMeses, mes, setMes, renderCard }) {
     }
   }, [idxAtivo, mesesAsc, setMes]);
 
-  // Parou de rolar: a mola leva o esticão que sobrou a zero, passando do ponto.
-  // Sem o anime.js ainda (ou com o movimento reduzido), só desfaz.
-  const soltarEsticao = React.useCallback(() => {
-    const L = liquido.current;
-    L.t = 0;
-    if (L.s === 0) return;
-    const lib = anime();
-    if (!lib) {
-      L.s = 0;
-      aplicarEfeitos();
-      return;
-    }
-    L.mola = lib.animate(L, {
-      s: 0,
-      ease: lib.spring(MOLA),
-      onRender: aplicarEfeitos,
-      onComplete: () => {
-        L.mola = null;
-        L.s = 0;
-        aplicarEfeitos();
-      },
-    });
-  }, [aplicarEfeitos]);
-
-  // A cada frame de scroll: velocidade → esticão alvo, e o esticão atual vai
-  // atrás dele. Também rearma o "parou".
-  const medirEsticao = React.useCallback(() => {
-    const el = ref.current;
-    const L = liquido.current;
-    if (!el || semMovimento()) return;
-    if (L.mola) {
-      // o dedo voltou no meio do balanço: continua de onde a mola estava
-      L.mola.cancel();
-      L.mola = null;
-    }
-    const agora = performance.now();
-    const x = el.scrollLeft;
-    if (L.t) {
-      const dt = Math.max(1, agora - L.t);
-      const v = (x - L.x) / dt;
-      const alvo = ESTICA_MAX * Math.tanh((v * ESTICA_POR_VEL) / ESTICA_MAX);
-      const segue = Math.abs(alvo) > Math.abs(L.s) ? SEGUE_ESTICANDO : SEGUE_SOLTANDO;
-      L.s += (alvo - L.s) * segue;
-    }
-    L.x = x;
-    L.t = agora;
-    clearTimeout(L.parou);
-    L.parou = setTimeout(soltarEsticao, PAROU_MS);
-  }, [soltarEsticao]);
-
-  // Leva o aperto até `alvo` numa mola. Sem o anime.js ainda, vai direto; com o
-  // movimento reduzido, não afunda.
-  const molaAperto = React.useCallback(
-    (alvo, mola) => {
-      const L = liquido.current;
-      const lib = anime();
-      L.molaA?.cancel();
-      L.molaA = null;
-      if (!lib || semMovimento()) {
-        const v = semMovimento() ? 0 : alvo;
-        if (L.a === v) return;
-        L.a = v;
-        aplicarEfeitos();
-        return;
-      }
-      L.molaA = lib.animate(L, {
-        a: alvo,
-        ease: lib.spring(mola),
-        onRender: aplicarEfeitos,
-        onComplete: () => {
-          L.molaA = null;
-        },
-      });
-    },
-    [aplicarEfeitos],
-  );
-
-  const aoTocar = React.useCallback(() => {
-    // Já arma a medição da velocidade: sem isso o primeiro quadro do gesto só
-    // anota a posição, e o esticão começa um quadro atrasado.
-    const el = ref.current;
-    const L = liquido.current;
-    if (el) {
-      L.x = el.scrollLeft;
-      L.t = performance.now();
-    }
-    molaAperto(1, MOLA_APERTA);
-  }, [molaAperto]);
-
-  const aoSoltarDedo = React.useCallback(() => molaAperto(0, MOLA_SOLTA), [molaAperto]);
-
-  React.useEffect(() => {
-    carregarAnime();
-    const L = liquido.current;
-    return () => {
-      clearTimeout(L.parou);
-      L.mola?.cancel();
-      L.molaA?.cancel();
-    };
-  }, []);
-
   // Um frame do gesto: repinta a escala e vê se o mês ativo mudou. Os eventos
   // de scroll chegam vários por frame, então o rAF é o que garante uma passada
   // só — e ela acontece no momento certo, junto do paint.
   const passo = React.useCallback(() => {
     pendenteRef.current = false;
-    medirEsticao();
     aplicarEfeitos();
     sincronizarMes();
-  }, [medirEsticao, aplicarEfeitos, sincronizarMes]);
+  }, [aplicarEfeitos, sincronizarMes]);
 
   const onScroll = React.useCallback(() => {
     if (pendenteRef.current) return;
@@ -483,9 +325,6 @@ export function CarrosselSaldoMes({ todosMeses, mes, setMes, renderCard }) {
     <div
       ref={ref}
       onScroll={onScroll}
-      onTouchStart={aoTocar}
-      onTouchEnd={aoSoltarDedo}
-      onTouchCancel={aoSoltarDedo}
       className="carrossel-saldo"
       style={{
         display: "flex",
