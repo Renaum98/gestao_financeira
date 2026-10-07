@@ -408,10 +408,10 @@ export const EN = {
     "You exceeded the {cat} budget: {proj} of {lim}.",
   "Atenção: {pct}% do orçamento de {cat} ({proj} de {lim}).":
     "Heads up: {pct}% of the {cat} budget ({proj} of {lim}).",
-  "Você excedeu o limite do cartão de crédito: {proj} de {lim}.":
-    "You exceeded the credit card limit: {proj} of {lim}.",
-  "Atenção: {pct}% do limite do cartão de crédito ({proj} de {lim}).":
-    "Heads up: {pct}% of the credit card limit ({proj} of {lim}).",
+  "Você excedeu o limite do {cartao}: {proj} de {lim}.":
+    "You exceeded the {cartao} limit: {proj} of {lim}.",
+  "Atenção: {pct}% do limite do {cartao} ({proj} de {lim}).":
+    "Heads up: {pct}% of the {cartao} limit ({proj} of {lim}).",
 
   // ─── Orçamentos ───
   "Orçamento mensal": "Monthly budget",
@@ -419,7 +419,6 @@ export const EN = {
   "Gasto: {x}": "Spent: {x}",
   "{pct}% utilizado": "{pct}% used",
   "Por forma de pagamento": "By payment method",
-  "Sem limite definido": "No limit set",
   "Por categoria": "By category",
   "{gasto} de {orc}": "{gasto} of {orc}",
 
@@ -825,6 +824,18 @@ export const EN = {
   "Quantidade de parcelas": "Number of installments",
   "Digite um valor para ver a análise.": "Enter an amount to see the analysis.",
   "Restante deste mês": "Left this month",
+  "Começando em": "Starting in",
+  "este mês": "this month",
+  "Mês anterior": "Previous month",
+  "Próximo mês": "Next month",
+  "Previsto para {mes}": "Expected for {mes}",
+  "Seu orçamento de {mes} já está ": "Your budget for {mes} is already ",
+  " em {mes}.": " in {mes}.",
+  " Você só tem {restante} previstos para {mes} — o restante teria que sair de outra fonte.":
+    " You only have {restante} expected for {mes} — the rest would have to come from another source.",
+  "{mes} já está com orçamento ": "{mes} already has a budget ",
+  "cabe em {mes}": "fits in {mes}",
+  "estoura o previsto para {mes}": "exceeds what's expected for {mes}",
   // blocos de análise (segmentos; trechos em <strong> são chaves próprias)
   "Seu orçamento deste mês já está ": "Your budget this month is already ",
   "negativo em {x}": "{x} in the red",

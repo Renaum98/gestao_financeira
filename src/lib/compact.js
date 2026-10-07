@@ -99,7 +99,6 @@ function compactarPreferences(p) {
   if (p.nome) out.nome = p.nome;
   if (p.fotoUrl) out.fotoUrl = p.fotoUrl;
   if (p.orcamentoMensal > 0) out.orcamentoMensal = p.orcamentoMensal;
-  if (p.orcamentoCartaoCredito > 0) out.orcamentoCartaoCredito = p.orcamentoCartaoCredito;
   // Dia de fechamento da fatura: 0 é o padrão (último dia do mês), então só
   // vale gravar quando o usuário escolheu um dia específico.
   if (p.diaFechamentoCartao > 0) out.diaFechamentoCartao = p.diaFechamentoCartao;

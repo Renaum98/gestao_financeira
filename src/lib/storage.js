@@ -60,7 +60,6 @@ const DEFAULT_STATE = {
     nome: "",
     fotoUrl: "",
     orcamentoMensal: 0,
-    orcamentoCartaoCredito: 0,
     // Dia em que a fatura do cartão fecha. 0 = último dia do mês (ver
     // lib/fatura.js) — "fatura de agosto = compras de agosto".
     diaFechamentoCartao: 0,

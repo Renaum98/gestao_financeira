@@ -51,21 +51,8 @@ export function OrcamentosScreen({ ctx }) {
   const [editandoCat, setEditandoCat] = React.useState(null);
   const [tempCat, setTempCat] = React.useState(valorZero());
 
-  const [editandoCartao, setEditandoCartao] = React.useState(false);
-  const [tempCartao, setTempCartao] = React.useState(valorZero());
-
   const [editandoFech, setEditandoFech] = React.useState(false);
   const [tempFech, setTempFech] = React.useState('');
-
-  // Limite só para o cartão de crédito — não faz sentido limitar Pix/dinheiro.
-  const gastoCartao = txMes.reduce(
-    (s, t) => (t.tipo !== 'entrada' && t.pagamento === 'Cartão de crédito' ? s + t.valor : s),
-    0,
-  );
-  const orcCartao = preferences.orcamentoCartaoCredito > 0 ? preferences.orcamentoCartaoCredito : 0;
-  const temCartao = orcCartao > 0;
-  const pctCartao = orcCartao > 0 ? (gastoCartao / orcCartao) * 100 : 0;
-  const corCartao = pctCartao > 100 ? COR_NEG : pctCartao > 80 ? COR_AVISO : COR_POS;
 
   // Salvar o orçamento também carimba o histórico de vigência: o valor novo
   // vale deste mês (e do anterior, a janela ao vivo de sempre) em diante, e o
@@ -78,11 +65,6 @@ export function OrcamentosScreen({ ctx }) {
       orcBaseAt: registrarMudancaOrcBase(preferences, novo, mes),
     });
     setEditandoTotal(false);
-  };
-
-  const salvarCartao = () => {
-    setPreferences({ orcamentoCartaoCredito: Math.max(0, parseValorBR(tempCartao)) });
-    setEditandoCartao(false);
   };
 
   // Dia em que a fatura fecha. 0 = último dia do mês (padrão), o caso "fatura
@@ -186,78 +168,19 @@ export function OrcamentosScreen({ ctx }) {
     </Card>
   );
 
-  const secaoPagamento = (
+  const secaoCartao = (
     <>
       <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: 0.4, padding: '0 4px var(--esp-titulo)' }}>
-        {t("Por forma de pagamento")}
+        {t("Cartão de crédito")}
       </div>
       <Card style={{ padding: '14px 16px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <div style={{
-            width: 36, height: 36, borderRadius: 'var(--raio-controle)', background: 'var(--surface-sunken)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-          }}>
-            <Icon name="card" size={18} color="var(--ink)" strokeWidth={2} />
-          </div>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--ink)' }}>{t("Cartão de crédito")}</div>
-            <div style={{ fontSize: 11, color: 'var(--muted)', fontWeight: 600, marginTop: 1 }}>
-              {temCartao
-                ? t("{gasto} de {orc}", { gasto: fmtBRLCompacto(gastoCartao), orc: fmtBRLCompacto(orcCartao) })
-                : t('Sem limite definido')}
-            </div>
-          </div>
-          {editandoCartao ? (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <input
-                autoFocus
-                type="text"
-                inputMode="numeric"
-                pattern="[0-9]*"
-                value={tempCartao}
-                onChange={(e) => setTempCartao(formatarValorDigitado(e.target.value))}
-                onKeyDown={(e) => { if (e.key === 'Enter') salvarCartao(); if (e.key === 'Escape') setEditandoCartao(false); }}
-                style={{
-                  width: 90, padding: '6px 10px', borderRadius: 'var(--raio-compacto)',
-                  border: '1.5px solid var(--primary)', background: 'var(--card)',
-                  fontSize: 13, fontWeight: 700, color: 'var(--ink)', outline: 'none',
-                  fontFamily: 'inherit', textAlign: 'right',
-                }}
-              />
-              <button onClick={salvarCartao} style={{
-                width: 30, height: 30, borderRadius: 'var(--raio-pilula)', border: 'none',
-                background: 'var(--primary)', color: '#fff', cursor: 'pointer',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-              }}>
-                <Icon name="check" size={14} strokeWidth={2.6} />
-              </button>
-            </div>
-          ) : (
-            <button onClick={() => { setEditandoCartao(true); setTempCartao(formatarValorInicial(orcCartao)); }} style={{
-              background: 'transparent', border: 'none', cursor: 'pointer', padding: 4, color: 'var(--muted)',
-            }}>
-              <Icon name="edit" size={16} strokeWidth={2} />
-            </button>
-          )}
-        </div>
-        {temCartao && (
-          <div style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div style={{ flex: 1 }}>
-              <BarraProgresso valor={Math.min(gastoCartao, orcCartao)} max={orcCartao || 1} cor={pctCartao > 100 ? COR_NEG : 'var(--primary)'} altura={8} />
-            </div>
-            <div style={{ fontSize: 12, fontWeight: 800, color: corCartao, minWidth: 38, textAlign: 'right' }}>
-              {pctCartao.toFixed(0)}%
-            </div>
-          </div>
-        )}
-
         {/* Com cartão cadastrado, o fechamento é de cada cartão — o campo
             global sai daqui pra não existirem dois lugares dizendo quando a
             fatura fecha. A linha vira o atalho pro cadastro. */}
         {cartoes.length > 0 ? (
           <div
             onClick={() => irPara('cartoes')}
-            style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid var(--linha)', display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer' }}
+            style={{ display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer' }}
           >
             <div style={{
               width: 36, height: 36, borderRadius: 'var(--raio-controle)', background: 'var(--surface-sunken)',
@@ -276,7 +199,7 @@ export function OrcamentosScreen({ ctx }) {
         ) : (
         /* Fechamento da fatura — define em qual fatura cada compra cai.
            Não altera o saldo do mês, só o ciclo mostrado (lib/fatura.js). */
-        <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid var(--linha)', display: 'flex', alignItems: 'center', gap: 12 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <div style={{
             width: 36, height: 36, borderRadius: 'var(--raio-controle)', background: 'var(--surface-sunken)',
             display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
@@ -414,7 +337,7 @@ export function OrcamentosScreen({ ctx }) {
           <div className="painel-lateral" style={{ "--painel-largura": "380px" }}>
             <div>
               {cardPrincipal}
-              <div style={{ marginTop: "var(--esp-secao)" }}>{secaoPagamento}</div>
+              <div style={{ marginTop: "var(--esp-secao)" }}>{secaoCartao}</div>
             </div>
             <div>{secaoCategorias}</div>
           </div>
@@ -426,9 +349,9 @@ export function OrcamentosScreen({ ctx }) {
             {cardPrincipal}
           </div>
 
-          {/* Limite do cartão de crédito */}
+          {/* Cartões / fechamento da fatura */}
           <div style={{ padding: 'var(--esp-secao) var(--pad-x) 0' }}>
-            {secaoPagamento}
+            {secaoCartao}
           </div>
 
           {/* Categorias */}

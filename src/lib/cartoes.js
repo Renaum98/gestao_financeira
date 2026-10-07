@@ -149,9 +149,8 @@ export function contarNoCartao(txs, recorrentes, cartaoId) {
 
 // ─── Limite ────────────────────────────────────────────────────────────────
 //
-// O limite é o teto do CARTÃO (o que o banco liberou), diferente do
-// `preferences.orcamentoCartaoCredito`, que é quanto o usuário quer gastar no
-// crédito no mês. Um é do banco, o outro é meta pessoal.
+// O limite é o teto do CARTÃO (o que o banco liberou). É ele que o aviso do
+// lançamento (modals/add-expense.jsx) usa pra alertar perto de estourar.
 //
 // O que ocupa o limite é só a FATURA ABERTA — o ciclo em que o usuário está
 // gastando agora. É o que responde "quanto ainda dá pra passar neste cartão

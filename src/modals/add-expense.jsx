@@ -21,8 +21,8 @@ import { COR_POS, COR_AVISO, COR_NEG } from "../lib/colors.js";
 import { formatarValorDigitado, formatarValorInicial, parseValorBR, valorZero } from "../lib/money-input.js";
 import { simboloMoeda } from "../lib/moeda.js";
 import { ajustarGuardado } from "../lib/guardado-entradas.js";
-import { faturaDaCompra, mesPagamentoDaFatura, PAG_CARTAO } from "../lib/fatura.js";
-import { corDoCartao, corTextoSobre, fechamentoDe } from "../lib/cartoes.js";
+import { faturaDaCompra, faturasEmAberto, mesPagamentoDaFatura, PAG_CARTAO } from "../lib/fatura.js";
+import { corDoCartao, corTextoSobre, fechamentoDe, usoDoCartao } from "../lib/cartoes.js";
 import { useT } from "../lib/i18n.jsx";
 import { chaveMes, dataNoMes, hojeISO } from "../lib/datas.js";
 
@@ -133,25 +133,27 @@ export function AddExpenseModal({ ctx, params }) {
     return { pct, excedeu: projetado > limite, limite, projetado };
   }, [ehEntrada, orcamentos, categoria, txs, mes, valorNum, editar]);
 
-  // Aviso do limite do cartão de crédito — mesma lógica do orçamento por
-  // categoria, mas projetando o gasto do mês no cartão + o valor digitado.
+  // Aviso do limite do cartão escolhido — mesma lógica do orçamento por
+  // categoria, mas projetando o que já ocupa o limite (a fatura aberta, ver
+  // usoDoCartao) + o valor digitado. Cartão sem limite informado não avisa.
   const avisoCartao = React.useMemo(() => {
-    if (ehEntrada || pagamento !== "Cartão de crédito") return null;
-    const limite = preferences?.orcamentoCartaoCredito || 0;
-    if (limite <= 0) return null;
-    let jaGasto = (txDoMes(txs || [], mes)).reduce(
-      (s, t) => (t.tipo !== "entrada" && t.pagamento === "Cartão de crédito" ? s + t.valor : s),
-      0,
-    );
-    // Ao editar, desconta o valor original se ela já era no cartão.
-    if (editar && editar.pagamento === "Cartão de crédito") {
-      jaGasto -= (editar.parcelas ? editar.parcelas.valorTotal : editar.valor) || 0;
+    if (ehEntrada || pagamento !== PAG_CARTAO || !cartaoId) return null;
+    const cartao = cartoes.find((c) => c.id === cartaoId);
+    if (!cartao || !(cartao.limite > 0)) return null;
+    const faturas = faturasEmAberto(txs || [], cartao.diaFechamento || 0, hojeISO(), cartao.id);
+    let { usado, limite } = usoDoCartao(cartao, faturas);
+    // Ao editar, desconta o valor original se ele já ocupava este cartão.
+    if (
+      editar && editar.cartaoId === cartao.id &&
+      faturaDaCompra(editar.data, cartao.diaFechamento || 0) === faturas.aberta.mes
+    ) {
+      usado -= editar.valor || 0;
     }
-    const projetado = jaGasto + valorNum;
+    const projetado = usado + valorNum;
     const pct = (projetado / limite) * 100;
     if (pct < 80) return null;
-    return { pct, excedeu: projetado > limite, limite, projetado };
-  }, [ehEntrada, pagamento, preferences, txs, mes, valorNum, editar]);
+    return { pct, excedeu: projetado > limite, limite, projetado, nome: cartao.nome };
+  }, [ehEntrada, pagamento, cartaoId, cartoes, txs, valorNum, editar]);
 
   // Em qual fatura essa compra cai e quando ela vai ser paga. Depende da data
   // digitada: comprar depois do fechamento já joga pra fatura do mês seguinte.
@@ -945,8 +947,8 @@ export function AddExpenseModal({ ctx, params }) {
               }}
             >
               {avisoCartaoVis.excedeu
-                ? t("Você excedeu o limite do cartão de crédito: {proj} de {lim}.", { proj: fmtBRL(avisoCartaoVis.projetado), lim: fmtBRL(avisoCartaoVis.limite) })
-                : t("Atenção: {pct}% do limite do cartão de crédito ({proj} de {lim}).", { pct: avisoCartaoVis.pct.toFixed(0), proj: fmtBRL(avisoCartaoVis.projetado), lim: fmtBRL(avisoCartaoVis.limite) })}
+                ? t("Você excedeu o limite do {cartao}: {proj} de {lim}.", { cartao: avisoCartaoVis.nome, proj: fmtBRL(avisoCartaoVis.projetado), lim: fmtBRL(avisoCartaoVis.limite) })
+                : t("Atenção: {pct}% do limite do {cartao} ({proj} de {lim}).", { pct: avisoCartaoVis.pct.toFixed(0), cartao: avisoCartaoVis.nome, proj: fmtBRL(avisoCartaoVis.projetado), lim: fmtBRL(avisoCartaoVis.limite) })}
             </div>
           </div>
           )}
