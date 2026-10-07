@@ -12,7 +12,11 @@
 //
 // O anime.js vem sob demanda (lib/anime.js). Até ele chegar, a gota cai na
 // transição CSS de sempre do .nav-indicador.
-import { anime, carregarAnime, semMovimento } from "../lib/anime.js";
+//
+// No modo leve não há mola nenhuma: a gota desliza só com a transição CSS, sem
+// a deformação do canto, e a bolha gruda no dedo sem embalo. O anime.js nem é
+// baixado.
+import { anime, carregarAnime, modoLeve, semMovimento } from "../lib/anime.js";
 
 // Borda que puxa: mais firme e rápida. Borda que vem atrás: mais solta, chega
 // depois e é a que dá o balanço na chegada.
@@ -38,7 +42,7 @@ const ACHATA_MIN = 0.78;
 const INCHA_MAX = 1.08;
 
 export function criarGota(el) {
-  carregarAnime();
+  if (!modoLeve()) carregarAnime();
   const g = { l: 0, r: 0 };
   let base = 0; // largura de repouso contra a qual o esticão é medido; 0 = sem achatar
   let anims = [];
@@ -86,7 +90,8 @@ export function criarGota(el) {
   // nada (o arraste solta a gota e logo depois a troca de aba pede o mesmo).
   const escorrer = (l, w) => {
     if (alvo && alvo.l === l && alvo.w === w) return false;
-    if (semMovimento()) {
+    if (semMovimento() || modoLeve()) {
+      // no leve a transição CSS ainda leva a gota; sem a deformação do canto
       colocar(l, w);
       return false;
     }
@@ -162,7 +167,7 @@ export function criarGota(el) {
   // pointermove; só o primeiro liga o laço, os outros trocam o alvo. Termina no
   // escorrer/colocar/parar seguinte, que é o que o soltar do dedo chama.
   const seguir = (centro, d) => {
-    if (semMovimento()) {
+    if (semMovimento() || modoLeve()) {
       colocar(centro - d / 2, d);
       return;
     }

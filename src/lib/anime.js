@@ -17,3 +17,8 @@ export const anime = () => lib;
 
 export const semMovimento = () =>
   window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+
+// Modo leve (lib/leve.js): as molas saem e o movimento volta pro CSS simples.
+// Lido do atributo no <html> a cada uso porque a preferência pode mudar com o
+// app aberto (Perfil → Desempenho).
+export const modoLeve = () => document.documentElement.hasAttribute("data-leve");

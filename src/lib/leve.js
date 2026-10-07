@@ -8,6 +8,9 @@
 //     card por mês; a troca de mês continua pelo seletor dentro do card, sem o
 //     swipe;
 //   • as transições de tela e a trava do splash encurtam;
+//   • a gota da tab bar perde as molas do anime.js (ui/gota-liquida.js): desliza
+//     só com a transição CSS, sem deformar o canto, e a bolha gruda no dedo sem
+//     embalo — o anime.js nem chega a ser baixado;
 //   • o prefetch dos chunks em idle não roda — cada aba baixa o seu na primeira
 //     visita, com skeleton no meio do caminho;
 //   • só a aba atual fica montada: as outras saem do DOM e voltam a custar
