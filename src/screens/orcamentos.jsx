@@ -4,10 +4,9 @@ import React from 'react';
 import { CATEGORIAS, catsMinhas, fmtBRL, fmtBRLCompacto, totalEntradas, totalGeral, totalPorCategoria, txDoMes } from '../data.js';
 import { CatChip, Icon } from '../ui/icons.jsx';
 import { Card, TopBar } from '../ui/common.jsx';
-import { CardDestaque } from '../ui/card-destaque.jsx';
 import { guardadoNoMes } from '../lib/saldo-mes.js';
 import { BarraProgresso } from '../ui/charts.jsx';
-import { COR_POS, COR_NEG, COR_AVISO, COR_NEG_SOBRE_FORTE } from '../lib/colors.js';
+import { COR_POS, COR_NEG, COR_AVISO } from '../lib/colors.js';
 import {
   formatarValorDigitado,
   formatarValorInicial,
@@ -107,17 +106,17 @@ export function OrcamentosScreen({ ctx }) {
   // curtos e ligados entre si — formam a coluna da esquerda, e a lista de
   // categorias, que é a longa, fica com a direita.
   const cardPrincipal = (
-    <CardDestaque>
+    <Card>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <div style={{ fontSize: 12, fontWeight: 600, opacity: 0.85 }}>{t("Orçamento mensal")}</div>
+        <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--muted)' }}>{t("Orçamento mensal")}</div>
         {!editandoTotal && (
           <button onClick={() => { setTempTotal(formatarValorInicial(orcBase)); setEditandoTotal(true); }} style={{
-            background: 'rgba(255,255,255,0.18)', border: 'none', cursor: 'pointer',
-            color: '#fff', padding: '6px 10px', borderRadius: 'var(--raio-pilula)',
+            background: 'var(--surface-sunken)', border: 'none', cursor: 'pointer',
+            color: 'var(--ink)', padding: '6px 10px', borderRadius: 'var(--raio-pilula)',
             display: 'inline-flex', alignItems: 'center', gap: 5,
             fontSize: 11, fontWeight: 700, fontFamily: 'inherit',
           }}>
-            <Icon name="edit" size={12} color="#fff" strokeWidth={2.4} /> {t("Editar")}
+            <Icon name="edit" size={12} color="var(--ink)" strokeWidth={2.4} /> {t("Editar")}
           </button>
         )}
       </div>
@@ -125,7 +124,7 @@ export function OrcamentosScreen({ ctx }) {
       {editandoTotal ? (
         <>
         <div style={{ marginTop: 4, display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span style={{ fontSize: 22, fontWeight: 700, opacity: 0.85 }}>{simboloMoeda()}</span>
+          <span style={{ fontSize: 22, fontWeight: 700, color: 'var(--muted)' }}>{simboloMoeda()}</span>
           <input
             autoFocus
             type="text"
@@ -136,33 +135,33 @@ export function OrcamentosScreen({ ctx }) {
             onKeyDown={(e) => { if (e.key === 'Enter') salvarTotal(); if (e.key === 'Escape') setEditandoTotal(false); }}
             style={{
               flex: 1, padding: '6px 10px', borderRadius: 'var(--raio-compacto)',
-              border: 'none', background: 'rgba(255,255,255,0.18)',
-              fontSize: 26, fontWeight: 800, color: '#fff',
+              border: 'none', background: 'var(--surface-sunken)',
+              fontSize: 26, fontWeight: 800, color: 'var(--ink)',
               outline: 'none', fontFamily: 'inherit', letterSpacing: '-0.02em',
               minWidth: 0,
             }}
           />
           <button onClick={salvarTotal} style={{
             width: 36, height: 36, borderRadius: 'var(--raio-pilula)', border: 'none', cursor: 'pointer',
-            background: '#fff', color: 'var(--primary)',
+            background: 'var(--primary)', color: '#fff',
             display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
           }}>
-            <Icon name="check" size={16} color="var(--primary)" strokeWidth={2.6} />
+            <Icon name="check" size={16} color="#fff" strokeWidth={2.6} />
           </button>
         </div>
         <div style={{
           marginTop: 10, fontSize: 11, fontWeight: 600, lineHeight: 1.4,
-          opacity: 0.85,
+          color: 'var(--muted)',
         }}>
           {t("Use um valor fixo que você recebe todo mês, como salário ou mesada. Recebimentos extras devem ser lançados como Entrada em Transações.")}
         </div>
         </>
       ) : (
-        <div style={{ fontSize: 28, fontWeight: 800, marginTop: 4, letterSpacing: '-0.02em' }}>
+        <div style={{ fontSize: 28, fontWeight: 800, marginTop: 4, letterSpacing: '-0.02em', color: 'var(--ink)' }}>
           {temOrcamento ? fmtBRL(orcMensal) : (
             <button onClick={() => { setTempTotal(formatarValorInicial(0)); setEditandoTotal(true); }} style={{
-              background: 'transparent', border: '1.5px dashed rgba(255,255,255,0.6)',
-              color: '#fff', padding: '8px 14px', borderRadius: 'var(--raio-controle)',
+              background: 'transparent', border: '1.5px dashed var(--muted)',
+              color: 'var(--ink)', padding: '8px 14px', borderRadius: 'var(--raio-controle)',
               fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
             }}>{t("Definir orçamento")}</button>
           )}
@@ -171,20 +170,20 @@ export function OrcamentosScreen({ ctx }) {
 
       {temOrcamento && (
         <div style={{ marginTop: 14 }}>
-          <div style={{ height: 8, background: 'rgba(255,255,255,0.2)', borderRadius: 'var(--raio-pilula)', overflow: 'hidden' }}>
+          <div style={{ height: 8, background: 'var(--surface-sunken)', borderRadius: 'var(--raio-pilula)', overflow: 'hidden' }}>
             <div style={{
               height: '100%', width: `${Math.min(100, pctGeral)}%`,
-              background: pctGeral > 100 ? COR_NEG_SOBRE_FORTE : '#fff', borderRadius: 'var(--raio-pilula)',
+              background: pctGeral > 100 ? COR_NEG : COR_POS, borderRadius: 'var(--raio-pilula)',
               transition: 'width .3s ease',
             }} />
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8, fontSize: 12, fontWeight: 600 }}>
-            <span>{t("Gasto: {x}", { x: fmtBRLCompacto(totalGasto) })}</span>
-            <span style={{ opacity: 0.85 }}>{t("{pct}% utilizado", { pct: pctGeral.toFixed(0) })}</span>
+            <span style={{ color: 'var(--ink)' }}>{t("Gasto: {x}", { x: fmtBRLCompacto(totalGasto) })}</span>
+            <span style={{ color: 'var(--muted)' }}>{t("{pct}% utilizado", { pct: pctGeral.toFixed(0) })}</span>
           </div>
         </div>
       )}
-    </CardDestaque>
+    </Card>
   );
 
   const secaoPagamento = (
