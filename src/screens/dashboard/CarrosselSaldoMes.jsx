@@ -26,6 +26,10 @@
 // ponto, e o card balança antes de parar. Aqui não dá pra soltar as bordas de
 // verdade como na gota (quem move o card é o scroll nativo), então o esticão é
 // uma deformação da face, puxada pela velocidade do gesto.
+//
+// E o dedo também é sentido: ao encostar, o card afunda um pouco (o "aperto"),
+// e ao soltar ele volta numa mola com repique — o carrossel responde ao toque
+// antes mesmo de começar a andar.
 
 import React from "react";
 import { anime, carregarAnime, semMovimento } from "../../lib/anime.js";
@@ -74,18 +78,30 @@ const OPACIDADE_MIN = 0.55;
 // O teto é o ESPACO: a 5% de ~300px a borda da frente avança ~15px, ainda
 // dentro dos 18 de respiro — mais que isso e um card entra no vizinho.
 const ESTICA_MAX = 0.05;
-const AFINA = 0.6;
+// O afinamento não tem o teto do ESPACO (a altura não encosta em nada), então é
+// por ele que o efeito ganha corpo sem um card entrar no vizinho.
+const AFINA = 0.9;
 // Esticão por px/ms de velocidade do scroll. Um swipe comum anda 1–3 px/ms.
-const ESTICA_POR_VEL = 0.03;
+// Passa por uma tangente hiperbólica (ver medirEsticao): na largada, com o dedo
+// ainda devagar, o esticão já aparece, e perto do teto ele satura macio em vez
+// de bater no limite.
+const ESTICA_POR_VEL = 0.07;
 // Seguir a velocidade: rápido pra esticar, devagar pra desinchar. Desinchando
 // devagar, sobra esticão quando o snap assenta — e é ele que a mola transforma
 // no balanço. Desinchando rápido, a desaceleração do snap zera tudo antes.
-const SEGUE_ESTICANDO = 0.4;
+const SEGUE_ESTICANDO = 0.65;
 const SEGUE_SOLTANDO = 0.06;
 // Sem evento de scroll por este tempo = o carrossel parou (o `scrollend` não
 // existe em todo Safari que ainda roda o app).
 const PAROU_MS = 110;
 const MOLA = { bounce: 0.55, duration: 480 };
+
+// ─── Aperto do dedo ───
+// Quanto o card afunda com o dedo encostado. Afundar é firme (responde ao
+// toque); voltar é solto, e o repique é o que faz o soltar parecer elástico.
+const APERTO = 0.035;
+const MOLA_APERTA = { bounce: 0.2, duration: 220 };
+const MOLA_SOLTA = { bounce: 0.6, duration: 520 };
 
 // Esqueleto do CardSaldo, exibido nos slides fora da janela. Repete o desenho do
 // card — cabeçalho, valor grande, chip de variação e o rodapé em duas colunas —
@@ -157,7 +173,8 @@ export function CarrosselSaldoMes({ todosMeses, mes, setMes, renderCard }) {
   const mudouPorSwipeRef = React.useRef(false);
   // Balanço líquido: `s` é o esticão atual, com sinal (+ = conteúdo indo pra
   // esquerda). O resto é o que mede a velocidade e a mola que solta no fim.
-  const liquido = React.useRef({ s: 0, x: 0, t: 0, mola: null, parou: 0 });
+  // `a` é o aperto do dedo (0 solto, 1 afundado), com a mola dele à parte.
+  const liquido = React.useRef({ s: 0, x: 0, t: 0, mola: null, parou: 0, a: 0, molaA: null });
 
   // Altura reservada pros slides sem card. Sem ela, a altura da fileira passaria
   // a ser ditada só pelos cards renderizados e mudaria conforme a janela desliza
@@ -222,6 +239,7 @@ export function CarrosselSaldoMes({ todosMeses, mes, setMes, renderCard }) {
       medidas.push({ face, centroSlide: s.offsetLeft + s.clientWidth / 2, largura: s.clientWidth });
     }
     const s = liquido.current.s;
+    const aperto = 1 - liquido.current.a * APERTO;
     const kx = 1 + Math.abs(s);
     const ky = 1 - Math.abs(s) * AFINA;
     // A borda de trás é a âncora do esticão: com o conteúdo indo pra esquerda
@@ -235,7 +253,7 @@ export function CarrosselSaldoMes({ todosMeses, mes, setMes, renderCard }) {
       // e o encolhimento acelera no meio do caminho. A rampa linear dá o ar de
       // persiana andando em passo constante.
       const q = d * d * (3 - 2 * d);
-      const escala = 1 - q * (1 - ESCALA_MIN);
+      const escala = (1 - q * (1 - ESCALA_MIN)) * aperto;
       // Mesma curva da escala: as duas andam juntas, então o card não some
       // antes de encolher nem o contrário.
       const op = 1 - q * (1 - OPACIDADE_MIN);
@@ -368,7 +386,7 @@ export function CarrosselSaldoMes({ todosMeses, mes, setMes, renderCard }) {
     if (L.t) {
       const dt = Math.max(1, agora - L.t);
       const v = (x - L.x) / dt;
-      const alvo = Math.max(-ESTICA_MAX, Math.min(ESTICA_MAX, v * ESTICA_POR_VEL));
+      const alvo = ESTICA_MAX * Math.tanh((v * ESTICA_POR_VEL) / ESTICA_MAX);
       const segue = Math.abs(alvo) > Math.abs(L.s) ? SEGUE_ESTICANDO : SEGUE_SOLTANDO;
       L.s += (alvo - L.s) * segue;
     }
@@ -378,12 +396,53 @@ export function CarrosselSaldoMes({ todosMeses, mes, setMes, renderCard }) {
     L.parou = setTimeout(soltarEsticao, PAROU_MS);
   }, [soltarEsticao]);
 
+  // Leva o aperto até `alvo` numa mola; sem o anime.js (ou com o movimento
+  // reduzido), não afunda.
+  const molaAperto = React.useCallback(
+    (alvo, mola) => {
+      const L = liquido.current;
+      const lib = anime();
+      L.molaA?.cancel();
+      L.molaA = null;
+      if (!lib || semMovimento()) {
+        if (L.a === 0) return;
+        L.a = 0;
+        aplicarEfeitos();
+        return;
+      }
+      L.molaA = lib.animate(L, {
+        a: alvo,
+        ease: lib.spring(mola),
+        onRender: aplicarEfeitos,
+        onComplete: () => {
+          L.molaA = null;
+        },
+      });
+    },
+    [aplicarEfeitos],
+  );
+
+  const aoTocar = React.useCallback(() => {
+    // Já arma a medição da velocidade: sem isso o primeiro quadro do gesto só
+    // anota a posição, e o esticão começa um quadro atrasado.
+    const el = ref.current;
+    const L = liquido.current;
+    if (el) {
+      L.x = el.scrollLeft;
+      L.t = performance.now();
+    }
+    molaAperto(1, MOLA_APERTA);
+  }, [molaAperto]);
+
+  const aoSoltarDedo = React.useCallback(() => molaAperto(0, MOLA_SOLTA), [molaAperto]);
+
   React.useEffect(() => {
     carregarAnime();
     const L = liquido.current;
     return () => {
       clearTimeout(L.parou);
       L.mola?.cancel();
+      L.molaA?.cancel();
     };
   }, []);
 
@@ -430,6 +489,9 @@ export function CarrosselSaldoMes({ todosMeses, mes, setMes, renderCard }) {
     <div
       ref={ref}
       onScroll={onScroll}
+      onTouchStart={aoTocar}
+      onTouchEnd={aoSoltarDedo}
+      onTouchCancel={aoSoltarDedo}
       className="carrossel-saldo"
       style={{
         display: "flex",
