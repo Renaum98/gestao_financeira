@@ -4,25 +4,38 @@ import React from "react";
 import {
   CATEGORIAS,
   catsMinhas,
-  PAGAMENTOS,
   MESES,
   CAT_FINANCIAMENTO,
   fmtBRL,
   txDoMes,
   totalPorCategoria,
 } from "../data.js";
-import { CatChip, Icon, iconePagamento } from "../ui/icons.jsx";
+import { Icon } from "../ui/icons.jsx";
 import { Expansivel, useUltimoNaoNulo } from "../ui/expansivel.jsx";
 import { ModalOverlay } from "../ui/modal-base.jsx";
 import { Toggle } from "../ui/common.jsx";
 import { vibrar } from "../lib/haptics.js";
 import { ConfirmModal } from "../ui/confirm-modal.jsx";
 import { COR_POS, COR_AVISO, COR_NEG } from "../lib/colors.js";
-import { formatarValorDigitado, formatarValorInicial, parseValorBR, valorZero } from "../lib/money-input.js";
-import { simboloMoeda } from "../lib/moeda.js";
+import { formatarValorInicial, parseValorBR, valorZero } from "../lib/money-input.js";
 import { ajustarGuardado } from "../lib/guardado-entradas.js";
 import { faturaDaCompra, faturasEmAberto, mesPagamentoDaFatura, PAG_CARTAO } from "../lib/fatura.js";
-import { corDoCartao, corTextoSobre, fechamentoDe, usoDoCartao } from "../lib/cartoes.js";
+import { fechamentoDe, usoDoCartao } from "../lib/cartoes.js";
+import {
+  Aviso,
+  CabecalhoForm,
+  FileiraPilulas,
+  Linha,
+  LinhaPagamento,
+  ListaAgrupada,
+  NotaLinha,
+  PilulaCategoria,
+  SeletorCores,
+  SeletorPilula,
+  ValorGrande,
+  estiloInputLinha,
+  estiloValorLinha,
+} from "../ui/form-lista.jsx";
 import { useT } from "../lib/i18n.jsx";
 import { chaveMes, dataNoMes, hojeISO } from "../lib/datas.js";
 
@@ -107,10 +120,6 @@ export function AddExpenseModal({ ctx, params }) {
     setCriandoCat(false);
   };
 
-  // Estilo "calculadora": cada dígito vira centavo, vai empurrando para reais.
-  // Lógica em lib/money-input.js (compartilhada com simular-gasto, caixinhas etc).
-  const aoDigitar = (texto) => setValor(formatarValorDigitado(texto));
-
   const valorNum = parseValorBR(valor);
 
   // Aviso de orçamento da categoria: projeta o gasto do mês + o valor digitado
@@ -188,7 +197,6 @@ export function AddExpenseModal({ ctx, params }) {
   const avisoCartaoVis = useUltimoNaoNulo(avisoCartao);
   const avisoGuardadoVis = useUltimoNaoNulo(avisoGuardado);
   const infoFaturaVis = useUltimoNaoNulo(infoFatura);
-  const mostrarCartoes = !ehEntrada && pagamento === PAG_CARTAO && cartoes.length > 0;
 
   const salvar = () => {
     if (valorNum <= 0) return;
@@ -237,295 +245,91 @@ export function AddExpenseModal({ ctx, params }) {
     setExcluirCat(null);
   };
 
+  const criandoRec = ehRecorrente && !editar;
+
   return (
     <>
     <ModalOverlay
       onClose={fechar}
       maxWidth={440}
-      maxWidthDesktop={560}
-      padding="16px 20px 24px"
+      maxWidthDesktop={520}
+      padding="14px 18px 20px"
       dialogStyle={{ overflowX: "hidden", transformOrigin: "center" }}
     >
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            marginBottom: 16,
-          }}
-        >
-          <button
-            onClick={fechar}
-            style={{
-              background: "transparent",
-              border: "none",
-              color: "var(--muted)",
-              fontWeight: 700,
-              fontSize: 14,
-              cursor: "pointer",
-            }}
-          >
-            {t("Cancelar")}
-          </button>
-          <div
-            style={{
-              fontSize: 16,
-              fontWeight: 800,
-              color: "var(--ink)",
-              letterSpacing: "-0.01em",
-            }}
-          >
-            {editar ? t("Editar transação") : t("Nova transação")}
-          </div>
-          <button
-            className="opcao-suave"
-            onClick={salvar}
-            disabled={valorNum <= 0}
-            style={{
-              background: valorNum > 0
-                ? (ehEntrada ? COR_POS : "var(--primary)")
-                : "var(--linha)",
-              color: valorNum > 0 ? "#fff" : "var(--muted)",
-              border: "none",
-              padding: "6px 14px",
-              borderRadius: "var(--raio-pilula)",
-              fontWeight: 800,
-              fontSize: 13,
-              cursor: valorNum > 0 ? "pointer" : "default",
-              fontFamily: "inherit",
-            }}
-          >
-            {t("Salvar")}
-          </button>
-        </div>
+        <CabecalhoForm
+          titulo={editar ? t("Editar transação") : t("Nova transação")}
+          onCancelar={fechar}
+          onSalvar={salvar}
+          salvarAtivo={valorNum > 0}
+          corSalvar={ehEntrada ? COR_POS : undefined}
+        />
 
-        {/* Valor grande (clique para abrir o teclado nativo) */}
-        <label
-          style={{
-            display: "block",
-            textAlign: "center",
-            padding: "8px 0 4px",
-            cursor: "text",
-            position: "relative",
-          }}
-        >
-          <div
-            style={{
-              fontSize: 12,
-              fontWeight: 700,
-              color: "var(--muted)",
-              textTransform: "uppercase",
-              letterSpacing: 0.6,
-            }}
-          >
-            {t("Valor")}
-          </div>
-          <div
-            className="tx-valor"
-            style={{
-              fontSize: 48,
-              fontWeight: 800,
-              color: ehEntrada ? COR_POS : "var(--ink)",
-              letterSpacing: "-0.04em",
-              marginTop: 4,
-              fontVariantNumeric: "tabular-nums",
-            }}
-          >
-            <span
-              className="tx-valor"
-              style={{
-                fontSize: 24,
-                color: ehEntrada ? COR_POS : "var(--muted)",
-                marginRight: 6,
-                verticalAlign: "top",
-                opacity: ehEntrada ? 0.9 : 1,
-              }}
-            >
-              {/* O "+" da entrada abre junto com a cor, em vez de piscar. */}
-              <span
-                className="tx-sinal"
-                style={{
-                  display: "inline-block",
-                  maxWidth: ehEntrada ? "1ch" : 0,
-                  opacity: ehEntrada ? 1 : 0,
-                  overflow: "hidden",
-                  verticalAlign: "top",
-                }}
-              >
-                +
-              </span>
-              {simboloMoeda()}
-            </span>
-            {valor}
-          </div>
-          {/* input invisível que dispara o teclado numérico nativo */}
-          <input
-            type="text"
-            inputMode="numeric"
-            pattern="[0-9]*"
-            value={valor.replace(",", "")}
-            onChange={(e) => aoDigitar(e.target.value)}
-            aria-label={t("Valor")}
-            style={{
-              position: "absolute",
-              inset: 0,
-              opacity: 0,
-              border: "none",
-              background: "transparent",
-              outline: "none",
-              fontSize: 16 /* >=16 evita zoom no iOS */,
-              cursor: "text",
-            }}
-          />
-        </label>
+        <ValorGrande
+          valor={valor}
+          onChange={setValor}
+          cor={ehEntrada ? COR_POS : undefined}
+          sinal={ehEntrada}
+        />
 
-        {/* Tipo: Saída / Entrada */}
-        <div style={{ marginTop: 14 }}>
-          <div
-            style={{
-              display: "flex",
-              gap: 6,
-              padding: 4,
-              borderRadius: "var(--raio-bloco)",
-              background: "var(--card-2)",
-              boxShadow: "0 1px 2px rgba(0,0,0,0.06)",
-            }}
-          >
-            {[
-              { id: "saida", label: t("Saída"), icon: "arrow-right", bgSel: "var(--card)", textoSel: "var(--ink)" },
-              { id: "entrada", label: t("Entrada"), icon: "arrow-left", bgSel: COR_POS, textoSel: "#fff" },
-            ].map((opt) => {
-              const sel = tipo === opt.id;
-              const txtColor = sel ? opt.textoSel : "var(--muted)";
-              return (
-                <button
-                  key={opt.id}
-                  className="opcao-suave"
-                  onClick={() => { vibrar(); setTipo(opt.id); }}
-                  style={{
-                    flex: 1,
-                    padding: "10px 8px",
-                    borderRadius: "var(--raio-compacto)",
-                    border: "none",
-                    background: sel ? opt.bgSel : "transparent",
-                    color: txtColor,
-                    fontSize: 13,
-                    fontWeight: 800,
-                    cursor: "pointer",
-                    fontFamily: "inherit",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    gap: 6,
-                    boxShadow: sel && opt.id === "saida" ? "0 1px 2px rgba(0,0,0,0.08)" : "none",
-                  }}
-                >
-                  {/* currentColor: o traço do ícone acompanha a transição de
-                      cor do botão em vez de trocar de uma vez. */}
-                  <Icon
-                    name={opt.icon}
-                    size={14}
-                    color="currentColor"
-                    strokeWidth={2.6}
-                  />
-                  {opt.label}
-                </button>
-              );
-            })}
-          </div>
-        </div>
+        {/* Tipo: Saída / Entrada — logo abaixo do valor, que é o que ele muda
+            (cor e sinal). */}
+        <SeletorPilula
+          valor={tipo}
+          onChange={setTipo}
+          opcoes={[
+            { id: "saida", label: t("Saída"), icon: "arrow-right" },
+            { id: "entrada", label: t("Entrada"), icon: "arrow-left", bgSel: COR_POS, textoSel: "#fff" },
+          ]}
+        />
 
-        {/* Categoria (só saída) */}
+        {/* Categoria (só saída): pílulas numa linha só, que rola de lado. */}
         <Expansivel aberto={!ehEntrada}>
-        <div style={{ marginTop: 14 }}>
-          <div
-            style={{
-              fontSize: 11,
-              fontWeight: 700,
-              color: "var(--muted)",
-              textTransform: "uppercase",
-              letterSpacing: 0.4,
-              padding: "0 4px 8px",
-            }}
-          >
-            {t("Categoria")}
-          </div>
-          <div
-            className="carrossel"
-            style={{
-              display: "flex",
-              gap: 8,
-              overflowX: "auto",
-              padding: "6px 4px 10px",
-              scrollbarWidth: "none",
-            }}
-          >
-            {catsMinhas().map((c) => {
-              const cat = CATEGORIAS[c];
-              const sel = categoria === c;
-              return (
-                <CategoriaBtn
-                  key={c}
-                  catId={c}
-                  cat={cat}
-                  selecionado={sel}
-                  ehDesktop={ehDesktop}
-                  podeExcluir={!!cat.custom && !!excluirCategoria}
-                  onSelecionar={() => { vibrar(); setCategoria(c); }}
-                  onPedirExcluir={() => setExcluirCat({ id: c, nome: cat.nome })}
-                />
-              );
-            })}
+        <div style={{ marginTop: 12 }}>
+          <FileiraPilulas>
+            {catsMinhas().map((c) => (
+              <PilulaCategoria
+                key={c}
+                catId={c}
+                selecionado={categoria === c}
+                ehDesktop={ehDesktop}
+                podeExcluir={!!CATEGORIAS[c].custom && !!excluirCategoria}
+                onSelecionar={() => { vibrar(); setCategoria(c); }}
+                onPedirExcluir={() => setExcluirCat({ id: c, nome: CATEGORIAS[c].nome })}
+              />
+            ))}
 
             {/* + Nova categoria */}
             <button
               onClick={() => setCriandoCat((v) => !v)}
               style={{
-                display: "flex",
-                flexDirection: "column",
+                display: "inline-flex",
                 alignItems: "center",
-                gap: 6,
-                padding: "8px 10px 6px",
-                borderRadius: "var(--raio-bloco)",
-                border: "none",
+                gap: 5,
+                padding: "6px 12px 6px 9px",
+                borderRadius: "var(--raio-pilula)",
+                border: "1.5px dashed var(--linha)",
                 background: criandoCat ? "var(--card-2)" : "transparent",
+                color: "var(--muted)",
+                fontSize: 12,
+                fontWeight: 700,
+                fontFamily: "inherit",
                 cursor: "pointer",
-                minWidth: 72,
                 flexShrink: 0,
-                WebkitTouchCallout: "none",
-                WebkitUserSelect: "none",
-                userSelect: "none",
+                whiteSpace: "nowrap",
                 touchAction: "manipulation",
               }}
             >
-              <div
-                style={{
-                  width: 32,
-                  height: 32,
-                  borderRadius: "var(--raio-compacto)",
-                  border: "2px dashed var(--linha)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  background: "var(--card)",
-                  boxShadow:
-                    "0 2px 5px rgba(20,16,24,0.10), inset 0 1px 0 rgba(255,255,255,0.6), inset 0 -2px 3px rgba(0,0,0,0.08)",
-                }}
-              >
-                <Icon name="plus" size={16} color="var(--muted)" strokeWidth={2.4} />
-              </div>
-              <span style={{ fontSize: 10, fontWeight: 700, color: "var(--muted)" }}>
-                {t("Nova")}
-              </span>
+              <Icon name="plus" size={14} color="currentColor" strokeWidth={2.4} />
+              {t("Nova")}
             </button>
-          </div>
+          </FileiraPilulas>
 
           {/* Formulário de nova categoria */}
-          {criandoCat && (
+          <Expansivel aberto={criandoCat}>
             <div
               style={{
-                margin: "2px 4px 4px",
-                padding: "12px 14px",
+                marginTop: 8,
+                padding: 12,
                 borderRadius: "var(--raio-bloco)",
                 background: "var(--card-2)",
                 boxShadow: "0 1px 2px rgba(0,0,0,0.06)",
@@ -537,9 +341,9 @@ export function AddExpenseModal({ ctx, params }) {
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                 <div
                   style={{
-                    width: 36,
-                    height: 36,
-                    borderRadius: "var(--raio-controle)",
+                    width: 32,
+                    height: 32,
+                    borderRadius: "var(--raio-pilula)",
                     background: novaCorCat + "22",
                     display: "flex",
                     alignItems: "center",
@@ -549,13 +353,13 @@ export function AddExpenseModal({ ctx, params }) {
                 >
                   <div
                     style={{
-                      width: 18,
-                      height: 18,
+                      width: 16,
+                      height: 16,
                       borderRadius: "var(--raio-pilula)",
                       background: novaCorCat,
                       color: "#fff",
                       fontWeight: 800,
-                      fontSize: 10,
+                      fontSize: 9,
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
@@ -573,7 +377,7 @@ export function AddExpenseModal({ ctx, params }) {
                   style={{
                     flex: 1,
                     minWidth: 0,
-                    padding: "10px 12px",
+                    padding: "9px 12px",
                     borderRadius: "var(--raio-compacto)",
                     border: "none",
                     background: "var(--bg)",
@@ -585,32 +389,15 @@ export function AddExpenseModal({ ctx, params }) {
                   }}
                 />
               </div>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-                {CORES_CAT.map((cor) => (
-                  <button
-                    key={cor}
-                    onClick={() => { vibrar(); setNovaCorCat(cor); }}
-                    aria-label={t("Cor {cor}", { cor })}
-                    style={{
-                      width: 26,
-                      height: 26,
-                      borderRadius: "var(--raio-pilula)",
-                      background: cor,
-                      border:
-                        novaCorCat === cor
-                          ? "3px solid var(--ink)"
-                          : "3px solid transparent",
-                      cursor: "pointer",
-                      flexShrink: 0,
-                    }}
-                  />
-                ))}
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center" }}>
+                <SeletorCores cores={CORES_CAT} valor={novaCorCat} onChange={setNovaCorCat} />
                 <label
                   style={{
-                    width: 26,
-                    height: 26,
+                    width: 28,
+                    height: 28,
                     borderRadius: "var(--raio-pilula)",
                     border: "2px dashed var(--linha)",
+                    boxSizing: "border-box",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
@@ -624,6 +411,7 @@ export function AddExpenseModal({ ctx, params }) {
                     type="color"
                     value={novaCorCat}
                     onChange={(e) => setNovaCorCat(e.target.value)}
+                    aria-label={t("Cor personalizada")}
                     style={{
                       position: "absolute",
                       inset: 0,
@@ -658,7 +446,7 @@ export function AddExpenseModal({ ctx, params }) {
                     background: novoNomeCat.trim() ? "var(--primary)" : "var(--linha)",
                     color: novoNomeCat.trim() ? "#fff" : "var(--muted)",
                     border: "none",
-                    padding: "8px 16px",
+                    padding: "7px 14px",
                     borderRadius: "var(--raio-pilula)",
                     fontWeight: 800,
                     fontSize: 13,
@@ -670,393 +458,91 @@ export function AddExpenseModal({ ctx, params }) {
                 </button>
               </div>
             </div>
-          )}
+          </Expansivel>
         </div>
         </Expansivel>
 
         {/* Aviso de orçamento da categoria */}
         <Expansivel aberto={!!avisoOrc}>
           {avisoOrcVis && (
-          <div
-            style={{
-              marginTop: 12,
-              padding: "10px 14px",
-              borderRadius: "var(--raio-controle)",
-              background: (avisoOrcVis.excedeu ? COR_NEG : COR_AVISO) + "1A",
-              border: `1px solid ${(avisoOrcVis.excedeu ? COR_NEG : COR_AVISO)}55`,
-              display: "flex",
-              alignItems: "center",
-              gap: 10,
-            }}
-          >
-            <Icon
-              name="target"
-              size={18}
-              color={avisoOrcVis.excedeu ? COR_NEG : COR_AVISO}
-              strokeWidth={2.4}
-            />
-            <div
-              style={{
-                fontSize: 12,
-                fontWeight: 700,
-                color: avisoOrcVis.excedeu ? COR_NEG : COR_AVISO,
-                lineHeight: 1.4,
-              }}
-            >
+            <Aviso icone="target" cor={avisoOrcVis.excedeu ? COR_NEG : COR_AVISO}>
               {avisoOrcVis.excedeu
                 ? t("Você excedeu o orçamento de {cat}: {proj} de {lim}.", { cat: t(CATEGORIAS[categoria].nome), proj: fmtBRL(avisoOrcVis.projetado), lim: fmtBRL(avisoOrcVis.limite) })
                 : t("Atenção: {pct}% do orçamento de {cat} ({proj} de {lim}).", { pct: avisoOrcVis.pct.toFixed(0), cat: t(CATEGORIAS[categoria].nome), proj: fmtBRL(avisoOrcVis.projetado), lim: fmtBRL(avisoOrcVis.limite) })}
-            </div>
-          </div>
+            </Aviso>
           )}
         </Expansivel>
 
-        {/* Descrição e data. No desktop dividem a mesma linha — é o único par
-            de campos curtos e sempre vizinhos deste formulário. O resto segue
-            empilhado de propósito: metade das seções aparece e some conforme o
-            preenchimento, e em duas colunas o formulário pularia enquanto está
-            sendo usado. */}
-        <div className="par-campos">
-        {/* Descrição */}
-        <div style={{ marginTop: 12 }}>
-          <input
-            value={descricao}
-            onChange={(e) => setDescricao(e.target.value)}
-            placeholder={t("Descrição (ex: Mercado, Uber...)")}
-            style={{
-              width: "100%",
-              padding: "14px 16px",
-              borderRadius: "var(--raio-bloco)",
-              border: "none",
-              background: "var(--card-2)",
-              outline: "none",
-              fontSize: 14,
-              fontWeight: 600,
-              color: "var(--ink)",
-              fontFamily: "inherit",
-              boxShadow: "0 1px 2px rgba(0,0,0,0.06)",
-              boxSizing: "border-box",
-            }}
-          />
-        </div>
-
-        {/* Data — escondida quando vai criar recorrência (usa dia + fim abaixo) */}
-        {!(ehRecorrente && !editar) && (
-        <div style={{ marginTop: 10 }}>
-          <label
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 10,
-              padding: "12px 16px",
-              borderRadius: "var(--raio-bloco)",
-              background: "var(--card-2)",
-              boxShadow: "0 1px 2px rgba(0,0,0,0.06)",
-            }}
-          >
-            <Icon
-              name="calendar"
-              size={18}
-              color="var(--muted)"
-              strokeWidth={2}
-            />
-            <span
-              style={{
-                flex: 1,
-                fontSize: 13,
-                fontWeight: 700,
-                color: "var(--muted)",
-              }}
-            >
-              {t("Data")}
-            </span>
+        {/* O resto dos campos numa lista agrupada só. O que antes eram blocos
+            soltos (pagamento, cartão, fatura) cabe numa linha que abre quando
+            tocada. */}
+        <ListaAgrupada>
+          <Linha icone="edit" as="label">
             <input
-              type="date"
-              value={data}
-              onChange={(e) => setData(e.target.value)}
-              style={{
-                border: "none",
-                background: "transparent",
-                outline: "none",
-                fontSize: 14,
-                fontWeight: 700,
-                color: "var(--ink)",
-                fontFamily: "inherit",
-              }}
+              value={descricao}
+              onChange={(e) => setDescricao(e.target.value)}
+              placeholder={t("Descrição (ex: Mercado, Uber...)")}
+              aria-label={t("Descrição")}
+              style={estiloInputLinha}
             />
-          </label>
-        </div>
-        )}
-        </div>
+          </Linha>
 
-        {/* Pagamento (só saída) */}
-        <Expansivel aberto={!ehEntrada}>
-        <div style={{ marginTop: 10, display: "flex", gap: 8 }}>
-          {PAGAMENTOS.map((p) => {
-            const sel = pagamento === p;
-            return (
-              <button
-                key={p}
-                className="opcao-suave"
-                onClick={() => { vibrar(); setPagamento(p); }}
-                style={{
-                  flex: 1,
-                  padding: "10px 4px",
-                  borderRadius: "var(--raio-controle)",
-                  border: "none",
-                  background: sel ? "var(--ink)" : "var(--card-2)",
-                  color: sel ? "var(--bg)" : "var(--ink)",
-                  fontSize: 11,
-                  fontWeight: 700,
-                  cursor: "pointer",
-                  fontFamily: "inherit",
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                  gap: 4,
-                  boxShadow: sel ? "none" : "0 1px 2px rgba(0,0,0,0.06)",
-                }}
-              >
-                <Icon
-                  name={iconePagamento(p)}
-                  size={18}
-                  color="currentColor"
-                  strokeWidth={2}
-                />
-                {t(p.replace("Cartão de ", ""))}
-              </button>
-            );
-          })}
-        </div>
-        </Expansivel>
-
-        {/* Qual cartão. Só aparece com cartão cadastrado — sem nenhum, o app
-            segue como antes, com "Cartão de crédito" solto. A opção "Sem
-            cartão" só existe pra tx que já está órfã (sobra de cartão apagado),
-            pra não virar um jeito fácil de criar órfã nova. */}
-        <Expansivel aberto={mostrarCartoes}>
-          <div style={{ marginTop: 10, display: "flex", gap: 8, flexWrap: "wrap" }}>
-            {cartoes.map((c) => {
-              const sel = cartaoId === c.id;
-              const cor = corDoCartao(c);
-              const tinta = sel ? corTextoSobre(cor) : "var(--ink)";
-              return (
-                <button
-                  key={c.id}
-                  className="opcao-suave"
-                  onClick={() => { vibrar(); setCartaoId(c.id); }}
-                  style={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: 6,
-                    padding: "8px 12px",
-                    borderRadius: "var(--raio-pilula)",
-                    border: "none",
-                    background: sel ? cor : "var(--card-2)",
-                    color: tinta,
-                    fontSize: 11.5,
-                    fontWeight: 700,
-                    cursor: "pointer",
-                    fontFamily: "inherit",
-                    boxShadow: sel ? "none" : "0 1px 2px rgba(0,0,0,0.06)",
-                  }}
-                >
-                  <Icon name="card" size={14} color="currentColor" strokeWidth={2.2} />
-                  {c.nome}
-                </button>
-              );
-            })}
-            {editar && editar.pagamento === PAG_CARTAO && !editar.cartaoId && (
-              <button
-                className="opcao-suave"
-                onClick={() => { vibrar(); setCartaoId(null); }}
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: 6,
-                  padding: "8px 12px",
-                  borderRadius: "var(--raio-pilula)",
-                  border: "none",
-                  background: cartaoId === null ? "var(--ink)" : "var(--card-2)",
-                  color: cartaoId === null ? "var(--bg)" : "var(--muted)",
-                  fontSize: 11.5,
-                  fontWeight: 700,
-                  cursor: "pointer",
-                  fontFamily: "inherit",
-                  boxShadow: cartaoId === null ? "none" : "0 1px 2px rgba(0,0,0,0.06)",
-                }}
-              >
-                {t("Sem cartão")}
-              </button>
-            )}
-          </div>
-        </Expansivel>
-
-        {/* Em que fatura essa compra cai — só leitura, não muda a conta do mês */}
-        <Expansivel aberto={!!infoFatura}>
-          {infoFaturaVis && (
-          <div
-            style={{
-              marginTop: 10,
-              padding: "9px 12px",
-              borderRadius: "var(--raio-controle)",
-              background: "var(--surface-sunken)",
-              display: "flex",
-              alignItems: "center",
-              gap: 9,
-            }}
-          >
-            <Icon name="card" size={15} color="var(--muted)" strokeWidth={2.2} />
-            <div style={{ fontSize: 11.5, fontWeight: 600, color: "var(--muted)", lineHeight: 1.45 }}>
-              {t("Entra na fatura de {fatura} · você paga em {vence}", {
-                fatura: t(MESES[Number(infoFaturaVis.fatura.slice(5, 7)) - 1]),
-                vence: t(MESES[Number(infoFaturaVis.vence.slice(5, 7)) - 1]),
-              })}
-            </div>
-          </div>
-          )}
-        </Expansivel>
-
-        {/* Aviso de limite do cartão de crédito */}
-        <Expansivel aberto={!!avisoCartao}>
-          {avisoCartaoVis && (
-          <div
-            style={{
-              marginTop: 10,
-              padding: "10px 14px",
-              borderRadius: "var(--raio-controle)",
-              background: (avisoCartaoVis.excedeu ? COR_NEG : COR_AVISO) + "1A",
-              border: `1px solid ${(avisoCartaoVis.excedeu ? COR_NEG : COR_AVISO)}55`,
-              display: "flex",
-              alignItems: "center",
-              gap: 10,
-            }}
-          >
-            <Icon
-              name="card"
-              size={18}
-              color={avisoCartaoVis.excedeu ? COR_NEG : COR_AVISO}
-              strokeWidth={2.4}
-            />
-            <div
-              style={{
-                fontSize: 12,
-                fontWeight: 700,
-                color: avisoCartaoVis.excedeu ? COR_NEG : COR_AVISO,
-                lineHeight: 1.4,
-              }}
-            >
-              {avisoCartaoVis.excedeu
-                ? t("Você excedeu o limite do {cartao}: {proj} de {lim}.", { cartao: avisoCartaoVis.nome, proj: fmtBRL(avisoCartaoVis.projetado), lim: fmtBRL(avisoCartaoVis.limite) })
-                : t("Atenção: {pct}% do limite do {cartao} ({proj} de {lim}).", { pct: avisoCartaoVis.pct.toFixed(0), cartao: avisoCartaoVis.nome, proj: fmtBRL(avisoCartaoVis.projetado), lim: fmtBRL(avisoCartaoVis.limite) })}
-            </div>
-          </div>
-          )}
-        </Expansivel>
-
-        {/* Aviso: parte do que está na caixinha volta ao salvar esta edição */}
-        <Expansivel aberto={!!avisoGuardado}>
-          {avisoGuardadoVis && (
-          <div
-            style={{
-              marginTop: 10,
-              padding: "10px 14px",
-              borderRadius: "var(--raio-controle)",
-              background: COR_AVISO + "1A",
-              border: `1px solid ${COR_AVISO}55`,
-              display: "flex",
-              alignItems: "center",
-              gap: 10,
-            }}
-          >
-            <Icon name="piggy" size={18} color={COR_AVISO} strokeWidth={2.4} />
-            <div style={{ fontSize: 12, fontWeight: 700, color: COR_AVISO, lineHeight: 1.4 }}>
-              {t("Esta entrada banca {valor} guardados em {caixinhas}. Ao salvar, esse valor sai da caixinha.", {
-                valor: fmtBRL(avisoGuardadoVis.removido),
-                caixinhas: avisoGuardadoVis.detalhes.map((d) => `"${d.nome}"`).join(", "),
-              })}
-            </div>
-          </div>
-          )}
-        </Expansivel>
-
-        {/* Recorrente */}
-        {!editar && (
-          <label
-            style={{
-              marginTop: 10,
-              display: "flex",
-              alignItems: "center",
-              gap: 12,
-              padding: "12px 14px",
-              borderRadius: "var(--raio-bloco)",
-              background: "var(--card-2)",
-              boxShadow: "0 1px 2px rgba(0,0,0,0.06)",
-              cursor: "pointer",
-            }}
-          >
-            <div
-              style={{
-                width: 36,
-                height: 36,
-                borderRadius: "var(--raio-controle)",
-                background: ehRecorrente
-                  ? "color-mix(in oklab, var(--primary) 14%, transparent)"
-                  : "var(--surface-sunken)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                flexShrink: 0,
-                transition: "background .15s",
-              }}
-            >
-              <Icon
-                name="history"
-                size={18}
-                color={ehRecorrente ? "var(--primary)" : "var(--muted)"}
-                strokeWidth={2.2}
+          {/* Data — some quando vai criar recorrência (usa o dia de vencimento) */}
+          <Expansivel aberto={!criandoRec}>
+            <Linha icone="calendar" rotulo={t("Data")} divisoria as="label">
+              <input
+                type="date"
+                value={data}
+                onChange={(e) => setData(e.target.value)}
+                style={estiloValorLinha}
               />
-            </div>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div
-                style={{ fontSize: 13, fontWeight: 800, color: "var(--ink)" }}
-              >
-                {t("Repetir todo mês")}
-              </div>
-              <div
-                style={{
-                  fontSize: 11,
-                  color: "var(--muted)",
-                  fontWeight: 500,
-                  marginTop: 1,
-                  lineHeight: 1.35,
-                }}
-              >
-                {t("Útil para assinaturas, aluguel e mensalidades.")}
-              </div>
-            </div>
-            <Toggle ativo={ehRecorrente} onChange={setEhRecorrente} />
-          </label>
-        )}
+            </Linha>
+          </Expansivel>
 
-        {/* Campos extras de recorrência: dia de vencimento + mês/ano final */}
-        {ehRecorrente && !editar && (
-          <div style={{ marginTop: 10, display: "flex", flexDirection: "column", gap: 10 }}>
-            {/* Reajuste por parcela (só financiamento) */}
-            {ehFinanciamento && (
-              <div
-                style={{
-                  padding: "12px 16px",
-                  borderRadius: "var(--raio-bloco)",
-                  background: "var(--card-2)",
-                  boxShadow: "0 1px 2px rgba(0,0,0,0.06)",
-                }}
-              >
-                <label style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                  <Icon name="chart" size={18} color="var(--muted)" strokeWidth={2} />
-                  <span style={{ flex: 1, fontSize: 13, fontWeight: 700, color: "var(--muted)" }}>
-                    {t("Reajuste por parcela")}
-                  </span>
+          {/* Pagamento (só saída). A fatura em que a compra cai vem de legenda —
+              só leitura, não muda a conta do mês. */}
+          <Expansivel aberto={!ehEntrada}>
+            <LinhaPagamento
+              pagamento={pagamento}
+              onPagamento={setPagamento}
+              cartoes={cartoes}
+              cartaoId={cartaoId}
+              onCartao={setCartaoId}
+              permitirSemCartao={!!editar && editar.pagamento === PAG_CARTAO && !editar.cartaoId}
+              legenda={infoFatura
+                ? t("Entra na fatura de {fatura} · você paga em {vence}", {
+                    fatura: t(MESES[Number(infoFaturaVis.fatura.slice(5, 7)) - 1]),
+                    vence: t(MESES[Number(infoFaturaVis.vence.slice(5, 7)) - 1]),
+                  })
+                : null}
+            />
+          </Expansivel>
+
+          {/* Recorrente */}
+          {!editar && (
+            <Linha icone="history" rotulo={t("Repetir todo mês")} divisoria as="label">
+              <Toggle ativo={ehRecorrente} onChange={setEhRecorrente} />
+            </Linha>
+          )}
+
+          {/* Campos extras de recorrência: reajuste, dia de vencimento, até quando */}
+          {!editar && (
+            <Expansivel aberto={ehRecorrente}>
+              {/* Reajuste por parcela (só financiamento) */}
+              <Expansivel aberto={ehFinanciamento}>
+                <Linha
+                  icone="chart"
+                  rotulo={t("Reajuste por parcela")}
+                  legenda={reajustePct > 0 && valorNum > 0
+                    ? t("1ª parcela {v1} · 2ª {v2} · 3ª {v3}", {
+                        v1: fmtBRL(valorNum),
+                        v2: fmtBRL(valorNum * (1 + reajustePct / 100)),
+                        v3: fmtBRL(valorNum * Math.pow(1 + reajustePct / 100, 2)),
+                      })
+                    : null}
+                  divisoria
+                  as="label"
+                >
                   <input
                     type="text"
                     inputMode="decimal"
@@ -1066,150 +552,81 @@ export function AddExpenseModal({ ctx, params }) {
                     }
                     placeholder="0"
                     aria-label={t("Porcentagem de reajuste por parcela")}
-                    style={{
-                      width: 64,
-                      textAlign: "right",
-                      border: "none",
-                      background: "transparent",
-                      outline: "none",
-                      fontSize: 16,
-                      fontWeight: 800,
-                      color: "var(--ink)",
-                      fontFamily: "inherit",
-                    }}
+                    style={{ ...estiloValorLinha, width: 56, textAlign: "right", fontSize: 16, fontWeight: 800 }}
                   />
                   <span style={{ fontSize: 14, fontWeight: 800, color: "var(--ink)" }}>%</span>
-                </label>
-                {reajustePct > 0 && valorNum > 0 && (
-                  <div
-                    style={{
-                      marginTop: 8,
-                      fontSize: 11,
-                      fontWeight: 600,
-                      color: "var(--muted)",
-                      lineHeight: 1.5,
-                    }}
+                </Linha>
+              </Expansivel>
+
+              {/* Vence todo dia. No crédito não pergunta: a conta entra na
+                  fatura e quem vence é ela. O lançamento fica no dia de hoje
+                  (o padrão de `diaVenc`) todo mês. */}
+              {!ehEntrada && pagamento === PAG_CARTAO ? (
+                <NotaLinha>
+                  {t("Entra na fatura do cartão todo mês — o vencimento é o da fatura.")}
+                </NotaLinha>
+              ) : (
+                <Linha icone="calendar" rotulo={t("Vence todo dia")} divisoria as="label">
+                  <select
+                    value={diaVenc}
+                    onChange={(e) => setDiaVenc(parseInt(e.target.value, 10))}
+                    style={{ ...estiloValorLinha, cursor: "pointer" }}
                   >
-                    {t("1ª parcela {v1} · 2ª {v2} · 3ª {v3}", {
-                      v1: fmtBRL(valorNum),
-                      v2: fmtBRL(valorNum * (1 + reajustePct / 100)),
-                      v3: fmtBRL(valorNum * Math.pow(1 + reajustePct / 100, 2)),
-                    })}
-                  </div>
-                )}
-              </div>
-            )}
+                    {Array.from({ length: 31 }, (_, i) => i + 1).map((d) => (
+                      <option key={d} value={d}>{d}</option>
+                    ))}
+                  </select>
+                </Linha>
+              )}
 
-            {/* Vence todo dia. No crédito não pergunta: a conta entra na
-                fatura e quem vence é ela. O lançamento fica no dia de hoje
-                (o padrão de `diaVenc`) todo mês. */}
-            {!ehEntrada && pagamento === PAG_CARTAO ? (
-              <div
-                style={{
-                  padding: "12px 16px",
-                  borderRadius: "var(--raio-bloco)",
-                  background: "var(--card-2)",
-                  fontSize: 12,
-                  fontWeight: 600,
-                  color: "var(--muted)",
-                  lineHeight: 1.45,
-                }}
-              >
-                {t("Entra na fatura do cartão todo mês — o vencimento é o da fatura.")}
-              </div>
-            ) : (
-            <label
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 10,
-                padding: "12px 16px",
-                borderRadius: "var(--raio-bloco)",
-                background: "var(--card-2)",
-                boxShadow: "0 1px 2px rgba(0,0,0,0.06)",
-              }}
-            >
-              <Icon name="calendar" size={18} color="var(--muted)" strokeWidth={2} />
-              <span style={{ flex: 1, fontSize: 13, fontWeight: 700, color: "var(--muted)" }}>
-                {t("Vence todo dia")}
-              </span>
-              <select
-                value={diaVenc}
-                onChange={(e) => setDiaVenc(parseInt(e.target.value, 10))}
-                style={{
-                  border: "none",
-                  background: "transparent",
-                  outline: "none",
-                  fontSize: 14,
-                  fontWeight: 700,
-                  color: "var(--ink)",
-                  fontFamily: "inherit",
-                  cursor: "pointer",
-                }}
-              >
-                {Array.from({ length: 31 }, (_, i) => i + 1).map((d) => (
-                  <option key={d} value={d}>{d}</option>
-                ))}
-              </select>
-            </label>
-            )}
+              {/* Até mês/ano — dois selects, então a linha não é label (o toque
+                  não saberia em qual cair). */}
+              <Linha icone="history" rotulo={t("Até")} divisoria>
+                <select
+                  value={fimMes}
+                  onChange={(e) => setFimMes(parseInt(e.target.value, 10))}
+                  style={{ ...estiloValorLinha, cursor: "pointer" }}
+                >
+                  {MESES.map((nome, idx) => (
+                    <option key={idx} value={idx + 1}>{t(nome)}</option>
+                  ))}
+                </select>
+                <select
+                  value={fimAno}
+                  onChange={(e) => setFimAno(parseInt(e.target.value, 10))}
+                  style={{ ...estiloValorLinha, cursor: "pointer" }}
+                >
+                  {Array.from({ length: 11 }, (_, i) => _hoje.getFullYear() + i).map((a) => (
+                    <option key={a} value={a}>{a}</option>
+                  ))}
+                </select>
+              </Linha>
+            </Expansivel>
+          )}
+        </ListaAgrupada>
 
-            {/* Até mês/ano */}
-            <label
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 10,
-                padding: "12px 16px",
-                borderRadius: "var(--raio-bloco)",
-                background: "var(--card-2)",
-                boxShadow: "0 1px 2px rgba(0,0,0,0.06)",
-              }}
-            >
-              <Icon name="history" size={18} color="var(--muted)" strokeWidth={2} />
-              <span style={{ flex: 1, fontSize: 13, fontWeight: 700, color: "var(--muted)" }}>
-                {t("Até")}
-              </span>
-              <select
-                value={fimMes}
-                onChange={(e) => setFimMes(parseInt(e.target.value, 10))}
-                style={{
-                  border: "none",
-                  background: "transparent",
-                  outline: "none",
-                  fontSize: 14,
-                  fontWeight: 700,
-                  color: "var(--ink)",
-                  fontFamily: "inherit",
-                  cursor: "pointer",
-                  marginRight: 6,
-                }}
-              >
-                {MESES.map((nome, idx) => (
-                  <option key={idx} value={idx + 1}>{t(nome)}</option>
-                ))}
-              </select>
-              <select
-                value={fimAno}
-                onChange={(e) => setFimAno(parseInt(e.target.value, 10))}
-                style={{
-                  border: "none",
-                  background: "transparent",
-                  outline: "none",
-                  fontSize: 14,
-                  fontWeight: 700,
-                  color: "var(--ink)",
-                  fontFamily: "inherit",
-                  cursor: "pointer",
-                }}
-              >
-                {Array.from({ length: 11 }, (_, i) => _hoje.getFullYear() + i).map((a) => (
-                  <option key={a} value={a}>{a}</option>
-                ))}
-              </select>
-            </label>
-          </div>
-        )}
+        {/* Aviso de limite do cartão de crédito */}
+        <Expansivel aberto={!!avisoCartao}>
+          {avisoCartaoVis && (
+            <Aviso icone="card" cor={avisoCartaoVis.excedeu ? COR_NEG : COR_AVISO}>
+              {avisoCartaoVis.excedeu
+                ? t("Você excedeu o limite do {cartao}: {proj} de {lim}.", { cartao: avisoCartaoVis.nome, proj: fmtBRL(avisoCartaoVis.projetado), lim: fmtBRL(avisoCartaoVis.limite) })
+                : t("Atenção: {pct}% do limite do {cartao} ({proj} de {lim}).", { pct: avisoCartaoVis.pct.toFixed(0), cartao: avisoCartaoVis.nome, proj: fmtBRL(avisoCartaoVis.projetado), lim: fmtBRL(avisoCartaoVis.limite) })}
+            </Aviso>
+          )}
+        </Expansivel>
+
+        {/* Aviso: parte do que está na caixinha volta ao salvar esta edição */}
+        <Expansivel aberto={!!avisoGuardado}>
+          {avisoGuardadoVis && (
+            <Aviso icone="piggy" cor={COR_AVISO}>
+              {t("Esta entrada banca {valor} guardados em {caixinhas}. Ao salvar, esse valor sai da caixinha.", {
+                valor: fmtBRL(avisoGuardadoVis.removido),
+                caixinhas: avisoGuardadoVis.detalhes.map((d) => `"${d.nome}"`).join(", "),
+              })}
+            </Aviso>
+          )}
+        </Expansivel>
     </ModalOverlay>
     {excluirCat && (
       <ConfirmModal
@@ -1222,119 +639,5 @@ export function AddExpenseModal({ ctx, params }) {
       />
     )}
     </>
-  );
-}
-
-// ─────────── Botão de categoria com long-press / double-click ───────────
-// Comportamento:
-//   • Mobile (PWA): segurar 2s na categoria personalizada → modal de exclusão.
-//   • Desktop: duplo-clique → modal de exclusão.
-//   • Categorias built-in (sem flag custom) ignoram esses gestos.
-//   • Em ambos os casos, um clique normal continua selecionando a categoria.
-const LONG_PRESS_MS = 2000;
-const MOVE_TOLERANCE = 10; // px — se o dedo arrasta mais que isso, cancela.
-
-function CategoriaBtn({
-  catId,
-  cat,
-  selecionado,
-  ehDesktop,
-  podeExcluir,
-  onSelecionar,
-  onPedirExcluir,
-}) {
-  const t = useT();
-  const timerRef = React.useRef(null);
-  const longPressFiredRef = React.useRef(false);
-  const inicioRef = React.useRef({ x: 0, y: 0 });
-
-  const limpar = () => {
-    if (timerRef.current) {
-      clearTimeout(timerRef.current);
-      timerRef.current = null;
-    }
-  };
-
-  const iniciarLongPress = (e) => {
-    if (!podeExcluir || ehDesktop) return;
-    longPressFiredRef.current = false;
-    inicioRef.current = { x: e.clientX || 0, y: e.clientY || 0 };
-    limpar();
-    timerRef.current = setTimeout(() => {
-      longPressFiredRef.current = true;
-      vibrar(28);
-      onPedirExcluir();
-    }, LONG_PRESS_MS);
-  };
-
-  const moverPossivelCancelar = (e) => {
-    if (!timerRef.current) return;
-    const dx = (e.clientX || 0) - inicioRef.current.x;
-    const dy = (e.clientY || 0) - inicioRef.current.y;
-    if (dx * dx + dy * dy > MOVE_TOLERANCE * MOVE_TOLERANCE) limpar();
-  };
-
-  const aoClicar = (e) => {
-    // Se o long-press já disparou, não seleciona a categoria.
-    if (longPressFiredRef.current) {
-      e.preventDefault();
-      e.stopPropagation();
-      longPressFiredRef.current = false;
-      return;
-    }
-    onSelecionar();
-  };
-
-  const aoDuploClicar = () => {
-    if (!podeExcluir || !ehDesktop) return;
-    onPedirExcluir();
-  };
-
-  // Cleanup ao desmontar.
-  React.useEffect(() => () => limpar(), []);
-
-  return (
-    <button
-      onClick={aoClicar}
-      onDoubleClick={aoDuploClicar}
-      onPointerDown={iniciarLongPress}
-      onPointerMove={moverPossivelCancelar}
-      onPointerUp={limpar}
-      onPointerCancel={limpar}
-      onPointerLeave={limpar}
-      onContextMenu={(e) => podeExcluir && e.preventDefault()}
-      title={podeExcluir ? (ehDesktop ? t('Duplo-clique para excluir') : t('Segure 2s para excluir')) : undefined}
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        gap: 6,
-        padding: "8px 10px 6px",
-        borderRadius: "var(--raio-bloco)",
-        border: "none",
-        background: selecionado ? "var(--card-2)" : "transparent",
-        boxShadow: selecionado
-          ? "0 2px 8px rgba(0,0,0,0.18), 0 0 0 1.5px " + cat.cor
-          : "none",
-        cursor: "pointer",
-        minWidth: 72,
-        flexShrink: 0,
-        WebkitTouchCallout: "none",
-        WebkitUserSelect: "none",
-        userSelect: "none",
-        touchAction: "manipulation",
-      }}
-    >
-      <CatChip catId={catId} size={32} raised />
-      <span
-        style={{
-          fontSize: 10,
-          fontWeight: 700,
-          color: "var(--ink)",
-        }}
-      >
-        {t(cat.nome)}
-      </span>
-    </button>
   );
 }

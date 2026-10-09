@@ -8,57 +8,37 @@
 // exatamente o app de antes do cadastro.
 
 import React from "react";
-import { createPortal } from "react-dom";
-import { useFecharComEsc } from "../../ui/modal-base.jsx";
+import { ModalOverlay } from "../../ui/modal-base.jsx";
 import { Icon } from "../../ui/icons.jsx";
-import { Z_MODAL } from "../../ui/modal-base.jsx";
-import { COR_NEG } from "../../lib/colors.js";
+import {
+  BotoesDialogo,
+  IconeDialogo,
+  LinhaOpcao,
+  ListaAgrupada,
+  TituloDialogo,
+} from "../../ui/form-lista.jsx";
+import { COR_NEG, COR_NEG_FUNDO } from "../../lib/colors.js";
 import { corDoCartao, corTextoSobre } from "../../lib/cartoes.js";
+import { vibrar } from "../../lib/haptics.js";
 import { useT } from "../../lib/i18n.jsx";
 
-function Opcao({ cor, titulo, legenda, selecionado, onClick }) {
+// O quadradinho do cartão no começo da linha, na cor dele.
+function MiniCartao({ cor }) {
   return (
-    <button
-      onClick={onClick}
+    <span
       style={{
-        width: "100%",
+        width: 26,
+        height: 26,
+        borderRadius: "var(--raio-compacto)",
+        background: cor,
         display: "flex",
         alignItems: "center",
-        gap: 10,
-        padding: "12px 14px",
-        borderRadius: "var(--raio-bloco)",
-        border: selecionado ? "1.5px solid var(--primary)" : "1.5px solid transparent",
-        background: "var(--card-2)",
-        cursor: "pointer",
-        fontFamily: "inherit",
-        textAlign: "left",
-        marginBottom: 8,
+        justifyContent: "center",
+        flexShrink: 0,
       }}
     >
-      <div
-        style={{
-          width: 30,
-          height: 30,
-          borderRadius: "var(--raio-compacto)",
-          background: cor,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          flexShrink: 0,
-        }}
-      >
-        <Icon name="card" size={15} color={corTextoSobre(cor)} strokeWidth={2.2} />
-      </div>
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: 13, fontWeight: 800, color: "var(--ink)" }}>{titulo}</div>
-        {legenda && (
-          <div style={{ fontSize: 11, fontWeight: 600, color: "var(--muted)", marginTop: 1 }}>
-            {legenda}
-          </div>
-        )}
-      </div>
-      {selecionado && <Icon name="check" size={16} color="var(--primary)" strokeWidth={2.6} />}
-    </button>
+      <Icon name="card" size={14} color={corTextoSobre(cor)} strokeWidth={2.2} />
+    </span>
   );
 }
 
@@ -66,120 +46,51 @@ export function ModalApagarCartao({ cartao, outros, quantidade, onFechar, onConf
   const t = useT();
   const [destino, setDestino] = React.useState(outros[0]?.id ?? null);
   const temLancamentos = quantidade > 0;
+  const escolher = (id) => { vibrar(); setDestino(id); };
 
-  useFecharComEsc(onFechar);
+  return (
+    <ModalOverlay onClose={onFechar} maxWidth={400} padding="22px 20px 18px">
+      <IconeDialogo icone="trash" cor={COR_NEG} fundo={COR_NEG_FUNDO} />
+      <TituloDialogo
+        titulo={t("Apagar {nome}?", { nome: cartao.nome })}
+        mensagem={!temLancamentos
+          ? t("Nenhum lançamento está preso a este cartão.")
+          : outros.length === 0
+            ? t("{n} lançamentos estão neste cartão. Eles continuam no histórico como crédito, sem cartão — nada é apagado e nenhum valor muda.", { n: quantidade })
+            : t("{n} lançamentos estão neste cartão. Escolha pra onde eles vão — nada é apagado e nenhum valor muda.", { n: quantidade })}
+      />
 
-  return createPortal(
-    <div
-      onClick={onFechar}
-      style={{
-        position: "fixed",
-        inset: 0,
-        height: "100dvh",
-        zIndex: Z_MODAL,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: 20,
-        background: "rgba(20, 16, 24, 0.45)",
-        backdropFilter: "blur(12px) saturate(140%)",
-        WebkitBackdropFilter: "blur(12px) saturate(140%)",
-        animation: "fadeIn .28s ease-out",
-      }}
-    >
-      <div
-        onClick={(e) => e.stopPropagation()}
-        style={{
-          width: "100%",
-          maxWidth: 440,
-          maxHeight: "calc(100dvh - 40px)",
-          overflowY: "auto",
-          background: "var(--bg)",
-          borderRadius: "var(--raio-superficie)",
-          padding: "22px 20px 20px",
-          boxShadow: "0 24px 60px rgba(0,0,0,0.28), 0 4px 12px rgba(0,0,0,0.08)",
-          animation: "scaleIn .34s cubic-bezier(0.22, 1, 0.36, 1)",
-        }}
-      >
-        <div style={{ fontSize: 17, fontWeight: 800, color: "var(--ink)", letterSpacing: "-0.01em" }}>
-          {t("Apagar {nome}?", { nome: cartao.nome })}
-        </div>
-
-        <div
-          style={{
-            fontSize: 13,
-            color: "var(--muted)",
-            fontWeight: 600,
-            lineHeight: 1.5,
-            marginTop: 8,
-          }}
-        >
-          {!temLancamentos
-            ? t("Nenhum lançamento está preso a este cartão.")
-            : outros.length === 0
-              ? t("{n} lançamentos estão neste cartão. Eles continuam no histórico como crédito, sem cartão — nada é apagado e nenhum valor muda.", { n: quantidade })
-              : t("{n} lançamentos estão neste cartão. Escolha pra onde eles vão — nada é apagado e nenhum valor muda.", { n: quantidade })}
-        </div>
-
-        {temLancamentos && outros.length > 0 && (
-          <div style={{ marginTop: 16 }}>
-            {outros.map((c) => (
-              <Opcao
-                key={c.id}
-                cor={corDoCartao(c)}
-                titulo={t("Mover para {nome}", { nome: c.nome })}
-                selecionado={destino === c.id}
-                onClick={() => setDestino(c.id)}
-              />
-            ))}
-            <Opcao
-              cor="var(--muted)"
-              titulo={t("Deixar sem cartão")}
-              legenda={t("Continuam como crédito, sem cartão definido")}
-              selecionado={destino === null}
-              onClick={() => setDestino(null)}
+      {temLancamentos && outros.length > 0 && (
+        <ListaAgrupada style={{ marginTop: 14 }}>
+          {outros.map((c, i) => (
+            <LinhaOpcao
+              key={c.id}
+              inicio={<MiniCartao cor={corDoCartao(c)} />}
+              rotulo={t("Mover para {nome}", { nome: c.nome })}
+              selecionado={destino === c.id}
+              divisoria={i > 0}
+              onClick={() => escolher(c.id)}
             />
-          </div>
-        )}
+          ))}
+          <LinhaOpcao
+            inicio={<MiniCartao cor="var(--muted)" />}
+            rotulo={t("Deixar sem cartão")}
+            legenda={t("Continuam como crédito, sem cartão definido")}
+            selecionado={destino === null}
+            divisoria
+            onClick={() => escolher(null)}
+          />
+        </ListaAgrupada>
+      )}
 
-        <div style={{ display: "flex", gap: 10, marginTop: 20 }}>
-          <button
-            onClick={onFechar}
-            style={{
-              flex: 1,
-              padding: "13px",
-              borderRadius: "var(--raio-bloco)",
-              border: "none",
-              background: "var(--card-2)",
-              color: "var(--ink)",
-              fontSize: 14,
-              fontWeight: 800,
-              cursor: "pointer",
-              fontFamily: "inherit",
-            }}
-          >
-            {t("Cancelar")}
-          </button>
-          <button
-            onClick={() => onConfirmar(outros.length > 0 ? destino : null)}
-            style={{
-              flex: 1,
-              padding: "13px",
-              borderRadius: "var(--raio-bloco)",
-              border: "none",
-              background: COR_NEG,
-              color: "#fff",
-              fontSize: 14,
-              fontWeight: 800,
-              cursor: "pointer",
-              fontFamily: "inherit",
-            }}
-          >
-            {t("Apagar")}
-          </button>
-        </div>
-      </div>
-    </div>,
-    document.body,
+      <BotoesDialogo
+        cancelar={{ texto: t("Cancelar"), onClick: onFechar }}
+        confirmar={{
+          texto: t("Apagar"),
+          onClick: () => onConfirmar(outros.length > 0 ? destino : null),
+          cor: COR_NEG,
+        }}
+      />
+    </ModalOverlay>
   );
 }

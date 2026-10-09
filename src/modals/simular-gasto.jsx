@@ -13,10 +13,10 @@ import { Icon } from "../ui/icons.jsx";
 import { ModalOverlay } from "../ui/modal-base.jsx";
 import { vibrar } from "../lib/haptics.js";
 import { COR_POS, COR_NEG, COR_AVISO } from "../lib/colors.js";
-import { formatarValorDigitado, parseValorBR, valorZero } from "../lib/money-input.js";
-import { simboloMoeda } from "../lib/moeda.js";
+import { parseValorBR, valorZero } from "../lib/money-input.js";
 import { mesShift } from "../lib/datas.js";
 import { useT } from "../lib/i18n.jsx";
+import { Aviso, Linha, ListaAgrupada, ValorGrande, estiloValorLinha } from "../ui/form-lista.jsx";
 
 // Até onde dá pra adiar o início: um ano pra frente.
 const INICIO_MAX = 12;
@@ -50,7 +50,6 @@ export function SimularGastoModal({
   const restanteIni = saldoInicio.restante;
   const orcTotalIni = saldoInicio.orcTotal;
 
-  const aoDigitar = (texto) => setValor(formatarValorDigitado(texto));
   const valorNum = parseValorBR(valor);
   const n = Math.max(1, Math.min(48, parcelas));
   const valorParcela = valorNum / n;
@@ -214,12 +213,17 @@ export function SimularGastoModal({
     vibrar(8);
     setInicio((i) => Math.max(0, Math.min(INICIO_MAX, i + delta)));
   };
+  const passoParcelas = (delta) => {
+    vibrar(8);
+    setParcelas((p) => Math.max(1, Math.min(48, p + delta)));
+  };
+  // Botão redondo dos passos (− / + e ‹ / ›), do tamanho da linha.
   const botaoPasso = (desligado) => ({
-    width: 36,
-    height: 36,
-    borderRadius: "var(--raio-controle)",
+    width: 30,
+    height: 30,
+    borderRadius: "var(--raio-pilula)",
     border: "none",
-    background: "var(--card-2)",
+    background: "var(--card)",
     color: "var(--ink)",
     cursor: desligado ? "default" : "pointer",
     opacity: desligado ? 0.4 : 1,
@@ -227,42 +231,39 @@ export function SimularGastoModal({
     alignItems: "center",
     justifyContent: "center",
     fontFamily: "inherit",
+    flexShrink: 0,
+    padding: 0,
   });
+  const valorPasso = {
+    minWidth: 58,
+    textAlign: "center",
+    fontSize: 13,
+    fontWeight: 800,
+    color: "var(--primary)",
+    fontVariantNumeric: "tabular-nums",
+  };
 
   return (
-    <ModalOverlay onClose={fechar} maxWidth={420}>
-        {/* Header */}
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            marginBottom: 8,
-          }}
-        >
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+    <ModalOverlay onClose={fechar} maxWidth={420} padding="14px 18px 20px">
+        {/* Cabeçalho: é uma ferramenta, não um formulário — não há o que
+            salvar, só fechar. */}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
             <div
               style={{
                 width: 28,
                 height: 28,
                 borderRadius: "var(--raio-pilula)",
-                background:
-                  "color-mix(in oklab, var(--primary) 14%, transparent)",
+                background: "color-mix(in oklab, var(--primary) 14%, transparent)",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
+                flexShrink: 0,
               }}
             >
-              <Icon name="target" size={15} color="var(--primary)" strokeWidth={2.4} />
+              <Icon name="coin" size={16} color="var(--primary)" strokeWidth={2.2} />
             </div>
-            <div
-              style={{
-                fontSize: 15,
-                fontWeight: 800,
-                color: "var(--ink)",
-                letterSpacing: "-0.01em",
-              }}
-            >
+            <div style={{ fontSize: 16, fontWeight: 800, color: "var(--ink)", letterSpacing: "-0.01em" }}>
               {t("Cabe no orçamento?")}
             </div>
           </div>
@@ -270,259 +271,110 @@ export function SimularGastoModal({
             onClick={fechar}
             aria-label={t("Fechar")}
             style={{
-              background: "transparent",
+              width: 30,
+              height: 30,
+              borderRadius: "var(--raio-pilula)",
+              background: "var(--card-2)",
               border: "none",
               color: "var(--muted)",
               cursor: "pointer",
-              padding: 4,
+              padding: 0,
               display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              flexShrink: 0,
             }}
           >
-            <Icon name="close" size={20} />
+            <Icon name="close" size={16} />
           </button>
         </div>
-
-        <div
-          style={{
-            fontSize: 12,
-            color: "var(--muted)",
-            fontWeight: 500,
-            marginBottom: 6,
-          }}
-        >
+        <div style={{ fontSize: 12, color: "var(--muted)", fontWeight: 500, marginTop: 4 }}>
           {t("Simule um gasto e veja como ele afeta seu mês.")}
         </div>
 
-        {/* Valor — input "calculadora" */}
-        <label
-          style={{
-            display: "block",
-            textAlign: "center",
-            padding: "10px 0 4px",
-            cursor: "text",
-            position: "relative",
-          }}
-        >
-          <div
-            style={{
-              fontSize: 11,
-              fontWeight: 700,
-              color: "var(--muted)",
-              textTransform: "uppercase",
-              letterSpacing: 0.6,
-            }}
-          >
-            {t("Valor da compra")}
-          </div>
-          <div
-            style={{
-              fontSize: 42,
-              fontWeight: 800,
-              color: "var(--ink)",
-              letterSpacing: "-0.04em",
-              marginTop: 4,
-              fontVariantNumeric: "tabular-nums",
-            }}
-          >
-            <span
-              style={{
-                fontSize: 22,
-                color: "var(--muted)",
-                marginRight: 6,
-                verticalAlign: "top",
-              }}
-            >
-              {simboloMoeda()}
-            </span>
-            {valor}
-          </div>
-          <input
-            type="text"
-            inputMode="numeric"
-            pattern="[0-9]*"
-            value={valor.replace(",", "")}
-            onChange={(e) => aoDigitar(e.target.value)}
-            aria-label={t("Valor da compra")}
-            style={{
-              position: "absolute",
-              inset: 0,
-              opacity: 0,
-              border: "none",
-              background: "transparent",
-              outline: "none",
-              fontSize: 16,
-              cursor: "text",
-            }}
-          />
-        </label>
+        <ValorGrande valor={valor} onChange={setValor} ariaLabel={t("Valor da compra")} />
 
-        {/* Parcelas */}
-        <div style={{ marginTop: 14 }}>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              marginBottom: 8,
-            }}
+        <ListaAgrupada style={{ marginTop: 14 }}>
+          {/* Parcelas: os passos acertam o número; a régua embaixo dá o salto
+              grande de uma vez. */}
+          <Linha
+            icone="card"
+            rotulo={t("Parcelas")}
+            legenda={n === 1 ? t("à vista") : t("{n}× de {vp}", { n, vp: fmtBRL(valorParcela) })}
           >
-            <div
-              style={{
-                fontSize: 13,
-                fontWeight: 700,
-                color: "var(--ink)",
-              }}
-            >
-              {t("Parcelas")}
-            </div>
-            <div
-              style={{
-                fontSize: 13,
-                fontWeight: 800,
-                color: "var(--primary)",
-                fontVariantNumeric: "tabular-nums",
-              }}
-            >
-              {n === 1 ? t("à vista") : t("{n}× de {vp}", { n, vp: fmtBRL(valorParcela) })}
-            </div>
-          </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <button
-              onClick={() => {
-                vibrar(8);
-                setParcelas((p) => Math.max(1, p - 1));
-              }}
-              aria-label={t("Diminuir parcelas")}
-              style={{
-                width: 36,
-                height: 36,
-                borderRadius: "var(--raio-controle)",
-                border: "none",
-                background: "var(--card-2)",
-                color: "var(--ink)",
-                cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontFamily: "inherit",
-              }}
-            >
-              <Icon name="minus" size={18} />
+            <button onClick={() => passoParcelas(-1)} disabled={n <= 1} aria-label={t("Diminuir parcelas")} style={botaoPasso(n <= 1)}>
+              <Icon name="minus" size={15} />
             </button>
+            <div style={{ ...valorPasso, minWidth: 30, color: "var(--ink)" }}>{n}×</div>
+            <button onClick={() => passoParcelas(1)} disabled={n >= 48} aria-label={t("Aumentar parcelas")} style={botaoPasso(n >= 48)}>
+              <Icon name="plus" size={15} />
+            </button>
+          </Linha>
+          <div style={{ padding: "0 14px 10px 42px" }}>
             <input
               type="range"
               min={1}
               max={24}
               step={1}
-              value={n}
+              value={Math.min(n, 24)}
               onChange={(e) => setParcelas(parseInt(e.target.value, 10))}
-              style={{ flex: 1, accentColor: "var(--primary)" }}
+              style={{ width: "100%", accentColor: "var(--primary)", margin: 0 }}
               aria-label={t("Quantidade de parcelas")}
             />
-            <button
-              onClick={() => {
-                vibrar(8);
-                setParcelas((p) => Math.min(48, p + 1));
-              }}
-              aria-label={t("Aumentar parcelas")}
-              style={{
-                width: 36,
-                height: 36,
-                borderRadius: "var(--raio-controle)",
-                border: "none",
-                background: "var(--card-2)",
-                color: "var(--ink)",
-                cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontFamily: "inherit",
-              }}
-            >
-              <Icon name="plus" size={18} />
-            </button>
           </div>
-        </div>
 
-        {/* Começando em */}
-        <div
-          style={{
-            marginTop: 14,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            gap: 10,
-          }}
-        >
-          <div style={{ fontSize: 13, fontWeight: 700, color: "var(--ink)" }}>
-            {t("Começando em")}
-          </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <button
-              onClick={() => passoInicio(-1)}
-              disabled={ehAgora}
-              aria-label={t("Mês anterior")}
-              style={botaoPasso(ehAgora)}
-            >
-              <Icon name="arrow-left" size={16} />
+          <Linha icone="calendar" rotulo={t("Começando em")} divisoria>
+            <button onClick={() => passoInicio(-1)} disabled={ehAgora} aria-label={t("Mês anterior")} style={botaoPasso(ehAgora)}>
+              <Icon name="arrow-left" size={14} />
             </button>
-            <div
-              aria-live="polite"
-              style={{
-                minWidth: 72,
-                textAlign: "center",
-                fontSize: 13,
-                fontWeight: 800,
-                color: "var(--primary)",
-                fontVariantNumeric: "tabular-nums",
-              }}
-            >
+            <div aria-live="polite" style={valorPasso}>
               {ehAgora ? t("este mês") : rotuloInicio}
             </div>
-            <button
-              onClick={() => passoInicio(1)}
-              disabled={inicio >= INICIO_MAX}
-              aria-label={t("Próximo mês")}
-              style={botaoPasso(inicio >= INICIO_MAX)}
-            >
-              <Icon name="arrow-right" size={16} />
+            <button onClick={() => passoInicio(1)} disabled={inicio >= INICIO_MAX} aria-label={t("Próximo mês")} style={botaoPasso(inicio >= INICIO_MAX)}>
+              <Icon name="arrow-right" size={14} />
             </button>
-          </div>
-        </div>
+          </Linha>
+
+          {/* Contexto: orçamento do mês de início */}
+          {orcTotalIni > 0 && (
+            <Linha
+              icone="wallet"
+              rotulo={ehAgora ? t("Restante deste mês") : t("Previsto para {mes}", { mes: rotuloInicio })}
+              divisoria
+            >
+              <span
+                style={{
+                  ...estiloValorLinha,
+                  color: restanteIni >= 0 ? COR_POS : COR_NEG,
+                  fontVariantNumeric: "tabular-nums",
+                }}
+              >
+                {fmtBRL(restanteIni)}
+              </span>
+            </Linha>
+          )}
+        </ListaAgrupada>
 
         {/* Análise textual */}
-        <div style={{ marginTop: 18 }}>
+        <div style={{ marginTop: 12 }}>
           {valorNum <= 0 ? (
-            <div
-              style={{
-                padding: "16px 14px",
-                borderRadius: "var(--raio-bloco)",
-                background: "var(--card-2)",
-                color: "var(--muted)",
-                fontSize: 13,
-                fontWeight: 500,
-                textAlign: "center",
-                lineHeight: 1.45,
-              }}
-            >
-              {t("Digite um valor para ver a análise.")}
-            </div>
+            <Aviso icone="sparkle">{t("Digite um valor para ver a análise.")}</Aviso>
           ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
               {blocos.map((b, i) => (
                 <div
                   key={i}
                   style={{
                     display: "flex",
                     gap: 10,
-                    padding: "12px 12px",
-                    borderRadius: "var(--raio-bloco)",
+                    padding: "10px 12px",
+                    borderRadius: "var(--raio-controle)",
                     background: `color-mix(in oklab, ${b.tom} 10%, transparent)`,
                   }}
                 >
                   <div
                     style={{
-                      width: 6,
+                      width: 4,
                       borderRadius: "var(--raio-pilula)",
                       background: b.tom,
                       flexShrink: 0,
@@ -530,7 +382,7 @@ export function SimularGastoModal({
                   />
                   <div
                     style={{
-                      fontSize: 13,
+                      fontSize: 12.5,
                       lineHeight: 1.5,
                       color: "var(--ink)",
                       fontWeight: 500,
@@ -543,33 +395,6 @@ export function SimularGastoModal({
             </div>
           )}
         </div>
-
-        {/* Contexto: orçamento do mês de início */}
-        {orcTotalIni > 0 && (
-          <div
-            style={{
-              marginTop: 14,
-              padding: "10px 12px",
-              borderRadius: "var(--raio-controle)",
-              background: "var(--card-2)",
-              display: "flex",
-              justifyContent: "space-between",
-              fontSize: 12,
-              color: "var(--muted)",
-              fontWeight: 600,
-            }}
-          >
-            <span>{ehAgora ? t("Restante deste mês") : t("Previsto para {mes}", { mes: rotuloInicio })}</span>
-            <span
-              style={{
-                color: restanteIni >= 0 ? COR_POS : COR_NEG,
-                fontVariantNumeric: "tabular-nums",
-              }}
-            >
-              {fmtBRL(restanteIni)}
-            </span>
-          </div>
-        )}
     </ModalOverlay>
   );
 }

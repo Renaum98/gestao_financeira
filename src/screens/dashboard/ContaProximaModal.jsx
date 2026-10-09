@@ -2,8 +2,15 @@
 // vencer", permitindo marcá-la como paga.
 
 import { CATEGORIAS, fmtBRL } from "../../data.js";
-import { Icon } from "../../ui/icons.jsx";
 import { ModalOverlay } from "../../ui/modal-base.jsx";
+import {
+  BotoesDialogo,
+  IconeDialogo,
+  Linha,
+  ListaAgrupada,
+  TituloDialogo,
+  estiloValorLinha,
+} from "../../ui/form-lista.jsx";
 import { COR_POS } from "../../lib/colors.js";
 import { useT } from "../../lib/i18n.jsx";
 
@@ -27,119 +34,29 @@ export function ContaProximaModal({ tx, onFechar, onMarcarPago }) {
       maxWidth={380}
       scrollable={false}
       center
-      borderRadius="var(--raio-superficie)"
-      padding="22px 22px 18px"
+      padding="22px 20px 18px"
     >
-      <div
-        style={{
-          width: 56,
-          height: 56,
-          borderRadius: "var(--raio-pilula)",
-          background: "color-mix(in oklab, var(--primary) 14%, transparent)",
-          margin: "0 auto 14px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <Icon name="calendar" size={26} color="var(--primary)" strokeWidth={2.2} />
-      </div>
+      <IconeDialogo icone="calendar" />
+      <TituloDialogo
+        titulo={tx.descricao}
+        mensagem={`${dd}/${String(mm).padStart(2, "0")} · ${t(cat.nome)}`}
+      />
 
-      <div style={{ fontSize: 17, fontWeight: 800, color: "var(--ink)", letterSpacing: "-0.02em" }}>
-        {tx.descricao}
-      </div>
-      <div style={{ fontSize: 13, color: "var(--muted)", fontWeight: 600, marginTop: 4 }}>
-        {dd}/{String(mm).padStart(2, "0")} · {t(cat.nome)}
-      </div>
-
-      <div
-        style={{
-          marginTop: 14,
-          padding: "12px 14px",
-          borderRadius: "var(--raio-bloco)",
-          background: "var(--card-2)",
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-        }}
-      >
-        <div style={{ textAlign: "left" }}>
-          <div
-            style={{
-              fontSize: 11,
-              fontWeight: 700,
-              color: "var(--muted)",
-              textTransform: "uppercase",
-              letterSpacing: 0.4,
-            }}
-          >
-            {t("Valor")}
-          </div>
-          <div style={{ fontSize: 18, fontWeight: 800, color: "var(--ink)", marginTop: 2 }}>
+      <ListaAgrupada style={{ marginTop: 14 }}>
+        <Linha icone="wallet" rotulo={t("Valor")}>
+          <span style={{ ...estiloValorLinha, fontSize: 16, fontWeight: 800, fontVariantNumeric: "tabular-nums" }}>
             {fmtBRL(tx.valor)}
-          </div>
-        </div>
-        <div style={{ textAlign: "right" }}>
-          <div
-            style={{
-              fontSize: 11,
-              fontWeight: 700,
-              color: "var(--muted)",
-              textTransform: "uppercase",
-              letterSpacing: 0.4,
-            }}
-          >
-            {t("Prazo")}
-          </div>
-          <div style={{ fontSize: 13, fontWeight: 700, color: "var(--ink)", marginTop: 2 }}>
-            {rotuloPrazo}
-          </div>
-        </div>
-      </div>
+          </span>
+        </Linha>
+        <Linha icone="bell" rotulo={t("Prazo")} divisoria>
+          <span style={estiloValorLinha}>{rotuloPrazo}</span>
+        </Linha>
+      </ListaAgrupada>
 
-      <div style={{ display: "flex", gap: 10, marginTop: 20 }}>
-        <button
-          onClick={onFechar}
-          style={{
-            flex: 1,
-            padding: "12px",
-            borderRadius: "var(--raio-bloco)",
-            border: "none",
-            background: "var(--card-2)",
-            color: "var(--ink)",
-            fontSize: 14,
-            fontWeight: 800,
-            fontFamily: "inherit",
-            cursor: "pointer",
-            boxShadow: "0 1px 2px rgba(0,0,0,0.06)",
-          }}
-        >
-          {t("Fechar")}
-        </button>
-        <button
-          onClick={onMarcarPago}
-          style={{
-            flex: 1,
-            padding: "12px",
-            borderRadius: "var(--raio-bloco)",
-            border: "none",
-            background: COR_POS,
-            color: "#fff",
-            fontSize: 14,
-            fontWeight: 800,
-            fontFamily: "inherit",
-            cursor: "pointer",
-            boxShadow: "0 4px 14px color-mix(in oklab, " + COR_POS + " 32%, transparent)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: 6,
-          }}
-        >
-          <Icon name="check" size={16} color="#fff" strokeWidth={2.6} />
-          {t("Marcar como pago")}
-        </button>
-      </div>
+      <BotoesDialogo
+        cancelar={{ texto: t("Fechar"), onClick: onFechar }}
+        confirmar={{ texto: t("Marcar como pago"), onClick: onMarcarPago, cor: COR_POS, icone: "check" }}
+      />
     </ModalOverlay>
   );
 }

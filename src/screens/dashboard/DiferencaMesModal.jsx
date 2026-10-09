@@ -4,8 +4,8 @@
 // dívida se faltou). A escolha fica em preferences.carryover[mesAtual].
 
 import { fmtBRL } from "../../data.js";
-import { Icon } from "../../ui/icons.jsx";
 import { ModalOverlay } from "../../ui/modal-base.jsx";
+import { BotoesDialogo, IconeDialogo, TituloDialogo } from "../../ui/form-lista.jsx";
 import { COR_POS, COR_NEG } from "../../lib/colors.js";
 import { useT } from "../../lib/i18n.jsx";
 
@@ -20,88 +20,46 @@ export function DiferencaMesModal({ nomeMesAnt, valor, onTrazer, onIgnorar }) {
       maxWidth={380}
       scrollable={false}
       center
-      borderRadius="var(--raio-superficie)"
-      padding="22px 22px 18px"
+      padding="22px 20px 18px"
     >
-      <div
-        style={{
-          width: 56,
-          height: 56,
-          borderRadius: "var(--raio-pilula)",
-          background: "color-mix(in oklab, " + cor + " 16%, transparent)",
-          margin: "0 auto 14px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <Icon name={sobrou ? "arrow-left" : "arrow-right"} size={26} color={cor} strokeWidth={2.4} />
-      </div>
-
-      <div style={{ fontSize: 17, fontWeight: 800, color: "var(--ink)", letterSpacing: "-0.02em", textAlign: "center" }}>
-        {t("Diferença de {mes}", { mes: nomeMesAnt })}
-      </div>
-      <div style={{ fontSize: 13, color: "var(--muted)", fontWeight: 600, marginTop: 6, textAlign: "center", lineHeight: 1.45 }}>
-        {sobrou
+      <IconeDialogo icone={sobrou ? "arrow-left" : "arrow-right"} cor={cor} />
+      <TituloDialogo
+        titulo={t("Diferença de {mes}", { mes: nomeMesAnt })}
+        mensagem={sobrou
           ? t("Em {mes} você fechou com sobra. Quer trazer esse valor pro mês atual?", { mes: nomeMesAnt })
           : t("Em {mes} você gastou mais que o orçamento. Quer trazer essa diferença como dívida do mês atual?", { mes: nomeMesAnt })}
-      </div>
+      />
 
+      {/* O valor em destaque, no mesmo tom do ícone. */}
       <div
         style={{
           marginTop: 14,
-          padding: "14px",
+          padding: "10px 14px",
           borderRadius: "var(--raio-bloco)",
           background: "color-mix(in oklab, " + cor + " 10%, transparent)",
-          textAlign: "center",
         }}
       >
-        <div style={{ fontSize: 11, fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: 0.4 }}>
+        <div style={{ fontSize: 11, fontWeight: 700, color: "var(--muted)" }}>
           {sobrou ? t("Sobrou") : t("Faltou")}
         </div>
-        <div style={{ fontSize: 24, fontWeight: 800, color: cor, marginTop: 2, letterSpacing: "-0.02em" }}>
+        <div
+          style={{
+            fontSize: 26,
+            fontWeight: 800,
+            color: cor,
+            marginTop: 1,
+            letterSpacing: "-0.03em",
+            fontVariantNumeric: "tabular-nums",
+          }}
+        >
           {sobrou ? "+" : "−"}{fmtBRL(Math.abs(valor))}
         </div>
       </div>
 
-      <div style={{ display: "flex", gap: 10, marginTop: 20 }}>
-        <button
-          onClick={onIgnorar}
-          style={{
-            flex: 1,
-            padding: "12px",
-            borderRadius: "var(--raio-bloco)",
-            border: "none",
-            background: "var(--card-2)",
-            color: "var(--ink)",
-            fontSize: 14,
-            fontWeight: 800,
-            fontFamily: "inherit",
-            cursor: "pointer",
-            boxShadow: "0 1px 2px rgba(0,0,0,0.06)",
-          }}
-        >
-          {t("Agora não")}
-        </button>
-        <button
-          onClick={onTrazer}
-          style={{
-            flex: 1,
-            padding: "12px",
-            borderRadius: "var(--raio-bloco)",
-            border: "none",
-            background: cor,
-            color: "#fff",
-            fontSize: 14,
-            fontWeight: 800,
-            fontFamily: "inherit",
-            cursor: "pointer",
-            boxShadow: "0 4px 14px color-mix(in oklab, " + cor + " 32%, transparent)",
-          }}
-        >
-          {t("Trazer")}
-        </button>
-      </div>
+      <BotoesDialogo
+        cancelar={{ texto: t("Agora não"), onClick: onIgnorar }}
+        confirmar={{ texto: t("Trazer"), onClick: onTrazer, cor }}
+      />
     </ModalOverlay>
   );
 }

@@ -317,7 +317,7 @@ export function DashboardScreen({ ctx }) {
             letterSpacing: "-0.005em",
           }}
         >
-          <Icon name="target" size={14} color="var(--primary)" strokeWidth={2.4} />
+          <Icon name="coin" size={15} color="var(--primary)" strokeWidth={2.2} />
           {t("Simular um gasto")}
         </button>
       </div>

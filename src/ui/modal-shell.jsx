@@ -1,133 +1,29 @@
-// modal-shell.jsx — wrapper de modal centralizado (mesmo estilo do add-expense)
-// e os controles de formulário que os modais de cadastro compartilham: rótulo de
-// campo, chave liga-desliga e o estilo de input.
-//
-// Nasceu dentro de screens/caixinhas/ e ficou lá mesmo depois que os cartões
-// passaram a usá-lo. É infraestrutura de UI, não detalhe de caixinha — por isso
-// mora aqui.
+// modal-shell.jsx — casca dos modais de cadastro (caixinha, cartão, depósito,
+// resgate): o ModalOverlay com o cabeçalho Cancelar · Título · Salvar. O
+// conteúdo segue as peças de ui/form-lista.jsx.
 
-import { createPortal } from "react-dom";
-import { Z_MODAL, useFecharComEsc } from "./modal-base.jsx";
-import { useT } from "../lib/i18n.jsx";
+import { ModalOverlay } from "./modal-base.jsx";
+import { CabecalhoForm } from "./form-lista.jsx";
 
 // `corAcentoTexto` existe porque um acento claro (cartão amarelo, por exemplo)
 // engole o branco. Só quem passa uma cor clara precisa informar.
 export function ModalShell({ titulo, onFechar, onSalvar, salvarAtivo, corAcento, corAcentoTexto, children }) {
-  const t = useT();
-  useFecharComEsc(onFechar);
-  return createPortal(
-    <div
-      onClick={onFechar}
-      style={{
-        position: "fixed",
-        inset: 0,
-        height: "100dvh",
-        zIndex: Z_MODAL,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: "20px",
-        background: "rgba(20, 16, 24, 0.45)",
-        backdropFilter: "blur(12px) saturate(140%)",
-        WebkitBackdropFilter: "blur(12px) saturate(140%)",
-        animation: "fadeIn .28s ease-out",
-      }}
-    >
-      <div
-        onClick={(e) => e.stopPropagation()}
-        style={{
-          width: "100%",
-          maxWidth: 440,
-          maxHeight: "calc(100dvh - 40px)",
-          overflowY: "auto",
-          overflowX: "hidden",
-          background: "var(--bg)",
-          borderRadius: "var(--raio-superficie)",
-          padding: "16px 20px 22px",
-          boxShadow: "0 24px 60px rgba(0,0,0,0.28), 0 4px 12px rgba(0,0,0,0.08)",
-          animation: "scaleIn .34s cubic-bezier(0.22, 1, 0.36, 1)",
-        }}
-      >
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            marginBottom: 16,
-          }}
-        >
-          <button
-            onClick={onFechar}
-            style={{
-              background: "transparent",
-              border: "none",
-              color: "var(--muted)",
-              fontWeight: 700,
-              fontSize: 14,
-              cursor: "pointer",
-            }}
-          >
-            {t("Cancelar")}
-          </button>
-          <div style={{ fontSize: 16, fontWeight: 800, color: "var(--ink)", letterSpacing: "-0.01em" }}>
-            {titulo}
-          </div>
-          <button
-            onClick={onSalvar}
-            disabled={!salvarAtivo}
-            style={{
-              background: salvarAtivo ? corAcento || "var(--primary)" : "var(--linha)",
-              color: salvarAtivo ? corAcentoTexto || "#fff" : "var(--muted)",
-              border: "none",
-              padding: "6px 14px",
-              borderRadius: "var(--raio-pilula)",
-              fontWeight: 800,
-              fontSize: 13,
-              cursor: salvarAtivo ? "pointer" : "default",
-              fontFamily: "inherit",
-            }}
-          >
-            {t("Salvar")}
-          </button>
-        </div>
-        {children}
-      </div>
-    </div>,
-    document.body,
-  );
-}
-
-export function Campo({ label, children }) {
   return (
-    <div style={{ marginTop: 14 }}>
-      <div
-        style={{
-          fontSize: 11,
-          fontWeight: 700,
-          color: "var(--muted)",
-          textTransform: "uppercase",
-          letterSpacing: 0.4,
-          padding: "0 4px 6px",
-        }}
-      >
-        {label}
-      </div>
+    <ModalOverlay
+      onClose={onFechar}
+      maxWidth={440}
+      padding="14px 18px 20px"
+      dialogStyle={{ overflowX: "hidden" }}
+    >
+      <CabecalhoForm
+        titulo={titulo}
+        onCancelar={onFechar}
+        onSalvar={onSalvar}
+        salvarAtivo={salvarAtivo}
+        corSalvar={corAcento}
+        corSalvarTexto={corAcentoTexto}
+      />
       {children}
-    </div>
+    </ModalOverlay>
   );
 }
-
-export const inputStyle = {
-  width: "100%",
-  padding: "12px 14px",
-  borderRadius: "var(--raio-bloco)",
-  border: "none",
-  background: "var(--card-2)",
-  outline: "none",
-  fontSize: 14,
-  fontWeight: 600,
-  color: "var(--ink)",
-  fontFamily: "inherit",
-  boxShadow: "0 1px 2px rgba(0,0,0,0.06)",
-  boxSizing: "border-box",
-};

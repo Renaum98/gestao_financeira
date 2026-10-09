@@ -102,6 +102,9 @@ export function Icon({ name, size = 22, color = 'currentColor', strokeWidth = 2 
       return (<svg style={s} viewBox="0 0 24 24" {...props}><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M3 7l9 7 9-7"/></svg>);
     case 'lock':
       return (<svg style={s} viewBox="0 0 24 24" {...props}><rect x="4" y="11" width="16" height="10" rx="2.5"/><path d="M8 11V8a4 4 0 018 0v3"/></svg>);
+    case 'coin':
+      // Moeda — disco com o cifrão
+      return (<svg style={s} viewBox="0 0 24 24" {...props}><circle cx="12" cy="12" r="9"/><path d="M14.6 9.4c-.5-.8-1.5-1.2-2.6-1.2-1.5 0-2.6.8-2.6 1.9 0 2.6 5.2 1.4 5.2 4 0 1.1-1.1 1.9-2.6 1.9-1.1 0-2.1-.4-2.6-1.2M12 6.6v1.6M12 15.8v1.6"/></svg>);
     case 'piggy':
       // Cofrinho — caixa com fenda para moeda
       return (<svg style={s} viewBox="0 0 24 24" {...props}><rect x="3" y="8" width="18" height="12" rx="3"/><path d="M9 8V6a3 3 0 016 0v2"/><path d="M10 13h4"/></svg>);

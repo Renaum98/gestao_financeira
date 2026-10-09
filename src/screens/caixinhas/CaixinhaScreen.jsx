@@ -7,6 +7,7 @@ import { Icon } from "../../ui/icons.jsx";
 import { COR_NEG } from "../../lib/colors.js";
 import { TopBar } from "../../ui/common.jsx";
 import { ConfirmModal } from "../../ui/confirm-modal.jsx";
+import { LinhaOpcao, ListaAgrupada, RodapeLista } from "../../ui/form-lista.jsx";
 import { useSelic, calcularRendimento, rendimentoDesdeSempre } from "../../lib/selic.js";
 import { alocadoPorDescricao } from "../../lib/guardado-entradas.js";
 import { calcularLembranca } from "./utils.js";
@@ -286,74 +287,35 @@ export function CaixinhaScreen({ ctx, params }) {
           onConfirmar={onConfirmarExclusao}
         >
           {temOQueDevolver && (
-            <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 14, textAlign: "left" }}>
-              <OpcaoExclusao
-                selecionada={!devolver}
-                onClick={() => setDevolver(false)}
-                titulo={tr("Só apagar a caixinha")}
-                descricao={tr("Nada muda nos meses: o que foi guardado continua descontado onde saiu.")}
-              />
-              <OpcaoExclusao
-                selecionada={devolver}
-                onClick={() => setDevolver(true)}
-                titulo={tr("Apagar e devolver")}
-                descricao={
-                  resgatadoMeu > 0
-                    ? tr("{x} voltam pros meses e entradas de onde saíram, e os resgates ({y}) saem de Transações. Como se ela nunca tivesse existido.", { x: fmtBRL(guardadoMeu), y: fmtBRL(resgatadoMeu) })
-                    : tr("{x} voltam pros meses e entradas de onde saíram. Como se ela nunca tivesse existido.", { x: fmtBRL(guardadoMeu) })
-                }
-              />
+            <div style={{ textAlign: "left" }}>
+              <ListaAgrupada style={{ marginTop: 14 }}>
+                <LinhaOpcao
+                  selecionado={!devolver}
+                  onClick={() => setDevolver(false)}
+                  rotulo={tr("Só apagar a caixinha")}
+                  legenda={tr("Nada muda nos meses: o que foi guardado continua descontado onde saiu.")}
+                />
+                <LinhaOpcao
+                  selecionado={devolver}
+                  onClick={() => setDevolver(true)}
+                  divisoria
+                  rotulo={tr("Apagar e devolver")}
+                  legenda={
+                    resgatadoMeu > 0
+                      ? tr("{x} voltam pros meses e entradas de onde saíram, e os resgates ({y}) saem de Transações. Como se ela nunca tivesse existido.", { x: fmtBRL(guardadoMeu), y: fmtBRL(resgatadoMeu) })
+                      : tr("{x} voltam pros meses e entradas de onde saíram. Como se ela nunca tivesse existido.", { x: fmtBRL(guardadoMeu) })
+                  }
+                />
+              </ListaAgrupada>
               {caixinhasCompartilhadas && (
-                <div style={{ fontSize: 11, color: "var(--muted)", fontWeight: 600, lineHeight: 1.4 }}>
+                <RodapeLista>
                   {tr("Só os seus lançamentos voltam. Os de {nome} continuam como estão.", { nome: partnerNome || tr("seu parceiro") })}
-                </div>
+                </RodapeLista>
               )}
             </div>
           )}
         </ConfirmModal>
       )}
     </div>
-  );
-}
-
-// Uma das duas saídas da exclusão, no formato de opção marcável.
-function OpcaoExclusao({ selecionada, onClick, titulo, descricao }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-pressed={selecionada}
-      style={{
-        display: "flex",
-        gap: 10,
-        alignItems: "flex-start",
-        width: "100%",
-        padding: "10px 12px",
-        borderRadius: "var(--raio-bloco)",
-        border: selecionada ? "2px solid var(--primary)" : "2px solid var(--linha)",
-        background: selecionada ? "color-mix(in oklab, var(--primary) 8%, transparent)" : "var(--card)",
-        cursor: "pointer",
-        fontFamily: "inherit",
-        textAlign: "left",
-      }}
-    >
-      <span
-        style={{
-          width: 16,
-          height: 16,
-          marginTop: 2,
-          flexShrink: 0,
-          borderRadius: "var(--raio-pilula)",
-          border: selecionada ? "5px solid var(--primary)" : "2px solid var(--muted)",
-          boxSizing: "border-box",
-        }}
-      />
-      <span>
-        <span style={{ display: "block", fontSize: 13, fontWeight: 800, color: "var(--ink)" }}>{titulo}</span>
-        <span style={{ display: "block", fontSize: 11.5, fontWeight: 500, color: "var(--muted)", lineHeight: 1.4, marginTop: 2 }}>
-          {descricao}
-        </span>
-      </span>
-    </button>
   );
 }

@@ -1,18 +1,29 @@
 // recorrentes.jsx — Tela para visualizar, editar e cancelar gastos recorrentes.
 
 import React from 'react';
-import { CATEGORIAS, catsMinhas, PAGAMENTOS, fmtBRL, rotuloMesCurtoT } from '../data.js';
-import { CatChip, Icon, iconePagamento } from '../ui/icons.jsx';
+import { CATEGORIAS, catsMinhas, fmtBRL, rotuloMesCurtoT } from '../data.js';
+import { CatChip, Icon } from '../ui/icons.jsx';
 import { Card, TopBar } from '../ui/common.jsx';
 import { ConfirmModal } from '../ui/confirm-modal.jsx';
 import { ModalOverlay } from '../ui/modal-base.jsx';
 import { COR_NEG } from '../lib/colors.js';
 import { vibrar } from '../lib/haptics.js';
-import { formatarValorDigitado, formatarValorInicial, parseValorBR } from '../lib/money-input.js';
-import { simboloMoeda } from '../lib/moeda.js';
+import { formatarValorInicial, parseValorBR } from '../lib/money-input.js';
 import { PAG_CARTAO } from '../lib/fatura.js';
-import { corDoCartao, corTextoSobre } from '../lib/cartoes.js';
 import { useT } from '../lib/i18n.jsx';
+import {
+  CabecalhoForm,
+  FileiraPilulas,
+  Linha,
+  LinhaPagamento,
+  ListaAgrupada,
+  NotaLinha,
+  PilulaCategoria,
+  RodapeLista,
+  ValorGrande,
+  estiloInputLinha,
+  estiloValorLinha,
+} from '../ui/form-lista.jsx';
 
 export function RecorrentesScreen({ ctx }) {
   const { recorrentes, cancelarRecorrente, editarRecorrente, voltar, ehDesktop, cartoes = [] } = ctx;
@@ -157,7 +168,6 @@ function EditarRecorrenteModal({ rec, cartoes = [], onFechar, onSalvar }) {
   }, [pagamento]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const valorNum = parseValorBR(valor);
-  const aoDigitar = (texto) => setValor(formatarValorDigitado(texto));
 
   const podeSalvar = valorNum > 0 && descricao.trim().length > 0;
 
@@ -179,222 +189,76 @@ function EditarRecorrenteModal({ rec, cartoes = [], onFechar, onSalvar }) {
   };
 
   return (
-    <ModalOverlay onClose={onFechar} maxWidth={440} padding="16px 20px 24px">
-      <div style={{
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        marginBottom: 16,
-      }}>
-        <button onClick={onFechar} style={{
-          background: 'transparent', border: 'none', color: 'var(--muted)',
-          fontWeight: 700, fontSize: 14, cursor: 'pointer',
-        }}>{t("Cancelar")}</button>
-        <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--ink)', letterSpacing: '-0.01em' }}>
-          {t("Editar recorrente")}
-        </div>
-        <button onClick={salvar} disabled={!podeSalvar} style={{
-          background: podeSalvar ? 'var(--primary)' : 'var(--linha)',
-          color: podeSalvar ? '#fff' : 'var(--muted)',
-          border: 'none', padding: '6px 14px', borderRadius: 'var(--raio-pilula)',
-          fontWeight: 800, fontSize: 13, cursor: podeSalvar ? 'pointer' : 'default',
-          fontFamily: 'inherit',
-        }}>{t("Salvar")}</button>
-      </div>
+    <ModalOverlay onClose={onFechar} maxWidth={440} padding="14px 18px 20px" dialogStyle={{ overflowX: 'hidden' }}>
+      <CabecalhoForm
+        titulo={t("Editar recorrente")}
+        onCancelar={onFechar}
+        onSalvar={salvar}
+        salvarAtivo={podeSalvar}
+      />
 
-      <div style={{
-        fontSize: 11, color: 'var(--muted)', fontWeight: 600, lineHeight: 1.45,
-        background: 'var(--card-2)', padding: '10px 12px', borderRadius: 'var(--raio-controle)',
-        marginBottom: 14,
-      }}>
-        {t("As mudanças valem do mês atual em diante.")}
-      </div>
+      <ValorGrande valor={valor} onChange={setValor} />
 
-      {/* Valor */}
-      <label style={{
-        display: 'block', textAlign: 'center', padding: '8px 0 4px',
-        cursor: 'text', position: 'relative',
-      }}>
-        <div style={{
-          fontSize: 12, fontWeight: 700, color: 'var(--muted)',
-          textTransform: 'uppercase', letterSpacing: 0.6,
-        }}>
-          {t("Valor")}
-        </div>
-        <div style={{
-          fontSize: 44, fontWeight: 800, color: 'var(--ink)',
-          letterSpacing: '-0.04em', marginTop: 4, fontVariantNumeric: 'tabular-nums',
-        }}>
-          <span style={{
-            fontSize: 22, color: 'var(--muted)', marginRight: 6, verticalAlign: 'top',
-          }}>{simboloMoeda()}</span>
-          {valor}
-        </div>
-        <input
-          type="text"
-          inputMode="numeric"
-          pattern="[0-9]*"
-          value={valor.replace(',', '')}
-          onChange={(e) => aoDigitar(e.target.value)}
-          aria-label={t("Valor")}
-          style={{
-            position: 'absolute', inset: 0, opacity: 0, border: 'none',
-            background: 'transparent', outline: 'none', fontSize: 16, cursor: 'text',
-          }}
-        />
-      </label>
-
-      {/* Descrição */}
-      <div style={{ marginTop: 12 }}>
-        <input
-          value={descricao}
-          onChange={(e) => setDescricao(e.target.value)}
-          placeholder={t("Descrição")}
-          style={{
-            width: '100%', padding: '14px 16px', borderRadius: 'var(--raio-bloco)', border: 'none',
-            background: 'var(--card-2)', outline: 'none', fontSize: 14, fontWeight: 600,
-            color: 'var(--ink)', fontFamily: 'inherit',
-            boxShadow: '0 1px 2px rgba(0,0,0,0.06)', boxSizing: 'border-box',
-          }}
-        />
-      </div>
-
-      {/* Categoria */}
+      {/* Categoria (só saída): as mesmas pílulas do gasto. */}
       {!ehEntrada && (
-        <div style={{ marginTop: 14 }}>
-          <div style={{
-            fontSize: 11, fontWeight: 700, color: 'var(--muted)',
-            textTransform: 'uppercase', letterSpacing: 0.4, padding: '0 4px 8px',
-          }}>
-            {t("Categoria")}
-          </div>
-          <div
-            className="carrossel"
-            style={{
-              display: 'flex', gap: 8, overflowX: 'auto',
-              padding: '6px 4px 10px', scrollbarWidth: 'none',
-            }}
-          >
-            {catsMinhas().map((c) => {
-              const cat = CATEGORIAS[c];
-              const sel = categoria === c;
-              return (
-                <button
-                  key={c}
-                  onClick={() => { vibrar(); setCategoria(c); }}
-                  style={{
-                    display: 'flex', flexDirection: 'column', alignItems: 'center',
-                    gap: 6, padding: '8px 10px 6px', borderRadius: 'var(--raio-bloco)', border: 'none',
-                    background: sel ? 'var(--card-2)' : 'transparent',
-                    boxShadow: sel ? '0 2px 8px rgba(0,0,0,0.18), 0 0 0 1.5px ' + cat.cor : 'none',
-                    cursor: 'pointer', minWidth: 72, flexShrink: 0,
-                    WebkitUserSelect: 'none', userSelect: 'none',
-                  }}
-                >
-                  <CatChip catId={c} size={32} raised />
-                  <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--ink)' }}>
-                    {t(cat.nome)}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
+        <div style={{ marginTop: 12 }}>
+          <FileiraPilulas>
+            {catsMinhas().map((c) => (
+              <PilulaCategoria
+                key={c}
+                catId={c}
+                selecionado={categoria === c}
+                onSelecionar={() => { vibrar(); setCategoria(c); }}
+              />
+            ))}
+          </FileiraPilulas>
         </div>
       )}
 
-      {/* Pagamento */}
-      {!ehEntrada && (
-        <div style={{ marginTop: 10, display: 'flex', gap: 8 }}>
-          {PAGAMENTOS.map((p) => {
-            const sel = pagamento === p;
-            return (
-              <button
-                key={p}
-                onClick={() => { vibrar(); setPagamento(p); }}
-                style={{
-                  flex: 1, padding: '10px 4px', borderRadius: 'var(--raio-controle)', border: 'none',
-                  background: sel ? 'var(--ink)' : 'var(--card-2)',
-                  color: sel ? 'var(--bg)' : 'var(--ink)',
-                  fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
-                  display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
-                  boxShadow: sel ? 'none' : '0 1px 2px rgba(0,0,0,0.06)',
-                }}
-              >
-                <Icon
-                  name={iconePagamento(p)}
-                  size={18}
-                  color={sel ? 'var(--bg)' : 'var(--ink)'}
-                  strokeWidth={2}
-                />
-                {t(p.replace('Cartão de ', ''))}
-              </button>
-            );
-          })}
-        </div>
-      )}
+      <ListaAgrupada>
+        <Linha icone="edit" as="label">
+          <input
+            value={descricao}
+            onChange={(e) => setDescricao(e.target.value)}
+            placeholder={t("Descrição")}
+            aria-label={t("Descrição")}
+            style={estiloInputLinha}
+          />
+        </Linha>
 
-      {/* Em qual cartão. Só com cartão cadastrado (ver lib/cartoes.js). */}
-      {!ehEntrada && pagamento === PAG_CARTAO && cartoes.length > 0 && (
-        <div style={{ marginTop: 10, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-          {cartoes.map((c) => {
-            const sel = cartaoId === c.id;
-            const cor = corDoCartao(c);
-            const tinta = sel ? corTextoSobre(cor) : 'var(--ink)';
-            return (
-              <button
-                key={c.id}
-                onClick={() => { vibrar(); setCartaoId(c.id); }}
-                style={{
-                  display: 'inline-flex', alignItems: 'center', gap: 6,
-                  padding: '8px 12px', borderRadius: 'var(--raio-pilula)', border: 'none',
-                  background: sel ? cor : 'var(--card-2)',
-                  color: tinta,
-                  fontSize: 11.5, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
-                  boxShadow: sel ? 'none' : '0 1px 2px rgba(0,0,0,0.06)',
-                }}
-              >
-                <Icon name="card" size={14} color={tinta} strokeWidth={2.2} />
-                {c.nome}
-              </button>
-            );
-          })}
-        </div>
-      )}
+        {!ehEntrada && (
+          <LinhaPagamento
+            pagamento={pagamento}
+            onPagamento={setPagamento}
+            cartoes={cartoes}
+            cartaoId={cartaoId}
+            onCartao={setCartaoId}
+          />
+        )}
 
-      {/* Dia de vencimento. No crédito não existe: a conta entra na fatura, e
-          quem vence é ela (dia de vencimento do cartão). O `dia` guardado
-          continua valendo pra data do lançamento. */}
-      {!ehEntrada && pagamento === PAG_CARTAO ? (
-        <div style={{
-          marginTop: 10, padding: '12px 16px', borderRadius: 'var(--raio-bloco)',
-          background: 'var(--card-2)', fontSize: 12, fontWeight: 600,
-          color: 'var(--muted)', lineHeight: 1.45,
-        }}>
-          {t("Entra na fatura do cartão todo mês — o vencimento é o da fatura.")}
-        </div>
-      ) : (
-      <label style={{
-        marginTop: 10, display: 'flex', alignItems: 'center', gap: 10,
-        padding: '12px 16px', borderRadius: 'var(--raio-bloco)', background: 'var(--card-2)',
-        boxShadow: '0 1px 2px rgba(0,0,0,0.06)',
-      }}>
-        <Icon name="calendar" size={18} color="var(--muted)" strokeWidth={2} />
-        <span style={{ flex: 1, fontSize: 13, fontWeight: 700, color: 'var(--muted)' }}>
-          {t("Vence todo dia")}
-        </span>
-        <select
-          value={dia}
-          onChange={(e) => setDia(parseInt(e.target.value, 10))}
-          style={{
-            border: 'none', background: 'transparent', outline: 'none',
-            fontSize: 14, fontWeight: 700, color: 'var(--ink)', fontFamily: 'inherit',
-            cursor: 'pointer',
-          }}
-        >
-          {Array.from({ length: 31 }, (_, i) => i + 1).map((d) => (
-            <option key={d} value={d}>{d}</option>
-          ))}
-        </select>
-      </label>
-      )}
+        {/* Dia de vencimento. No crédito não existe: a conta entra na fatura, e
+            quem vence é ela (dia de vencimento do cartão). O `dia` guardado
+            continua valendo pra data do lançamento. */}
+        {!ehEntrada && pagamento === PAG_CARTAO ? (
+          <NotaLinha>
+            {t("Entra na fatura do cartão todo mês — o vencimento é o da fatura.")}
+          </NotaLinha>
+        ) : (
+          <Linha icone="calendar" rotulo={t("Vence todo dia")} divisoria as="label">
+            <select
+              value={dia}
+              onChange={(e) => setDia(parseInt(e.target.value, 10))}
+              style={{ ...estiloValorLinha, cursor: 'pointer' }}
+            >
+              {Array.from({ length: 31 }, (_, i) => i + 1).map((d) => (
+                <option key={d} value={d}>{d}</option>
+              ))}
+            </select>
+          </Linha>
+        )}
+      </ListaAgrupada>
+
+      <RodapeLista>{t("As mudanças valem do mês atual em diante.")}</RodapeLista>
     </ModalOverlay>
   );
 }

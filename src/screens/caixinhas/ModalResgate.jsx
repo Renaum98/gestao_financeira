@@ -3,9 +3,9 @@
 import React from "react";
 import { fmtBRL } from "../../data.js";
 import { COR_NEG } from "../../lib/colors.js";
-import { formatarValorDigitado, formatarValorInicial, parseValorBR, valorZero } from "../../lib/money-input.js";
-import { simboloMoeda } from "../../lib/moeda.js";
+import { formatarValorInicial, parseValorBR, valorZero } from "../../lib/money-input.js";
 import { ModalShell } from "../../ui/modal-shell.jsx";
+import { Aviso, Linha, ListaAgrupada, NotaLinha, ValorGrande, estiloValorLinha } from "../../ui/form-lista.jsx";
 import { Expansivel, useUltimoNaoNulo } from "../../ui/expansivel.jsx";
 import { useT } from "../../lib/i18n.jsx";
 
@@ -13,7 +13,6 @@ export function ModalResgate({ cor, nome, disponivel, rendimento = 0, onFechar, 
   const t = useT();
   const [valor, setValor] = React.useState(valorZero());
 
-  const aoDigitar = (texto) => setValor(formatarValorDigitado(texto));
   const valorNum = parseValorBR(valor);
   const excede = valorNum > disponivel + 0.001;
   const podeSalvar = valorNum > 0 && !excede;
@@ -37,147 +36,49 @@ export function ModalResgate({ cor, nome, disponivel, rendimento = 0, onFechar, 
 
   return (
     <ModalShell titulo={t("Resgatar de \"{nome}\"", { nome })} onFechar={onFechar} onSalvar={salvar} salvarAtivo={podeSalvar} corAcento={cor}>
-      <label
-        style={{
-          display: "block",
-          textAlign: "center",
-          padding: "14px 0 6px",
-          position: "relative",
-          cursor: "text",
-        }}
-      >
-        <div
-          style={{
-            fontSize: 12,
-            fontWeight: 700,
-            color: "var(--muted)",
-            textTransform: "uppercase",
-            letterSpacing: 0.6,
-          }}
-        >
-          {t("Valor a resgatar")}
-        </div>
-        <div
-          style={{
-            fontSize: 42,
-            fontWeight: 800,
-            color: "var(--ink)",
-            letterSpacing: "-0.03em",
-            marginTop: 4,
-            fontVariantNumeric: "tabular-nums",
-          }}
-        >
-          <span style={{ fontSize: 20, color: "var(--muted)", marginRight: 6, verticalAlign: "top" }}>
-            {simboloMoeda()}
-          </span>
-          {valor}
-        </div>
-        <input
-          type="text"
-          inputMode="numeric"
-          pattern="[0-9]*"
-          value={valor.replace(",", "")}
-          onChange={(e) => aoDigitar(e.target.value)}
-          aria-label={t("Valor a resgatar")}
-          style={{
-            position: "absolute",
-            inset: 0,
-            opacity: 0,
-            border: "none",
-            background: "transparent",
-            outline: "none",
-            fontSize: 16,
-            cursor: "text",
-          }}
-        />
-      </label>
+      <ValorGrande valor={valor} onChange={setValor} ariaLabel={t("Valor a resgatar")} />
 
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          gap: 10,
-          padding: "12px 14px",
-          marginTop: 4,
-          borderRadius: "var(--raio-bloco)",
-          background: "var(--card-2)",
-          boxShadow: "0 1px 2px rgba(0,0,0,0.06)",
-        }}
-      >
-        <div style={{ minWidth: 0 }}>
-          <div
+      <ListaAgrupada style={{ marginTop: 16 }}>
+        <Linha icone="piggy" rotulo={t("Disponível na caixinha")}>
+          <span style={{ ...estiloValorLinha, fontVariantNumeric: "tabular-nums" }}>{fmtBRL(disponivel)}</span>
+          <button
+            className="opcao-suave"
+            onClick={aplicarTudo}
+            disabled={disponivel <= 0}
             style={{
-              fontSize: 11,
-              fontWeight: 700,
-              color: "var(--muted)",
-              textTransform: "uppercase",
-              letterSpacing: 0.4,
-            }}
-          >
-            {t("Disponível na caixinha")}
-          </div>
-          <div
-            style={{
-              fontSize: 16,
+              padding: "6px 12px",
+              borderRadius: "var(--raio-pilula)",
+              border: "none",
+              background: cor,
+              color: "#fff",
+              fontSize: 12,
               fontWeight: 800,
-              color: "var(--ink)",
-              marginTop: 2,
-              letterSpacing: "-0.01em",
+              cursor: disponivel > 0 ? "pointer" : "default",
+              opacity: disponivel > 0 ? 1 : 0.5,
+              fontFamily: "inherit",
+              flexShrink: 0,
             }}
           >
-            {fmtBRL(disponivel)}
-          </div>
-        </div>
-        <button
-          onClick={aplicarTudo}
-          disabled={disponivel <= 0}
-          style={{
-            padding: "8px 12px",
-            borderRadius: "var(--raio-pilula)",
-            border: "none",
-            background: cor,
-            color: "#fff",
-            fontSize: 12,
-            fontWeight: 800,
-            cursor: disponivel > 0 ? "pointer" : "default",
-            opacity: disponivel > 0 ? 1 : 0.5,
-            fontFamily: "inherit",
-          }}
-        >
-          {t("Tudo")}
-        </button>
-      </div>
+            {t("Tudo")}
+          </button>
+        </Linha>
+        <NotaLinha>
+          {t("O valor volta como uma ")}<strong style={{ color: "var(--ink)" }}>{t("entrada do mês atual")}</strong>{t(" e fica disponível no orçamento.")}
+          {/* O valor congela no último não-zero enquanto a linha fecha, senão o
+              texto viraria "R$ 0,00" no meio da animação. */}
+          <Expansivel aberto={rendimentoQueSai > 0.005}>
+            <div style={{ marginTop: 4 }}>
+              {t("O rendimento de {x} sai junto e deixa de render.", {
+                x: fmtBRL(rendimentoVisivel),
+              })}
+            </div>
+          </Expansivel>
+        </NotaLinha>
+      </ListaAgrupada>
 
       <Expansivel aberto={excede}>
-        <div style={{ marginTop: 10, fontSize: 12, color: COR_NEG, fontWeight: 700, padding: "0 4px" }}>
-          {t("Valor maior que o disponível na caixinha.")}
-        </div>
+        <Aviso icone="close" cor={COR_NEG}>{t("Valor maior que o disponível na caixinha.")}</Aviso>
       </Expansivel>
-
-      <div
-        style={{
-          marginTop: 14,
-          padding: "12px 14px",
-          borderRadius: "var(--raio-bloco)",
-          background: "color-mix(in oklab, var(--primary) 8%, transparent)",
-          fontSize: 12,
-          color: "var(--muted)",
-          fontWeight: 500,
-          lineHeight: 1.45,
-        }}
-      >
-        {t("O valor volta como uma ")}<strong style={{ color: "var(--ink)" }}>{t("entrada do mês atual")}</strong>{t(" e fica disponível no orçamento.")}
-        {/* O valor congela no último não-zero enquanto a linha fecha, senão o
-            texto viraria "R$ 0,00" no meio da animação. */}
-        <Expansivel aberto={rendimentoQueSai > 0.005}>
-          <div style={{ marginTop: 6 }}>
-            {t("O rendimento de {x} sai junto e deixa de render.", {
-              x: fmtBRL(rendimentoVisivel),
-            })}
-          </div>
-        </Expansivel>
-      </div>
     </ModalShell>
   );
 }

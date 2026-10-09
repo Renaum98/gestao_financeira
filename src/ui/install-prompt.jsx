@@ -5,6 +5,7 @@
 import React from 'react';
 import { Icon } from './icons.jsx';
 import { ModalOverlay } from './modal-base.jsx';
+import { Linha, ListaAgrupada, TituloDialogo } from './form-lista.jsx';
 import { vibrar } from '../lib/haptics.js';
 import { useT } from '../lib/i18n.jsx';
 
@@ -112,12 +113,25 @@ export function InstallPromptModal({ temAtalho, plataformaIOS, onInstalar, onDis
     }
   };
 
+  // Botões empilhados: aqui a ação principal pesa mais que a de sair, e o
+  // texto dos dois é longo demais pra dividir a linha.
+  const botao = (primario) => ({
+    width: '100%', minHeight: 46, padding: '12px 16px', borderRadius: 'var(--raio-pilula)',
+    border: 'none',
+    background: primario ? 'var(--primary-degrade)' : 'var(--card-2)',
+    color: primario ? '#fff' : 'var(--ink)',
+    fontSize: primario ? 15 : 14, fontWeight: primario ? 800 : 700, fontFamily: 'inherit',
+    cursor: 'pointer',
+    boxShadow: primario
+      ? '0 8px 20px color-mix(in oklab, var(--primary) 30%, transparent)'
+      : '0 1px 2px rgba(0,0,0,0.06)',
+  });
+
   return (
     <ModalOverlay
       onClose={onDispensar}
       maxWidth={380}
-      padding="26px 22px 20px"
-      borderRadius="var(--raio-superficie)"
+      padding="24px 20px 18px"
       scrollable={false}
       center
       >
@@ -125,8 +139,8 @@ export function InstallPromptModal({ temAtalho, plataformaIOS, onInstalar, onDis
             mesmo azulejo branco do login. É a promessa da tela: o usuário
             precisa reconhecer depois o que viu aqui. */}
         <div style={{
-          width: 72, height: 72, borderRadius: 20,
-          margin: '0 auto 16px',
+          width: 64, height: 64, borderRadius: 18,
+          margin: '0 auto 14px',
           background: '#fff',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           boxShadow: '0 12px 28px color-mix(in oklab, var(--primary) 32%, transparent)',
@@ -142,100 +156,56 @@ export function InstallPromptModal({ temAtalho, plataformaIOS, onInstalar, onDis
 
         {!instrucoesIOS ? (
           <>
-            <div style={{
-              fontSize: 19, fontWeight: 800, color: 'var(--ink)',
-              letterSpacing: '-0.02em',
-            }}>{tr("Instale o MyCounts")}</div>
+            <TituloDialogo
+              titulo={tr("Instale o MyCounts")}
+              mensagem={tr("O app instalado abre mais rápido, funciona offline e tem desempenho melhor que o navegador. Você ganha um ícone na tela inicial e uma experiência sem barras de endereço.")}
+            />
 
-            <div style={{
-              fontSize: 13.5, color: 'var(--muted)', fontWeight: 500,
-              marginTop: 8, lineHeight: 1.5,
-            }}>
-              {tr("O app instalado abre mais rápido, funciona offline e tem desempenho melhor que o navegador. Você ganha um ícone na tela inicial e uma experiência sem barras de endereço.")}
-            </div>
-
-            <div style={{
-              display: 'flex', flexDirection: 'column', gap: 8,
-              margin: '18px 0 4px', textAlign: 'left',
-            }}>
+            <ListaAgrupada style={{ marginTop: 14, textAlign: 'left' }}>
               {[
                 { ico: 'sparkle', txt: tr('Abre instantaneamente, como um app nativo.') },
                 { ico: 'check',   txt: tr('Funciona mesmo com internet instável.') },
                 { ico: 'home',    txt: tr('Ícone na tela inicial, sem barras do navegador.') },
-              ].map((b) => (
-                <div key={b.ico} style={{
-                  display: 'flex', alignItems: 'center', gap: 10,
-                  padding: '8px 10px', borderRadius: 'var(--raio-controle)',
-                  background: 'var(--surface-sunken)',
-                }}>
-                  <div style={{
-                    width: 28, height: 28, borderRadius: 'var(--raio-pilula)',
-                    background: 'color-mix(in oklab, var(--primary) 14%, transparent)',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    flexShrink: 0,
-                  }}>
-                    <Icon name={b.ico} size={15} color="var(--primary)" strokeWidth={2.4} />
-                  </div>
-                  <div style={{
-                    fontSize: 12.5, fontWeight: 600, color: 'var(--ink)', lineHeight: 1.35,
-                  }}>{b.txt}</div>
-                </div>
+              ].map((b, i) => (
+                <Linha
+                  key={b.ico}
+                  divisoria={i > 0}
+                  inicio={<Icon name={b.ico} size={17} color="var(--primary)" strokeWidth={2.4} />}
+                >
+                  <span style={{ flex: 1, fontSize: 12.5, fontWeight: 600, color: 'var(--ink)', lineHeight: 1.35 }}>
+                    {b.txt}
+                  </span>
+                </Linha>
               ))}
-            </div>
+            </ListaAgrupada>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 18 }}>
-              <button onClick={acaoInstalar} style={{
-                width: '100%', padding: '14px 16px', borderRadius: 'var(--raio-bloco)', border: 'none',
-                background: 'var(--primary-degrade)',
-                color: '#fff', fontSize: 15, fontWeight: 800, fontFamily: 'inherit',
-                cursor: 'pointer',
-                boxShadow: '0 8px 20px color-mix(in oklab, var(--primary) 30%, transparent)',
-              }}>{tr("Instalar app")}</button>
-              <button onClick={onDispensar} style={{
-                width: '100%', padding: '12px', borderRadius: 'var(--raio-bloco)',
-                border: '1.5px solid var(--linha)',
-                background: 'var(--card)', color: 'var(--ink)',
-                fontSize: 14, fontWeight: 700, fontFamily: 'inherit', cursor: 'pointer',
-              }}>{tr("Continuar no navegador")}</button>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 18 }}>
+              <button onClick={acaoInstalar} style={botao(true)}>{tr("Instalar app")}</button>
+              <button onClick={onDispensar} style={botao(false)}>{tr("Continuar no navegador")}</button>
             </div>
           </>
         ) : (
           <>
-            <div style={{
-              fontSize: 19, fontWeight: 800, color: 'var(--ink)',
-              letterSpacing: '-0.02em',
-            }}>{tr("Como instalar no iPhone")}</div>
-            <div style={{
-              fontSize: 13.5, color: 'var(--muted)', fontWeight: 500,
-              marginTop: 8, lineHeight: 1.5,
-            }}>
-              {tr("No Safari, toque no botão de Compartilhar e depois em \"Adicionar à Tela de Início\".")}
-            </div>
+            <TituloDialogo
+              titulo={tr("Como instalar no iPhone")}
+              mensagem={tr("No Safari, toque no botão de Compartilhar e depois em \"Adicionar à Tela de Início\".")}
+            />
 
-            <div style={{
-              display: 'flex', flexDirection: 'column', gap: 10,
-              margin: '18px 0 4px', textAlign: 'left',
-            }}>
+            <ListaAgrupada style={{ marginTop: 14, textAlign: 'left' }}>
               {[
                 '1. Toque no ícone de Compartilhar na barra inferior do Safari.',
                 '2. Role e selecione "Adicionar à Tela de Início".',
                 '3. Confirme em "Adicionar" no canto superior direito.',
               ].map((linha, i) => (
-                <div key={i} style={{
-                  padding: '10px 12px', borderRadius: 'var(--raio-controle)',
-                  background: 'var(--surface-sunken)',
-                  fontSize: 12.5, fontWeight: 600, color: 'var(--ink)', lineHeight: 1.4,
-                }}>{tr(linha)}</div>
+                <Linha key={i} divisoria={i > 0}>
+                  <span style={{ flex: 1, fontSize: 12.5, fontWeight: 600, color: 'var(--ink)', lineHeight: 1.4 }}>
+                    {tr(linha)}
+                  </span>
+                </Linha>
               ))}
-            </div>
+            </ListaAgrupada>
 
-            <button onClick={onDispensar} style={{
-              width: '100%', padding: '13px', borderRadius: 'var(--raio-bloco)', border: 'none',
-              background: 'var(--primary-degrade)',
-              color: '#fff', fontSize: 14, fontWeight: 800, fontFamily: 'inherit',
-              cursor: 'pointer', marginTop: 16,
-              boxShadow: '0 8px 20px color-mix(in oklab, var(--primary) 30%, transparent)',
-            }}>{tr("Entendi")}</button>
+            <button onClick={onDispensar} style={{ ...botao(true), marginTop: 18 }}>{tr("Entendi")}</button>
           </>
         )}
     </ModalOverlay>

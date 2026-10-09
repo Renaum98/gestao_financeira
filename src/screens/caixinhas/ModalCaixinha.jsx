@@ -1,15 +1,22 @@
 // ModalCaixinha.jsx — criar / editar caixinha (nome, cor, meta e investimento).
 
 import React from "react";
-import { Icon } from "../../ui/icons.jsx";
-import { formatarValorDigitado, formatarValorInicial, parseValorBR } from "../../lib/money-input.js";
+import { formatarValorInicial, parseValorBR } from "../../lib/money-input.js";
 import { useSelic, taxaAnualEfetiva } from "../../lib/selic.js";
 import { CORES_CAIXINHA } from "./utils.js";
 import { hojeISO } from "../../lib/datas.js";
-import { ModalShell, Campo, inputStyle } from "../../ui/modal-shell.jsx";
+import { ModalShell } from "../../ui/modal-shell.jsx";
+import {
+  InputMoedaLinha,
+  Linha,
+  ListaAgrupada,
+  NotaLinha,
+  SeletorCores,
+  estiloInputLinha,
+  estiloValorLinha,
+} from "../../ui/form-lista.jsx";
 import { Toggle } from "../../ui/common.jsx";
 import { Expansivel } from "../../ui/expansivel.jsx";
-import { simboloMoeda } from "../../lib/moeda.js";
 import { useT } from "../../lib/i18n.jsx";
 
 export function ModalCaixinha({ editando, onFechar, onSalvar }) {
@@ -29,8 +36,7 @@ export function ModalCaixinha({ editando, onFechar, onSalvar }) {
   const [saldoInicial, setSaldoInicial] = React.useState(formatarValorInicial(0));
   const saldoInicialNum = parseValorBR(saldoInicial);
 
-  // ─── Avançado / investimento ───
-  const [avancadoAberto, setAvancadoAberto] = React.useState(!!editando?.rendimentoAtivo);
+  // ─── Investimento ───
   const [rendimentoAtivo, setRendimentoAtivo] = React.useState(!!editando?.rendimentoAtivo);
   const [rendimentoCDI, setRendimentoCDI] = React.useState(String(editando?.rendimentoCDI ?? 100));
   const cdiNum = parseFloat(String(rendimentoCDI).replace(",", ".")) || 0;
@@ -60,258 +66,129 @@ export function ModalCaixinha({ editando, onFechar, onSalvar }) {
       onSalvar={salvar}
       salvarAtivo={valido}
     >
-      <Campo label={t("Nome")}>
-        <input
-          value={nome}
-          onChange={(e) => setNome(e.target.value)}
-          placeholder={t("Ex: Viagem para a praia")}
-          style={inputStyle}
-        />
-      </Campo>
+      {/* Nome e cor. A bolinha antes do nome já mostra a cor escolhida. */}
+      <ListaAgrupada>
+        <Linha
+          as="label"
+          inicio={
+            <span
+              style={{
+                width: 18,
+                height: 18,
+                borderRadius: "var(--raio-pilula)",
+                background: cor,
+                flexShrink: 0,
+                transition: "background .2s",
+              }}
+            />
+          }
+        >
+          <input
+            value={nome}
+            onChange={(e) => setNome(e.target.value)}
+            placeholder={t("Ex: Viagem para a praia")}
+            aria-label={t("Nome")}
+            style={estiloInputLinha}
+          />
+        </Linha>
+        <Linha divisoria style={{ padding: "10px 14px" }}>
+          <SeletorCores cores={CORES_CAIXINHA} valor={cor} onChange={setCor} />
+        </Linha>
+      </ListaAgrupada>
 
-      <Campo label={t("Cor")}>
-        <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-          {CORES_CAIXINHA.map((c) => {
-            const sel = cor === c;
-            return (
-              <button
-                key={c}
-                className="opcao-suave"
-                onClick={() => setCor(c)}
-                style={{
-                  width: 32,
-                  height: 32,
-                  borderRadius: "var(--raio-pilula)",
-                  background: c,
-                  border: sel ? "3px solid var(--ink)" : "3px solid transparent",
-                  cursor: "pointer",
-                  padding: 0,
-                }}
-              />
-            );
-          })}
-        </div>
-      </Campo>
-
-      <Campo label={t("Meta (opcional)")}>
-        {/* A margem de baixo do cabeçalho virou margem de cima do conteúdo:
-            dentro do bloco ela some junto na hora de fechar. */}
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+      {/* Meta */}
+      <ListaAgrupada>
+        <Linha
+          icone="target"
+          rotulo={t("Meta (opcional)")}
+          legenda={temMeta ? t("Definir um valor-alvo") : t("Sem meta — só vou juntando")}
+          as="label"
+        >
           <Toggle ativo={temMeta} onChange={setTemMeta} />
-          <span style={{ fontSize: 13, color: "var(--muted)", fontWeight: 600 }}>
-            {temMeta ? t("Definir um valor-alvo") : t("Sem meta — só vou juntando")}
-          </span>
-        </div>
+        </Linha>
         <Expansivel aberto={temMeta}>
-          <div>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 16 }}>
-              <span style={{ fontSize: 14, color: "var(--muted)", fontWeight: 700 }}>{simboloMoeda()}</span>
-              <input
-                type="text"
-                inputMode="numeric"
-                pattern="[0-9]*"
-                value={meta}
-                onChange={(e) => setMeta(formatarValorDigitado(e.target.value))}
-                style={inputStyle}
-              />
-            </div>
-            <div style={{ marginTop: 10 }}>
-              <label
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 10,
-                  padding: "12px 14px",
-                  borderRadius: "var(--raio-bloco)",
-                  background: "var(--card-2)",
-                  boxShadow: "0 1px 2px rgba(0,0,0,0.06)",
-                }}
-              >
-                <Icon name="calendar" size={16} color="var(--muted)" strokeWidth={2} />
-                <span style={{ flex: 1, fontSize: 12, fontWeight: 700, color: "var(--muted)" }}>
-                  {t("Até quando?")} <span style={{ opacity: 0.7 }}>{t("(opcional)")}</span>
-                </span>
-                <input
-                  type="date"
-                  value={dataMeta}
-                  min={hojeISO()}
-                  onChange={(e) => setDataMeta(e.target.value)}
-                  style={{
-                    border: "none",
-                    background: "transparent",
-                    outline: "none",
-                    fontSize: 13,
-                    fontWeight: 700,
-                    color: "var(--ink)",
-                    fontFamily: "inherit",
-                  }}
-                />
-              </label>
-            </div>
-          </div>
+          <Linha icone="piggy" rotulo={t("Valor-alvo")} divisoria as="label">
+            <InputMoedaLinha valor={meta} onChange={setMeta} ariaLabel={t("Valor-alvo")} />
+          </Linha>
+          <Linha icone="calendar" rotulo={t("Até quando?")} legenda={t("(opcional)")} divisoria as="label">
+            <input
+              type="date"
+              value={dataMeta}
+              min={hojeISO()}
+              onChange={(e) => setDataMeta(e.target.value)}
+              style={estiloValorLinha}
+            />
+          </Linha>
         </Expansivel>
-      </Campo>
+      </ListaAgrupada>
 
-      {/* ─── Saldo inicial (só ao criar) ─── */}
+      {/* Saldo inicial (só ao criar) */}
       {!editando && (
-        <Campo label={t("Já tinha dinheiro guardado?")}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        <ListaAgrupada>
+          <Linha
+            icone="wallet"
+            rotulo={t("Já tinha dinheiro guardado?")}
+            legenda={temSaldoInicial ? t("Informar o valor que já havia") : t("Começar do zero")}
+            as="label"
+          >
             <Toggle ativo={temSaldoInicial} onChange={setTemSaldoInicial} />
-            <span style={{ fontSize: 13, color: "var(--muted)", fontWeight: 600 }}>
-              {temSaldoInicial ? t("Informar o valor que já havia") : t("Começar do zero")}
-            </span>
-          </div>
+          </Linha>
           <Expansivel aberto={temSaldoInicial}>
-            <div>
-              <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 16 }}>
-                <span style={{ fontSize: 14, color: "var(--muted)", fontWeight: 700 }}>{simboloMoeda()}</span>
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  pattern="[0-9]*"
-                  value={saldoInicial}
-                  onChange={(e) => setSaldoInicial(formatarValorDigitado(e.target.value))}
-                  style={inputStyle}
-                />
-              </div>
-              <div
-                style={{
-                  marginTop: 8,
-                  fontSize: 11,
-                  color: "var(--muted)",
-                  fontWeight: 500,
-                  lineHeight: 1.45,
-                }}
-              >
-                {t("Esse valor já existia — entra na caixinha sem sair do seu saldo do mês.")}
-              </div>
-            </div>
+            <Linha icone="plus" rotulo={t("Valor")} divisoria as="label">
+              <InputMoedaLinha valor={saldoInicial} onChange={setSaldoInicial} ariaLabel={t("Valor")} />
+            </Linha>
+            <NotaLinha>
+              {t("Esse valor já existia — entra na caixinha sem sair do seu saldo do mês.")}
+            </NotaLinha>
           </Expansivel>
-        </Campo>
+        </ListaAgrupada>
       )}
 
-      {/* ─── Avançado (investimento) ─── */}
-      <div style={{ marginTop: 18 }}>
-        <button
-          onClick={() => setAvancadoAberto((v) => !v)}
-          style={{
-            width: "100%",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            gap: 8,
-            padding: "12px 14px",
-            borderRadius: "var(--raio-bloco)",
-            border: "none",
-            background: "var(--card-2)",
-            cursor: "pointer",
-            fontFamily: "inherit",
-            boxShadow: "0 1px 2px rgba(0,0,0,0.06)",
-          }}
+      {/* Investimento. A chave já esconde a parte técnica — dispensa o
+          "Avançado" que embrulhava este bloco. */}
+      <ListaAgrupada>
+        <Linha
+          icone="chart"
+          rotulo={t("Render como investimento")}
+          legenda={rendimentoAtivo ? null : t("Sem rendimento — caixinha comum")}
+          as="label"
         >
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <Icon name="chart" size={16} color="var(--muted)" strokeWidth={2.2} />
-            <span style={{ fontSize: 13, fontWeight: 800, color: "var(--ink)" }}>{t("Avançado")}</span>
-            <span style={{ fontSize: 11, fontWeight: 600, color: "var(--muted)" }}>{t("Investimento")}</span>
-          </div>
-          <span
-            className="chevron-expansivel"
-            style={{
-              display: "inline-flex",
-              transform: avancadoAberto ? "rotate(180deg)" : "none",
-            }}
-          >
-            <Icon name="chevron-down" size={16} color="var(--muted)" strokeWidth={2} />
-          </span>
-        </button>
-
-        <Expansivel aberto={avancadoAberto}>
-          <div
-            style={{
-              marginTop: 10,
-              padding: "12px 14px",
-              borderRadius: "var(--raio-bloco)",
-              background: "var(--card-2)",
-              boxShadow: "0 1px 2px rgba(0,0,0,0.06)",
-            }}
-          >
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <Toggle ativo={rendimentoAtivo} onChange={setRendimentoAtivo} />
-              <span style={{ fontSize: 13, color: "var(--muted)", fontWeight: 600 }}>
-                {rendimentoAtivo ? t("Render como investimento") : t("Sem rendimento — caixinha comum")}
-              </span>
+          <Toggle ativo={rendimentoAtivo} onChange={setRendimentoAtivo} />
+        </Linha>
+        <Expansivel aberto={rendimentoAtivo}>
+          <Linha icone="sparkle" rotulo={t("Taxa de rendimento (% do CDI)")} divisoria as="label">
+            <input
+              type="text"
+              inputMode="decimal"
+              value={rendimentoCDI}
+              onChange={(e) => {
+                // aceita só dígitos, vírgula e ponto
+                setRendimentoCDI(e.target.value.replace(/[^\d.,]/g, ""));
+              }}
+              placeholder="100"
+              style={{ ...estiloValorLinha, width: 52, textAlign: "right", fontSize: 16, fontWeight: 800 }}
+            />
+            <span style={{ fontSize: 13, fontWeight: 700, color: "var(--muted)" }}>%</span>
+          </Linha>
+          <NotaLinha>
+            {t("Selic atual: ")}
+            <strong style={{ color: "var(--ink)" }}>
+              {selic.toFixed(2).replace(".", ",")}% {t("a.a.")}
+            </strong>
+            {cdiNum > 0 && (
+              <>
+                {t(" · rende ~")}
+                <strong style={{ color: "var(--ink)" }}>
+                  {taxaEfetiva.toFixed(2).replace(".", ",")}% {t("a.a.")}
+                </strong>
+              </>
+            )}
+            <div style={{ marginTop: 4, fontWeight: 500, opacity: 0.85 }}>
+              {t("100% CDI = renda igual ao CDI · Estimativa diária com base na Meta Selic do BCB. Não considera IR.")}
             </div>
-
-            {/* Bloco dentro de bloco: o de fora acompanha a altura do de dentro
-                enquanto os dois animam. */}
-            <Expansivel aberto={rendimentoAtivo}>
-              <div style={{ marginTop: 12 }}>
-                <div
-                  style={{
-                    fontSize: 11,
-                    fontWeight: 700,
-                    color: "var(--muted)",
-                    textTransform: "uppercase",
-                    letterSpacing: 0.4,
-                    marginBottom: 6,
-                  }}
-                >
-                  {t("Taxa de rendimento (% do CDI)")}
-                </div>
-                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <input
-                    type="text"
-                    inputMode="decimal"
-                    value={rendimentoCDI}
-                    onChange={(e) => {
-                      // aceita só dígitos, vírgula e ponto
-                      const v = e.target.value.replace(/[^\d.,]/g, "");
-                      setRendimentoCDI(v);
-                    }}
-                    placeholder="100"
-                    style={{ ...inputStyle, flex: 1 }}
-                  />
-                  <span style={{ fontSize: 14, color: "var(--muted)", fontWeight: 700 }}>{t("% CDI")}</span>
-                </div>
-                <div
-                  style={{
-                    marginTop: 10,
-                    fontSize: 12,
-                    color: "var(--muted)",
-                    fontWeight: 500,
-                    lineHeight: 1.45,
-                  }}
-                >
-                  {t("Selic atual: ")}
-                  <strong style={{ color: "var(--ink)" }}>
-                    {selic.toFixed(2).replace(".", ",")}% {t("a.a.")}
-                  </strong>
-                  {cdiNum > 0 && (
-                    <>
-                      {t(" · rende ~")}
-                      <strong style={{ color: "var(--ink)" }}>
-                        {taxaEfetiva.toFixed(2).replace(".", ",")}% {t("a.a.")}
-                      </strong>
-                    </>
-                  )}
-                </div>
-                <div
-                  style={{
-                    marginTop: 6,
-                    fontSize: 11,
-                    color: "var(--muted)",
-                    fontWeight: 500,
-                    lineHeight: 1.45,
-                    opacity: 0.85,
-                  }}
-                >
-                  {t("100% CDI = renda igual ao CDI · Estimativa diária com base na Meta Selic do BCB. Não considera IR.")}
-                </div>
-              </div>
-            </Expansivel>
-          </div>
+          </NotaLinha>
         </Expansivel>
-      </div>
+      </ListaAgrupada>
     </ModalShell>
   );
 }

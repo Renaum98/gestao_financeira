@@ -2,10 +2,16 @@
 // senha quando o Firebase exige login recente.
 
 import React from "react";
-import { createPortal } from "react-dom";
-import { useFecharComEsc } from "../../ui/modal-base.jsx";
-import { Icon } from "../../ui/icons.jsx";
-import { Z_MODAL } from "../../ui/modal-base.jsx";
+import { ModalOverlay } from "../../ui/modal-base.jsx";
+import {
+  Aviso,
+  BotoesDialogo,
+  IconeDialogo,
+  Linha,
+  ListaAgrupada,
+  TituloDialogo,
+  estiloInputLinha,
+} from "../../ui/form-lista.jsx";
 import { reautenticarComSenha } from "../../lib/firebase.js";
 import { excluirContaCompleta, precisaReautenticar } from "../../lib/account.js";
 import { Loader } from "../../ui/loader.jsx";
@@ -61,216 +67,75 @@ export function ExcluirContaModal({ uid, meuEmail, meuNome, partnershipId, onFec
 
   const apagando = etapa === "apagando";
 
-  useFecharComEsc(onFechar);
-
-  return createPortal(
-    <div
-      onClick={apagando ? undefined : onFechar}
-      style={{
-        position: "fixed",
-        inset: 0,
-        height: "100dvh",
-        zIndex: Z_MODAL,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: 20,
-        background: "rgba(20, 16, 24, 0.45)",
-        backdropFilter: "blur(12px) saturate(140%)",
-        WebkitBackdropFilter: "blur(12px) saturate(140%)",
-        animation: "fadeIn .28s ease-out",
-      }}
+  return (
+    <ModalOverlay
+      onClose={apagando ? undefined : onFechar}
+      maxWidth={380}
+      padding="22px 20px 18px"
     >
-      <form
-        onClick={(e) => e.stopPropagation()}
-        onSubmit={etapa === "senha" ? confirmarSenha : (e) => e.preventDefault()}
-        role="dialog"
-        aria-modal="true"
-        style={{
-          width: "100%",
-          maxWidth: 380,
-          maxHeight: "calc(100dvh - 40px)",
-          overflowY: "auto",
-          background: "var(--bg)",
-          borderRadius: "var(--raio-superficie)",
-          padding: "22px 20px 18px",
-          boxShadow: "0 24px 60px rgba(0,0,0,0.28), 0 4px 12px rgba(0,0,0,0.08)",
-          animation: "scaleIn .34s cubic-bezier(0.22, 1, 0.36, 1)",
-        }}
-      >
-        <div
-          style={{
-            width: 56,
-            height: 56,
-            borderRadius: "var(--raio-pilula)",
-            background: COR_NEG_FUNDO,
-            margin: "0 auto 14px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <Icon name="trash" size={26} color={COR_NEG} strokeWidth={2.2} />
-        </div>
-
-        <div style={{ fontSize: 18, fontWeight: 800, color: "var(--ink)", letterSpacing: "-0.02em", textAlign: "center" }}>
-          {t("Excluir sua conta?")}
-        </div>
+      <form onSubmit={etapa === "senha" ? confirmarSenha : (e) => e.preventDefault()}>
+        <IconeDialogo icone="trash" cor={COR_NEG} fundo={COR_NEG_FUNDO} />
 
         {etapa === "aviso" && (
           <>
-            <div style={{ fontSize: 13, color: "var(--muted)", fontWeight: 500, marginTop: 8, lineHeight: 1.45, textAlign: "center" }}>
-              {t("Essa ação é ")}<strong style={{ color: "var(--ink)" }}>{t("irreversível")}</strong>{t(". Todos os seus dados (gastos, caixinhas, orçamentos, recorrentes) serão apagados permanentemente da nuvem.")}
-            </div>
+            <TituloDialogo
+              titulo={t("Excluir sua conta?")}
+              mensagem={
+                <>
+                  {t("Essa ação é ")}<strong style={{ color: "var(--ink)" }}>{t("irreversível")}</strong>{t(". Todos os seus dados (gastos, caixinhas, orçamentos, recorrentes) serão apagados permanentemente da nuvem.")}
+                </>
+              }
+            />
             {partnershipId && (
-              <div
-                style={{
-                  marginTop: 10,
-                  padding: "10px 12px",
-                  borderRadius: "var(--raio-controle)",
-                  background: `color-mix(in oklab, ${COR_NEG} 8%, transparent)`,
-                  fontSize: 12,
-                  color: "var(--muted)",
-                  fontWeight: 600,
-                  lineHeight: 1.4,
-                }}
-              >
+              <Aviso icone="user">
                 {t("Você está em uma conta compartilhada — seu parceiro receberá uma notificação avisando que você saiu, e as caixinhas dele serão limpas.")}
-              </div>
+              </Aviso>
             )}
-            {erro && (
-              <div style={{ marginTop: 10, fontSize: 12.5, fontWeight: 700, color: COR_NEG, textAlign: "center" }}>
-                {erro}
-              </div>
-            )}
-            <div style={{ display: "flex", gap: 10, marginTop: 20 }}>
-              <button
-                type="button"
-                onClick={onFechar}
-                style={{
-                  flex: 1,
-                  padding: 12,
-                  borderRadius: "var(--raio-bloco)",
-                  border: "none",
-                  background: "var(--card-2)",
-                  color: "var(--ink)",
-                  fontSize: 14,
-                  fontWeight: 800,
-                  fontFamily: "inherit",
-                  cursor: "pointer",
-                  boxShadow: "0 1px 2px rgba(0,0,0,0.06)",
-                }}
-              >
-                {t("Cancelar")}
-              </button>
-              <button
-                type="button"
-                onClick={tentarExcluir}
-                style={{
-                  flex: 1,
-                  padding: 12,
-                  borderRadius: "var(--raio-bloco)",
-                  border: "none",
-                  background: COR_NEG,
-                  color: "#fff",
-                  fontSize: 14,
-                  fontWeight: 800,
-                  fontFamily: "inherit",
-                  cursor: "pointer",
-                  boxShadow: "0 4px 14px rgba(214,58,85,0.32)",
-                }}
-              >
-                {t("Excluir")}
-              </button>
-            </div>
+            {erro && <Aviso icone="close" cor={COR_NEG}>{erro}</Aviso>}
+            <BotoesDialogo
+              cancelar={{ texto: t("Cancelar"), onClick: onFechar }}
+              confirmar={{ texto: t("Excluir"), onClick: tentarExcluir, cor: COR_NEG }}
+            />
           </>
         )}
 
         {etapa === "senha" && (
           <>
-            <div style={{ fontSize: 13, color: "var(--muted)", fontWeight: 500, marginTop: 8, lineHeight: 1.45, textAlign: "center" }}>
-              {t("Por segurança, digite sua senha pra confirmar a exclusão.")}
-            </div>
-            <label style={{ display: "block", marginTop: 14 }}>
-              <div style={{ fontSize: 12, fontWeight: 700, color: "var(--muted)", marginBottom: 6, paddingLeft: 2 }}>
-                {t("Senha")}
-              </div>
-              <input
-                type="password"
-                autoComplete="current-password"
-                value={senha}
-                onChange={(e) => setSenha(e.target.value)}
-                placeholder={t("Sua senha")}
-                style={{
-                  width: "100%",
-                  padding: "13px 14px",
-                  borderRadius: "var(--raio-bloco)",
-                  border: "1.5px solid var(--linha)",
-                  background: "var(--card)",
-                  outline: "none",
-                  fontSize: 15,
-                  fontWeight: 600,
-                  color: "var(--ink)",
-                  fontFamily: "inherit",
-                  boxSizing: "border-box",
-                }}
-              />
-            </label>
-            {erro && (
-              <div style={{ marginTop: 10, fontSize: 12.5, fontWeight: 700, color: COR_NEG, textAlign: "center" }}>
-                {erro}
-              </div>
-            )}
-            <div style={{ display: "flex", gap: 10, marginTop: 16 }}>
-              <button
-                type="button"
-                onClick={onFechar}
-                style={{
-                  flex: 1,
-                  padding: 12,
-                  borderRadius: "var(--raio-bloco)",
-                  border: "none",
-                  background: "var(--card-2)",
-                  color: "var(--ink)",
-                  fontSize: 14,
-                  fontWeight: 800,
-                  fontFamily: "inherit",
-                  cursor: "pointer",
-                  boxShadow: "0 1px 2px rgba(0,0,0,0.06)",
-                }}
-              >
-                {t("Cancelar")}
-              </button>
-              <button
-                type="submit"
-                style={{
-                  flex: 1,
-                  padding: 12,
-                  borderRadius: "var(--raio-bloco)",
-                  border: "none",
-                  background: COR_NEG,
-                  color: "#fff",
-                  fontSize: 14,
-                  fontWeight: 800,
-                  fontFamily: "inherit",
-                  cursor: "pointer",
-                  boxShadow: "0 4px 14px rgba(214,58,85,0.32)",
-                }}
-              >
-                {t("Confirmar exclusão")}
-              </button>
-            </div>
+            <TituloDialogo
+              titulo={t("Excluir sua conta?")}
+              mensagem={t("Por segurança, digite sua senha pra confirmar a exclusão.")}
+            />
+            <ListaAgrupada style={{ marginTop: 14 }}>
+              <Linha icone="lock" as="label">
+                <input
+                  type="password"
+                  autoComplete="current-password"
+                  value={senha}
+                  onChange={(e) => setSenha(e.target.value)}
+                  placeholder={t("Sua senha")}
+                  aria-label={t("Senha")}
+                  style={estiloInputLinha}
+                />
+              </Linha>
+            </ListaAgrupada>
+            {erro && <Aviso icone="close" cor={COR_NEG}>{erro}</Aviso>}
+            <BotoesDialogo
+              cancelar={{ texto: t("Cancelar"), onClick: onFechar }}
+              confirmar={{ texto: t("Confirmar exclusão"), type: "submit", cor: COR_NEG }}
+            />
           </>
         )}
 
         {apagando && (
-          <div style={{ marginTop: 16, display: "flex", flexDirection: "column", alignItems: "center", gap: 10 }}>
-            <Loader size={44} label={t("Apagando seus dados")} />
-            <div style={{ fontSize: 13, fontWeight: 700, color: "var(--muted)" }}>{t("Apagando seus dados…")}</div>
-          </div>
+          <>
+            <TituloDialogo titulo={t("Excluir sua conta?")} />
+            <div style={{ marginTop: 16, display: "flex", flexDirection: "column", alignItems: "center", gap: 10 }}>
+              <Loader size={44} label={t("Apagando seus dados")} />
+              <div style={{ fontSize: 13, fontWeight: 700, color: "var(--muted)" }}>{t("Apagando seus dados…")}</div>
+            </div>
+          </>
         )}
       </form>
-    </div>,
-    document.body,
+    </ModalOverlay>
   );
 }
