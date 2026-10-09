@@ -1138,6 +1138,18 @@ export function App() {
   const [params, setParams] = React.useState({});
   const [stack, setStack] = React.useState([]);
 
+  // A rolagem é da janela, e não de cada tela: sem isto, abrir uma tela
+  // empilhada a partir de uma lista rolada herdava o scrollY de lá, e a página
+  // nova já nascia "rolada" (barra do voltar formada, ver TopBar). Quem navega
+  // marca aqui pra onde a janela vai; o efeito aplica depois que a tela nova
+  // montou, quando a altura dela já existe.
+  const rolagemAlvo = React.useRef(null);
+  React.useLayoutEffect(() => {
+    if (rolagemAlvo.current == null) return;
+    window.scrollTo({ top: rolagemAlvo.current, behavior: "instant" });
+    rolagemAlvo.current = null;
+  }, [tela, params]);
+
   // Ao logar (uid passa a ser válido), volta sempre para a tela "inicio".
   // Sem isto, quem desloga em "gastos"/"analise" volta para a mesma aba
   // ao logar novamente, porque o componente App nunca desmonta.
@@ -1239,7 +1251,9 @@ export function App() {
       // Sem isso, escolher cinco caixinhas seguidas custaria cinco voltas.
       setParams(p);
     } else {
-      setStack([...stack, { tela, params }]);
+      // Guarda onde a tela de baixo estava, pra o voltar devolver ao mesmo ponto.
+      setStack([...stack, { tela, params, rolagem: window.scrollY }]);
+      rolagemAlvo.current = 0;
       setTela(t);
       setParams(p);
     }
@@ -1252,6 +1266,7 @@ export function App() {
     }
     const last = stack[stack.length - 1];
     setStack(stack.slice(0, -1));
+    rolagemAlvo.current = last.rolagem ?? 0;
     setTela(last.tela);
     setParams(last.params);
   };
