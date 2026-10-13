@@ -9,6 +9,7 @@
 //     TituloDialogo e BotoesDialogo.
 
 import React from "react";
+import { createPortal } from "react-dom";
 import { CATEGORIAS, PAGAMENTOS } from "../data.js";
 import { CatChip, Icon, iconePagamento } from "./icons.jsx";
 import { Expansivel } from "./expansivel.jsx";
@@ -18,6 +19,7 @@ import { formatarValorDigitado } from "../lib/money-input.js";
 import { PAG_CARTAO } from "../lib/fatura.js";
 import { corDoCartao, corTextoSobre } from "../lib/cartoes.js";
 import { useT } from "../lib/i18n.jsx";
+import { Z_MODAL } from "./modal-base.jsx";
 
 // ─── Formulário ────────────────────────────────────────────────────────────
 
@@ -580,6 +582,276 @@ export function FileiraPilulas({ children, style }) {
       }}
     >
       {children}
+    </div>
+  );
+}
+
+// Select da linha (dia, mês, ano): o valor em texto com uma setinha, e ao tocar
+// abre um painel do próprio app no lugar da lista do sistema. Cada opção:
+// { value, label }.
+//
+// O painel vai por portal pro body com posição fixa, ancorado no botão: a
+// ListaAgrupada e o próprio modal cortam o que transborda (overflow), então
+// um painel absoluto dentro deles sairia picotado. Abre pra baixo e, sem
+// espaço, pra cima. Rolar o modal ou mudar o tamanho da janela fecha, em vez
+// de deixar o painel boiando longe do botão.
+//
+// O Esc é escutado na captura e não propaga: sem isso, o mesmo Esc fecharia o
+// painel e o modal embaixo dele (useFecharComEsc).
+export function SelectLinha({ value, options, onChange, ariaLabel }) {
+  const [aberto, setAberto] = React.useState(false);
+  const [pos, setPos] = React.useState(null);
+  const botao = React.useRef(null);
+  const painel = React.useRef(null);
+  const atual = options.find((o) => o.value === value);
+
+  const abrir = () => {
+    const r = botao.current?.getBoundingClientRect();
+    if (!r) return;
+    vibrar();
+    const ALTURA = 264;
+    const abaixo = window.innerHeight - r.bottom;
+    const praCima = abaixo < ALTURA + 16 && r.top > abaixo;
+    setPos({
+      direita: Math.max(8, window.innerWidth - r.right - 8),
+      ...(praCima ? { bottom: window.innerHeight - r.top + 6 } : { top: r.bottom + 6 }),
+      praCima,
+      largura: Math.max(r.width + 16, 112),
+      alturaMax: Math.min(ALTURA, (praCima ? r.top : abaixo) - 16),
+    });
+    setAberto(true);
+  };
+  const fechar = (devolverFoco) => {
+    setAberto(false);
+    if (devolverFoco) botao.current?.focus();
+  };
+
+  React.useEffect(() => {
+    if (!aberto) return;
+    const fora = (e) => {
+      if (painel.current?.contains(e.target) || botao.current?.contains(e.target)) return;
+      fechar(false);
+    };
+    const rolou = (e) => {
+      if (painel.current?.contains(e.target)) return;
+      fechar(false);
+    };
+    const tecla = (e) => {
+      if (e.key === "Escape") {
+        e.stopPropagation();
+        fechar(true);
+        return;
+      }
+      if (e.key !== "ArrowDown" && e.key !== "ArrowUp") return;
+      const itens = [...(painel.current?.querySelectorAll("[role=option]") || [])];
+      const i = itens.indexOf(document.activeElement);
+      const prox = e.key === "ArrowDown" ? Math.min(itens.length - 1, i + 1) : Math.max(0, i - 1);
+      itens[prox]?.focus();
+      e.preventDefault();
+    };
+    const redimensionou = () => fechar(false);
+    document.addEventListener("pointerdown", fora);
+    document.addEventListener("scroll", rolou, true);
+    window.addEventListener("keydown", tecla, true);
+    window.addEventListener("resize", redimensionou);
+    // Abre já com a escolhida à vista (no meio) e com o foco nela.
+    const sel = painel.current?.querySelector("[aria-selected=true]");
+    if (sel) {
+      painel.current.scrollTop = sel.offsetTop - painel.current.clientHeight / 2 + sel.offsetHeight / 2;
+      sel.focus({ preventScroll: true });
+    }
+    return () => {
+      document.removeEventListener("pointerdown", fora);
+      document.removeEventListener("scroll", rolou, true);
+      window.removeEventListener("keydown", tecla, true);
+      window.removeEventListener("resize", redimensionou);
+    };
+  }, [aberto]);
+
+  return (
+    <>
+      <button
+        ref={botao}
+        type="button"
+        onClick={() => (aberto ? fechar(false) : abrir())}
+        aria-haspopup="listbox"
+        aria-expanded={aberto}
+        aria-label={ariaLabel}
+        style={{
+          ...estiloValorLinha,
+          display: "inline-flex",
+          alignItems: "center",
+          gap: 4,
+          cursor: "pointer",
+          flexShrink: 0,
+        }}
+      >
+        {atual?.label ?? value}
+        <Chevron aberto={aberto} />
+      </button>
+
+      {aberto && pos && createPortal(
+        <div
+          ref={painel}
+          role="listbox"
+          aria-label={ariaLabel}
+          className={pos.praCima ? "select-mola select-mola-cima" : "select-mola"}
+          style={{
+            position: "fixed",
+            right: pos.direita,
+            top: pos.top,
+            bottom: pos.bottom,
+            width: pos.largura,
+            maxHeight: pos.alturaMax,
+            overflowY: "auto",
+            zIndex: Z_MODAL + 1,
+            padding: 5,
+            boxSizing: "border-box",
+            borderRadius: "var(--raio-bloco)",
+            background: "var(--card)",
+            border: "1px solid var(--linha)",
+            boxShadow: "0 14px 32px rgba(20,16,24,0.22), 0 3px 8px rgba(20,16,24,0.12)",
+            scrollbarWidth: "none",
+          }}
+        >
+          {options.map((o) => {
+            const sel = o.value === value;
+            return (
+              <button
+                key={o.value}
+                type="button"
+                role="option"
+                aria-selected={sel}
+                className="opcao-suave"
+                onClick={() => {
+                  vibrar();
+                  if (!sel) onChange(o.value);
+                  fechar(true);
+                }}
+                style={{
+                  width: "100%",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                  padding: "8px 10px",
+                  border: "none",
+                  borderRadius: "var(--raio-compacto)",
+                  background: sel ? "color-mix(in oklab, var(--primary) 16%, transparent)" : "transparent",
+                  color: sel ? "var(--primary)" : "var(--ink)",
+                  fontSize: 14,
+                  fontWeight: sel ? 800 : 600,
+                  fontFamily: "inherit",
+                  fontVariantNumeric: "tabular-nums",
+                  textAlign: "left",
+                  cursor: "pointer",
+                }}
+              >
+                <span style={{ flex: 1 }}>{o.label}</span>
+                {sel && <Icon name="check" size={15} color="var(--primary)" strokeWidth={2.8} />}
+              </button>
+            );
+          })}
+        </div>,
+        document.body,
+      )}
+    </>
+  );
+}
+
+// Range com mola: o pino corre até o valor novo numa mola (passa um pouco e
+// assenta), estica no sentido do movimento conforme a velocidade e cresce
+// enquanto está agarrado. O input nativo fica por cima, invisível, e é quem
+// recebe toque e teclado — ver .range-mola em components.css.
+//
+// A mola escreve direto nas variáveis CSS do elemento a cada quadro, sem
+// passar pelo estado do React: são 60 renders por segundo que ninguém lê.
+export function RangeMola({ min, max, step = 1, value, onChange, ariaLabel }) {
+  const ref = React.useRef(null);
+  const alvo = React.useRef({ pos: 0, escala: 1 });
+  const estado = React.useRef(null);
+  const raf = React.useRef(0);
+  const [agarrado, setAgarrado] = React.useState(false);
+
+  const fracao = max > min ? (value - min) / (max - min) : 0;
+
+  const animar = React.useCallback(() => {
+    if (raf.current) return;
+    let antes = performance.now();
+    const quadro = (agora) => {
+      // Passo limitado: aba em segundo plano devolve um dt enorme na volta.
+      const dt = Math.min((agora - antes) / 1000, 1 / 30);
+      antes = agora;
+      const e = estado.current;
+      const a = alvo.current;
+      // Posição: mola com pouco amortecimento, pra passar do ponto e voltar.
+      e.vPos += (260 * (a.pos - e.pos) - 18 * e.vPos) * dt;
+      e.pos += e.vPos * dt;
+      // Escala: mola mais solta ainda, o "pulo" ao agarrar e soltar.
+      e.vEsc += (320 * (a.escala - e.esc) - 14 * e.vEsc) * dt;
+      e.esc += e.vEsc * dt;
+      // Estica na direção do movimento e afina na outra, guardando o volume.
+      const estica = Math.min(Math.abs(e.vPos) * 0.12, 0.35);
+      const el = ref.current;
+      if (el) {
+        el.style.setProperty("--pos", e.pos.toFixed(4));
+        el.style.setProperty("--sx", (e.esc * (1 + estica)).toFixed(3));
+        el.style.setProperty("--sy", (e.esc / (1 + estica * 0.6)).toFixed(3));
+      }
+      const parado =
+        Math.abs(a.pos - e.pos) < 0.0005 && Math.abs(e.vPos) < 0.005 &&
+        Math.abs(a.escala - e.esc) < 0.001 && Math.abs(e.vEsc) < 0.01;
+      if (parado) {
+        e.pos = a.pos; e.esc = a.escala; e.vPos = 0; e.vEsc = 0;
+        if (el) {
+          el.style.setProperty("--pos", String(a.pos));
+          el.style.setProperty("--sx", String(a.escala));
+          el.style.setProperty("--sy", String(a.escala));
+        }
+        raf.current = 0;
+        return;
+      }
+      raf.current = requestAnimationFrame(quadro);
+    };
+    raf.current = requestAnimationFrame(quadro);
+  }, []);
+
+  React.useLayoutEffect(() => {
+    alvo.current = { pos: fracao, escala: agarrado ? 1.4 : 1 };
+    const semMovimento = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    if (!estado.current || semMovimento) {
+      // Primeira pintura (ou movimento reduzido): já nasce no lugar, sem mola.
+      estado.current = { pos: fracao, vPos: 0, esc: alvo.current.escala, vEsc: 0 };
+      const el = ref.current;
+      el?.style.setProperty("--pos", String(fracao));
+      el?.style.setProperty("--sx", String(alvo.current.escala));
+      el?.style.setProperty("--sy", String(alvo.current.escala));
+      return;
+    }
+    animar();
+  }, [fracao, agarrado, animar]);
+
+  React.useEffect(() => () => cancelAnimationFrame(raf.current), []);
+
+  const soltar = () => setAgarrado(false);
+
+  return (
+    <div ref={ref} className="range-mola">
+      <div className="range-mola-trilha"><div className="range-mola-cheio" /></div>
+      <div className="range-mola-pino" />
+      <input
+        type="range"
+        min={min}
+        max={max}
+        step={step}
+        value={value}
+        onChange={(e) => onChange(Number(e.target.value))}
+        onPointerDown={() => setAgarrado(true)}
+        onPointerUp={soltar}
+        onPointerCancel={soltar}
+        onLostPointerCapture={soltar}
+        onBlur={soltar}
+        aria-label={ariaLabel}
+      />
     </div>
   );
 }

@@ -626,3 +626,107 @@
     transition: none;
   }
 }
+
+/* ── Range com mola (ui/form-lista.jsx, RangeMola) ──────────────────────────
+   O input nativo fica por cima, invisível, e cuida do toque, do teclado e do
+   leitor de tela; a trilha e o pino são divs que uma mola em JS move. O nativo
+   não serve de visual: a posição do pino dele não anima, e no tema escuro o
+   navegador ainda desenha uma borda clara na trilha.
+
+   O pino do input invisível tem a mesma largura do desenhado (18px), pra o
+   ponto que o dedo agarra bater com o que se vê. */
+.range-mola {
+  position: relative;
+  height: 22px;
+}
+.range-mola-trilha {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 8px;
+  height: 6px;
+  border-radius: var(--raio-pilula);
+  background: color-mix(in oklab, var(--ink) 12%, transparent);
+  overflow: hidden;
+}
+.range-mola-cheio {
+  height: 100%;
+  width: calc(9px + var(--pos, 0) * (100% - 18px));
+  background: var(--primary);
+}
+.range-mola-pino {
+  position: absolute;
+  top: 2px;
+  left: calc(var(--pos, 0) * (100% - 18px));
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--primary);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+  transform: scale(var(--sx, 1), var(--sy, 1));
+  pointer-events: none;
+}
+.range-mola input {
+  -webkit-appearance: none;
+  appearance: none;
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+  touch-action: pan-y;
+}
+.range-mola input::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 22px;
+}
+.range-mola input::-moz-range-thumb {
+  width: 18px;
+  height: 22px;
+  border: none;
+}
+/* O input é invisível; o anel de foco do teclado vai pro pino desenhado. */
+.range-mola:has(input:focus-visible) .range-mola-pino {
+  outline: 2px solid color-mix(in oklab, var(--primary) 60%, transparent);
+  outline-offset: 2px;
+}
+
+/* ── Troca de mês com mola (simular-gasto.jsx, "Começando em") ──────────────
+   O rótulo novo entra deslizando pelo lado do passo dado e passa um pouco do
+   ponto antes de assentar — a mesma família de mola do RangeMola. */
+@keyframes mes-entra-dir {
+  from { transform: translateX(22px); opacity: 0; }
+  to { transform: none; opacity: 1; }
+}
+@keyframes mes-entra-esq {
+  from { transform: translateX(-22px); opacity: 0; }
+  to { transform: none; opacity: 1; }
+}
+.mes-entra-dir { animation: mes-entra-dir .45s cubic-bezier(.34, 1.56, .64, 1); }
+.mes-entra-esq { animation: mes-entra-esq .45s cubic-bezier(.34, 1.56, .64, 1); }
+@media (prefers-reduced-motion: reduce) {
+  .mes-entra-dir,
+  .mes-entra-esq { animation: none; }
+}
+
+/* ── Painel do SelectLinha (ui/form-lista.jsx) ──────────────────────────────
+   Sai do canto do botão (direita) com a mesma mola do range e da troca de mês:
+   cresce passando um pouco do tamanho e assenta. Abrindo pra cima, cresce de
+   baixo. */
+@keyframes select-mola {
+  from { transform: scale(.88); opacity: 0; }
+  to { transform: none; opacity: 1; }
+}
+.select-mola {
+  transform-origin: top right;
+  animation: select-mola .38s cubic-bezier(.34, 1.56, .64, 1);
+}
+.select-mola-cima { transform-origin: bottom right; }
+.select-mola::-webkit-scrollbar { display: none; }
+@media (prefers-reduced-motion: reduce) {
+  .select-mola { animation: none; }
+}

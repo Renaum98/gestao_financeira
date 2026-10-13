@@ -28,6 +28,7 @@ import {
   Linha,
   LinhaPagamento,
   ListaAgrupada,
+  SelectLinha,
   NotaLinha,
   PilulaCategoria,
   SeletorCores,
@@ -581,39 +582,30 @@ export function AddExpenseModal({ ctx, params }) {
                 </NotaLinha>
               ) : (
                 <Linha icone="calendar" rotulo={t("Vence todo dia")} divisoria as="label">
-                  <select
+                  <SelectLinha
                     value={diaVenc}
-                    onChange={(e) => setDiaVenc(parseInt(e.target.value, 10))}
-                    style={{ ...estiloValorLinha, cursor: "pointer" }}
-                  >
-                    {Array.from({ length: 31 }, (_, i) => i + 1).map((d) => (
-                      <option key={d} value={d}>{d}</option>
-                    ))}
-                  </select>
+                    onChange={setDiaVenc}
+                    ariaLabel={t("Vence todo dia")}
+                    options={Array.from({ length: 31 }, (_, i) => ({ value: i + 1, label: i + 1 }))}
+                  />
                 </Linha>
               )}
 
               {/* Até mês/ano — dois selects, então a linha não é label (o toque
                   não saberia em qual cair). */}
               <Linha icone="history" rotulo={t("Até")} divisoria>
-                <select
+                <SelectLinha
                   value={fimMes}
-                  onChange={(e) => setFimMes(parseInt(e.target.value, 10))}
-                  style={{ ...estiloValorLinha, cursor: "pointer" }}
-                >
-                  {MESES.map((nome, idx) => (
-                    <option key={idx} value={idx + 1}>{t(nome)}</option>
-                  ))}
-                </select>
-                <select
+                  onChange={setFimMes}
+                  ariaLabel={t("Mês")}
+                  options={MESES.map((nome, idx) => ({ value: idx + 1, label: t(nome) }))}
+                />
+                <SelectLinha
                   value={fimAno}
-                  onChange={(e) => setFimAno(parseInt(e.target.value, 10))}
-                  style={{ ...estiloValorLinha, cursor: "pointer" }}
-                >
-                  {Array.from({ length: 11 }, (_, i) => _hoje.getFullYear() + i).map((a) => (
-                    <option key={a} value={a}>{a}</option>
-                  ))}
-                </select>
+                  onChange={setFimAno}
+                  ariaLabel={t("Ano")}
+                  options={Array.from({ length: 11 }, (_, i) => _hoje.getFullYear() + i).map((a) => ({ value: a, label: a }))}
+                />
               </Linha>
             </Expansivel>
           )}

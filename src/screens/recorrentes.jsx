@@ -17,12 +17,12 @@ import {
   Linha,
   LinhaPagamento,
   ListaAgrupada,
+  SelectLinha,
   NotaLinha,
   PilulaCategoria,
   RodapeLista,
   ValorGrande,
   estiloInputLinha,
-  estiloValorLinha,
 } from '../ui/form-lista.jsx';
 
 export function RecorrentesScreen({ ctx }) {
@@ -245,15 +245,12 @@ function EditarRecorrenteModal({ rec, cartoes = [], onFechar, onSalvar }) {
           </NotaLinha>
         ) : (
           <Linha icone="calendar" rotulo={t("Vence todo dia")} divisoria as="label">
-            <select
+            <SelectLinha
               value={dia}
-              onChange={(e) => setDia(parseInt(e.target.value, 10))}
-              style={{ ...estiloValorLinha, cursor: 'pointer' }}
-            >
-              {Array.from({ length: 31 }, (_, i) => i + 1).map((d) => (
-                <option key={d} value={d}>{d}</option>
-              ))}
-            </select>
+              onChange={setDia}
+              ariaLabel={t("Vence todo dia")}
+              options={Array.from({ length: 31 }, (_, i) => ({ value: i + 1, label: i + 1 }))}
+            />
           </Linha>
         )}
       </ListaAgrupada>

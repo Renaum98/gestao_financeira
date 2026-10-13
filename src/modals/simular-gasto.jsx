@@ -16,7 +16,7 @@ import { COR_POS, COR_NEG, COR_AVISO } from "../lib/colors.js";
 import { parseValorBR, valorZero } from "../lib/money-input.js";
 import { mesShift } from "../lib/datas.js";
 import { useT } from "../lib/i18n.jsx";
-import { Aviso, Linha, ListaAgrupada, ValorGrande, estiloValorLinha } from "../ui/form-lista.jsx";
+import { Aviso, Linha, ListaAgrupada, RangeMola, ValorGrande, estiloValorLinha } from "../ui/form-lista.jsx";
 
 // Até onde dá pra adiar o início: um ano pra frente.
 const INICIO_MAX = 12;
@@ -209,8 +209,13 @@ export function SimularGastoModal({
     return out;
   }, [valorNum, n, restanteIni, orcTotalIni, mesInicio, rotuloInicio, ehAgora, valorParcela, t]);
 
+  // Sentido do último passo de mês: o rótulo novo entra pelo lado de onde o
+  // mês "veio" (› empurra pra esquerda, ‹ pra direita). Começa em 0 pra o
+  // rótulo não animar quando o modal abre.
+  const [sentidoInicio, setSentidoInicio] = React.useState(0);
   const passoInicio = (delta) => {
     vibrar(8);
+    setSentidoInicio(delta);
     setInicio((i) => Math.max(0, Math.min(INICIO_MAX, i + delta)));
   };
   const passoParcelas = (delta) => {
@@ -311,15 +316,12 @@ export function SimularGastoModal({
             </button>
           </Linha>
           <div style={{ padding: "0 14px 10px 42px" }}>
-            <input
-              type="range"
+            <RangeMola
               min={1}
               max={24}
-              step={1}
               value={Math.min(n, 24)}
-              onChange={(e) => setParcelas(parseInt(e.target.value, 10))}
-              style={{ width: "100%", accentColor: "var(--primary)", margin: 0 }}
-              aria-label={t("Quantidade de parcelas")}
+              onChange={setParcelas}
+              ariaLabel={t("Quantidade de parcelas")}
             />
           </div>
 
@@ -327,8 +329,15 @@ export function SimularGastoModal({
             <button onClick={() => passoInicio(-1)} disabled={ehAgora} aria-label={t("Mês anterior")} style={botaoPasso(ehAgora)}>
               <Icon name="arrow-left" size={14} />
             </button>
-            <div aria-live="polite" style={valorPasso}>
-              {ehAgora ? t("este mês") : rotuloInicio}
+            <div aria-live="polite" style={{ ...valorPasso, overflow: "hidden" }}>
+              {/* key remonta o span a cada mês, e a animação de entrada roda de novo. */}
+              <span
+                key={inicio}
+                className={sentidoInicio > 0 ? "mes-entra-dir" : sentidoInicio < 0 ? "mes-entra-esq" : undefined}
+                style={{ display: "inline-block" }}
+              >
+                {ehAgora ? t("este mês") : rotuloInicio}
+              </span>
             </div>
             <button onClick={() => passoInicio(1)} disabled={inicio >= INICIO_MAX} aria-label={t("Próximo mês")} style={botaoPasso(inicio >= INICIO_MAX)}>
               <Icon name="arrow-right" size={14} />
