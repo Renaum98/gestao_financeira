@@ -292,20 +292,29 @@ export function DashboardScreen({ ctx }) {
 
       <InsightsCard insights={insights} ehDesktop={ehDesktop} />
 
-      {/* Botão discreto: simular um gasto e checar se cabe no orçamento */}
-      <div className={ehDesktop ? "col-span-all" : undefined} style={{ padding: "var(--esp-secao) var(--pad-x) 0" }}>
+      {/* Botão discreto: simular um gasto e checar se cabe no orçamento. No
+          desktop a linha ocupa a grade inteira, e um botão de largura total
+          virava uma faixa de mais de mil pixels: lá ele fica do tamanho do
+          texto, centralizado. */}
+      <div
+        className={ehDesktop ? "col-span-all" : undefined}
+        style={{
+          padding: "var(--esp-secao) var(--pad-x) 0",
+          ...(ehDesktop && { display: "flex", justifyContent: "center" }),
+        }}
+      >
         <button
           onClick={() => {
             vibrar();
             setSimularAberto(true);
           }}
           style={{
-            width: "100%",
+            width: ehDesktop ? "auto" : "100%",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
             gap: 8,
-            padding: "10px 14px",
+            padding: ehDesktop ? "9px 22px" : "10px 14px",
             borderRadius: "var(--raio-bloco)",
             border: "1px solid color-mix(in oklab, var(--primary) 35%, transparent)",
             background: "color-mix(in oklab, var(--primary) 6%, transparent)",
