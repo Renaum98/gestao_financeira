@@ -216,6 +216,7 @@ export function SeletorPilula({ opcoes, valor, onChange, style }) {
 export function ListaAgrupada({ children, style }) {
   return (
     <div
+      className="lista-agrupada"
       style={{
         marginTop: 12,
         borderRadius: "var(--raio-bloco)",

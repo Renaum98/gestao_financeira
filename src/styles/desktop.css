@@ -23,6 +23,14 @@ select:focus-visible {
   outline-offset: 1px;
 }
 
+/* Dentro da lista agrupada dos modais o campo é texto solto na linha, sem
+   caixa: o anel aparece já no clique (input de texto sempre casa com
+   :focus-visible) e desenha um contorno em volta de nada. O cursor basta. */
+.lista-agrupada input:focus-visible,
+.lista-agrupada textarea:focus-visible {
+  outline: none !important;
+}
+
 /* ─── Hover ─────────────────────────────────────────────────────────────────
    `filter`, e não `background`: quase todo elemento clicável do app pinta o
    próprio fundo por estilo inline, e inline vence uma regra `:hover`. O filtro
