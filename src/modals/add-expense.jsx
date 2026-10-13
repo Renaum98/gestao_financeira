@@ -282,10 +282,24 @@ export function AddExpenseModal({ ctx, params }) {
           ]}
         />
 
-        {/* Categoria (só saída): pílulas numa linha só, que rola de lado. */}
-        <Expansivel aberto={!ehEntrada}>
-        <div style={{ marginTop: 12 }}>
-          <FileiraPilulas>
+        {/* Categoria (só saída): pílulas numa linha só, que rola de lado. Vai
+            de borda a borda do modal (a margem negativa come o padding de
+            18px) e as pontas esmaecem, pra pílula sumir na borda em vez de
+            ser cortada. Em repouso a primeira fica fora do esmaecido.
+            A margem negativa fica no Expansivel porque o miolo dele tem
+            overflow: hidden e cortaria a fileira; o padding devolve o recuo
+            ao resto do bloco (formulário de nova categoria). */}
+        <Expansivel aberto={!ehEntrada} style={{ margin: "0 -18px" }}>
+        <div style={{ marginTop: 12, padding: "0 18px" }}>
+          <FileiraPilulas
+            style={{
+              margin: "0 -18px",
+              padding: "4px 18px",
+              scrollPaddingInline: 18,
+              maskImage: "linear-gradient(to right, transparent, #000 18px, #000 calc(100% - 18px), transparent)",
+              WebkitMaskImage: "linear-gradient(to right, transparent, #000 18px, #000 calc(100% - 18px), transparent)",
+            }}
+          >
             {catsMinhas().map((c) => (
               <PilulaCategoria
                 key={c}
