@@ -400,6 +400,8 @@ export const EN = {
   "1ª parcela {v1} · 2ª {v2} · 3ª {v3}": "1st installment {v1} · 2nd {v2} · 3rd {v3}",
   "Vence todo dia": "Due every day",
   "Até": "Until",
+  "Mês": "Month",
+  "Ano": "Year",
   "Duplo-clique para excluir": "Double-click to delete",
   "Segure 2s para excluir": "Hold 2s to delete",
   "Excluir \"{nome}\"?": "Delete \"{nome}\"?",
@@ -714,6 +716,7 @@ export const EN = {
   "Começar": "Start",
   "Ir para slide {n}": "Go to slide {n}",
   "Meta": "Goal",
+  "Meta alcançada!": "Goal reached!",
 
   // ─── Notificações ───
   "Eventos recentes da parceria": "Recent partnership events",
