@@ -24,17 +24,19 @@ function LinhaMes({ d, ativo, primeiro, t, onClick }) {
         display: "flex",
         alignItems: "center",
         gap: 12,
-        padding: "12px 0",
+        padding: "10px 0",
         borderTop: primeiro ? "none" : "1px solid var(--linha)",
         cursor: "pointer",
       }}
     >
+      {/* Menor que o quadrado do ano e no fundo do card (o subgrupo já pinta
+          var(--bg)): a hierarquia ano › mês também se lê pelo tamanho. */}
       <div
         style={{
-          width: 44,
-          height: 44,
-          borderRadius: "var(--raio-bloco)",
-          background: ativo ? "var(--primary)" : "var(--bg)",
+          width: 38,
+          height: 38,
+          borderRadius: "var(--raio-compacto)",
+          background: ativo ? "var(--primary)" : "var(--card)",
           color: ativo ? "#fff" : "var(--ink)",
           display: "flex",
           flexDirection: "column",
@@ -44,13 +46,13 @@ function LinhaMes({ d, ativo, primeiro, t, onClick }) {
           flexShrink: 0,
         }}
       >
-        <div style={{ fontSize: 10, opacity: 0.8 }}>{d.mes.split("-")[0].slice(2)}</div>
-        <div style={{ fontSize: 13, letterSpacing: "-0.02em" }}>
+        <div style={{ fontSize: 9, opacity: 0.8 }}>{d.mes.split("-")[0].slice(2)}</div>
+        <div style={{ fontSize: 12, letterSpacing: "-0.02em" }}>
           {t(MESES_CURTO[parseInt(d.mes.split("-")[1], 10) - 1])}
         </div>
       </div>
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: 14, fontWeight: 700, color: "var(--ink)" }}>
+        <div style={{ fontSize: 13.5, fontWeight: 700, color: "var(--ink)" }}>
           {rotuloMesT(t, d.mes)}
         </div>
         <div style={{ fontSize: 12, color: "var(--muted)", fontWeight: 600, marginTop: 2 }}>
@@ -58,7 +60,7 @@ function LinhaMes({ d, ativo, primeiro, t, onClick }) {
         </div>
       </div>
       <div style={{ textAlign: "right" }}>
-        <div style={{ fontSize: 14, fontWeight: 800, color: "var(--ink)" }}>
+        <div style={{ fontSize: 13.5, fontWeight: 800, color: "var(--ink)" }}>
           {fmtBRLCompacto(d.total)}
         </div>
       </div>
@@ -217,8 +219,19 @@ export function HistoricoScreen({ ctx }) {
                   </span>
                 </div>
 
+                {/* Os meses formam um subgrupo dentro do card do ano: bloco
+                    recuado com fundo próprio, pra a lista não se confundir
+                    com a linha do ano (antes era tudo da mesma cor, separado
+                    só por divisórias iguais). */}
                 {aberto && (
-                  <div style={{ borderTop: "1px solid var(--linha)", paddingBottom: 4 }}>
+                  <div
+                    style={{
+                      margin: "0 -6px 12px",
+                      padding: "2px 12px",
+                      borderRadius: "var(--raio-bloco)",
+                      background: "var(--bg)",
+                    }}
+                  >
                     {g.meses.map((d, i) => (
                       <LinhaMes
                         key={d.mes}
