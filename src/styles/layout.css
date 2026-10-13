@@ -12,6 +12,17 @@
   scroll-snap-align: start;
 }
 
+/* Carrossel de borda a borda com as pontas esmaecidas: a pílula some aos
+   poucos na borda da tela em vez de ser cortada seco. O esmaecido tem a largura
+   do recuo lateral (--pad-x), então em repouso a primeira pílula fica fora
+   dele; o snap para no mesmo recuo. Mesmo efeito do carrossel de categorias
+   do modal de nova transação. */
+.carrossel-esmaecido {
+  scroll-padding-inline: var(--pad-x);
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 var(--pad-x), #000 calc(100% - var(--pad-x)), transparent);
+  mask-image: linear-gradient(to right, transparent, #000 var(--pad-x), #000 calc(100% - var(--pad-x)), transparent);
+}
+
 /* Layout em colunas (desktop) — telas que aderem ficam mais amplas */
 .cols-desktop {
   display: grid;
@@ -103,8 +114,15 @@
 .desktop-shell .painel-filtros .carrossel {
   flex-wrap: wrap;
   overflow-x: visible;
-  padding-left: 0;
-  padding-right: 0;
+  /* !important: o recuo de --pad-x vem inline em gastos.jsx (é o do celular,
+     de borda a borda), e inline vence CSS. Sem ele as pílulas ficavam
+     recuadas em relação à busca logo acima. */
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  /* Quebrando em linhas não há o que rolar, e sem recuo o esmaecido comeria a
+     primeira e a última pílula. */
+  -webkit-mask-image: none;
+  mask-image: none;
 }
 
 /* Botão de ação única que, numa coluna larga, viraria uma faixa de mil pixels.

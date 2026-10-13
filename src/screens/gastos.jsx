@@ -313,7 +313,7 @@ export function GastosScreen({ ctx }) {
       {/* Filtros de categoria */}
       <div style={{ padding: "10px 0 0" }}>
         <div
-          className="carrossel"
+          className="carrossel carrossel-esmaecido"
           style={{
             display: "flex",
             gap: 6,
@@ -381,7 +381,7 @@ export function GastosScreen({ ctx }) {
       <Expansivel aberto={pags.length > 1 && !ehFiltroEntradas && !ehFiltroGuardados}>
         <div style={{ padding: "6px 0 0" }}>
           <div
-            className="carrossel"
+            className="carrossel carrossel-esmaecido"
             style={{
               display: "flex",
               gap: 6,
@@ -434,7 +434,7 @@ export function GastosScreen({ ctx }) {
       <Expansivel aberto={filtrosCartao.length > 0 && !ehFiltroEntradas && !ehFiltroGuardados}>
         <div style={{ padding: "6px 0 0" }}>
           <div
-            className="carrossel"
+            className="carrossel carrossel-esmaecido"
             style={{
               display: "flex",
               gap: 6,
