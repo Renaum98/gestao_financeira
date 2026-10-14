@@ -41,11 +41,7 @@ const DEDO_TRAS = { k: 380, c: 24 };
 const ACHATA_MIN = 0.78;
 const INCHA_MAX = 1.08;
 
-// `vertical` é a sidebar do desktop: a gota anda de cima pra baixo, então as
-// "bordas" l/r passam a ser o topo e a base, quem estica é a altura e quem
-// afina é a largura. O arraste (seguir/soltar) é gesto de dedo e só existe na
-// tab bar.
-export function criarGota(el, { vertical = false } = {}) {
+export function criarGota(el) {
   if (!modoLeve()) carregarAnime();
   const g = { l: 0, r: 0 };
   let base = 0; // largura de repouso contra a qual o esticão é medido; 0 = sem achatar
@@ -56,14 +52,9 @@ export function criarGota(el, { vertical = false } = {}) {
   const pintar = () => {
     const w = Math.max(0, g.r - g.l);
     const estica = base ? w / base : 1;
-    const s = Math.min(INCHA_MAX, Math.max(ACHATA_MIN, 1 - (estica - 1) * ACHATA));
-    if (vertical) {
-      el.style.height = `${w}px`;
-      el.style.transform = `translateY(${g.l}px) scaleX(${s})`;
-    } else {
-      el.style.width = `${w}px`;
-      el.style.transform = `translateX(${g.l}px) scaleY(${s})`;
-    }
+    const sy = Math.min(INCHA_MAX, Math.max(ACHATA_MIN, 1 - (estica - 1) * ACHATA));
+    el.style.width = `${w}px`;
+    el.style.transform = `translateX(${g.l}px) scaleY(${sy})`;
   };
 
   const parar = () => {
@@ -81,10 +72,9 @@ export function criarGota(el, { vertical = false } = {}) {
   // ela pode estar no meio da transição CSS do segurar ou de outra mola.
   const ler = () => {
     const cs = getComputedStyle(el);
-    const m = new DOMMatrix(cs.transform);
-    const x = vertical ? m.m42 : m.m41;
+    const x = new DOMMatrix(cs.transform).m41;
     g.l = x;
-    g.r = x + (parseFloat(vertical ? cs.height : cs.width) || 0);
+    g.r = x + (parseFloat(cs.width) || 0);
   };
 
   const colocar = (l, w) => {

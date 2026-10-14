@@ -117,19 +117,17 @@
   100% { border-radius: var(--raio-gota, 22px); }
 }
 
-/* Variante da sidebar (desktop): o mesmo escorrer em molas e a mesma
-   deformação do canto, só que de pé — quem anda e estica é a altura. O fundo
-   continua chapado e o raio de repouso é o dos itens da sidebar (--raio-gota
-   vem do app.jsx). Segurar e arrastar são gestos de dedo, não existem aqui.
-   A transição de height é a do deslize enquanto o anime.js não chega (e no
-   modo leve, que não usa mola). */
+/* Variante da sidebar (desktop): leva só o deslize, por transição CSS. O fundo
+   e o canto são os de sempre — chapado e no raio dos itens da sidebar — sem
+   gradiente, sem molas e sem deformação no caminho: de pé, num caminho bem
+   mais longo que o da tab bar, o efeito de mola ficava estranho. Segurar e
+   arrastar são gestos de dedo, não existem aqui. */
 .nav-indicador--v {
   background: color-mix(in oklab, var(--primary) 12%, transparent);
-  border-radius: var(--raio-gota, var(--raio-controle));
+  border-radius: var(--raio-controle);
   transition:
     transform .44s cubic-bezier(.32, .96, .36, 1),
     height .44s cubic-bezier(.32, .96, .36, 1),
-    border-radius .18s ease,
     opacity .2s ease;
 }
 

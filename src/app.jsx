@@ -595,31 +595,10 @@ function Sidebar({ tela, irPara, abrirAdd, usuario }) {
   const t = useT();
   const navRef = React.useRef(null);
   const itemRefs = React.useRef({});
-  const indicadorRef = React.useRef(null);
-  // O mesmo movimento da tab bar, de pé: a gota escorre entre os itens com as
-  // bordas em molas separadas (ui/gota-liquida.js) e se deforma no caminho
-  // (@keyframes nav-gota). Topo e altura são do criarGota, não do React — um
-  // re-render no meio passaria por cima das molas.
+  // O desktop leva só o deslize: o indicador é um retângulo que escorrega entre
+  // os itens por transição CSS. Sem as molas e sem a deformação da gota da tab
+  // bar — de pé, num caminho bem mais longo, o efeito de mola ficava estranho.
   const pos = usePosicaoIndicador(tela, navRef, itemRefs);
-  const posAnterior = React.useRef(null);
-  const gotaRef = React.useRef(null);
-  const gota = () => (gotaRef.current ??= criarGota(indicadorRef.current, { vertical: true }));
-
-  React.useLayoutEffect(() => {
-    const antes = posAnterior.current;
-    posAnterior.current = pos;
-    if (!pos) return;
-    if (!antes || antes.top === pos.top) {
-      gota().colocar(pos.top, pos.height);
-      return;
-    }
-    if (gota().escorrer(pos.top, pos.height)) {
-      const el = indicadorRef.current;
-      el.classList.remove("is-deslizando");
-      void el.offsetWidth; // força o reflow pra o navegador reiniciar a animação
-      el.classList.add("is-deslizando");
-    }
-  }, [pos]);
 
   return (
     <aside
@@ -694,15 +673,14 @@ function Sidebar({ tela, irPara, abrirAdd, usuario }) {
         }}
       >
         <div
-          ref={indicadorRef}
           className="nav-indicador nav-indicador--v"
           aria-hidden="true"
           style={{
-            // a deformação assenta no raio dos itens da sidebar, não no da tab bar
-            "--raio-gota": "var(--raio-controle)",
             opacity: pos ? 1 : 0,
             top: 0,
             width: pos?.width ?? 0,
+            height: pos?.height ?? 0,
+            transform: `translateY(${pos?.top ?? 0}px)`,
           }}
         />
         {NAV_DESKTOP.map((it) => {
