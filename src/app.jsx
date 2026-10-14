@@ -16,6 +16,7 @@ import {
 import { Icon } from "./ui/icons.jsx";
 import { IconeTab } from "./ui/icones-tab.jsx";
 import { criarGota } from "./ui/gota-liquida.js";
+import { caixinhasVisiveis } from "./lib/caixinhas.js";
 import { escutarAuth, sair as sairFirebase } from "./lib/firebase.js";
 import { haviaSessao, lembrarSessao } from "./lib/sessao.js";
 import { useCloudState } from "./lib/storage.js";
@@ -1880,26 +1881,43 @@ export function App() {
     };
   }
 
+  // Caixinhas no desktop abre direto numa caixinha: o par lista + detalhe já
+  // mostra a lista ao lado, então a tela só de lista (com o detalhe vazio) era
+  // um passo a mais. A navegação continua a mesma — aqui só muda o que se
+  // DESENHA: "caixinhas" vira o detalhe da primeira, e um detalhe cuja caixinha
+  // sumiu (acabou de ser excluída) cai na primeira que restou. Sem nenhuma
+  // caixinha, fica a lista com o convite de criar. No celular nada muda.
+  let telaVista = tela;
+  let paramsVista = params;
+  if (ehDesktop && (tela === "caixinhas" || tela === "caixinha")) {
+    const visiveis = caixinhasVisiveis(caixinhasAtivas);
+    const aberta = tela === "caixinha" && visiveis.some((c) => c.id === params?.id);
+    if (!aberta && visiveis.length > 0) {
+      telaVista = "caixinha";
+      paramsVista = { id: visiveis[0].id };
+    }
+  }
+
   // As 4 abas principais são montadas pelo AreaDeTelas, que as mantém vivas.
   // Aqui ficam só as telas secundárias.
   let conteudo;
-  if (tela === "categoria")
-    conteudo = <CategoriaScreen ctx={ctx} params={params} />;
-  else if (tela === "orcamentos") conteudo = <OrcamentosScreen ctx={ctx} />;
-  else if (tela === "historico") conteudo = <HistoricoScreen ctx={ctx} />;
-  else if (tela === "caixinhas") conteudo = <CaixinhasScreen ctx={ctx} />;
-  else if (tela === "caixinha") conteudo = <CaixinhaScreen ctx={ctx} params={params} />;
-  else if (tela === "recorrentes") conteudo = <RecorrentesScreen ctx={ctx} />;
-  else if (tela === "cartoes") conteudo = <CartoesScreen ctx={ctx} />;
-  else if (tela === "notificacoes") conteudo = <NotificacoesScreen ctx={ctx} />;
+  if (telaVista === "categoria")
+    conteudo = <CategoriaScreen ctx={ctx} params={paramsVista} />;
+  else if (telaVista === "orcamentos") conteudo = <OrcamentosScreen ctx={ctx} />;
+  else if (telaVista === "historico") conteudo = <HistoricoScreen ctx={ctx} />;
+  else if (telaVista === "caixinhas") conteudo = <CaixinhasScreen ctx={ctx} />;
+  else if (telaVista === "caixinha") conteudo = <CaixinhaScreen ctx={ctx} params={paramsVista} />;
+  else if (telaVista === "recorrentes") conteudo = <RecorrentesScreen ctx={ctx} />;
+  else if (telaVista === "cartoes") conteudo = <CartoesScreen ctx={ctx} />;
+  else if (telaVista === "notificacoes") conteudo = <NotificacoesScreen ctx={ctx} />;
 
   // No desktop, um detalhe com dono ganha a lista ao lado em vez de escondê-la.
   // As duas telas vêm do mesmo chunk lazy, então o par não custa rede extra.
-  const mestre = ehDesktop ? MESTRE_DE[tela] : null;
+  const mestre = ehDesktop ? MESTRE_DE[telaVista] : null;
   if (mestre) {
     conteudo = (
       <div className="mestre-detalhe">
-        <mestre.Tela ctx={ctx} params={params} />
+        <mestre.Tela ctx={ctx} params={paramsVista} />
         {conteudo}
       </div>
     );
@@ -1919,7 +1937,7 @@ export function App() {
         <Sidebar
           // Com a lista ao lado, quem está aberto é o dono do detalhe: a
           // sidebar deve marcar "Caixinhas", não perder o destaque.
-          tela={mestre?.id || tela}
+          tela={mestre?.id || telaVista}
           irPara={irPara}
           abrirAdd={() => { vibrar(); setAddModal({}); }}
           usuario={usuario}
@@ -1932,18 +1950,18 @@ export function App() {
           <EspacoBarraOffline offline={offline} />
           <div
             style={{
-              maxWidth: LARGURA_DESKTOP[tela] || LARGURA_DESKTOP_PADRAO,
+              maxWidth: LARGURA_DESKTOP[telaVista] || LARGURA_DESKTOP_PADRAO,
               margin: "0 auto",
               padding: "0 24px",
               minHeight: "100vh",
             }}
           >
             <AreaDeTelas
-              tela={tela}
-              params={params}
+              tela={telaVista}
+              params={paramsVista}
               ctx={ctx}
               secundaria={conteudo}
-              chaveTransicao={mestre ? tela : undefined}
+              chaveTransicao={mestre ? telaVista : undefined}
             />
           </div>
         </main>
