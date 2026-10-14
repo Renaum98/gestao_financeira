@@ -17,7 +17,9 @@ export function Segmentado({ valor, onChange, opcoes, ariaLabel }) {
         gap: 6,
         padding: 4,
         borderRadius: "var(--raio-bloco)",
-        background: "var(--card-2)",
+        // trilho mais fundo que o card no claro, pra a pílula branca da opção
+        // escolhida aparecer
+        background: "var(--controle-trilho)",
         boxShadow: "0 1px 2px rgba(0,0,0,0.06)",
       }}
     >
@@ -82,7 +84,7 @@ export function SelectPerfil({ value, onChange, options, ariaLabel }) {
           fontFamily: "inherit",
           cursor: "pointer",
           outline: "none",
-          boxShadow: "0 1px 2px rgba(0,0,0,0.06)",
+          boxShadow: "0 0 0 1px var(--controle-contorno), 0 1px 2px rgba(0,0,0,0.06)",
         }}
       >
         {options.map((o) => (

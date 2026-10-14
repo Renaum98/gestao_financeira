@@ -170,7 +170,7 @@ export function SeletorPilula({ opcoes, valor, onChange, style }) {
           gap: 4,
           padding: 3,
           borderRadius: "var(--raio-pilula)",
-          background: "var(--card-2)",
+          background: "var(--controle-trilho)",
           boxShadow: "0 1px 2px rgba(0,0,0,0.06)",
         }}
       >
@@ -224,7 +224,7 @@ export function ListaAgrupada({ children, style }) {
         marginTop: 12,
         borderRadius: "var(--raio-bloco)",
         background: "var(--card-2)",
-        boxShadow: "0 1px 2px rgba(0,0,0,0.06)",
+        boxShadow: "0 0 0 1px var(--controle-contorno), 0 1px 2px rgba(0,0,0,0.06)",
         overflow: "hidden",
         ...style,
       }}
@@ -1185,7 +1185,7 @@ export function BotoesDialogo({ cancelar, confirmar, style }) {
             color: "var(--ink)",
             cursor: cancelar.disabled ? "default" : "pointer",
             opacity: cancelar.disabled ? 0.6 : 1,
-            boxShadow: "0 1px 2px rgba(0,0,0,0.06)",
+            boxShadow: "0 0 0 1px var(--controle-contorno), 0 1px 2px rgba(0,0,0,0.06)",
           }}
         >
           {cancelar.texto}

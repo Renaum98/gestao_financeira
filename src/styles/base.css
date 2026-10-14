@@ -1,13 +1,28 @@
 /* base.css — tokens de cor/espaçamento, reset e tipografia. */
 
 :root {
-  --bg: #FBF7F2;
+  /* Tema claro recalibrado (2026-10-14). O texto principal já estava em 18:1;
+     o que faltava era tudo em volta dele — o card branco quase não se separava
+     do fundo (1,07:1), o texto secundário ficava abaixo do AA (3,85:1 no card)
+     e trilhos/linhas sumiam. Agora:
+       • muted ≥ 4,7:1 no card, no fundo e no sunken (texto pequeno, AA)
+       • card × fundo 1,17:1 — o branco volta a "levantar" do creme
+       • sunken × card 1,31:1 — barras e trilhos inativos aparecem
+     O escuro (aplicarTema, app.jsx) não mudou. */
+  --bg: #F2ECE4;
   --card: #FFFFFF;
   --card-2: #FFFFFF;
-  --surface-sunken: #F3EEE8;
+  --surface-sunken: #E8E0D6;
   --ink: #1A1416;
-  --muted: #8A7F84;
-  --linha: rgba(20, 16, 24, 0.06);
+  --muted: #685E63;
+  --linha: rgba(20, 16, 24, 0.12);
+  /* Controles (selects, segmentados, botões secundários) são --card-2, que no
+     claro é o mesmo branco do card: dentro de um card eles sumiam. Estes dois
+     dão a borda e o trilho só no claro — no escuro o --card-2 já é um degrau
+     acima do card, então o contorno é transparente e o trilho é o próprio
+     --card-2 (aplicarTema, app.jsx). */
+  --controle-contorno: rgba(20, 16, 24, 0.14);
+  --controle-trilho: var(--surface-sunken);
   --primary: #6E4FF6;
   --primary-2: #A085FF;
   /* Degradê de destaque dos botões grandes. A diagonal de sempre entre os dois

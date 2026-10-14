@@ -103,7 +103,7 @@ function SeletorPaleta({ paletaAtual, escuro, onEscolher, t }) {
           fontWeight: 700,
           fontFamily: "inherit",
           cursor: "pointer",
-          boxShadow: "0 1px 2px rgba(0,0,0,0.06)",
+          boxShadow: "0 0 0 1px var(--controle-contorno), 0 1px 2px rgba(0,0,0,0.06)",
         }}
       >
         <Bolinha pal={atual} escuro={escuro} />

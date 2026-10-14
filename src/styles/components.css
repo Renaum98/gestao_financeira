@@ -9,6 +9,11 @@
   backdrop-filter: blur(22px) saturate(180%);
   border: 1px solid color-mix(in srgb, var(--ink) 10%, transparent);
 }
+/* No claro os 10% de tinta davam 1,23:1 contra o branco e a borda do vidro
+   sumia; no escuro os mesmos 10% já bastam. */
+:root:not(.tema-escuro) .glass-surface {
+  border-color: color-mix(in srgb, var(--ink) 15%, transparent);
+}
 /* Quando o navegador não suporta backdrop-filter, volta ao sólido */
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
   .glass-surface { background: var(--card); }

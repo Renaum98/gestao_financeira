@@ -341,7 +341,7 @@ export function AddExpenseModal({ ctx, params }) {
                 padding: 12,
                 borderRadius: "var(--raio-bloco)",
                 background: "var(--card-2)",
-                boxShadow: "0 1px 2px rgba(0,0,0,0.06)",
+                boxShadow: "0 0 0 1px var(--controle-contorno), 0 1px 2px rgba(0,0,0,0.06)",
                 display: "flex",
                 flexDirection: "column",
                 gap: 10,

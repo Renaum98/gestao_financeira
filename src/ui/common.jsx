@@ -200,7 +200,7 @@ export function Card({ children, style = {}, onClick, className, ...rest }) {
       {...rest}
       style={{
       background: 'var(--card)', borderRadius: 'var(--raio-card)', padding: 18,
-      boxShadow: '0 1px 2px rgba(20,16,24,0.04), 0 4px 12px rgba(20,16,24,0.03)',
+      boxShadow: '0 1px 2px rgba(20,16,24,0.06), 0 4px 14px rgba(20,16,24,0.06)',
       cursor: onClick ? 'pointer' : 'default',
       ...style,
     }}>

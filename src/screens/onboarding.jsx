@@ -416,7 +416,7 @@ function IlustracaoAdd({ cor }) {
     }}>
       <div style={{
         position: 'relative', display: 'flex',
-        background: 'var(--card-2)', borderRadius: 10, padding: 3,
+        background: 'var(--controle-trilho)', borderRadius: 10, padding: 3,
         boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.06)',
       }}>
         <div className="m-toggle" style={{
@@ -512,7 +512,7 @@ function IlustracaoCartoes({ cor }) {
       {/* Barra de limite — mesma leitura da tela: quanto da fatura aberta já
           comeu o limite. */}
       <div style={{
-        height: 6, background: 'var(--card-2)', borderRadius: 'var(--raio-pilula)',
+        height: 6, background: 'var(--controle-trilho)', borderRadius: 'var(--raio-pilula)',
         overflow: 'hidden', marginTop: 12,
       }}>
         <div className="m-barra" style={{
@@ -752,7 +752,7 @@ function IlustracaoPlanejar({ cor }) {
             <span ref={pct} style={{ fontVariantNumeric: 'tabular-nums' }}>100%</span>
           </div>
           <div style={{
-            height: 6, background: 'var(--card-2)', borderRadius: 'var(--raio-pilula)', overflow: 'hidden',
+            height: 6, background: 'var(--controle-trilho)', borderRadius: 'var(--raio-pilula)', overflow: 'hidden',
           }}>
             <div ref={barra} style={{
               height: '100%', background: `linear-gradient(90deg, ${cor}, ${cor}AA)`,

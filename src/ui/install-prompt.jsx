@@ -124,7 +124,7 @@ export function InstallPromptModal({ temAtalho, plataformaIOS, onInstalar, onDis
     cursor: 'pointer',
     boxShadow: primario
       ? '0 8px 20px color-mix(in oklab, var(--primary) 30%, transparent)'
-      : '0 1px 2px rgba(0,0,0,0.06)',
+      : '0 0 0 1px var(--controle-contorno), 0 1px 2px rgba(0,0,0,0.06)',
   });
 
   return (

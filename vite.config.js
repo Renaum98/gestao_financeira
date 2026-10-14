@@ -43,7 +43,7 @@ export default defineConfig({
         description: 'Gestão financeira pessoal',
         lang: 'pt-BR',
         theme_color: '#6E4FF6',
-        background_color: '#FBF7F2',
+        background_color: '#F2ECE4',
         display: 'standalone',
         display_override: ['standalone', 'minimal-ui'],
         orientation: 'portrait',

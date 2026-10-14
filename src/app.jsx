@@ -819,15 +819,20 @@ function aplicarTema(paleta, modo) {
     root.style.setProperty("--ink", "#F4F0F2");
     root.style.setProperty("--muted", "#B8AEB6");
     root.style.setProperty("--linha", "rgba(255,255,255,0.08)");
+    root.style.setProperty("--controle-contorno", "transparent");
+    root.style.setProperty("--controle-trilho", "var(--card-2)");
     root.style.setProperty("color-scheme", "dark");
   } else {
-    root.style.setProperty("--bg", "#FBF7F2");
+    // Mesmos valores do :root em base.css — o porquê de cada um está lá.
+    root.style.setProperty("--bg", "#F2ECE4");
     root.style.setProperty("--card", "#FFFFFF");
     root.style.setProperty("--card-2", "#FFFFFF");
-    root.style.setProperty("--surface-sunken", "#F3EEE8");
+    root.style.setProperty("--surface-sunken", "#E8E0D6");
     root.style.setProperty("--ink", "#1A1416");
-    root.style.setProperty("--muted", "#8A7F84");
-    root.style.setProperty("--linha", "rgba(20,16,24,0.06)");
+    root.style.setProperty("--muted", "#685E63");
+    root.style.setProperty("--linha", "rgba(20,16,24,0.12)");
+    root.style.setProperty("--controle-contorno", "rgba(20,16,24,0.14)");
+    root.style.setProperty("--controle-trilho", "var(--surface-sunken)");
     root.style.setProperty("color-scheme", "light");
   }
   document
