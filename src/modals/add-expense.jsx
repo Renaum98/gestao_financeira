@@ -292,15 +292,7 @@ export function AddExpenseModal({ ctx, params }) {
             ao resto do bloco (formulário de nova categoria). */}
         <Expansivel aberto={!ehEntrada} style={{ margin: "0 -18px" }}>
         <div style={{ marginTop: 12, padding: "0 18px" }}>
-          <FileiraPilulas
-            style={{
-              margin: "0 -18px",
-              padding: "4px 18px",
-              scrollPaddingInline: 18,
-              maskImage: "linear-gradient(to right, transparent, #000 18px, #000 calc(100% - 18px), transparent)",
-              WebkitMaskImage: "linear-gradient(to right, transparent, #000 18px, #000 calc(100% - 18px), transparent)",
-            }}
-          >
+          <FileiraPilulas sangria={18} esmaecido>
             {catsMinhas().map((c) => (
               <PilulaCategoria
                 key={c}

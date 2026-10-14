@@ -56,6 +56,18 @@ select:focus-visible {
   transition: filter 0.14s ease;
 }
 
+/* Setas das fileiras de pílulas (FileiraPilulas): afundam no clique, pra
+   ficar claro que pegou — a rolagem suave sozinha demora a dar o retorno. */
+.em-desktop .seta-fileira {
+  transition: filter 0.14s ease, transform 0.12s ease;
+}
+/* Seletor pesado de propósito: precisa vencer o `filter` do hover lá em cima
+   (o botão continua em hover enquanto é pressionado), nos dois temas. */
+.em-desktop button.seta-fileira:not(:disabled):active {
+  transform: scale(0.84);
+  filter: brightness(0.8);
+}
+
 @media (prefers-reduced-motion: reduce) {
   :where(.em-desktop) :where(button, .clicavel, .config-item) {
     transition: none;

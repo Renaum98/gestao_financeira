@@ -336,6 +336,8 @@ export const EN = {
   "Voltar": "Back",
   "Mês anterior": "Previous month",
   "Próximo mês": "Next month",
+  "Rolar para a esquerda": "Scroll left",
+  "Rolar para a direita": "Scroll right",
   "Entrada": "Income",
   "Entradas": "Income",
   "Resgatado": "Withdrawn",

@@ -20,6 +20,7 @@ import { PAG_CARTAO } from "../lib/fatura.js";
 import { corDoCartao, corTextoSobre } from "../lib/cartoes.js";
 import { useT } from "../lib/i18n.jsx";
 import { Z_MODAL } from "./modal-base.jsx";
+import { useEhDesktop } from "../lib/desktop.js";
 
 // ─── Formulário ────────────────────────────────────────────────────────────
 
@@ -567,21 +568,124 @@ export function PilulaCategoria({ catId, selecionado, ehDesktop, podeExcluir = f
 }
 
 // Fileira de pílulas que rola de lado. O último filho costuma ser o "+ Nova".
-export function FileiraPilulas({ children, style }) {
+//
+// `sangria` é quanto a fileira avança além do conteúdo pra correr até a borda
+// (o modal de gasto a estica de borda a borda: 18px); `esmaecido` faz as
+// pílulas sumirem aos poucos nessa faixa em vez de serem cortadas seco.
+//
+// No desktop não tem dedo pra arrastar (e a barra de rolagem está escondida),
+// então, quando há o que rolar, cada ponta ganha uma seta clicável. As setas
+// ficam AO LADO da faixa, não por cima: a fileira volta pro recuo do conteúdo
+// e as pílulas terminam na seta em vez de passar por trás dela. A seta da
+// ponta já no fim fica invisível mas guarda o lugar — sem isso a faixa
+// mudaria de largura a cada clique. A ponta com pílula escondida esmaece.
+export function FileiraPilulas({ children, sangria = 2, esmaecido = false }) {
+  const t = useT();
+  const ehDesktop = useEhDesktop();
+  const ref = React.useRef(null);
+  const [pontas, setPontas] = React.useState({ esq: false, dir: false });
+
+  const medir = React.useCallback(() => {
+    const el = ref.current;
+    if (!el) return;
+    const esq = el.scrollLeft > 1;
+    const dir = el.scrollLeft + el.clientWidth < el.scrollWidth - 1;
+    setPontas((p) => (p.esq === esq && p.dir === dir ? p : { esq, dir }));
+  }, []);
+
+  React.useEffect(() => {
+    if (!ehDesktop) return;
+    const el = ref.current;
+    if (!el) return;
+    medir();
+    // Observa a fileira e os filhos: pílula nova ("+ Nova", categoria criada)
+    // muda a largura do conteúdo sem mudar a da fileira.
+    const ro = new ResizeObserver(medir);
+    ro.observe(el);
+    Array.from(el.children).forEach((c) => ro.observe(c));
+    return () => ro.disconnect();
+  }, [ehDesktop, medir, children]);
+
+  const rolar = (sentido) => {
+    const el = ref.current;
+    if (el) el.scrollBy({ left: sentido * el.clientWidth * 0.7, behavior: "smooth" });
+  };
+
+  const comSetas = ehDesktop && (pontas.esq || pontas.dir);
+  const mascara = `linear-gradient(to right, transparent, #000 ${sangria}px, #000 calc(100% - ${sangria}px), transparent)`;
+  // Com setas, a ponta só esmaece do lado que ainda tem pílula escondida: em
+  // repouso a primeira pílula fica inteira, e a faixa some aos poucos rumo à
+  // seta em vez de ser cortada seco.
+  const FADE = 24;
+  const mascaraSetas = `linear-gradient(to right, ${pontas.esq ? "transparent" : "#000"}, #000 ${FADE}px, #000 calc(100% - ${FADE}px), ${pontas.dir ? "transparent" : "#000"})`;
+
+  const seta = (sentido) => {
+    const ativa = sentido < 0 ? pontas.esq : pontas.dir;
+    return (
+      <button
+        type="button"
+        className="seta-fileira"
+        aria-label={t(sentido < 0 ? "Rolar para a esquerda" : "Rolar para a direita")}
+        aria-hidden={!ativa}
+        tabIndex={ativa ? 0 : -1}
+        disabled={!ativa}
+        onClick={() => rolar(sentido)}
+        style={{
+          visibility: ativa ? "visible" : "hidden",
+          flexShrink: 0,
+          width: 28,
+          height: 28,
+          borderRadius: "var(--raio-pilula)",
+          border: "none",
+          background: "var(--ink)",
+          boxShadow: "0 2px 6px rgba(0,0,0,0.25)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          padding: 0,
+          cursor: "pointer",
+        }}
+      >
+        <Icon name={sentido < 0 ? "arrow-left" : "arrow-right"} size={14} color="var(--bg)" strokeWidth={2.4} />
+      </button>
+    );
+  };
+
   return (
     <div
-      className="carrossel"
       style={{
         display: "flex",
+        alignItems: "center",
         gap: 6,
-        overflowX: "auto",
-        padding: "4px 2px",
-        margin: "0 -2px",
-        scrollbarWidth: "none",
-        ...style,
+        margin: `0 -${sangria}px`,
+        padding: comSetas ? `0 ${sangria}px` : 0,
       }}
     >
-      {children}
+      {comSetas && seta(-1)}
+      <div
+        ref={ref}
+        className="carrossel"
+        onScroll={ehDesktop ? medir : undefined}
+        style={{
+          flex: 1,
+          minWidth: 0,
+          display: "flex",
+          gap: 6,
+          overflowX: "auto",
+          scrollbarWidth: "none",
+          // Com setas, a faixa já termina no recuo do conteúdo: sobra só o
+          // respiro de 2px pra sombra da pílula não ser cortada.
+          padding: comSetas ? "4px 2px" : `4px ${sangria}px`,
+          margin: comSetas ? "0 -2px" : 0,
+          scrollPaddingInline: comSetas ? 2 : sangria,
+          ...(comSetas
+            ? { maskImage: mascaraSetas, WebkitMaskImage: mascaraSetas }
+            : esmaecido ? { maskImage: mascara, WebkitMaskImage: mascara } : null),
+        }}
+      >
+        {children}
+      </div>
+      {comSetas && seta(1)}
     </div>
   );
 }
