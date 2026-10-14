@@ -558,6 +558,10 @@ const NAV_DESKTOP = [
   { id: "historico", icon: "calendar", label: "Histórico" },
   { id: "perfil", icon: "user", label: "Perfil" },
 ];
+// Ícones que o IconeTab sabe animar — hoje todos os do menu.
+const ICONES_ANIMADOS = new Set([
+  "home", "list", "chart", "user", "target", "piggy", "card", "history", "calendar",
+]);
 
 // Largura da coluna de conteúdo no desktop, por tela. O padrão estreito serve
 // às telas que são uma lista só — esticá-las deixaria linhas longas demais pra
@@ -591,10 +595,31 @@ function Sidebar({ tela, irPara, abrirAdd, usuario, fotoPerfil }) {
   const t = useT();
   const navRef = React.useRef(null);
   const itemRefs = React.useRef({});
-  // O desktop leva só o deslize: o indicador é o mesmo retângulo de antes, que
-  // agora escorrega entre os itens em vez de reaparecer no lugar novo. Nada de
-  // deformação no caminho — por isso não há classe de animação aqui.
+  const indicadorRef = React.useRef(null);
+  // O mesmo movimento da tab bar, de pé: a gota escorre entre os itens com as
+  // bordas em molas separadas (ui/gota-liquida.js) e se deforma no caminho
+  // (@keyframes nav-gota). Topo e altura são do criarGota, não do React — um
+  // re-render no meio passaria por cima das molas.
   const pos = usePosicaoIndicador(tela, navRef, itemRefs);
+  const posAnterior = React.useRef(null);
+  const gotaRef = React.useRef(null);
+  const gota = () => (gotaRef.current ??= criarGota(indicadorRef.current, { vertical: true }));
+
+  React.useLayoutEffect(() => {
+    const antes = posAnterior.current;
+    posAnterior.current = pos;
+    if (!pos) return;
+    if (!antes || antes.top === pos.top) {
+      gota().colocar(pos.top, pos.height);
+      return;
+    }
+    if (gota().escorrer(pos.top, pos.height)) {
+      const el = indicadorRef.current;
+      el.classList.remove("is-deslizando");
+      void el.offsetWidth; // força o reflow pra o navegador reiniciar a animação
+      el.classList.add("is-deslizando");
+    }
+  }, [pos]);
 
   return (
     <aside
@@ -669,14 +694,15 @@ function Sidebar({ tela, irPara, abrirAdd, usuario, fotoPerfil }) {
         }}
       >
         <div
+          ref={indicadorRef}
           className="nav-indicador nav-indicador--v"
           aria-hidden="true"
           style={{
+            // a deformação assenta no raio dos itens da sidebar, não no da tab bar
+            "--raio-gota": "var(--raio-controle)",
             opacity: pos ? 1 : 0,
             top: 0,
             width: pos?.width ?? 0,
-            height: pos?.height ?? 0,
-            transform: `translateY(${pos?.top ?? 0}px)`,
           }}
         />
         {NAV_DESKTOP.map((it) => {
@@ -688,6 +714,10 @@ function Sidebar({ tela, irPara, abrirAdd, usuario, fotoPerfil }) {
                 if (it.id !== tela) vibrar();
                 irPara(it.id);
               }}
+              // nav-btn + aria-current disparam a animação de cada ícone (a mesma
+              // da tab bar) quando o item vira o ativo
+              className="nav-btn"
+              aria-current={ativo ? "page" : undefined}
               ref={(el) => { itemRefs.current[it.id] = el; }}
               style={{
                 display: "flex",
@@ -707,12 +737,16 @@ function Sidebar({ tela, irPara, abrirAdd, usuario, fotoPerfil }) {
                 zIndex: 1,
               }}
             >
-              <Icon
-                name={it.icon}
-                size={20}
-                color={ativo ? "var(--primary)" : "var(--muted)"}
-                strokeWidth={ativo ? 2.4 : 2}
-              />
+              {/* o IconeTab dá classe a cada parte do desenho pra a CSS animar o
+                  ícone quando o item vira o ativo; ícone sem animação cai no Icon */}
+              <span className="nav-icone">
+                {React.createElement(ICONES_ANIMADOS.has(it.icon) ? IconeTab : Icon, {
+                  name: it.icon,
+                  size: 20,
+                  color: ativo ? "var(--primary)" : "var(--muted)",
+                  strokeWidth: ativo ? 2.4 : 2,
+                })}
+              </span>
               {t(it.label)}
             </button>
           );

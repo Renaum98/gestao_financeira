@@ -117,13 +117,20 @@
   100% { border-radius: var(--raio-gota, 22px); }
 }
 
-/* Variante da sidebar (desktop): leva só o deslize. O fundo e o canto voltam a
-   ser os de antes — chapado e no raio dos itens da sidebar — sem gradiente,
-   sem raio assimétrico e sem deformação no caminho. Segurar e arrastar são
-   gestos de dedo, não existem aqui. */
+/* Variante da sidebar (desktop): o mesmo escorrer em molas e a mesma
+   deformação do canto, só que de pé — quem anda e estica é a altura. O fundo
+   continua chapado e o raio de repouso é o dos itens da sidebar (--raio-gota
+   vem do app.jsx). Segurar e arrastar são gestos de dedo, não existem aqui.
+   A transição de height é a do deslize enquanto o anime.js não chega (e no
+   modo leve, que não usa mola). */
 .nav-indicador--v {
   background: color-mix(in oklab, var(--primary) 12%, transparent);
-  border-radius: var(--raio-controle);
+  border-radius: var(--raio-gota, var(--raio-controle));
+  transition:
+    transform .44s cubic-bezier(.32, .96, .36, 1),
+    height .44s cubic-bezier(.32, .96, .36, 1),
+    border-radius .18s ease,
+    opacity .2s ease;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -212,6 +219,89 @@
 }
 @keyframes nav-ico-ombros {
   0%   { transform: translateY(5px); opacity: 0; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+
+/* Os cinco a seguir só existem na sidebar do desktop (a tab bar não tem essas
+   abas). Mesmo ritmo e mesmas curvas dos de cima. */
+
+/* Orçamentos — os anéis se desenham de fora pra dentro e o centro acende com
+   repique. O pulo do centro reaproveita o da cabeça do Perfil. */
+.nav-btn[aria-current="page"] .nav-ico-anel {
+  animation: nav-ico-traco .55s cubic-bezier(.45, .05, .35, 1) both;
+}
+.nav-btn[aria-current="page"] .nav-ico-anel-2 { animation-delay: .14s; }
+.nav-ico-mosca { transform-box: fill-box; transform-origin: 50% 50%; }
+.nav-btn[aria-current="page"] .nav-ico-mosca {
+  animation: nav-ico-cabeca .6s cubic-bezier(.45, .1, .35, 1) .32s both;
+}
+
+/* Caixinhas — a alça se fecha por cima, a caixa cede com o peso e a fenda se
+   risca. A caixa encolhe a partir da base, então o "ceder" é ela abaixando o
+   topo, não flutuando. */
+.nav-btn[aria-current="page"] .nav-ico-alca {
+  animation: nav-ico-traco .45s cubic-bezier(.45, .05, .35, 1) both;
+}
+.nav-ico-caixa { transform-box: fill-box; transform-origin: 50% 100%; }
+.nav-btn[aria-current="page"] .nav-ico-caixa {
+  animation: nav-ico-caixa .42s ease-in-out .36s both;
+}
+.nav-btn[aria-current="page"] .nav-ico-fenda {
+  animation: nav-ico-traco .3s cubic-bezier(.45, .05, .35, 1) .5s both;
+}
+@keyframes nav-ico-caixa {
+  0%, 100% { transform: scaleY(1); }
+  40%      { transform: scaleY(.9); }
+}
+
+/* Cartões — o cartão entra deslizando da esquerda, passa um pouco do ponto e
+   volta, e a tarja se risca atrás dele. */
+.nav-btn[aria-current="page"] .nav-ico-cartao {
+  animation: nav-ico-cartao .7s cubic-bezier(.45, .1, .35, 1) both;
+}
+.nav-btn[aria-current="page"] .nav-ico-tarja {
+  animation: nav-ico-traco .4s cubic-bezier(.45, .05, .35, 1) .3s both;
+}
+@keyframes nav-ico-cartao {
+  0%   { transform: translateX(-6px); opacity: 0; }
+  50%  { transform: translateX(1px); opacity: 1; }
+  100% { transform: translateX(0); opacity: 1; }
+}
+
+/* Recorrentes — a volta se desenha, a ponta da seta aparece fechando o giro e
+   os ponteiros giram até a hora certa, em volta do centro do mostrador. */
+.nav-btn[aria-current="page"] .nav-ico-volta {
+  animation: nav-ico-traco .6s cubic-bezier(.45, .05, .35, 1) both;
+}
+.nav-btn[aria-current="page"] .nav-ico-seta {
+  animation: nav-ico-aparece .2s ease-out .5s both;
+}
+.nav-ico-ponteiros { transform-box: view-box; transform-origin: 12px 12px; }
+.nav-btn[aria-current="page"] .nav-ico-ponteiros {
+  animation: nav-ico-ponteiros .7s cubic-bezier(.45, .1, .35, 1) .1s both;
+}
+@keyframes nav-ico-aparece {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes nav-ico-ponteiros {
+  0%   { transform: rotate(-200deg); }
+  70%  { transform: rotate(12deg); }
+  100% { transform: rotate(0); }
+}
+
+/* Histórico — as argolas caem no lugar, uma atrás da outra, e o cabeçalho se
+   risca. */
+.nav-btn[aria-current="page"] .nav-ico-argola {
+  animation: nav-ico-argola .5s cubic-bezier(.45, .1, .35, 1) both;
+}
+.nav-btn[aria-current="page"] .nav-ico-argola-2 { animation-delay: .12s; }
+.nav-btn[aria-current="page"] .nav-ico-cabecalho {
+  animation: nav-ico-traco .45s cubic-bezier(.45, .05, .35, 1) .2s both;
+}
+@keyframes nav-ico-argola {
+  0%   { transform: translateY(-4px); opacity: 0; }
+  60%  { transform: translateY(.8px); opacity: 1; }
   100% { transform: translateY(0); opacity: 1; }
 }
 

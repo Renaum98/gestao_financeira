@@ -67,6 +67,66 @@ export function IconeTab({ name, size = 24, color = "currentColor", strokeWidth 
         </svg>
       );
 
+    // Os cinco abaixo só aparecem na sidebar do desktop — a tab bar não tem
+    // essas abas. Mesmo desenho do Icon, partes separadas pra animar.
+
+    // Orçamentos — os anéis do alvo se desenham de fora pra dentro e o centro
+    // acende com um repique, como um tiro na mosca.
+    case "target":
+      return (
+        <svg {...props}>
+          <circle className="nav-ico-anel nav-ico-anel-1" style={traco(57)} cx="12" cy="12" r="9" />
+          <circle className="nav-ico-anel nav-ico-anel-2" style={traco(32)} cx="12" cy="12" r="5" />
+          <circle className="nav-ico-mosca" cx="12" cy="12" r="1.5" fill={color} />
+        </svg>
+      );
+
+    // Caixinhas — a alça se fecha por cima, a caixa assenta com o peso e a
+    // fenda se risca.
+    case "piggy":
+      return (
+        <svg {...props}>
+          <path className="nav-ico-alca" style={traco(14)} d="M9 8V6a3 3 0 016 0v2" />
+          <rect className="nav-ico-caixa" x="3" y="8" width="18" height="12" rx="3" />
+          <path className="nav-ico-fenda" style={traco(4)} d="M10 13h4" />
+        </svg>
+      );
+
+    // Cartões — o cartão entra deslizando, como passando na maquininha, e a
+    // tarja se risca atrás dele.
+    case "card":
+      return (
+        <svg {...props}>
+          <g className="nav-ico-cartao">
+            <rect x="2.5" y="6" width="19" height="13" rx="2.5" />
+            <path className="nav-ico-tarja" style={traco(19)} d="M2.5 10.5h19" />
+          </g>
+        </svg>
+      );
+
+    // Recorrentes — a volta se desenha, a ponta da seta fecha o giro e os
+    // ponteiros acertam a hora.
+    case "history":
+      return (
+        <svg {...props}>
+          <path className="nav-ico-volta" style={traco(51)} d="M3 12a9 9 0 109-9 9 9 0 00-7 3" />
+          <path className="nav-ico-seta" d="M3 4v5h5" />
+          <path className="nav-ico-ponteiros" d="M12 7v5l3 2" />
+        </svg>
+      );
+
+    // Histórico — as argolas caem no lugar, uma depois da outra, e a linha do
+    // cabeçalho se risca.
+    case "calendar":
+      return (
+        <svg {...props}>
+          <rect x="3" y="5" width="18" height="16" rx="2" />
+          <path className="nav-ico-cabecalho" style={traco(18)} d="M3 10h18" />
+          <path className="nav-ico-argola nav-ico-argola-1" d="M8 3v4" />
+          <path className="nav-ico-argola nav-ico-argola-2" d="M16 3v4" />
+        </svg>
+      );
+
     default:
       return null;
   }
