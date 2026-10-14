@@ -1,7 +1,8 @@
 // EvolucaoConjunta.jsx — barras lado a lado (você x parceiro) nos últimos 6
-// meses. Só renderiza em conta compartilhada.
+// meses, com a diferença em valor entre os dois em cima de cada par. Só
+// renderiza em conta compartilhada.
 
-import { fmtBRL } from "../../data.js";
+import { MESES, fmtBRL, fmtBRLCompacto } from "../../data.js";
 import { Card } from "../../ui/common.jsx";
 import { SecaoTitulo } from "./SecaoTitulo.jsx";
 import { useT } from "../../lib/i18n.jsx";
@@ -9,6 +10,21 @@ import { useT } from "../../lib/i18n.jsx";
 export function EvolucaoConjunta({ evolucaoConjunta, maxEvolConjunta, mes, setMes, partnerNome }) {
   const t = useT();
   if (!evolucaoConjunta) return null;
+  const nome = partnerNome || t("Parceiro");
+
+  // Frase do rodapé, sobre o mês selecionado: quem gastou mais e quanto.
+  const sel = evolucaoConjunta.find((e) => e.key === mes);
+  let frase = null;
+  if (sel && (sel.meu > 0 || sel.parceiro > 0)) {
+    const nomeMes = t(MESES[Number(sel.key.slice(5, 7)) - 1]);
+    const dif = Math.abs(sel.meu - sel.parceiro);
+    frase =
+      dif < 0.005
+        ? t("Em {mes}, vocês gastaram o mesmo.", { mes: nomeMes })
+        : sel.meu > sel.parceiro
+          ? t("Em {mes}, você gastou {x} a mais que {nome}.", { mes: nomeMes, x: fmtBRL(dif), nome })
+          : t("Em {mes}, {nome} gastou {x} a mais que você.", { mes: nomeMes, x: fmtBRL(dif), nome });
+  }
 
   return (
     <div style={{ padding: "var(--esp-secao) var(--pad-x) 0" }}>
@@ -21,13 +37,16 @@ export function EvolucaoConjunta({ evolucaoConjunta, maxEvolConjunta, mes, setMe
             alignItems: "flex-end",
             justifyContent: "space-between",
             gap: 8,
-            height: 150,
+            height: 164,
           }}
         >
           {evolucaoConjunta.map((e) => {
             const hMeu = Math.max((e.meu / maxEvolConjunta) * 100, e.meu > 0 ? 4 : 0);
             const hParc = Math.max((e.parceiro / maxEvolConjunta) * 100, e.parceiro > 0 ? 4 : 0);
             const atual = e.key === mes;
+            // A diferença leva a cor da barra de quem gastou mais — é assim que
+            // se lê de quem é sem precisar de sinal nem de nome.
+            const dif = e.meu - e.parceiro;
             return (
               <div
                 key={e.key}
@@ -43,6 +62,27 @@ export function EvolucaoConjunta({ evolucaoConjunta, maxEvolConjunta, mes, setMe
                   justifyContent: "flex-end",
                 }}
               >
+                <div
+                  title={
+                    dif === 0
+                      ? undefined
+                      : dif > 0
+                        ? t("Você gastou {x} a mais", { x: fmtBRL(dif) })
+                        : t("{nome} gastou {x} a mais", { nome, x: fmtBRL(-dif) })
+                  }
+                  style={{
+                    height: 12,
+                    lineHeight: "12px",
+                    fontSize: 9,
+                    fontWeight: 800,
+                    whiteSpace: "nowrap",
+                    color: dif > 0 ? "var(--primary)" : "var(--muted)",
+                  }}
+                >
+                  {Math.abs(dif) >= 0.005 && (e.meu > 0 || e.parceiro > 0)
+                    ? `+${fmtBRLCompacto(Math.abs(dif))}`
+                    : ""}
+                </div>
                 <div
                   style={{
                     display: "flex",
@@ -66,7 +106,7 @@ export function EvolucaoConjunta({ evolucaoConjunta, maxEvolConjunta, mes, setMe
                     }}
                   />
                   <div
-                    title={t("{nome}: {x}", { nome: partnerNome || t("Parceiro"), x: fmtBRL(e.parceiro) })}
+                    title={t("{nome}: {x}", { nome, x: fmtBRL(e.parceiro) })}
                     style={{
                       flex: 1,
                       maxWidth: 16,
@@ -126,9 +166,22 @@ export function EvolucaoConjunta({ evolucaoConjunta, maxEvolConjunta, mes, setMe
                 border: "1px solid var(--linha)",
               }}
             />
-            <span style={{ color: "var(--muted)" }}>{partnerNome || t("Parceiro")}</span>
+            <span style={{ color: "var(--muted)" }}>{nome}</span>
           </div>
         </div>
+        {frase && (
+          <div
+            style={{
+              marginTop: 8,
+              fontSize: 12,
+              fontWeight: 600,
+              color: "var(--muted)",
+              textAlign: "center",
+            }}
+          >
+            {frase}
+          </div>
+        )}
       </Card>
     </div>
   );
