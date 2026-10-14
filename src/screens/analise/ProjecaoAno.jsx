@@ -12,8 +12,12 @@
 // gastos) vem no clique — mesmo padrão dos anos do Histórico.
 //
 // A conta do ano:
-//   esperado = Σ (orçamento do mês + entradas do mês), janeiro a dezembro
+//   esperado = Σ (orçamento do mês + entradas do mês), do 1º mês de uso a dezembro
 //   sobra    = esperado − gastos do ano
+// O "1º mês de uso" é o do lançamento mais antigo — o mesmo critério do
+// carrossel do Início (listarMeses). Quem começou em maio não ganha de presente
+// o orçamento de janeiro a abril, meses em que nada foi lançado. Se o uso
+// começou num ano anterior, a conta volta a ser janeiro a dezembro.
 // Ou seja: o orçamento de cada mês é dinheiro que se espera ter, não gasto
 // previsto. Os gastos que descem dele são os reais — o que já foi lançado,
 // incluindo parcelas com data futura.
@@ -30,6 +34,7 @@
 import React from "react";
 import {
   CATEGORIAS,
+  MESES,
   fmtBRL,
   totalEntradas,
   totalPorCategoria,
@@ -45,6 +50,18 @@ import { COR_POS, COR_NEG } from "../../lib/colors.js";
 import { vibrar } from "../../lib/haptics.js";
 import { useT } from "../../lib/i18n.jsx";
 
+// Primeiro mês (1–12) do ano que entra na conta: o do lançamento mais antigo,
+// se ele cai neste ano; janeiro se o uso vem de antes. Sem lançamento nenhum,
+// o mês atual — é dali que o uso começa.
+function primeiroMesDeUso(txs, ano, mesAtual) {
+  let maisAntigo = mesAtual;
+  for (const tx of txs) {
+    const m = tx.data?.slice(0, 7);
+    if (m && m < maisAntigo) maisAntigo = m;
+  }
+  return Number(maisAntigo.slice(0, 4)) < ano ? 1 : Number(maisAntigo.slice(5, 7));
+}
+
 function calcularProjecaoAno({ ano, txs, recorrentes, preferences, mesAtual }) {
   let orcamentoAno = 0;
   let entradasAno = 0;
@@ -55,7 +72,8 @@ function calcularProjecaoAno({ ano, txs, recorrentes, preferences, mesAtual }) {
   let orcPrimeiroMes = null;
   let orcVariou = false;
 
-  for (let i = 1; i <= 12; i++) {
+  const inicio = primeiroMesDeUso(txs, ano, mesAtual);
+  for (let i = inicio; i <= 12; i++) {
     const mes = `${ano}-${String(i).padStart(2, "0")}`;
     const txMes = txDoMes(txs, mes);
 
@@ -106,6 +124,7 @@ function calcularProjecaoAno({ ano, txs, recorrentes, preferences, mesAtual }) {
     sobra: esperado - gastosAno,
     orcMensal: calcOrcBaseAtual(preferences),
     orcVariou,
+    inicio,
   };
 }
 
@@ -166,7 +185,7 @@ export function ProjecaoAno({ txs, recorrentes = [], preferences, mesAtual, span
     });
   };
 
-  const { categorias, orcamentoAno, entradasAno, gastosAno, esperado, sobra, orcMensal, orcVariou } =
+  const { categorias, orcamentoAno, entradasAno, gastosAno, esperado, sobra, orcMensal, orcVariou, inicio } =
     React.useMemo(
       () => calcularProjecaoAno({ ano, txs, recorrentes, preferences, mesAtual }),
       [ano, txs, recorrentes, preferences, mesAtual],
@@ -347,13 +366,26 @@ export function ProjecaoAno({ txs, recorrentes = [], preferences, mesAtual, span
                 marginTop: 6,
               }}
             >
+              {/* Começou no meio do ano: a legenda diz de quando a conta parte,
+                  senão o "12 meses" engana quem sabe que usa há menos tempo. */}
               {orcMensal <= 0
                 ? t("sem orçamento definido — só as entradas contam")
-                : orcVariou
-                  ? t("orçamento de cada mês do ano + entradas agendadas")
-                  : t("orçamento de {x}/mês nos 12 meses + entradas agendadas", {
-                      x: fmtBRL(orcMensal),
-                    })}
+                : inicio > 1
+                  ? orcVariou
+                    ? t("orçamento de cada mês de {mes} a {fim} + entradas agendadas", {
+                        mes: t(MESES[inicio - 1]),
+                        fim: t(MESES[11]),
+                      })
+                    : t("orçamento de {x}/mês de {mes} a {fim} + entradas agendadas", {
+                        x: fmtBRL(orcMensal),
+                        mes: t(MESES[inicio - 1]),
+                        fim: t(MESES[11]),
+                      })
+                  : orcVariou
+                    ? t("orçamento de cada mês do ano + entradas agendadas")
+                    : t("orçamento de {x}/mês nos 12 meses + entradas agendadas", {
+                        x: fmtBRL(orcMensal),
+                      })}
             </div>
           </div>
         </Expansivel>

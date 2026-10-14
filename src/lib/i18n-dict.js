@@ -671,6 +671,10 @@ export const EN = {
   "acima do previsto no ano": "over the year’s projection",
   "orçamento de cada mês do ano + entradas agendadas":
     "each month's own budget + scheduled income",
+  "orçamento de {x}/mês de {mes} a {fim} + entradas agendadas":
+    "budget of {x}/month from {mes} to {fim} + scheduled income",
+  "orçamento de cada mês de {mes} a {fim} + entradas agendadas":
+    "each month's own budget from {mes} to {fim} + scheduled income",
   "sem orçamento definido — só as entradas contam":
     "no budget set — only income counts",
   "Total gasto": "Total spent",
