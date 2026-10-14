@@ -403,7 +403,7 @@ export function useConvitesEnviados(uid) {
 // se o doc do parceiro aponta `partnerUid` de volta pra mim.
 //
 // Tudo aqui é real-time via onSnapshot — qualquer alteração que o parceiro
-// faça no próprio doc (txs, orcamentos, recorrentes, categorias, foto, nome)
+// faça no próprio doc (txs, orcamentos, recorrentes, categorias, nome)
 // chega ao meu app na mesma hora, sem polling.
 const PARTNER_VAZIO = {
   txs: [],
@@ -412,7 +412,6 @@ const PARTNER_VAZIO = {
   orcamentos: {},
   orcamentoMensal: 0,
   nome: "",
-  fotoUrl: "",
   email: null,
   ready: false,
 };
@@ -443,7 +442,6 @@ export function usePartnerData(partnerUid) {
           orcamentos: d.orcamentos ?? {},
           orcamentoMensal: d.preferences?.orcamentoMensal || 0,
           nome: d.preferences?.nome || "",
-          fotoUrl: d.preferences?.fotoUrl || "",
           email: d.email || null,
           ready: true,
         });

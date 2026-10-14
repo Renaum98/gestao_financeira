@@ -90,10 +90,7 @@ export const EN = {
 
   // ─── Cabeçalho do perfil ───
   "Você": "You",
-  "Remover foto": "Remove photo",
-  "Alterar foto de perfil": "Change profile photo",
   "Seu nome": "Your name",
-  "Não foi possível usar essa imagem.": "Couldn't use this image.",
 
   // ─── Conta compartilhada ───
   "Conta compartilhada": "Shared account",

@@ -591,7 +591,7 @@ const MESTRE_DE = {
   caixinha: { id: "caixinhas", Tela: CaixinhasScreen },
 };
 
-function Sidebar({ tela, irPara, abrirAdd, usuario, fotoPerfil }) {
+function Sidebar({ tela, irPara, abrirAdd, usuario }) {
   const t = useT();
   const navRef = React.useRef(null);
   const itemRefs = React.useRef({});
@@ -766,9 +766,9 @@ function Sidebar({ tela, irPara, abrirAdd, usuario, fotoPerfil }) {
             background: "var(--surface-sunken)",
           }}
         >
-          {(fotoPerfil || usuario.photoURL) ? (
+          {usuario.photoURL ? (
             <img
-              src={fotoPerfil || usuario.photoURL}
+              src={usuario.photoURL}
               alt=""
               referrerPolicy="no-referrer"
               style={{ width: 30, height: 30, borderRadius: "var(--raio-pilula)", objectFit: "cover" }}
@@ -1940,7 +1940,6 @@ export function App() {
           irPara={irPara}
           abrirAdd={() => { vibrar(); setAddModal({}); }}
           usuario={usuario}
-          fotoPerfil={cloud.preferences.fotoUrl}
         />
         <main
           className="desktop-shell"

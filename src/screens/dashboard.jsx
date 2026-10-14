@@ -267,7 +267,6 @@ export function DashboardScreen({ ctx }) {
         primeiroNome={primeiroNome}
         irPara={irPara}
         totalNotif={totalNotif}
-        preferences={preferences}
         usuario={usuario}
         ehDesktop={ehDesktop}
       />

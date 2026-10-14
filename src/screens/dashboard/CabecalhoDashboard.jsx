@@ -21,7 +21,6 @@ export function CabecalhoDashboard({
   primeiroNome,
   irPara,
   totalNotif,
-  preferences,
   usuario,
   ehDesktop,
 }) {
@@ -89,9 +88,9 @@ export function CabecalhoDashboard({
             aria-label={t("Abrir perfil")}
             style={{ ...ACAO_BTN, padding: 0, overflow: "hidden" }}
           >
-            {preferences.fotoUrl || usuario?.photoURL ? (
+            {usuario?.photoURL ? (
               <img
-                src={preferences.fotoUrl || usuario.photoURL}
+                src={usuario.photoURL}
                 alt={primeiroNome || t("Perfil")}
                 referrerPolicy="no-referrer"
                 style={{

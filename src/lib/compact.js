@@ -3,7 +3,7 @@
 // Toda a leitura faz `...DEFAULT, ...(data ?? {})`, então campos ausentes
 // caem nos defaults. Aqui omitimos:
 //   • valores numéricos zero (orcamentos, meta da caixinha, orcamentoMensal…)
-//   • strings vazias (fotoUrl, dataMeta…)
+//   • strings vazias (nome, dataMeta…)
 //   • arrays vazios
 //   • objetos cujos campos são todos default
 //   • o `origem.tipo === 'orcamento'` de cada depósito (é o padrão)
@@ -97,7 +97,6 @@ function compactarPreferences(p) {
   if (p.idioma && p.idioma !== IDIOMA_PADRAO) out.idioma = p.idioma;
   if (p.moeda && p.moeda !== MOEDA_PADRAO) out.moeda = p.moeda;
   if (p.nome) out.nome = p.nome;
-  if (p.fotoUrl) out.fotoUrl = p.fotoUrl;
   if (p.orcamentoMensal > 0) out.orcamentoMensal = p.orcamentoMensal;
   // Dia de fechamento da fatura: 0 é o padrão (último dia do mês), então só
   // vale gravar quando o usuário escolheu um dia específico.

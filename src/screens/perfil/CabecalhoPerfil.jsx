@@ -1,75 +1,35 @@
-// CabecalhoPerfil.jsx — avatar (troca/remove foto), nome editável e e-mail.
-// Concentra o estado da foto e da edição de nome, que só interessam aqui.
+// CabecalhoPerfil.jsx — avatar, nome editável e e-mail.
+// Concentra o estado da edição de nome, que só interessa aqui.
 
 import React from "react";
 import { Icon } from "../../ui/icons.jsx";
-import { vibrar } from "../../lib/haptics.js";
-import { lerFotoPerfil } from "../../lib/imagem.js";
-import { COR_NEG } from "../../lib/colors.js";
 import { useT } from "../../lib/i18n.jsx";
 
 export function CabecalhoPerfil({ preferences, setPreferences, usuario }) {
   const t = useT();
   const nomeConta = usuario?.displayName || "";
   const email = usuario?.email || "";
-  const foto = preferences.fotoUrl || usuario?.photoURL || "";
+  // Só a foto que vem da conta (Google); o app não guarda foto própria.
+  const foto = usuario?.photoURL || "";
   const nomeExibido = preferences.nome?.trim() || nomeConta || t("Você");
   const inicial = (nomeExibido.trim()[0] || "F").toUpperCase();
 
   const [editandoNome, setEditandoNome] = React.useState(false);
   const [nomeTemp, setNomeTemp] = React.useState(preferences.nome || nomeConta);
-  const [erroFoto, setErroFoto] = React.useState("");
-  const [carregandoFoto, setCarregandoFoto] = React.useState(false);
-  const inputFotoRef = React.useRef(null);
 
   const salvarNome = () => {
     setPreferences({ nome: nomeTemp.trim() });
     setEditandoNome(false);
   };
 
-  const escolherFoto = () => {
-    setErroFoto("");
-    inputFotoRef.current?.click();
-  };
-  const aoSelecionarFoto = async (e) => {
-    const file = e.target.files?.[0];
-    e.target.value = ""; // permite re-selecionar o mesmo arquivo depois
-    if (!file) return;
-    setErroFoto("");
-    setCarregandoFoto(true);
-    try {
-      const dataUrl = await lerFotoPerfil(file);
-      setPreferences({ fotoUrl: dataUrl });
-      vibrar(14);
-    } catch (err) {
-      setErroFoto(err?.message || t("Não foi possível usar essa imagem."));
-    }
-    setCarregandoFoto(false);
-  };
-  const removerFoto = () => {
-    setErroFoto("");
-    setPreferences({ fotoUrl: "" });
-    vibrar();
-  };
-
   return (
     <div style={{ padding: "0 var(--pad-x) 0", display: "flex", flexDirection: "column", alignItems: "center" }}>
-      {/* Avatar — clique para trocar a foto */}
-      <input ref={inputFotoRef} type="file" accept="image/*" onChange={aoSelecionarFoto} style={{ display: "none" }} />
-      <button
-        onClick={escolherFoto}
-        aria-label={t("Alterar foto de perfil")}
+      <div
         style={{
-          position: "relative",
           width: 88,
           height: 88,
           borderRadius: "var(--raio-pilula)",
-          border: "none",
-          padding: 0,
-          cursor: "pointer",
-          background: "transparent",
           boxShadow: "0 12px 30px color-mix(in oklab, var(--primary) 22%, transparent)",
-          opacity: carregandoFoto ? 0.6 : 1,
         }}
       >
         {foto ? (
@@ -98,47 +58,7 @@ export function CabecalhoPerfil({ preferences, setPreferences, usuario }) {
             {inicial}
           </div>
         )}
-        {/* Selo de câmera */}
-        <div
-          className="glass-surface"
-          style={{
-            position: "absolute",
-            right: -2,
-            bottom: -2,
-            width: 30,
-            height: 30,
-            borderRadius: "var(--raio-pilula)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            boxShadow: "0 2px 8px rgba(0,0,0,0.18)",
-          }}
-        >
-          <Icon name="edit" size={14} color="var(--ink)" strokeWidth={2.2} />
-        </div>
-      </button>
-      {foto && preferences.fotoUrl ? (
-        <button
-          onClick={removerFoto}
-          style={{
-            background: "transparent",
-            border: "none",
-            cursor: "pointer",
-            marginTop: 8,
-            color: "var(--muted)",
-            fontSize: 12,
-            fontWeight: 700,
-            fontFamily: "inherit",
-          }}
-        >
-          {t("Remover foto")}
-        </button>
-      ) : null}
-      {erroFoto && (
-        <div style={{ fontSize: 12, fontWeight: 700, color: COR_NEG, marginTop: 6, textAlign: "center" }}>
-          {erroFoto}
-        </div>
-      )}
+      </div>
 
       {editandoNome ? (
         <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 12 }}>
