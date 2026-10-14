@@ -9,6 +9,9 @@ import { calcularLembranca } from "./utils.js";
 import { valorAtual } from "../../lib/caixinhas.js";
 import { useT } from "../../lib/i18n.jsx";
 
+// A caixinha aberta ao lado (desktop) não ganha marca visual: já teve contorno
+// na cor de destaque, barra lateral e véu na cor dela, e o usuário recusou os
+// três. `selecionada` fica só no aria-current, pra leitor de tela.
 export function CardCaixinha({ cx, onClick, selecionada = false }) {
   const t = useT();
   const selic = useSelic();
@@ -20,6 +23,7 @@ export function CardCaixinha({ cx, onClick, selecionada = false }) {
   return (
     <div
       onClick={onClick}
+      aria-current={selecionada ? "true" : undefined}
       className="clicavel"
       style={{
         background: "var(--card)",
@@ -29,12 +33,6 @@ export function CardCaixinha({ cx, onClick, selecionada = false }) {
         cursor: "pointer",
         position: "relative",
         overflow: "hidden",
-        // Marca de "esta é a que está aberta ao lado". Contorno, e não borda:
-        // borda entraria no box e mexeria no tamanho do card.
-        ...(selecionada && {
-          outline: "2px solid var(--primary)",
-          outlineOffset: 2,
-        }),
       }}
     >
       <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
