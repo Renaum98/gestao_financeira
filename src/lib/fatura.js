@@ -85,6 +85,8 @@ export function totalFatura(txs, faturaMes, diaFechamento, cartaoId) {
 // data; sem ele, pelo mês.
 //
 // `mes` é o id (mês do fechamento); `rotulo` é o mês que dá nome à fatura.
+// `vence` é o mês do pagamento; `dataVence` a data exata (yyyy-mm-dd), null
+// quando o cartão não tem dia de vencimento informado.
 // `cartaoId` segue a convenção de totalFatura: ausente = todos os cartões.
 export function faturasEmAberto(txs, diaFechamento, hoje, cartaoId, diaVencimento) {
   const mesAtual = hoje.slice(0, 7);
@@ -95,6 +97,7 @@ export function faturasEmAberto(txs, diaFechamento, hoje, cartaoId, diaVenciment
     total: totalFatura(txs, mesAberta, diaFechamento, cartaoId),
     fecha: dataFechamento(mesAberta, diaFechamento),
     vence: mesPagamentoDaFatura(mesAberta, diaFechamento, diaVencimento),
+    dataVence: dataVencimentoFatura(mesAberta, diaFechamento, diaVencimento),
   };
 
   const mesFechada = mesAnteriorDe(mesAberta);
@@ -109,6 +112,7 @@ export function faturasEmAberto(txs, diaFechamento, hoje, cartaoId, diaVenciment
           rotulo: rotuloFatura(mesFechada, diaFechamento),
           total: totalFechada,
           vence: venceFechada,
+          dataVence: dataVenceFechada,
         }
       : null;
 

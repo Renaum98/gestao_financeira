@@ -13,6 +13,7 @@ import { Icon } from "../../ui/icons.jsx";
 import { Card } from "../../ui/common.jsx";
 import { COR_AVISO } from "../../lib/colors.js";
 import { corDoCartao } from "../../lib/cartoes.js";
+import { MiniCartao } from "../cartoes/CardCartao.jsx";
 import { useT } from "../../lib/i18n.jsx";
 
 // "2026-08" → "Agosto" (já traduzido).
@@ -25,8 +26,17 @@ function diaMes(data) {
   return `${data.slice(8, 10)}/${data.slice(5, 7)}`;
 }
 
-function LinhaFatura({ titulo, legenda, valor, destaque, cor }) {
-  const corIcone = destaque ? COR_AVISO : cor || "var(--muted)";
+// Quando vence: a data exata se o cartão tem dia de vencimento, senão só o mês.
+function venceEm(fatura, t) {
+  return fatura.dataVence
+    ? t("vence {data}", { data: diaMes(fatura.dataVence) })
+    : t("vence em {mes}", { mes: nomeMes(fatura.vence, t) });
+}
+
+// `cartao` presente = a linha leva a miniatura do cartão; sem cartão (crédito
+// sem cartão definido) fica o ícone genérico.
+function LinhaFatura({ titulo, legenda, valor, destaque, cartao }) {
+  const corIcone = destaque ? COR_AVISO : "var(--muted)";
   return (
     <div
       style={{
@@ -36,20 +46,24 @@ function LinhaFatura({ titulo, legenda, valor, destaque, cor }) {
         padding: "12px 0",
       }}
     >
-      <div
-        style={{
-          width: 42,
-          height: 42,
-          borderRadius: "var(--raio-bloco)",
-          background: `color-mix(in oklab, ${corIcone} 14%, transparent)`,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          flexShrink: 0,
-        }}
-      >
-        <Icon name="card" size={18} color={corIcone} strokeWidth={2.2} />
-      </div>
+      {cartao ? (
+        <MiniCartao cor={corDoCartao(cartao)} />
+      ) : (
+        <div
+          style={{
+            width: 42,
+            height: 42,
+            borderRadius: "var(--raio-bloco)",
+            background: `color-mix(in oklab, ${corIcone} 14%, transparent)`,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            flexShrink: 0,
+          }}
+        >
+          <Icon name="card" size={18} color={corIcone} strokeWidth={2.2} />
+        </div>
+      )}
       <div style={{ flex: 1, minWidth: 0 }}>
         <div
           style={{
@@ -139,18 +153,19 @@ function GrupoFatura({ grupo, varios, primeiro, t }) {
       {fechada && (
         <LinhaFatura
           destaque
+          cartao={cartao}
           titulo={tituloDe(fechada.rotulo)}
-          legenda={t("Fechada · vence em {mes}", { mes: nomeMes(fechada.vence, t) })}
+          legenda={t("Fechada · {vence}", { vence: venceEm(fechada, t) })}
           valor={fechada.total}
         />
       )}
       <div style={{ borderTop: fechada ? "1px solid var(--linha)" : "none" }}>
         <LinhaFatura
-          cor={cor}
+          cartao={cartao}
           titulo={tituloDe(aberta.rotulo)}
-          legenda={t("Aberta · fecha {data} · vence em {mes}", {
+          legenda={t("Aberta · fecha {data} · {vence}", {
             data: diaMes(aberta.fecha),
-            mes: nomeMes(aberta.vence, t),
+            vence: venceEm(aberta, t),
           })}
           valor={aberta.total}
         />

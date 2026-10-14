@@ -437,8 +437,10 @@ export const EN = {
   "Fatura do cartão": "Card statement",
   "Ajustar →": "Adjust →",
   "Fatura de {mes}": "{mes} statement",
-  "Fechada · vence em {mes}": "Closed · due in {mes}",
-  "Aberta · fecha {data} · vence em {mes}": "Open · closes {data} · due in {mes}",
+  "Fechada · {vence}": "Closed · {vence}",
+  "Aberta · fecha {data} · {vence}": "Open · closes {data} · {vence}",
+  "vence {data}": "due {data}",
+  "vence em {mes}": "due in {mes}",
   "Não entra no saldo do mês: cada compra já abateu o mês em que foi feita.":
     "Not counted in the month's balance: each purchase already reduced the month it was made in.",
   "Entra na fatura de {fatura} · você paga em {vence}":
