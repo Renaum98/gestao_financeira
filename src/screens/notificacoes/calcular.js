@@ -46,7 +46,7 @@ export function calcularNotificacoes(
         data: f.data,
         valor: f.valor,
         descricao: f.cartaoNome,
-        fatura: { cartaoId: f.cartaoId, mes: f.mes },
+        fatura: { cartaoId: f.cartaoId, mes: f.mes, rotulo: f.rotulo },
       })),
     )
     .sort((a, b) => a.data.localeCompare(b.data));

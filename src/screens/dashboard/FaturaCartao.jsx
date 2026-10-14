@@ -139,7 +139,7 @@ function GrupoFatura({ grupo, varios, primeiro, t }) {
       {fechada && (
         <LinhaFatura
           destaque
-          titulo={tituloDe(fechada.mes)}
+          titulo={tituloDe(fechada.rotulo)}
           legenda={t("Fechada · vence em {mes}", { mes: nomeMes(fechada.vence, t) })}
           valor={fechada.total}
         />
@@ -147,7 +147,7 @@ function GrupoFatura({ grupo, varios, primeiro, t }) {
       <div style={{ borderTop: fechada ? "1px solid var(--linha)" : "none" }}>
         <LinhaFatura
           cor={cor}
-          titulo={tituloDe(aberta.mes)}
+          titulo={tituloDe(aberta.rotulo)}
           legenda={t("Aberta · fecha {data} · vence em {mes}", {
             data: diaMes(aberta.fecha),
             mes: nomeMes(aberta.vence, t),

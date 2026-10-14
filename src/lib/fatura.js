@@ -1,8 +1,13 @@
 // fatura.js — ciclo de fatura do cartão de crédito.
 //
 // Regra do banco: as compras no cartão se acumulam numa fatura que FECHA num
-// dia do mês e só é PAGA no mês seguinte. Comprei em agosto, pago com o
-// salário de setembro.
+// dia do mês e é PAGA no vencimento. Comprei em agosto, pago com o salário de
+// setembro.
+//
+// Internamente a fatura é identificada pelo mês em que FECHA (`faturaMes`).
+// Pra quem lê, o nome é outro (rotuloFatura): o mês em que a maior parte das
+// compras dela foi feita. Fecha dia 3 de novembro = compras de 4/out a 3/nov =
+// "fatura de outubro".
 //
 // IMPORTANTE — isto NÃO mexe no saldo do mês. A conta de saldo continua por
 // competência: a compra abate o mês em que foi feita (ver lib/saldo-mes.js).
@@ -37,9 +42,23 @@ export function faturaDaCompra(data, diaFechamento) {
   return dia <= fechamentoDoMes(mes, diaFechamento) ? mes : mesSeguinteDe(mes);
 }
 
-// Mês em que uma fatura é paga — sempre o seguinte ao do fechamento.
-export function mesPagamentoDaFatura(faturaMes) {
-  return mesSeguinteDe(faturaMes);
+// Mês em que uma fatura é paga. Vencimento depois do dia de fechamento cai no
+// MESMO mês (fecha 3/nov, vence 10/nov); antes ou igual, no seguinte (fecha
+// 28/out, vence 5/nov). Sem vencimento informado, o mês seguinte ao que dá nome
+// à fatura — "comprei em outubro, pago em novembro" — que no fechamento padrão
+// (último dia) é o seguinte ao do fechamento, como sempre foi.
+export function mesPagamentoDaFatura(faturaMes, diaFechamento, diaVencimento) {
+  const venc = Number(diaVencimento) || 0;
+  if (venc < 1) return mesSeguinteDe(rotuloFatura(faturaMes, diaFechamento));
+  return venc > fechamentoDoMes(faturaMes, diaFechamento) ? faturaMes : mesSeguinteDe(faturaMes);
+}
+
+// Mês (yyyy-mm) que dá NOME à fatura: aquele em que caiu a maior parte do
+// ciclo. Fechando até o dia 15, o ciclo mora quase todo no mês anterior ao do
+// fechamento; depois disso, no próprio mês. Com o fechamento padrão (último
+// dia) é o próprio mês: "fatura de agosto = compras de agosto".
+export function rotuloFatura(faturaMes, diaFechamento) {
+  return fechamentoDoMes(faturaMes, diaFechamento) <= 15 ? mesAnteriorDe(faturaMes) : faturaMes;
 }
 
 // Soma das compras no cartão que compõem uma fatura. Usa `valor` (o valor do
@@ -61,46 +80,55 @@ export function totalFatura(txs, faturaMes, diaFechamento, cartaoId) {
 // As duas faturas que interessam hoje:
 //   aberta  — ainda acumulando compras, fecha no futuro
 //   fechada — já fechou e ainda vai ser paga (null quando não há)
-// A fechada some quando o mês de vencimento dela já passou: aí ela não é mais
-// "a pagar", virou histórico.
+// A fechada some quando o vencimento dela já passou: aí ela não é mais "a
+// pagar", virou histórico. Com o dia de vencimento informado a conta é pela
+// data; sem ele, pelo mês.
 //
+// `mes` é o id (mês do fechamento); `rotulo` é o mês que dá nome à fatura.
 // `cartaoId` segue a convenção de totalFatura: ausente = todos os cartões.
-export function faturasEmAberto(txs, diaFechamento, hoje, cartaoId) {
+export function faturasEmAberto(txs, diaFechamento, hoje, cartaoId, diaVencimento) {
   const mesAtual = hoje.slice(0, 7);
   const mesAberta = faturaDaCompra(hoje, diaFechamento);
   const aberta = {
     mes: mesAberta,
+    rotulo: rotuloFatura(mesAberta, diaFechamento),
     total: totalFatura(txs, mesAberta, diaFechamento, cartaoId),
     fecha: dataFechamento(mesAberta, diaFechamento),
-    vence: mesPagamentoDaFatura(mesAberta),
+    vence: mesPagamentoDaFatura(mesAberta, diaFechamento, diaVencimento),
   };
 
   const mesFechada = mesAnteriorDe(mesAberta);
-  const venceFechada = mesPagamentoDaFatura(mesFechada);
+  const venceFechada = mesPagamentoDaFatura(mesFechada, diaFechamento, diaVencimento);
+  const dataVenceFechada = dataVencimentoFatura(mesFechada, diaFechamento, diaVencimento);
   const totalFechada = totalFatura(txs, mesFechada, diaFechamento, cartaoId);
+  const aPagar = dataVenceFechada ? dataVenceFechada >= hoje : venceFechada >= mesAtual;
   const fechada =
-    venceFechada >= mesAtual && totalFechada > 0
-      ? { mes: mesFechada, total: totalFechada, vence: venceFechada }
+    aPagar && totalFechada > 0
+      ? {
+          mes: mesFechada,
+          rotulo: rotuloFatura(mesFechada, diaFechamento),
+          total: totalFechada,
+          vence: venceFechada,
+        }
       : null;
 
   return { aberta, fechada };
 }
 
 // Data (yyyy-mm-dd) em que a fatura de `faturaMes` vence, pelo dia de
-// vencimento do cartão. Cai no mês de pagamento (o seguinte ao do fechamento);
-// um dia que o mês não comporta vira o último. null = cartão sem vencimento
-// informado.
-export function dataVencimentoFatura(faturaMes, diaVencimento) {
+// vencimento do cartão. Cai no mês de pagamento (mesPagamentoDaFatura); um dia
+// que o mês não comporta vira o último. null = cartão sem vencimento informado.
+export function dataVencimentoFatura(faturaMes, diaFechamento, diaVencimento) {
   const dia = Number(diaVencimento) || 0;
   if (dia < 1) return null;
-  const mes = mesPagamentoDaFatura(faturaMes);
+  const mes = mesPagamentoDaFatura(faturaMes, diaFechamento, diaVencimento);
   return `${mes}-${String(Math.min(dia, diasNoMes(mes))).padStart(2, "0")}`;
 }
 
 // Faturas que vencem entre hoje e `diasJanela` dias, uma por cartão com
 // vencimento informado. É o lembrete que substitui o "vence em N dias" de cada
 // conta no crédito: no cartão quem vence é a fatura, não a compra.
-//   [{ id, cartaoId, cartaoNome, mes, data, valor }]
+//   [{ id, cartaoId, cartaoNome, mes, rotulo, data, valor }]
 // O id leva o mês da fatura — o lembrete de outubro não herda o "lido" do de
 // setembro.
 export function faturasAVencer(txs, cartoes, hoje, diasJanela = 7) {
@@ -110,16 +138,18 @@ export function faturasAVencer(txs, cartoes, hoje, diasJanela = 7) {
   const out = [];
   for (const cartao of cartoes || []) {
     if (!(cartao.diaVencimento > 0)) continue;
-    const { aberta, fechada } = faturasEmAberto(txs, cartao.diaFechamento || 0, hoje, cartao.id);
+    const fech = cartao.diaFechamento || 0;
+    const { aberta, fechada } = faturasEmAberto(txs, fech, hoje, cartao.id, cartao.diaVencimento);
     for (const f of [fechada, aberta]) {
       if (!f || !(f.total > 0)) continue;
-      const data = dataVencimentoFatura(f.mes, cartao.diaVencimento);
+      const data = dataVencimentoFatura(f.mes, fech, cartao.diaVencimento);
       if (data < hoje || data > limite) continue;
       out.push({
         id: `fatura-${cartao.id}-${f.mes}`,
         cartaoId: cartao.id,
         cartaoNome: cartao.nome,
         mes: f.mes,
+        rotulo: f.rotulo,
         data,
         valor: f.total,
       });
@@ -141,7 +171,7 @@ export function faturasPorCartao(txs, cartoes, diaFechamentoGlobal, hoje) {
 
   const grupos = lista.map((cartao) => ({
     cartao,
-    faturas: faturasEmAberto(txs, cartao.diaFechamento || 0, hoje, cartao.id),
+    faturas: faturasEmAberto(txs, cartao.diaFechamento || 0, hoje, cartao.id, cartao.diaVencimento),
   }));
 
   const orfas = faturasEmAberto(txs, diaFechamentoGlobal, hoje, null);

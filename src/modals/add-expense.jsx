@@ -19,7 +19,7 @@ import { ConfirmModal } from "../ui/confirm-modal.jsx";
 import { COR_POS, COR_AVISO, COR_NEG } from "../lib/colors.js";
 import { formatarValorInicial, parseValorBR, valorZero } from "../lib/money-input.js";
 import { ajustarGuardado } from "../lib/guardado-entradas.js";
-import { faturaDaCompra, faturasEmAberto, mesPagamentoDaFatura, PAG_CARTAO } from "../lib/fatura.js";
+import { faturaDaCompra, faturasEmAberto, mesPagamentoDaFatura, rotuloFatura, PAG_CARTAO } from "../lib/fatura.js";
 import { fechamentoDe, usoDoCartao } from "../lib/cartoes.js";
 import {
   Aviso,
@@ -172,8 +172,10 @@ export function AddExpenseModal({ ctx, params }) {
   // O fechamento é o do cartão escolhido; sem cartão, o global de antes.
   const infoFatura = React.useMemo(() => {
     if (ehEntrada || pagamento !== PAG_CARTAO || !data) return null;
-    const fatura = faturaDaCompra(data, fechamentoDe(cartoes, cartaoId, preferences));
-    return { fatura, vence: mesPagamentoDaFatura(fatura) };
+    const fech = fechamentoDe(cartoes, cartaoId, preferences);
+    const venc = cartoes.find((c) => c.id === cartaoId)?.diaVencimento || 0;
+    const fatura = faturaDaCompra(data, fech);
+    return { fatura: rotuloFatura(fatura, fech), vence: mesPagamentoDaFatura(fatura, fech, venc) };
   }, [ehEntrada, pagamento, data, cartoes, cartaoId, preferences?.diaFechamentoCartao]);
 
   // Aviso de caixinha: editar uma entrada que já foi guardada pode deixar o

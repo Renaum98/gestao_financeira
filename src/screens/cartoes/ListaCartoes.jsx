@@ -38,7 +38,7 @@ export function CartoesScreen({ ctx }) {
     const hoje = hojeISO();
     const mapa = {};
     for (const c of cartoes) {
-      mapa[c.id] = usoDoCartao(c, faturasEmAberto(txs, c.diaFechamento || 0, hoje, c.id));
+      mapa[c.id] = usoDoCartao(c, faturasEmAberto(txs, c.diaFechamento || 0, hoje, c.id, c.diaVencimento));
     }
     return mapa;
   }, [cartoes, txs]);

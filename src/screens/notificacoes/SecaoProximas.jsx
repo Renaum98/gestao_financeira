@@ -72,7 +72,7 @@ export function SecaoProximas({ proximas, ehLida, marcarLida }) {
                   {rotuloPrazoT(t, n)}
                   <span style={{ opacity: 0.5 }}>·</span>
                   {tx.fatura
-                    ? t('Compras de {mes}', { mes: t(MESES[Number(tx.fatura.mes.slice(5, 7)) - 1]) })
+                    ? t('Compras de {mes}', { mes: t(MESES[Number((tx.fatura.rotulo || tx.fatura.mes).slice(5, 7)) - 1]) })
                     : tx.parcelas
                       ? t('Parcela {atual}/{total}', { atual: tx.parcelas.atual, total: tx.parcelas.total })
                       : t('Mensal')}
