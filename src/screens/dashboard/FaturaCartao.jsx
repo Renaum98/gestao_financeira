@@ -33,10 +33,7 @@ function venceEm(fatura, t) {
     : t("vence em {mes}", { mes: nomeMes(fatura.vence, t) });
 }
 
-// `cartao` presente = a linha leva a miniatura do cartão; sem cartão (crédito
-// sem cartão definido) fica o ícone genérico.
-function LinhaFatura({ titulo, legenda, valor, destaque, cartao }) {
-  const corIcone = destaque ? COR_AVISO : "var(--muted)";
+function LinhaFatura({ titulo, legenda, valor, destaque }) {
   return (
     <div
       style={{
@@ -46,24 +43,6 @@ function LinhaFatura({ titulo, legenda, valor, destaque, cartao }) {
         padding: "12px 0",
       }}
     >
-      {cartao ? (
-        <MiniCartao cor={corDoCartao(cartao)} />
-      ) : (
-        <div
-          style={{
-            width: 42,
-            height: 42,
-            borderRadius: "var(--raio-bloco)",
-            background: `color-mix(in oklab, ${corIcone} 14%, transparent)`,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            flexShrink: 0,
-          }}
-        >
-          <Icon name="card" size={18} color={corIcone} strokeWidth={2.2} />
-        </div>
-      )}
       <div style={{ flex: 1, minWidth: 0 }}>
         <div
           style={{
@@ -114,6 +93,7 @@ function GrupoFatura({ grupo, varios, primeiro, t }) {
   const cor = cartao
     ? `color-mix(in oklab, ${corDoCartao(cartao)} 65%, var(--ink))`
     : undefined;
+  const corIcone = fechada ? COR_AVISO : "var(--muted)";
 
   // Com vários cartões cada grupo ganha um cabeçalho com o nome do cartão, e as
   // linhas ficam só com o mês — quem lê sabe de quem é a fatura antes de saber
@@ -150,25 +130,48 @@ function GrupoFatura({ grupo, varios, primeiro, t }) {
           </span>
         </div>
       )}
-      {fechada && (
-        <LinhaFatura
-          destaque
-          cartao={cartao}
-          titulo={tituloDe(fechada.rotulo)}
-          legenda={t("Fechada · {vence}", { vence: venceEm(fechada, t) })}
-          valor={fechada.total}
-        />
-      )}
-      <div style={{ borderTop: fechada ? "1px solid var(--linha)" : "none" }}>
-        <LinhaFatura
-          cartao={cartao}
-          titulo={tituloDe(aberta.rotulo)}
-          legenda={t("Aberta · fecha {data} · {vence}", {
-            data: diaMes(aberta.fecha),
-            vence: venceEm(aberta, t),
-          })}
-          valor={aberta.total}
-        />
+      {/* Uma miniatura só por cartão, ao lado das duas faturas dele. Sem cartão
+          (crédito sem cartão definido) fica o ícone genérico, em alerta quando
+          há fatura fechada esperando pagamento. */}
+      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+        {cartao ? (
+          <MiniCartao cor={corDoCartao(cartao)} />
+        ) : (
+          <div
+            style={{
+              width: 42,
+              height: 42,
+              borderRadius: "var(--raio-bloco)",
+              background: `color-mix(in oklab, ${corIcone} 14%, transparent)`,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              flexShrink: 0,
+            }}
+          >
+            <Icon name="card" size={18} color={corIcone} strokeWidth={2.2} />
+          </div>
+        )}
+        <div style={{ flex: 1, minWidth: 0 }}>
+          {fechada && (
+            <LinhaFatura
+              destaque
+              titulo={tituloDe(fechada.rotulo)}
+              legenda={t("Fechada · {vence}", { vence: venceEm(fechada, t) })}
+              valor={fechada.total}
+            />
+          )}
+          <div style={{ borderTop: fechada ? "1px solid var(--linha)" : "none" }}>
+            <LinhaFatura
+              titulo={tituloDe(aberta.rotulo)}
+              legenda={t("Aberta · fecha {data} · {vence}", {
+                data: diaMes(aberta.fecha),
+                vence: venceEm(aberta, t),
+              })}
+              valor={aberta.total}
+            />
+          </div>
+        </div>
       </div>
     </div>
   );
