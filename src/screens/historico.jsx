@@ -5,6 +5,7 @@
 // cabe inteira e quem quer 2024 abre 2024.
 
 import React, { useMemo } from "react";
+import { flushSync } from "react-dom";
 import {
   MESES_CURTO,
   fmtBRLCompacto,
@@ -12,6 +13,8 @@ import {
 } from "../data.js";
 import { Icon } from "../ui/icons.jsx";
 import { Card, TopBar } from "../ui/common.jsx";
+import { Expansivel } from "../ui/expansivel.jsx";
+import { modoLeve, semMovimento } from "../lib/anime.js";
 import { vibrar } from "../lib/haptics.js";
 import { useT } from "../lib/i18n.jsx";
 
@@ -108,14 +111,33 @@ export function HistoricoScreen({ ctx }) {
     return Array.from(porAno.values());
   }, [dadosMeses]);
 
+  // Abrir e fechar um ano tem movimento nos dois layouts, cada um com o seu:
+  //   • celular: os meses abrem em altura (Expansivel), o card só cresce;
+  //   • desktop: o ano muda de lugar na grade (de uma célula pra linha inteira)
+  //     e empurra os vizinhos. Isso é troca de layout, que transição CSS não
+  //     alcança — então é uma View Transition: cada card de ano tem nome
+  //     próprio e o navegador faz o morph de posição e tamanho entre as duas
+  //     grades (o CSS do morph está em layout.css, sob .vt-anos).
+  // Sem suporte, no modo leve ou com "reduzir movimento", troca seco.
   const alternar = (ano) => {
     vibrar();
-    setAbertos((atual) => {
-      const novo = new Set(atual);
-      if (novo.has(ano)) novo.delete(ano);
-      else novo.add(ano);
-      return novo;
-    });
+    const aplicar = () =>
+      setAbertos((atual) => {
+        const novo = new Set(atual);
+        if (novo.has(ano)) novo.delete(ano);
+        else novo.add(ano);
+        return novo;
+      });
+    if (!ehDesktop || !document.startViewTransition || semMovimento() || modoLeve()) {
+      aplicar();
+      return;
+    }
+    const raiz = document.documentElement;
+    raiz.classList.add("vt-anos");
+    // flushSync: a View Transition fotografa o DOM assim que o callback volta,
+    // e o React precisa já ter aplicado o novo estado nesse instante.
+    const vt = document.startViewTransition(() => flushSync(aplicar));
+    vt.finished.finally(() => raiz.classList.remove("vt-anos"));
   };
 
   return (
@@ -136,16 +158,55 @@ export function HistoricoScreen({ ctx }) {
         </div>
 
         {/* Um card por ano, e nenhum depende do outro: no desktop eles se
-            repartem em colunas. Um ano aberto cresce dentro da própria célula
-            (a grade usa align-items: start) em vez de esticar o vizinho. */}
+            repartem em colunas. Aberto, o ano toma a linha inteira da grade e
+            os meses se espalham em colunas dentro dele (layout.css) — crescendo
+            numa célula só, ele virava uma tira comprida ao lado de um vizinho
+            baixinho. */}
         <div className="grade-tiles">
           {anos.map((g) => {
             const aberto = abertos.has(g.ano);
             // O ano do mês que está aberto no app ganha destaque: recolhido,
             // é o único jeito de saber onde você está.
             const ehAnoAtivo = mes.slice(0, 4) === g.ano;
+            // Os meses formam um subgrupo dentro do card do ano: bloco
+            // recuado com fundo próprio, pra a lista não se confundir com a
+            // linha do ano (antes era tudo da mesma cor, separado só por
+            // divisórias iguais).
+            const meses = (
+              <div
+                className="meses-do-ano"
+                style={{
+                  margin: "0 -6px 12px",
+                  padding: "2px 12px",
+                  borderRadius: "var(--raio-bloco)",
+                  background: "var(--bg)",
+                }}
+              >
+                {g.meses.map((d, i) => (
+                  <LinhaMes
+                    key={d.mes}
+                    d={d}
+                    t={t}
+                    ativo={d.mes === mes}
+                    primeiro={i === 0}
+                    onClick={() => irPara("gastos", { mes: d.mes })}
+                  />
+                ))}
+              </div>
+            );
             return (
-              <Card key={g.ano} style={{ padding: "4px 16px" }}>
+              <Card
+                key={g.ano}
+                className={aberto ? "ano-aberto" : undefined}
+                style={{
+                  padding: "4px 16px",
+                  // nome e classe do morph do desktop (ver `alternar`)
+                  ...(ehDesktop && {
+                    viewTransitionName: `ano-${g.ano}`,
+                    viewTransitionClass: "ano",
+                  }),
+                }}
+              >
                 <div
                   onClick={() => alternar(g.ano)}
                   role="button"
@@ -219,30 +280,12 @@ export function HistoricoScreen({ ctx }) {
                   </span>
                 </div>
 
-                {/* Os meses formam um subgrupo dentro do card do ano: bloco
-                    recuado com fundo próprio, pra a lista não se confundir
-                    com a linha do ano (antes era tudo da mesma cor, separado
-                    só por divisórias iguais). */}
-                {aberto && (
-                  <div
-                    style={{
-                      margin: "0 -6px 12px",
-                      padding: "2px 12px",
-                      borderRadius: "var(--raio-bloco)",
-                      background: "var(--bg)",
-                    }}
-                  >
-                    {g.meses.map((d, i) => (
-                      <LinhaMes
-                        key={d.mes}
-                        d={d}
-                        t={t}
-                        ativo={d.mes === mes}
-                        primeiro={i === 0}
-                        onClick={() => irPara("gastos", { mes: d.mes })}
-                      />
-                    ))}
-                  </div>
+                {/* No desktop quem anima é a View Transition (ver `alternar`):
+                    um Expansivel ali brigaria com o morph. */}
+                {ehDesktop ? (
+                  aberto && meses
+                ) : (
+                  <Expansivel aberto={aberto}>{meses}</Expansivel>
                 )}
               </Card>
             );

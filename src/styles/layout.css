@@ -24,10 +24,24 @@
 }
 
 /* Layout em colunas (desktop) — telas que aderem ficam mais amplas */
+/* Cada seção já traz o recuo lateral (--pad-x) inline dos dois lados — é o do
+   celular. Num grid comum isso somava, entre as colunas, o recuo da esquerda,
+   o vão e o recuo da direita (~84px), enquanto as grades internas de cartões
+   (o resumo da Análise, gap 10px) ficam a 10px: as bordas de dentro não
+   batiam. Aqui o vão entre colunas é zero e o grid ganha um recuo próprio que
+   cada filho desfaz com margem negativa: a borda de fora continua em --pad-x,
+   e entre as colunas sobram exatamente 2 × 5px = o mesmo vão do resumo.
+   Os filhos de largura total (col-span-all) ficam onde sempre estiveram. */
 .cols-desktop {
+  --vao-colunas: 10px;
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 4px 28px;
+  gap: 4px 0;
+  padding-inline: calc(var(--pad-x) - var(--vao-colunas) / 2);
+}
+.cols-desktop > * {
+  margin-inline: calc(var(--vao-colunas) / 2 - var(--pad-x));
+  min-width: 0;
 }
 .cols-desktop > .col-span-all { grid-column: 1 / -1; }
 
@@ -105,6 +119,48 @@
   grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
   gap: var(--esp-pilha);
   align-items: start;
+}
+
+/* Histórico no desktop: o ano aberto ocupa a linha inteira e os meses dele
+   viram uma grade, em vez de uma lista de doze linhas numa coluna estreita.
+   Na grade as divisórias entre linhas não fecham (só a primeira linha da lista
+   ficava sem a borda de cima), então elas saem — o quadradinho de cada mês já
+   separa um do outro. */
+.desktop-shell .grade-tiles > .ano-aberto { grid-column: 1 / -1; }
+.desktop-shell .meses-do-ano {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  column-gap: 28px;
+  padding: 6px 14px !important;
+}
+.desktop-shell .meses-do-ano > * { border-top: none !important; }
+
+/* Morph dos anos do Histórico (desktop), durante a View Transition que o
+   historico.jsx abre — a classe .vt-anos só existe enquanto ela roda.
+   • A página em volta não faz o fade padrão: só os cards se mexem.
+   • As fotos do card antes/depois ficam no tamanho natural, ancoradas no
+     canto de cima à esquerda, e o grupo recorta: o card cresce revelando os
+     meses, em vez de esticar a foto (o padrão escala a imagem com a largura,
+     e o texto do card estreito "inflaria" ao virar a linha inteira). */
+.vt-anos::view-transition-old(root),
+.vt-anos::view-transition-new(root) {
+  animation: none;
+}
+.vt-anos::view-transition-group(*.ano) {
+  animation-duration: .42s;
+  animation-timing-function: cubic-bezier(.32, .72, 0, 1);
+}
+.vt-anos::view-transition-image-pair(*.ano) {
+  overflow: clip;
+  border-radius: var(--raio-card);
+}
+.vt-anos::view-transition-old(*.ano),
+.vt-anos::view-transition-new(*.ano) {
+  width: auto;
+  height: auto;
+  object-fit: none;
+  object-position: left top;
+  animation-duration: .24s;
 }
 
 /* Os chips de filtro das transações. No mobile são faixas que rolam na
