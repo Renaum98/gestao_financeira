@@ -665,16 +665,22 @@ export const EN = {
   "Total esperado": "Expected total",
   "Entradas no ano": "Income this year",
   "Gastos no ano": "Spent this year",
-  "orçamento de {x}/mês nos 12 meses + entradas agendadas":
-    "budget of {x}/month across 12 months + scheduled income",
+  "orçamento de {x}/mês nos 12 meses + {entradas}":
+    "budget of {x}/month across 12 months + {entradas}",
   "sobra prevista no ano": "projected left over this year",
   "acima do previsto no ano": "over the year’s projection",
-  "orçamento de cada mês do ano + entradas agendadas":
-    "each month's own budget + scheduled income",
-  "orçamento de {x}/mês de {mes} a {fim} + entradas agendadas":
-    "budget of {x}/month from {mes} to {fim} + scheduled income",
-  "orçamento de cada mês de {mes} a {fim} + entradas agendadas":
-    "each month's own budget from {mes} to {fim} + scheduled income",
+  "orçamento de cada mês do ano + {entradas}":
+    "each month's own budget + {entradas}",
+  "orçamento de {x}/mês de {mes} a {fim} + {entradas}":
+    "budget of {x}/month from {mes} to {fim} + {entradas}",
+  "orçamento de cada mês de {mes} a {fim} + {entradas}":
+    "each month's own budget from {mes} to {fim} + {entradas}",
+  "entradas agendadas": "scheduled income",
+  "entradas lançadas": "recorded income",
+  "sobrou no ano": "left over that year",
+  "acima do orçamento no ano": "over budget that year",
+  "Ano anterior": "Previous year",
+  "Próximo ano": "Next year",
   "sem orçamento definido — só as entradas contam":
     "no budget set — only income counts",
   "Total gasto": "Total spent",

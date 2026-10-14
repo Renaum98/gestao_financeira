@@ -1,6 +1,8 @@
 // ProjecaoAno.jsx — card de projeção do ANO INTEIRO no topo da Análise. De
 // propósito NÃO depende do mês selecionado na tela: o seletor manda nos blocos
-// abaixo, aqui a foto é sempre o ano corrente.
+// abaixo. Abre no ano corrente; as setas ao lado do ano andam pelos anos que têm
+// lançamento — os passados (o que sobrou de fato) e os futuros (parcelas já
+// lançadas com data à frente).
 //
 // Usa o <Card> comum, igual aos outros blocos da Análise — não o card de
 // destaque colorido. Sobra e déficit usam o verde/vermelho da UI clara.
@@ -60,6 +62,20 @@ function primeiroMesDeUso(txs, ano, mesAtual) {
     if (m && m < maisAntigo) maisAntigo = m;
   }
   return Number(maisAntigo.slice(0, 4)) < ano ? 1 : Number(maisAntigo.slice(5, 7));
+}
+
+// Anos navegáveis: do lançamento mais antigo ao mais distante, sempre incluindo
+// o ano corrente. Recorrentes não abrem anos — uma sem fim abriria todos.
+function anosDisponiveis(txs, anoAtual) {
+  let min = anoAtual;
+  let max = anoAtual;
+  for (const tx of txs) {
+    const a = Number(tx.data?.slice(0, 4));
+    if (!a) continue;
+    if (a < min) min = a;
+    if (a > max) max = a;
+  }
+  return { min, max };
 }
 
 function calcularProjecaoAno({ ano, txs, recorrentes, preferences, mesAtual }) {
@@ -122,7 +138,9 @@ function calcularProjecaoAno({ ano, txs, recorrentes, preferences, mesAtual }) {
     gastosAno,
     esperado,
     sobra: esperado - gastosAno,
-    orcMensal: calcOrcBaseAtual(preferences),
+    // O valor mensal da legenda é o do próprio ano (quando não variou), não o
+    // de hoje: num ano passado o orçamento podia ser outro.
+    orcMensal: orcPrimeiroMes ?? calcOrcBaseAtual(preferences),
     orcVariou,
     inicio,
   };
@@ -168,9 +186,54 @@ function Linha({ rotulo, valor, cor, destaque }) {
   );
 }
 
+// Seta do seletor de ano. Fica dentro do cabeçalho que abre e fecha o card,
+// então o clique (e o Enter/espaço) não pode subir até ele.
+function SetaAno({ dir, onClick, disabled, label }) {
+  return (
+    <button
+      type="button"
+      aria-label={label}
+      disabled={disabled}
+      onClick={(e) => {
+        e.stopPropagation();
+        onClick();
+      }}
+      onKeyDown={(e) => e.stopPropagation()}
+      style={{
+        width: 26,
+        height: 26,
+        display: "inline-flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: 0,
+        border: "none",
+        borderRadius: "var(--raio-pilula)",
+        background: "transparent",
+        cursor: disabled ? "default" : "pointer",
+        opacity: disabled ? 0.3 : 1,
+      }}
+    >
+      <Icon name={dir < 0 ? "arrow-left" : "arrow-right"} size={14} color="var(--muted)" strokeWidth={2.4} />
+    </button>
+  );
+}
+
 export function ProjecaoAno({ txs, recorrentes = [], preferences, mesAtual, spanAll }) {
   const t = useT();
-  const ano = Number(mesAtual.slice(0, 4));
+  const anoAtual = Number(mesAtual.slice(0, 4));
+  const { min: anoMin, max: anoMax } = React.useMemo(
+    () => anosDisponiveis(txs, anoAtual),
+    [txs, anoAtual],
+  );
+  const [anoEscolhido, setAnoEscolhido] = React.useState(anoAtual);
+  // Preso ao intervalo: se o lançamento que abria um ano for apagado, o card
+  // volta pro ano válido mais próximo em vez de mostrar um ano vazio.
+  const ano = Math.min(anoMax, Math.max(anoMin, anoEscolhido));
+  const passado = ano < anoAtual;
+  const mudarAno = (d) => {
+    vibrar();
+    setAnoEscolhido(ano + d);
+  };
   const [aberto, setAberto] = React.useState(false);
   // Categorias da legenda mostrando o valor em moeda em vez do %. Cada toque
   // alterna só a categoria tocada.
@@ -223,6 +286,9 @@ export function ProjecaoAno({ txs, recorrentes = [], preferences, mesAtual, span
             <div style={{ flex: 1, minWidth: 0, fontSize: 13, fontWeight: 600, color: "var(--muted)" }}>
               {t("Projeção anual")}
             </div>
+            {anoMin < anoMax && (
+              <SetaAno dir={-1} label={t("Ano anterior")} disabled={ano <= anoMin} onClick={() => mudarAno(-1)} />
+            )}
             <span
               style={{
                 padding: "4px 10px",
@@ -232,10 +298,14 @@ export function ProjecaoAno({ txs, recorrentes = [], preferences, mesAtual, span
                 fontSize: 11,
                 fontWeight: 700,
                 letterSpacing: 0.2,
+                fontVariantNumeric: "tabular-nums",
               }}
             >
               {ano}
             </span>
+            {anoMin < anoMax && (
+              <SetaAno dir={1} label={t("Próximo ano")} disabled={ano >= anoMax} onClick={() => mudarAno(1)} />
+            )}
             <span
               className="chevron-expansivel"
               style={{ display: "inline-flex", transform: aberto ? "rotate(180deg)" : "none" }}
@@ -257,7 +327,13 @@ export function ProjecaoAno({ txs, recorrentes = [], preferences, mesAtual, span
             {fmtBRL(Math.abs(sobra))}
           </div>
           <div style={{ marginTop: 2, fontSize: 11.5, fontWeight: 600, color: "var(--muted)" }}>
-            {estourou ? t("acima do previsto no ano") : t("sobra prevista no ano")}
+            {passado
+              ? estourou
+                ? t("acima do orçamento no ano")
+                : t("sobrou no ano")
+              : estourou
+                ? t("acima do previsto no ano")
+                : t("sobra prevista no ano")}
           </div>
         </div>
 
@@ -368,24 +444,29 @@ export function ProjecaoAno({ txs, recorrentes = [], preferences, mesAtual, span
             >
               {/* Começou no meio do ano: a legenda diz de quando a conta parte,
                   senão o "12 meses" engana quem sabe que usa há menos tempo. */}
-              {orcMensal <= 0
-                ? t("sem orçamento definido — só as entradas contam")
-                : inicio > 1
-                  ? orcVariou
-                    ? t("orçamento de cada mês de {mes} a {fim} + entradas agendadas", {
+              {/* Ano passado: as entradas são só as lançadas — não há mais
+                  nada agendado nele. */}
+              {(() => {
+                const entradas = passado ? t("entradas lançadas") : t("entradas agendadas");
+                if (orcamentoAno <= 0) return t("sem orçamento definido — só as entradas contam");
+                if (inicio > 1) {
+                  return orcVariou
+                    ? t("orçamento de cada mês de {mes} a {fim} + {entradas}", {
                         mes: t(MESES[inicio - 1]),
                         fim: t(MESES[11]),
+                        entradas,
                       })
-                    : t("orçamento de {x}/mês de {mes} a {fim} + entradas agendadas", {
+                    : t("orçamento de {x}/mês de {mes} a {fim} + {entradas}", {
                         x: fmtBRL(orcMensal),
                         mes: t(MESES[inicio - 1]),
                         fim: t(MESES[11]),
-                      })
-                  : orcVariou
-                    ? t("orçamento de cada mês do ano + entradas agendadas")
-                    : t("orçamento de {x}/mês nos 12 meses + entradas agendadas", {
-                        x: fmtBRL(orcMensal),
-                      })}
+                        entradas,
+                      });
+                }
+                return orcVariou
+                  ? t("orçamento de cada mês do ano + {entradas}", { entradas })
+                  : t("orçamento de {x}/mês nos 12 meses + {entradas}", { x: fmtBRL(orcMensal), entradas });
+              })()}
             </div>
           </div>
         </Expansivel>
