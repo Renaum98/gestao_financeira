@@ -891,4 +891,5 @@ export const EN = {
   "Cada parcela representa apenas ": "Each installment represents just ",
   " do seu orçamento mensal — impacto leve durante {n} meses.":
     " of your monthly budget — light impact for {n} months.",
+  "Gire o celular para usar o app": "Turn your phone upright to use the app",
 };

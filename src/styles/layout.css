@@ -198,3 +198,41 @@
   gap: 24px;
   align-items: start;
 }
+
+/* Aviso de celular deitado (criado em main.jsx). O iOS não deixa travar a
+   orientação, então com o celular de lado ele cobre o app inteiro. A altura
+   máxima separa celular de tablet: deitado, o celular tem no máximo ~430px de
+   altura, o iPad passa de 700. */
+.aviso-retrato {
+  display: none;
+}
+@media (orientation: landscape) and (max-height: 500px) and (pointer: coarse) {
+  .aviso-retrato {
+    position: fixed;
+    inset: 0;
+    z-index: 2147483647;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    padding: 24px;
+    background: var(--bg);
+    color: var(--ink);
+    text-align: center;
+  }
+  .aviso-retrato svg {
+    color: var(--primary);
+    transform: rotate(-90deg);
+  }
+  .aviso-retrato p {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 700;
+  }
+  /* sem isso o app por baixo continua rolando sob o dedo */
+  html:has(.aviso-retrato),
+  body:has(.aviso-retrato) {
+    overflow: hidden;
+  }
+}

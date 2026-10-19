@@ -4,6 +4,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { registerSW } from 'virtual:pwa-register';
 import { App } from './app.jsx';
+import { lerIdiomaSalvo, traduzir } from './lib/i18n.jsx';
 import './styles.css';
 
 // ─── PWA: descoberta agressiva de versão nova ───
@@ -39,6 +40,35 @@ const updateSW = registerSW({
       }
     });
   },
+});
+
+// ─── Só em pé no celular ───
+// O manifest pede `orientation: 'portrait'`, o que trava o PWA instalado no
+// Android. O iOS ignora o manifest e o Safari não tem `screen.orientation.lock`,
+// então lá não há como travar de verdade: com o celular deitado, um aviso cobre
+// o app pedindo pra girar de volta. Quem decide quando ele aparece é o CSS
+// (.aviso-retrato, layout.css); aqui só se cria o elemento e se acerta o idioma
+// do texto a cada vez que o celular deita.
+const avisoRetrato = document.createElement('div');
+avisoRetrato.className = 'aviso-retrato';
+avisoRetrato.setAttribute('role', 'alert');
+avisoRetrato.innerHTML =
+  '<svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+  '<rect x="7" y="2" width="10" height="20" rx="2.5"/><path d="M11 18h2"/></svg><p></p>';
+document.body.appendChild(avisoRetrato);
+
+const celularDeitado = window.matchMedia(
+  '(orientation: landscape) and (max-height: 500px) and (pointer: coarse)'
+);
+const textoAvisoRetrato = () => {
+  avisoRetrato.querySelector('p').textContent = traduzir(
+    lerIdiomaSalvo(),
+    'Gire o celular para usar o app'
+  );
+};
+textoAvisoRetrato();
+celularDeitado.addEventListener('change', (e) => {
+  if (e.matches) textoAvisoRetrato();
 });
 
 // Safari iOS ignora user-scalable=no — bloqueamos gestos de pinch e
