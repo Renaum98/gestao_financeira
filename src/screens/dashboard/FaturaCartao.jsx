@@ -96,10 +96,8 @@ function GrupoFatura({ grupo, varios, primeiro, t }) {
   const corIcone = fechada ? COR_AVISO : "var(--muted)";
 
   // Com vários cartões cada grupo ganha um cabeçalho com o nome do cartão, e as
-  // linhas ficam só com o mês — quem lê sabe de quem é a fatura antes de saber
-  // de que mês ela é, sem repetir o nome em cada linha.
-  const tituloDe = (mes) => t("Fatura de {mes}", { mes: nomeMes(mes, t) });
-
+  // linhas dizem só qual das duas faturas é — quem lê sabe de quem é a fatura
+  // antes, sem repetir o nome em cada linha.
   return (
     <div style={{ borderTop: primeiro ? "none" : "1px solid var(--linha)" }}>
       {varios && (
@@ -156,14 +154,14 @@ function GrupoFatura({ grupo, varios, primeiro, t }) {
           {fechada && (
             <LinhaFatura
               destaque
-              titulo={tituloDe(fechada.rotulo)}
+              titulo={t("Fatura passada")}
               legenda={t("Fechada · {vence}", { vence: venceEm(fechada, t) })}
               valor={fechada.total}
             />
           )}
           <div style={{ borderTop: fechada ? "1px solid var(--linha)" : "none" }}>
             <LinhaFatura
-              titulo={tituloDe(aberta.rotulo)}
+              titulo={t("Fatura atual")}
               legenda={t("Aberta · fecha {data} · {vence}", {
                 data: diaMes(aberta.fecha),
                 vence: venceEm(aberta, t),

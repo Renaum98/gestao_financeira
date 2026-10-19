@@ -434,6 +434,8 @@ export const EN = {
   "Fatura do cartão": "Card statement",
   "Ajustar →": "Adjust →",
   "Fatura de {mes}": "{mes} statement",
+  "Fatura atual": "Current statement",
+  "Fatura passada": "Previous statement",
   "Fechada · {vence}": "Closed · {vence}",
   "Aberta · fecha {data} · {vence}": "Open · closes {data} · {vence}",
   "vence {data}": "due {data}",
