@@ -6,7 +6,6 @@ import { Icon } from "../ui/icons.jsx";
 import { chaveMes } from "../lib/datas.js";
 import { Card, TopBar } from "../ui/common.jsx";
 import { ConfirmModal } from "../ui/confirm-modal.jsx";
-import { vibrar } from "../lib/haptics.js";
 import { useT, useLang } from "../lib/i18n.jsx";
 import { baixarDadosXLSX } from "../lib/export.js";
 import { baixarRelatorioPDF } from "../lib/relatorio-pdf.js";
@@ -53,13 +52,11 @@ export function PerfilScreen({ ctx }) {
   }, [txs, todosMeses]);
 
   const abrirBaixar = () => {
-    vibrar();
     setBaixar({ formato: "xlsx", mes: "todos", baixando: false, erro: "" });
   };
   // O relatório PDF só existe por mês — abre já no mais recente que dá pra
   // baixar (`mesesBaixaveis` vem ordenado do mais novo pro mais antigo).
   const abrirRelatorio = () => {
-    vibrar();
     setBaixar({ formato: "pdf", mes: mesesBaixaveis[0] || null, baixando: false, erro: "" });
   };
   const executarBaixar = async () => {
@@ -80,7 +77,6 @@ export function PerfilScreen({ ctx }) {
           nomeUsuario,
         });
       }
-      vibrar(14);
       setBaixar(null);
     } catch {
       setBaixar((b) => ({ ...b, baixando: false, erro: t("Não foi possível gerar o arquivo.") }));
@@ -110,17 +106,14 @@ export function PerfilScreen({ ctx }) {
             partnerNome={partnerNome}
             convitePendente={(convitesEnviados || []).find((c) => c.status === "pendente")}
             onConvidar={() => {
-              vibrar();
               setConvidando(true);
             }}
             onCancelarConvite={async (id) => {
               try {
                 await cancelarConvite(id);
-                vibrar();
               } catch { }
             }}
             onDesfazer={() => {
-              vibrar();
               setConfirmandoDesfazer(true);
             }}
           />

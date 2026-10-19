@@ -6,7 +6,6 @@ import { fmtBRLCompacto } from "../../data.js";
 import { Icon } from "../../ui/icons.jsx";
 import { COR_POS, COR_NEG, COR_POS_FUNDO } from "../../lib/colors.js";
 import { parseValorBR, valorZero } from "../../lib/money-input.js";
-import { vibrar } from "../../lib/haptics.js";
 import { hojeISO } from "../../lib/datas.js";
 import { ModalShell } from "../../ui/modal-shell.jsx";
 import {
@@ -106,7 +105,7 @@ export function ModalDeposito({ cor, gruposEntrada = [], alocadoPorDescricao = {
                 selecionado={entradaDesc === g.descricao}
                 divisoria={i > 0}
                 desabilitado={semSaldo}
-                onClick={() => { if (semSaldo) return; vibrar(); setEntradaDesc(g.descricao); }}
+                onClick={() => { if (semSaldo) return; setEntradaDesc(g.descricao); }}
                 inicio={
                   <span
                     style={{

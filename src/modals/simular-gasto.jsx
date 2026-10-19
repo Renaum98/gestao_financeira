@@ -11,7 +11,6 @@ import React from "react";
 import { fmtBRL, MESES_CURTO } from "../data.js";
 import { Icon } from "../ui/icons.jsx";
 import { ModalOverlay } from "../ui/modal-base.jsx";
-import { vibrar } from "../lib/haptics.js";
 import { COR_POS, COR_NEG, COR_AVISO } from "../lib/colors.js";
 import { parseValorBR, valorZero } from "../lib/money-input.js";
 import { mesShift } from "../lib/datas.js";
@@ -214,12 +213,10 @@ export function SimularGastoModal({
   // rótulo não animar quando o modal abre.
   const [sentidoInicio, setSentidoInicio] = React.useState(0);
   const passoInicio = (delta) => {
-    vibrar(8);
     setSentidoInicio(delta);
     setInicio((i) => Math.max(0, Math.min(INICIO_MAX, i + delta)));
   };
   const passoParcelas = (delta) => {
-    vibrar(8);
     setParcelas((p) => Math.max(1, Math.min(48, p + delta)));
   };
   // Botão redondo dos passos (− / + e ‹ / ›), do tamanho da linha.

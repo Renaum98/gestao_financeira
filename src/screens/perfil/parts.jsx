@@ -2,7 +2,6 @@
 
 import { Icon } from "../../ui/icons.jsx";
 import { Toggle } from "../../ui/common.jsx";
-import { vibrar } from "../../lib/haptics.js";
 
 // Controle segmentado — as opções lado a lado, uma acesa. Usado pelo Tema e
 // pelo Modo leve; nasceu dentro do AparenciaCard e saiu de lá quando o segundo
@@ -31,7 +30,6 @@ export function Segmentado({ valor, onChange, opcoes, ariaLabel }) {
             role="radio"
             aria-checked={sel}
             onClick={() => {
-              vibrar();
               onChange(opt.id);
             }}
             style={{
@@ -66,7 +64,6 @@ export function SelectPerfil({ value, onChange, options, ariaLabel }) {
         value={value}
         aria-label={ariaLabel}
         onChange={(e) => {
-          vibrar();
           onChange(e.target.value);
         }}
         style={{

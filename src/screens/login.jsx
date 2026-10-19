@@ -11,7 +11,6 @@ import {
 } from '../lib/firebase.js';
 import { Icon } from '../ui/icons.jsx';
 import { LogoAzulejo } from '../ui/logo-animado.jsx';
-import { vibrar } from '../lib/haptics.js';
 import { COR_POS, COR_NEG } from '../lib/colors.js';
 import { useT } from '../lib/i18n.jsx';
 import {
@@ -242,7 +241,6 @@ export function LoginScreen() {
     // e não o erro. No login é o contrário, e a contagem fica no catch.
     if (modo !== 'entrar') setEsperaMs(registrarTentativa(acao, email));
 
-    vibrar();
     setCarregando(true);
     try {
       if (modo === 'recuperar') {
@@ -372,7 +370,7 @@ export function VerifyEmailScreen({ email, onAtualizar }) {
     setMsg(''); setErro(''); setCarregando(true);
     try {
       const u = await recarregarUsuario();
-      if (u?.emailVerified) { vibrar(14); onAtualizar?.(u); }
+      if (u?.emailVerified) onAtualizar?.(u);
       else setErro(t('Ainda não detectamos a confirmação. Abra o link do e-mail e tente de novo.'));
     } catch {
       setErro(t('Não foi possível verificar agora. Tente novamente.'));

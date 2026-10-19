@@ -7,7 +7,6 @@ import { Icon } from "../ui/icons.jsx";
 import { calcularNotificacoes } from "./notificacoes.jsx";
 import { dispararPendentes } from "../lib/notifications.js";
 import { SimularGastoModal } from "../modals/simular-gasto.jsx";
-import { vibrar } from "../lib/haptics.js";
 import { atualizarBadge } from "../lib/badge.js";
 import { useT } from "../lib/i18n.jsx";
 import { computeInsights } from "../lib/insights.jsx";
@@ -304,7 +303,6 @@ export function DashboardScreen({ ctx }) {
       >
         <button
           onClick={() => {
-            vibrar();
             setSimularAberto(true);
           }}
           style={{

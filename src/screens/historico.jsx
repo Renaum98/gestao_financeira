@@ -15,7 +15,6 @@ import { Icon } from "../ui/icons.jsx";
 import { Card, TopBar } from "../ui/common.jsx";
 import { Expansivel } from "../ui/expansivel.jsx";
 import { modoLeve, semMovimento } from "../lib/anime.js";
-import { vibrar } from "../lib/haptics.js";
 import { useT } from "../lib/i18n.jsx";
 
 function LinhaMes({ d, ativo, primeiro, t, onClick }) {
@@ -120,7 +119,6 @@ export function HistoricoScreen({ ctx }) {
   //     grades (o CSS do morph está em layout.css, sob .vt-anos).
   // Sem suporte, no modo leve ou com "reduzir movimento", troca seco.
   const alternar = (ano) => {
-    vibrar();
     const aplicar = () =>
       setAbertos((atual) => {
         const novo = new Set(atual);

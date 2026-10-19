@@ -49,7 +49,6 @@ import { Expansivel } from "../../ui/expansivel.jsx";
 import { Icon } from "../../ui/icons.jsx";
 import { calcOrcBaseAtual, obterOrcBaseDoMes } from "../../lib/orcamento.js";
 import { COR_POS, COR_NEG } from "../../lib/colors.js";
-import { vibrar } from "../../lib/haptics.js";
 import { useT } from "../../lib/i18n.jsx";
 
 // Primeiro mês (1–12) do ano que entra na conta: o do lançamento mais antigo,
@@ -231,7 +230,6 @@ export function ProjecaoAno({ txs, recorrentes = [], preferences, mesAtual, span
   const ano = Math.min(anoMax, Math.max(anoMin, anoEscolhido));
   const passado = ano < anoAtual;
   const mudarAno = (d) => {
-    vibrar();
     setAnoEscolhido(ano + d);
   };
   const [aberto, setAberto] = React.useState(false);
@@ -239,7 +237,6 @@ export function ProjecaoAno({ txs, recorrentes = [], preferences, mesAtual, span
   // alterna só a categoria tocada.
   const [emValor, setEmValor] = React.useState(() => new Set());
   const alternarValor = (id) => {
-    vibrar();
     setEmValor((atual) => {
       const novo = new Set(atual);
       if (novo.has(id)) novo.delete(id);
@@ -260,7 +257,6 @@ export function ProjecaoAno({ txs, recorrentes = [], preferences, mesAtual, span
   const estourou = sobra < 0;
 
   const alternar = () => {
-    vibrar();
     setAberto((v) => !v);
   };
 

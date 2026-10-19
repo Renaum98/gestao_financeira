@@ -6,7 +6,6 @@ import React from 'react';
 import { Icon } from './icons.jsx';
 import { ModalOverlay } from './modal-base.jsx';
 import { Linha, ListaAgrupada, TituloDialogo } from './form-lista.jsx';
-import { vibrar } from '../lib/haptics.js';
 import { useT } from '../lib/i18n.jsx';
 
 const DISMISS_KEY = 'finca.installPrompt.dismissedAt';
@@ -72,7 +71,6 @@ export function useInstallPrompt() {
   }, []);
 
   const instalar = React.useCallback(async () => {
-    vibrar(14);
     if (deferred) {
       deferred.prompt();
       try { await deferred.userChoice; } catch {}
@@ -85,7 +83,6 @@ export function useInstallPrompt() {
   }, [deferred]);
 
   const dispensar = React.useCallback(() => {
-    vibrar();
     localStorage.setItem(DISMISS_KEY, String(Date.now()));
     setMostrar(false);
   }, []);

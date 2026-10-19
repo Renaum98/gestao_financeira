@@ -6,7 +6,6 @@ import { CATEGORIAS, MESES_CURTO, fmtBRL, fmtBRLCompacto, rotuloMesT } from '../
 import { Icon, CatChip, iconePagamento } from './icons.jsx';
 import { COR_POS, COR_POS_FUNDO } from '../lib/colors.js';
 import { useT } from '../lib/i18n.jsx';
-import { vibrar } from '../lib/haptics.js';
 
 // Quanto a página precisa descer pra o botão de voltar subir pra barra do topo.
 // Baixo de propósito: o gesto de descer já começou, o botão sai da frente junto.
@@ -151,15 +150,14 @@ export function SeletorMes({ mes, setMes, todosMeses }) {
   );
 }
 
-// Interruptor liga/desliga. Vibra ao virar, como os outros controles de toque
-// do app. O preventDefault é pra quando ele mora dentro de um <label>: sem
-// ele, o clique dispara a ação padrão do rótulo por cima da nossa.
+// Interruptor liga/desliga. O preventDefault é pra quando ele mora dentro de
+// um <label>: sem ele, o clique dispara a ação padrão do rótulo por cima da
+// nossa.
 export function Toggle({ ativo, onChange }) {
   return (
     <div
       onClick={(e) => {
         e.preventDefault();
-        vibrar();
         onChange(!ativo);
       }}
       style={{

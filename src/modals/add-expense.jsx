@@ -14,7 +14,6 @@ import { Icon } from "../ui/icons.jsx";
 import { Expansivel, useUltimoNaoNulo } from "../ui/expansivel.jsx";
 import { ModalOverlay } from "../ui/modal-base.jsx";
 import { Toggle } from "../ui/common.jsx";
-import { vibrar } from "../lib/haptics.js";
 import { ConfirmModal } from "../ui/confirm-modal.jsx";
 import { COR_POS, COR_AVISO, COR_NEG } from "../lib/colors.js";
 import { formatarValorInicial, parseValorBR, valorZero } from "../lib/money-input.js";
@@ -113,7 +112,6 @@ export function AddExpenseModal({ ctx, params }) {
   const confirmarNovaCat = () => {
     const nome = novoNomeCat.trim();
     if (!nome) return;
-    vibrar(14);
     const id = adicionarCategoria(nome, novaCorCat);
     setCategoria(id);
     setNovoNomeCat("");
@@ -302,7 +300,7 @@ export function AddExpenseModal({ ctx, params }) {
                 selecionado={categoria === c}
                 ehDesktop={ehDesktop}
                 podeExcluir={!!CATEGORIAS[c].custom && !!excluirCategoria}
-                onSelecionar={() => { vibrar(); setCategoria(c); }}
+                onSelecionar={() => setCategoria(c)}
                 onPedirExcluir={() => setExcluirCat({ id: c, nome: CATEGORIAS[c].nome })}
               />
             ))}

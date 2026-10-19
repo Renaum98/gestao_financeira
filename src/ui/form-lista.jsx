@@ -13,7 +13,6 @@ import { createPortal } from "react-dom";
 import { CATEGORIAS, PAGAMENTOS } from "../data.js";
 import { CatChip, Icon, iconePagamento } from "./icons.jsx";
 import { Expansivel } from "./expansivel.jsx";
-import { vibrar } from "../lib/haptics.js";
 import { simboloMoeda } from "../lib/moeda.js";
 import { formatarValorDigitado } from "../lib/money-input.js";
 import { PAG_CARTAO } from "../lib/fatura.js";
@@ -184,7 +183,7 @@ export function SeletorPilula({ opcoes, valor, onChange, style }) {
               aria-checked={sel}
               className="opcao-suave"
               disabled={opt.disabled}
-              onClick={() => { if (opt.disabled) return; vibrar(); onChange(opt.id); }}
+              onClick={() => { if (opt.disabled) return; onChange(opt.id); }}
               style={{
                 padding: "6px 14px",
                 borderRadius: "var(--raio-pilula)",
@@ -430,7 +429,7 @@ export function SeletorCores({ cores, valor, onChange, comCheck = false, corChec
           <button
             key={hex}
             className="opcao-suave"
-            onClick={() => { vibrar(); onChange(hex); }}
+            onClick={() => onChange(hex)}
             title={nome}
             aria-label={nome || hex}
             aria-pressed={sel}
@@ -488,7 +487,6 @@ export function PilulaCategoria({ catId, selecionado, ehDesktop, podeExcluir = f
     limpar();
     timerRef.current = setTimeout(() => {
       longPressFiredRef.current = true;
-      vibrar(28);
       onPedirExcluir();
     }, LONG_PRESS_MS);
   };
@@ -712,7 +710,6 @@ export function SelectLinha({ value, options, onChange, ariaLabel }) {
   const abrir = () => {
     const r = botao.current?.getBoundingClientRect();
     if (!r) return;
-    vibrar();
     const ALTURA = 264;
     const abaixo = window.innerHeight - r.bottom;
     const praCima = abaixo < ALTURA + 16 && r.top > abaixo;
@@ -828,7 +825,6 @@ export function SelectLinha({ value, options, onChange, ariaLabel }) {
                 aria-selected={sel}
                 className="opcao-suave"
                 onClick={() => {
-                  vibrar();
                   if (!sel) onChange(o.value);
                   fechar(true);
                 }}
@@ -998,12 +994,10 @@ export function LinhaPagamento({
   const mostrarCartoes = pagamento === PAG_CARTAO && cartoes.length > 0;
 
   const escolherPag = (p) => {
-    vibrar();
     onPagamento(p);
     if (p !== PAG_CARTAO || cartoes.length <= 1) setAberto(false);
   };
   const escolherCartao = (id) => {
-    vibrar();
     onCartao(id);
     setAberto(false);
   };
@@ -1030,7 +1024,7 @@ export function LinhaPagamento({
         rotulo={t("Pagamento")}
         legenda={legenda}
         divisoria={divisoria}
-        onClick={() => { vibrar(); setAberto((v) => !v); }}
+        onClick={() => setAberto((v) => !v)}
         aberto={aberto}
       >
         <span

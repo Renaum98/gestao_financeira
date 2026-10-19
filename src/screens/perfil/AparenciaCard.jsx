@@ -5,7 +5,6 @@ import { PALETAS, degradeDaPaleta, acharPaleta } from "../../data.js";
 import { Card } from "../../ui/common.jsx";
 import { Icon } from "../../ui/icons.jsx";
 import { Segmentado } from "./parts.jsx";
-import { vibrar } from "../../lib/haptics.js";
 import { useTemaEscuro } from "../../lib/tema.js";
 import { useT } from "../../lib/i18n.jsx";
 
@@ -74,7 +73,6 @@ function SeletorPaleta({ paletaAtual, escuro, onEscolher, t }) {
   }, [aberto]);
 
   const escolher = (p) => {
-    vibrar();
     onEscolher(p.primary);
     setAberto(false);
   };
@@ -83,7 +81,6 @@ function SeletorPaleta({ paletaAtual, escuro, onEscolher, t }) {
     <div ref={caixa} style={{ position: "relative" }}>
       <button
         onClick={() => {
-          vibrar();
           setAberto((v) => !v);
         }}
         aria-haspopup="listbox"

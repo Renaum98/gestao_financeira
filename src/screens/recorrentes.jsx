@@ -7,7 +7,6 @@ import { Card, TopBar } from '../ui/common.jsx';
 import { ConfirmModal } from '../ui/confirm-modal.jsx';
 import { ModalOverlay } from '../ui/modal-base.jsx';
 import { COR_NEG } from '../lib/colors.js';
-import { vibrar } from '../lib/haptics.js';
 import { formatarValorInicial, parseValorBR } from '../lib/money-input.js';
 import { PAG_CARTAO } from '../lib/fatura.js';
 import { useT } from '../lib/i18n.jsx';
@@ -79,7 +78,7 @@ export function RecorrentesScreen({ ctx }) {
                 {fmtBRL(r.valor)}
               </div>
               <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 4 }}>
-                <button onClick={() => { vibrar(); setEditando(r); }} style={{
+                <button onClick={() => setEditando(r)} style={{
                   background: 'transparent', border: 'none', cursor: 'pointer',
                   padding: 0, color: 'var(--primary)', fontSize: 11, fontWeight: 700,
                   fontFamily: 'inherit',
@@ -208,7 +207,7 @@ function EditarRecorrenteModal({ rec, cartoes = [], onFechar, onSalvar }) {
                 key={c}
                 catId={c}
                 selecionado={categoria === c}
-                onSelecionar={() => { vibrar(); setCategoria(c); }}
+                onSelecionar={() => setCategoria(c)}
               />
             ))}
           </FileiraPilulas>

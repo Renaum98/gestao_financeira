@@ -5,7 +5,6 @@ import { MESES_CURTO, fmtBRL } from "../../data.js";
 import { Icon } from "../../ui/icons.jsx";
 import { Card } from "../../ui/common.jsx";
 import { COR_NEG } from "../../lib/colors.js";
-import { vibrar } from "../../lib/haptics.js";
 import { useT } from "../../lib/i18n.jsx";
 
 export function ProximasVencer({ proximas, irPara, onSelecionar, ehDesktop }) {
@@ -53,7 +52,6 @@ export function ProximasVencer({ proximas, irPara, onSelecionar, ehDesktop }) {
             <div
               key={tx.id}
               onClick={() => {
-                vibrar();
                 onSelecionar(tx);
               }}
               style={{

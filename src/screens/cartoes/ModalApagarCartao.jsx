@@ -19,7 +19,6 @@ import {
 } from "../../ui/form-lista.jsx";
 import { COR_NEG, COR_NEG_FUNDO } from "../../lib/colors.js";
 import { corDoCartao, corTextoSobre } from "../../lib/cartoes.js";
-import { vibrar } from "../../lib/haptics.js";
 import { useT } from "../../lib/i18n.jsx";
 
 // O quadradinho do cartão no começo da linha, na cor dele.
@@ -46,7 +45,7 @@ export function ModalApagarCartao({ cartao, outros, quantidade, onFechar, onConf
   const t = useT();
   const [destino, setDestino] = React.useState(outros[0]?.id ?? null);
   const temLancamentos = quantidade > 0;
-  const escolher = (id) => { vibrar(); setDestino(id); };
+  const escolher = (id) => setDestino(id);
 
   return (
     <ModalOverlay onClose={onFechar} maxWidth={400} padding="22px 20px 18px">

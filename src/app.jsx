@@ -30,7 +30,6 @@ import {
   desfazerParceria as desfazerParceriaFn,
 } from "./lib/partnership.js";
 import { chaveMes, dataISO, dataNoMes, hojeISO, mesCorrente, mesShift } from "./lib/datas.js";
-import { vibrar } from "./lib/haptics.js";
 import { ehTemaEscuro, lerAparenciaSalva, salvarAparencia } from "./lib/tema.js";
 import { useEhDesktop } from "./lib/desktop.js";
 import { ehLeve, lerLeveSalvo, salvarLeve, AUTO } from "./lib/leve.js";
@@ -289,10 +288,7 @@ function TabBar({ tela, irPara, abrirAdd }) {
     const perto = abas.reduce((m, ab) =>
       Math.abs(ab.centro - e.clientX) < Math.abs(m.centro - e.clientX) ? ab : m
     );
-    if (perto.id !== a.id) {
-      a.id = perto.id;
-      vibrar();
-    }
+    a.id = perto.id;
   };
 
   const aoSoltar = (e) => {
@@ -427,7 +423,6 @@ function TabBar({ tela, irPara, abrirAdd }) {
               onClick={() => {
                 // um arraste que terminou aqui já navegou no pointerup
                 if (arrastou.current) return void (arrastou.current = false);
-                if (it.id !== tela) vibrar();
                 irPara(it.id);
               }}
               aria-label={it.label}
@@ -690,7 +685,6 @@ function Sidebar({ tela, irPara, abrirAdd, usuario }) {
             <button
               key={it.id}
               onClick={() => {
-                if (it.id !== tela) vibrar();
                 irPara(it.id);
               }}
               // nav-btn + aria-current disparam a animação de cada ícone (a mesma
@@ -1112,7 +1106,6 @@ export function App() {
       // Digitando num campo, "n" é só a letra n.
       if (e.target?.matches?.('input, textarea, select, [contenteditable="true"]')) return;
       e.preventDefault();
-      vibrar();
       setAddModal({});
     };
     window.addEventListener("keydown", aoTeclar);
@@ -1251,7 +1244,6 @@ export function App() {
   // justamente o histórico que queremos preservar.
 
   const irPara = (t, p = {}) => {
-    vibrar();
     if (ABAS.includes(t)) {
       // Início e Transações sempre abrem no mês atual, salvo quando um mês
       // específico é passado (ex.: clicar num mês no Histórico).
@@ -1290,7 +1282,6 @@ export function App() {
   };
 
   const salvarTx = (tx, editando) => {
-    vibrar(14);
     const ehRec = tx.ehRecorrente;
     const recDia = tx.recDia;
     const recFim = tx.recFim;
@@ -1449,7 +1440,6 @@ export function App() {
   // dia de vencimento mudar, recalcula a data das txs afetadas mantendo o
   // yyyymm original (com clamping pro último dia do mês).
   const editarRecorrente = (recId, dados) => {
-    vibrar(14);
     const yyyymmHoje = mesCorrente();
     const recAntiga = cloud.recorrentes.find((r) => r.id === recId);
     // Financiamento com reajuste: ao mudar o valor, o novo valor passa a ser a
@@ -1500,7 +1490,6 @@ export function App() {
 
   // Marca uma tx como paga (some das "Próximas a vencer", continua no histórico).
   const marcarTxPago = (id) => {
-    vibrar(14);
     const yyyymmdd = hojeISO();
     cloud.setTxs((atual) =>
       atual.map((t) => (t.id === id ? { ...t, pago: true, pagoEm: yyyymmdd } : t)),
@@ -1696,7 +1685,6 @@ export function App() {
       );
     }
 
-    vibrar(14);
     cloud.setTxs((atual) => {
       const yyyymm = yyyymmdd.slice(0, 7);
       if (yyyymm !== mes) setMes(yyyymm);
@@ -1725,7 +1713,6 @@ export function App() {
   // patches num render só, então cartões + txs + recorrentes saem numa escrita
   // única (ver o efeito de persistência em lib/storage.js).
   const salvarCartao = (dados) => {
-    vibrar(14);
     if (dados.id) {
       cloud.setCartoes((atual) =>
         atual.map((c) => (c.id === dados.id ? { ...c, ...dados } : c)),
@@ -1747,7 +1734,6 @@ export function App() {
   // apagado; null solta pra "sem cartão", que devolve a tx ao estado genérico
   // de antes dos cartões. Quem pergunta é a tela (ModalApagarCartao).
   const excluirCartao = (id, destinoId = null) => {
-    vibrar(14);
     cloud.setCartoes((atual) => atual.filter((c) => c.id !== id));
     // Só reescreve as listas que realmente têm lançamento nesse cartão — apagar
     // um cartão vazio não deve custar uma regravação de todo o histórico.
@@ -1939,7 +1925,7 @@ export function App() {
           // sidebar deve marcar "Caixinhas", não perder o destaque.
           tela={mestre?.id || telaVista}
           irPara={irPara}
-          abrirAdd={() => { vibrar(); setAddModal({}); }}
+          abrirAdd={() => setAddModal({})}
           usuario={usuario}
         />
         <main
@@ -2004,7 +1990,7 @@ export function App() {
           secundaria={conteudo}
         />
       </main>
-      <TabBar tela={tela} irPara={irPara} abrirAdd={() => { vibrar(); setAddModal({}); }} />
+      <TabBar tela={tela} irPara={irPara} abrirAdd={() => setAddModal({})} />
       {addModal && (
         <React.Suspense fallback={null}>
           <AddExpenseModal ctx={ctx} params={addModal} />

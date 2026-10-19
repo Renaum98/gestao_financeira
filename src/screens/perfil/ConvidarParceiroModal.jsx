@@ -14,7 +14,6 @@ import {
   TituloDialogo,
   estiloInputLinha,
 } from "../../ui/form-lista.jsx";
-import { vibrar } from "../../lib/haptics.js";
 import { convidarPorEmail } from "../../lib/partnership.js";
 import { COR_POS, COR_NEG } from "../../lib/colors.js";
 import { useT } from "../../lib/i18n.jsx";
@@ -68,7 +67,6 @@ export function ConvidarParceiroModal({ meuUid, meuNome, meuEmail, onFechar }) {
     setEnviando(true);
     try {
       await convidarPorEmail({ meuUid, meuNome, meuEmail, emailParceiro: email });
-      vibrar(14);
       setEtapa("sucesso");
       setTimeout(onFechar, 1400);
     } catch (err) {
