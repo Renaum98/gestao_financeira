@@ -160,7 +160,7 @@ export function InstallPromptModal({ temAtalho, plataformaIOS, onInstalar, onDis
 
             <ListaAgrupada style={{ marginTop: 14, textAlign: 'left' }}>
               {[
-                { ico: 'sparkle', txt: tr('Abre instantaneamente, como um app nativo.') },
+                { ico: 'bolt',    txt: tr('Abre instantaneamente, como um app nativo.') },
                 { ico: 'check',   txt: tr('Funciona mesmo com internet instável.') },
                 { ico: 'home',    txt: tr('Ícone na tela inicial, sem barras do navegador.') },
               ].map((b, i) => (

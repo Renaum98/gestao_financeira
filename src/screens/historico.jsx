@@ -144,11 +144,9 @@ export function HistoricoScreen({ ctx }) {
       <div style={{ padding: "4px var(--pad-x) 0" }}>
         <div
           style={{
-            fontSize: 13,
+            fontSize: 15,
             fontWeight: 700,
-            color: "var(--muted)",
-            textTransform: "uppercase",
-            letterSpacing: 0.4,
+            color: "var(--ink)",
             padding: "0 4px var(--esp-titulo)",
           }}
         >

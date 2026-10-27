@@ -127,7 +127,7 @@ export function PerfilScreen({ ctx }) {
           </Card>
 
           <Card style={{ padding: "4px 16px" }}>
-            <ConfigItem icon="sparkle" label={t("Refazer tour")} onClick={() => setOnboarding(true)} />
+            <ConfigItem icon="replay" label={t("Refazer tour")} onClick={() => setOnboarding(true)} />
             <ConfigItem icon="list" label={t("Baixar dados (.xlsx)")} onClick={abrirBaixar} />
             <ConfigItem icon="file-text" label={t("Baixar relatório (.pdf)")} onClick={abrirRelatorio} />
           </Card>

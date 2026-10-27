@@ -29,7 +29,9 @@ export function CabecalhoPerfil({ preferences, setPreferences, usuario }) {
           width: 88,
           height: 88,
           borderRadius: "var(--raio-pilula)",
-          boxShadow: "0 12px 30px color-mix(in oklab, var(--primary) 22%, transparent)",
+          // A sombra neutra dos cards, não um brilho roxo: o avatar é mais uma
+          // peça da tela, não um destaque.
+          boxShadow: "0 1px 2px rgba(20,16,24,0.06), 0 4px 14px rgba(20,16,24,0.06)",
         }}
       >
         {foto ? (
@@ -45,7 +47,7 @@ export function CabecalhoPerfil({ preferences, setPreferences, usuario }) {
               width: "100%",
               height: "100%",
               borderRadius: "var(--raio-pilula)",
-              background: "var(--primary-degrade)",
+              background: "var(--primary)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",

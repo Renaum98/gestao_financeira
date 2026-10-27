@@ -29,6 +29,7 @@ function CardSaldoBase({
   const {
     total,
     totalAnt,
+    mesAnt,
     entradasDisponiveis,
     entradasGuardadas,
     delta,
@@ -57,6 +58,10 @@ function CardSaldoBase({
 
   // Nome do mês de onde veio a diferença (mês anterior a este card).
   const nomeMesAnt = t(MESES[Number(mesAnteriorDe(mesCard).split("-")[1]) - 1]);
+  // Nome do mês da comparação de gasto — o anterior com lançamento, que pode
+  // não ser o de calendário (ver `mesAnt` em calcularSaldoMes).
+  const nomeMesComparado = mesAnt ? t(MESES[Number(mesAnt.slice(5, 7)) - 1]) : "";
+  const pctDelta = Math.abs(delta).toFixed(0);
 
   return (
     <CardDestaque
@@ -89,33 +94,22 @@ function CardSaldoBase({
         {fmtBRL(total)}
       </div>
 
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: 8,
-          marginTop: 6,
-        }}
-      >
-        {totalAnt > 0 && (
-          <div
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 4,
-              padding: "4px 10px",
-              borderRadius: "var(--raio-pilula)",
-              background: "rgba(255,255,255,0.18)",
-              fontSize: 12,
-              fontWeight: 700,
-            }}
-          >
-            <span>{delta >= 0 ? "▲" : "▼"}</span>
-            <span>{Math.abs(delta).toFixed(1)}%</span>
-            <span style={{ opacity: 0.8, fontWeight: 600 }}>{t("vs. mês anterior")}</span>
-          </div>
-        )}
-      </div>
+      {/* A comparação vem em frase, como na Análise, e nomeia o mês com que
+          compara. Só o "x% a mais/menos" leva cor. */}
+      {totalAnt > 0 && (
+        <div style={{ marginTop: 4, fontSize: 13, fontWeight: 600, opacity: 0.9 }}>
+          {pctDelta === "0" ? (
+            t("o mesmo que {mes}", { mes: nomeMesComparado })
+          ) : (
+            <>
+              <span style={{ fontWeight: 700, color: delta > 0 ? COR_NEG_SOBRE : COR_POS_SOBRE }}>
+                {delta > 0 ? t("{pct}% a mais", { pct: pctDelta }) : t("{pct}% a menos", { pct: pctDelta })}
+              </span>{" "}
+              {t("que {mes}", { mes: nomeMesComparado })}
+            </>
+          )}
+        </div>
+      )}
 
       <div
         style={{
@@ -184,8 +178,6 @@ function CardSaldoBase({
               fontSize: 10,
               fontWeight: 700,
               opacity: 0.78,
-              letterSpacing: 0.4,
-              textTransform: "uppercase",
             }}
           >
             <span>{partnerNome || t("Parceiro")}</span>
@@ -231,8 +223,6 @@ function CardSaldoBase({
                 fontSize: 11,
                 fontWeight: 700,
                 opacity: 0.9,
-                letterSpacing: 0.3,
-                textTransform: "uppercase",
               }}
             >
               {t("Disponível juntos")}

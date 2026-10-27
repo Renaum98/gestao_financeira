@@ -269,7 +269,6 @@ export const EN = {
   "Simular um gasto": "Simulate an expense",
   // CardSaldo
   "Gasto em {mes}": "Spent in {mes}",
-  "vs. mês anterior": "vs. last month",
   "Orçamento": "Budget",
   "entradas": "income",
   "guardado em caixinhas": "saved in jars",

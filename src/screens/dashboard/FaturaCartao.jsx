@@ -147,8 +147,6 @@ function GrupoFatura({ grupo, varios, primeiro, t }) {
             fontSize: 12,
             fontWeight: 700,
             color: "var(--muted)",
-            textTransform: "uppercase",
-            letterSpacing: 0.4,
           }}
         >
           <span

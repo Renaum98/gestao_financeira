@@ -22,11 +22,9 @@ export function ContaCompartilhadaCard({
     <Card style={{ padding: 16 }}>
       <div
         style={{
-          fontSize: 12,
+          fontSize: 15,
           fontWeight: 700,
-          color: "var(--muted)",
-          textTransform: "uppercase",
-          letterSpacing: 0.4,
+          color: "var(--ink)",
           paddingBottom: 12,
         }}
       >

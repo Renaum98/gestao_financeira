@@ -364,7 +364,7 @@ export function SimularGastoModal({
         {/* Análise textual */}
         <div style={{ marginTop: 12 }}>
           {valorNum <= 0 ? (
-            <Aviso icone="sparkle">{t("Digite um valor para ver a análise.")}</Aviso>
+            <Aviso icone="chart">{t("Digite um valor para ver a análise.")}</Aviso>
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
               {blocos.map((b, i) => (

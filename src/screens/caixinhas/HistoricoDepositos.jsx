@@ -14,11 +14,9 @@ export function HistoricoDepositos({ depositos, cx, entradas, caixinhasCompartil
     <>
       <div
         style={{
-          fontSize: 13,
+          fontSize: 15,
           fontWeight: 700,
-          color: "var(--muted)",
-          textTransform: "uppercase",
-          letterSpacing: 0.4,
+          color: "var(--ink)",
           padding: "var(--esp-secao) 4px var(--esp-titulo)",
         }}
       >

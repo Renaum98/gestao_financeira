@@ -75,6 +75,9 @@ export function calcularSaldoMes(
   return {
     txMes,
     txMesAnt,
+    // O mês com que o card compara: o anterior com lançamento, que pode não
+    // ser o mês de calendário de antes. A frase do card nomeia este.
+    mesAnt,
     total,
     totalAnt,
     entradas,

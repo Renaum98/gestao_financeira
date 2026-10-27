@@ -54,7 +54,7 @@ export function BaixarDadosModal({
       <ListaAgrupada style={{ marginTop: 14, maxHeight: 300, overflowY: "auto" }}>
         {!ehPdf && (
           <LinhaOpcao
-            icone="sparkle"
+            icone="layers"
             rotulo={t("Todos os dados")}
             legenda={t("Transações, caixinhas, recorrentes e orçamentos")}
             selecionado={mesSelecionado === "todos"}

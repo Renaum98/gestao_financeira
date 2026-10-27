@@ -76,8 +76,6 @@ export function CabecalhoCaixinha({ cx, atual, rendimento, rendimentoTotal = 0, 
                     fontSize: 11,
                     fontWeight: 700,
                     opacity: 0.85,
-                    textTransform: "uppercase",
-                    letterSpacing: 0.4,
                   }}
                 >
                   {t("Já rendeu")}

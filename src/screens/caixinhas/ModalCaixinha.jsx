@@ -156,7 +156,7 @@ export function ModalCaixinha({ editando, onFechar, onSalvar }) {
           <Toggle ativo={rendimentoAtivo} onChange={setRendimentoAtivo} />
         </Linha>
         <Expansivel aberto={rendimentoAtivo}>
-          <Linha icone="sparkle" rotulo={t("Taxa de rendimento (% do CDI)")} divisoria as="label">
+          <Linha icone="trending" rotulo={t("Taxa de rendimento (% do CDI)")} divisoria as="label">
             <input
               type="text"
               inputMode="decimal"

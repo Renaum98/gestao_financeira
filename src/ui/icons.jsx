@@ -98,6 +98,18 @@ export function Icon({ name, size = 22, color = 'currentColor', strokeWidth = 2 
       return (<svg style={s} viewBox="0 0 24 24" {...props}><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>);
     case 'sparkle':
       return (<svg style={s} viewBox="0 0 24 24" {...props}><path d="M12 3l1.6 5.4L19 10l-5.4 1.6L12 17l-1.6-5.4L5 10l5.4-1.6L12 3z"/></svg>);
+    case 'replay':
+      // Seta circular voltando ao começo — refazer, recomeçar
+      return (<svg style={s} viewBox="0 0 24 24" {...props}><path d="M3 12a9 9 0 103-6.7L3 8"/><path d="M3 3v5h5"/></svg>);
+    case 'trending':
+      // Linha subindo — rendimento, crescimento
+      return (<svg style={s} viewBox="0 0 24 24" {...props}><path d="M3 17l6-6 4 4 8-8"/><path d="M14 7h7v7"/></svg>);
+    case 'layers':
+      // Folhas empilhadas — "tudo junto"
+      return (<svg style={s} viewBox="0 0 24 24" {...props}><path d="M12 3l9 5-9 5-9-5 9-5z"/><path d="M3 13l9 5 9-5"/></svg>);
+    case 'bolt':
+      // Raio — rapidez
+      return (<svg style={s} viewBox="0 0 24 24" {...props}><path d="M13 2L4 14h7l-1 8 9-12h-7l1-8z"/></svg>);
     case 'mail':
       return (<svg style={s} viewBox="0 0 24 24" {...props}><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M3 7l9 7 9-7"/></svg>);
     case 'lock':

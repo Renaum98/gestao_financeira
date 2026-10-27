@@ -67,7 +67,7 @@ export function PieChart({ dados, total, tamanho = 200, ativo, onHover }) {
         pointerEvents: 'none', textAlign: 'center',
       }}>
         <div style={{
-          fontSize: 11, color: 'var(--muted)', fontWeight: 600, letterSpacing: 0.4, textTransform: 'uppercase',
+          fontSize: 11, color: 'var(--muted)', fontWeight: 600,
           maxWidth: larguraInterna, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
         }}>
           {exibirRotulo}

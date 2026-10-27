@@ -170,7 +170,7 @@ export function OrcamentosScreen({ ctx }) {
 
   const secaoCartao = (
     <>
-      <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: 0.4, padding: '0 4px var(--esp-titulo)' }}>
+      <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--ink)', padding: '0 4px var(--esp-titulo)' }}>
         {t("Cartão de crédito")}
       </div>
       <Card style={{ padding: '14px 16px' }}>
@@ -256,7 +256,7 @@ export function OrcamentosScreen({ ctx }) {
 
   const secaoCategorias = (
     <>
-      <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: 0.4, padding: '0 4px var(--esp-titulo)' }}>
+      <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--ink)', padding: '0 4px var(--esp-titulo)' }}>
         {t("Por categoria")}
       </div>
       <Card style={{ padding: '4px 16px' }}>
