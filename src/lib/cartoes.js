@@ -159,8 +159,7 @@ export function contarNoCartao(txs, recorrentes, cartaoId) {
 // A fatura que já fechou fica de fora de propósito. Somar as duas transforma a
 // barra num acumulado que só cresce até a virada do ciclo e nunca reflete o
 // mês corrente — com um gasto grande em julho, o cartão aparecia no vermelho em
-// agosto sem o usuário ter gasto nada em agosto. Quem quiser ver a fatura
-// fechada tem o card do Dashboard, que mostra as duas separadas.
+// agosto sem o usuário ter gasto nada em agosto.
 //
 // Com o fechamento padrão (último dia do mês), fatura aberta = mês corrente.
 // Com fechamento no dia 25, o ciclo atravessa a virada — e é esse ciclo que

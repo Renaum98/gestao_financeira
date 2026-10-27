@@ -1,8 +1,13 @@
 // FaturaCartao.jsx — ciclo da fatura do cartão no Dashboard.
 //
-// Mostra, por cartão cadastrado, a fatura que ainda está aberta (acumulando
-// compras) e a que já fechou e vence agora. Sem cartão cadastrado é uma fatura
-// só, somando todo o crédito — o comportamento de antes do cadastro.
+// Mostra, por cartão cadastrado, só a fatura que ainda está aberta (acumulando
+// compras) — o ciclo em que o usuário está gastando agora. A que já fechou
+// saiu daqui de propósito. Sem cartão cadastrado é uma fatura só,
+// somando todo o crédito — o comportamento de antes do cadastro.
+//
+// Cartão com limite informado ganha uma barra fina de uso embaixo da fatura,
+// que só chama atenção (cor e texto) quando passa de 80% — no resto do tempo
+// ela fica quieta.
 //
 // É uma camada de LEITURA: nada aqui entra na conta do saldo do mês, que
 // continua por competência (a compra abate o mês em que foi feita). O rodapé do
@@ -11,9 +16,9 @@
 import { MESES, fmtBRL } from "../../data.js";
 import { Icon } from "../../ui/icons.jsx";
 import { Card } from "../../ui/common.jsx";
-import { COR_AVISO } from "../../lib/colors.js";
-import { corDoCartao } from "../../lib/cartoes.js";
-import { MiniCartao } from "../cartoes/CardCartao.jsx";
+import { BarraProgresso } from "../../ui/charts.jsx";
+import { corDoCartao, usoDoCartao, faixaDoUso } from "../../lib/cartoes.js";
+import { MiniCartao, corDaFaixa } from "../cartoes/CardCartao.jsx";
 import { useT } from "../../lib/i18n.jsx";
 
 // "2026-08" → "Agosto" (já traduzido).
@@ -33,7 +38,7 @@ function venceEm(fatura, t) {
     : t("vence em {mes}", { mes: nomeMes(fatura.vence, t) });
 }
 
-function LinhaFatura({ titulo, legenda, valor, destaque }) {
+function LinhaFatura({ titulo, legenda, valor }) {
   return (
     <div
       style={{
@@ -60,7 +65,7 @@ function LinhaFatura({ titulo, legenda, valor, destaque }) {
           style={{
             fontSize: 11,
             fontWeight: 600,
-            color: destaque ? COR_AVISO : "var(--muted)",
+            color: "var(--muted)",
             marginTop: 2,
           }}
         >
@@ -81,23 +86,55 @@ function LinhaFatura({ titulo, legenda, valor, destaque }) {
   );
 }
 
+// Uso do limite, discreto: barra de 3px e a porcentagem em cinza enquanto há
+// folga; perto de estourar (≥80%) as duas pegam a cor da faixa, a mesma da
+// tela Cartões.
+function UsoLimite({ uso, t }) {
+  const alerta = faixaDoUso(uso.pct) === "aperto" || faixaDoUso(uso.pct) === "estourado";
+  const cor = corDaFaixa(uso.pct);
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: -4, paddingBottom: 10 }}>
+      <div style={{ flex: 1 }}>
+        <BarraProgresso
+          valor={uso.usado}
+          max={uso.limite}
+          cor={alerta ? cor : "color-mix(in oklab, var(--muted) 55%, transparent)"}
+          altura={3}
+        />
+      </div>
+      <div
+        style={{
+          fontSize: 11,
+          fontWeight: alerta ? 700 : 600,
+          color: alerta ? cor : "var(--muted)",
+          whiteSpace: "nowrap",
+        }}
+      >
+        {uso.pct >= 100
+          ? t("Passou do limite")
+          : t("{pct}% do limite", { pct: uso.pct.toFixed(0) })}
+      </div>
+    </div>
+  );
+}
+
 // Um grupo = um cartão (ou o grupo sem cartão). `cartao` null significa crédito
 // sem cartão definido: ou o app inteiro antes do cadastro, ou as sobras de um
 // cartão apagado com "deixar sem cartão".
 function GrupoFatura({ grupo, varios, primeiro, t }) {
   const { cartao, faturas } = grupo;
-  const { aberta, fechada } = faturas;
+  const { aberta } = faturas;
+  const uso = cartao ? usoDoCartao(cartao, faturas) : null;
   // A cor do cartão puxada pro tom do tema: um amarelo puro num ícone de 18px
   // some no fundo claro, e o que importa aqui é reconhecer o cartão, não
   // reproduzir a cor exata.
   const cor = cartao
     ? `color-mix(in oklab, ${corDoCartao(cartao)} 65%, var(--ink))`
     : undefined;
-  const corIcone = fechada ? COR_AVISO : "var(--muted)";
 
-  // Com vários cartões cada grupo ganha um cabeçalho com o nome do cartão, e as
-  // linhas dizem só qual das duas faturas é — quem lê sabe de quem é a fatura
-  // antes, sem repetir o nome em cada linha.
+  // Com vários cartões cada grupo ganha um cabeçalho com o nome do cartão, e a
+  // linha diz só "Fatura atual" — quem lê sabe de quem é a fatura antes, sem
+  // repetir o nome em cada linha.
   return (
     <div style={{ borderTop: primeiro ? "none" : "1px solid var(--linha)" }}>
       {varios && (
@@ -128,9 +165,8 @@ function GrupoFatura({ grupo, varios, primeiro, t }) {
           </span>
         </div>
       )}
-      {/* Uma miniatura só por cartão, ao lado das duas faturas dele. Sem cartão
-          (crédito sem cartão definido) fica o ícone genérico, em alerta quando
-          há fatura fechada esperando pagamento. */}
+      {/* A miniatura do cartão ao lado da fatura dele. Sem cartão (crédito sem
+          cartão definido) fica o ícone genérico. */}
       <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
         {cartao ? (
           <MiniCartao cor={corDoCartao(cartao)} />
@@ -140,35 +176,26 @@ function GrupoFatura({ grupo, varios, primeiro, t }) {
               width: 42,
               height: 42,
               borderRadius: "var(--raio-bloco)",
-              background: `color-mix(in oklab, ${corIcone} 14%, transparent)`,
+              background: "color-mix(in oklab, var(--muted) 14%, transparent)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               flexShrink: 0,
             }}
           >
-            <Icon name="card" size={18} color={corIcone} strokeWidth={2.2} />
+            <Icon name="card" size={18} color="var(--muted)" strokeWidth={2.2} />
           </div>
         )}
         <div style={{ flex: 1, minWidth: 0 }}>
-          {fechada && (
-            <LinhaFatura
-              destaque
-              titulo={t("Fatura passada")}
-              legenda={t("Fechada · {vence}", { vence: venceEm(fechada, t) })}
-              valor={fechada.total}
-            />
-          )}
-          <div style={{ borderTop: fechada ? "1px solid var(--linha)" : "none" }}>
-            <LinhaFatura
-              titulo={t("Fatura atual")}
-              legenda={t("Aberta · fecha {data} · {vence}", {
-                data: diaMes(aberta.fecha),
-                vence: venceEm(aberta, t),
-              })}
-              valor={aberta.total}
-            />
-          </div>
+          <LinhaFatura
+            titulo={t("Fatura atual")}
+            legenda={t("Aberta · fecha {data} · {vence}", {
+              data: diaMes(aberta.fecha),
+              vence: venceEm(aberta, t),
+            })}
+            valor={aberta.total}
+          />
+          {uso?.temLimite && <UsoLimite uso={uso} t={t} />}
         </div>
       </div>
     </div>
@@ -179,8 +206,8 @@ export function FaturaCartao({ grupos, temCartoes, irPara, ehDesktop }) {
   const t = useT();
   if (!grupos || grupos.length === 0) return null;
 
-  // Cartão sem movimento nos dois ciclos só ocuparia espaço.
-  const visiveis = grupos.filter((g) => g.faturas.fechada || g.faturas.aberta.total > 0);
+  // Cartão sem nada na fatura atual só ocuparia espaço.
+  const visiveis = grupos.filter((g) => g.faturas.aberta.total > 0);
   if (visiveis.length === 0) return null;
 
   return (
