@@ -310,26 +310,38 @@ export function ProjecaoAno({ txs, recorrentes = [], preferences, mesAtual, span
             </span>
           </div>
 
+          {/* Recolhido, o valor é uma linha de lista, não uma manchete: quem
+              manda no topo da Análise é o resumo do mês logo abaixo. */}
           <div
             style={{
-              marginTop: 10,
-              fontSize: 34,
-              fontWeight: 800,
-              letterSpacing: "-0.03em",
-              color: estourou ? COR_NEG : COR_POS,
+              display: "flex",
+              alignItems: "baseline",
+              justifyContent: "space-between",
+              gap: 12,
+              marginTop: 8,
             }}
           >
-            {estourou && "−"}
-            {fmtBRL(Math.abs(sobra))}
-          </div>
-          <div style={{ marginTop: 2, fontSize: 11.5, fontWeight: 600, color: "var(--muted)" }}>
-            {passado
-              ? estourou
-                ? t("acima do orçamento no ano")
-                : t("sobrou no ano")
-              : estourou
-                ? t("acima do previsto no ano")
-                : t("sobra prevista no ano")}
+            <span style={{ fontSize: 12.5, fontWeight: 600, color: "var(--muted)" }}>
+              {passado
+                ? estourou
+                  ? t("acima do orçamento no ano")
+                  : t("sobrou no ano")
+                : estourou
+                  ? t("acima do previsto no ano")
+                  : t("sobra prevista no ano")}
+            </span>
+            <span
+              style={{
+                fontSize: 17,
+                fontWeight: 800,
+                letterSpacing: "-0.02em",
+                whiteSpace: "nowrap",
+                color: estourou ? COR_NEG : COR_POS,
+              }}
+            >
+              {estourou && "−"}
+              {fmtBRL(Math.abs(sobra))}
+            </span>
           </div>
         </div>
 

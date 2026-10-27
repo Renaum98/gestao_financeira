@@ -78,7 +78,6 @@ export function AnaliseScreen({ ctx }) {
   );
   const orcTotal = orcBase + entradasMes - guardadoEmCaixinhas;
   const restante = orcTotal - total;
-  const pctRestante = orcTotal > 0 ? (restante / orcTotal) * 100 : null;
 
   const diffTotal = totalAnt > 0 ? ((total - totalAnt) / totalAnt) * 100 : null;
 
@@ -143,7 +142,13 @@ export function AnaliseScreen({ ctx }) {
   const vazio = total === 0 && (!ehCompartilhado || totalGeral(txDoMes(partnerTxs, mes)) === 0);
 
   return (
-    <div className={ehDesktop ? "cols-desktop" : undefined} style={{ paddingBottom: "var(--pad-bottom)" }}>
+    // Algarismos de largura fixa na tela toda: valores em lista e os rótulos do
+    // gráfico alinham coluna com coluna. A propriedade herda, então vale pros
+    // blocos de ./analise/* sem repetir em cada um.
+    <div
+      className={ehDesktop ? "cols-desktop" : undefined}
+      style={{ paddingBottom: "var(--pad-bottom)", fontVariantNumeric: "tabular-nums" }}
+    >
       <div className={spanAll}>
         <TopBar titulo={tr("Análise")} />
       </div>
@@ -177,13 +182,15 @@ export function AnaliseScreen({ ctx }) {
           <ResumoMes
             total={total}
             diffTotal={diffTotal}
+            mesAnterior={mesAnterior}
             mediaDia={mediaDia}
             diasDecorridos={diasDecorridos}
+            diasMes={diasNoMes(mes)}
+            ehMesAtual={mes === mesAtual}
+            ehPassado={mes < mesAtual}
             txCount={txMes.length}
-            catCount={dados.length}
             restante={restante}
             orcTotal={orcTotal}
-            pctRestante={pctRestante}
             spanAll={spanAll}
           />
 

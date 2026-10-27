@@ -51,7 +51,7 @@ export function TopCategorias({ dados, porCatAnt, irPara }) {
                       color: diff >= 0 ? VERMELHO : VERDE,
                     }}
                   >
-                    {diff >= 0 ? "▲" : "▼"} {Math.abs(diff).toFixed(0)}%
+                    {diff >= 0 ? "+" : "−"}{Math.abs(diff).toFixed(0)}%
                   </div>
                 )}
               </div>
