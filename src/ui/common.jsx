@@ -6,6 +6,7 @@ import { CATEGORIAS, MESES_CURTO, fmtBRL, fmtBRLCompacto, rotuloMesT } from '../
 import { Icon, CatChip, iconePagamento } from './icons.jsx';
 import { COR_POS, COR_POS_FUNDO } from '../lib/colors.js';
 import { useT } from '../lib/i18n.jsx';
+import { useRevelar } from '../lib/revelar.js';
 
 // Quanto a página precisa descer pra o botão de voltar subir pra barra do topo.
 // Baixo de propósito: o gesto de descer já começou, o botão sai da frente junto.
@@ -189,8 +190,11 @@ export function Toggle({ ativo, onChange }) {
 }
 
 export function Card({ children, style = {}, onClick, className, ...rest }) {
+  // Entra ao rolar quando nasce abaixo da tela (lib/revelar.js).
+  const revelar = useRevelar();
   return (
     <div
+      ref={revelar}
       onClick={onClick}
       // Um card que responde a clique é alvo de ponteiro: no desktop ele
       // reage ao passar o mouse. Quem não tem onClick não ganha a classe.
@@ -209,6 +213,9 @@ export function Card({ children, style = {}, onClick, className, ...rest }) {
 
 export function ItemTransacao({ tx, onClick, doParceiro = false, nomeParceiro = '', guardado = 0 }) {
   const t = useT();
+  // Numa lista longa dentro de um card só, o card já nasceu na tela: quem
+  // entra ao rolar são as linhas.
+  const revelar = useRevelar();
   const ehEntrada = tx.tipo === 'entrada';
   // Linha derivada de um depósito em caixinha (ver lib/caixinhas.js). Não é uma
   // tx gravada: aparece na lista pra o dinheiro guardado ter rastro no mês, mas
@@ -239,7 +246,7 @@ export function ItemTransacao({ tx, onClick, doParceiro = false, nomeParceiro = 
     ? 'var(--muted)'
     : (ehEntrada ? COR_POS : 'var(--ink)');
   return (
-    <div onClick={onClick} className={onClick ? 'clicavel' : undefined} style={{
+    <div ref={revelar} onClick={onClick} className={onClick ? 'clicavel' : undefined} style={{
       display: 'flex', alignItems: 'center', gap: 12, padding: '12px 4px',
       cursor: onClick ? 'pointer' : 'default',
       opacity: doParceiro ? 0.78 : 1,

@@ -23,7 +23,7 @@ export function DesempenhoCard({ preferences, setPreferences }) {
         ? t("Ligado: este aparelho foi detectado como mais modesto.")
         : t("Desligado: este aparelho dá conta dos efeitos completos.")
       : ativo
-        ? t("Menos efeitos, mais fluidez. Sem vidro, sem animações de transição e sem deslizar entre meses no card de saldo.")
+        ? t("Menos efeitos, mais fluidez. Sem vidro, sem animações de transição ou de entrada ao rolar, e sem deslizar entre meses no card de saldo.")
         : t("Todos os efeitos ligados.");
 
   return (

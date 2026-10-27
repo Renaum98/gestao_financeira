@@ -95,6 +95,36 @@
   :root:not(.em-desktop) .notif-entrada { animation: none; }
 }
 
+/* Entrada e saída com a rolagem (lib/revelar.js): fora da faixa visível, o
+   card espera escondido 20px pra fora do lado por onde vai voltar — abaixo
+   dele quando sai por baixo, acima quando sai por cima. Ao entrar, anda os
+   20px e aparece; ao sair, faz o caminho de volta.
+
+   O `!important` é pela opacidade inline: o item do parceiro tem 0.78 no
+   `style`, e sem ele o estado escondido perderia pra ela. Ao sair a classe, a
+   transição vai até o valor inline, não até 1.
+
+   A curva é a do `pageIn`: rápida no começo e assentando no fim, que é o que
+   faz um deslocamento tão curto ler como "chegou" e não como "tremeu". */
+.revela-abaixo,
+.revela-acima {
+  opacity: 0 !important;
+}
+.revela-abaixo { transform: translate3d(0, 20px, 0) !important; }
+.revela-acima { transform: translate3d(0, -20px, 0) !important; }
+/* O `filter` vai junto porque esta regra, enquanto o card anda, toma o lugar
+   da transição do hover do desktop (desktop.css). */
+.revela-anda {
+  transition:
+    opacity .55s cubic-bezier(0.22, 1, 0.36, 1),
+    transform .55s cubic-bezier(0.22, 1, 0.36, 1),
+    filter .14s ease;
+}
+@media (prefers-reduced-motion: reduce) {
+  .revela-abaixo, .revela-acima { opacity: 1 !important; transform: none !important; }
+  .revela-anda { transition: none; }
+}
+
 /* Modo leve (lib/leve.js): as animações que existem só pra suavizar a troca de
    tela saem de cena. Numa GPU fraca elas competem justamente com a montagem da
    tela nova — o quadro em que o app tem menos folga. O `will-change` some
@@ -111,3 +141,6 @@
   animation: none;
   will-change: auto;
 }
+:root[data-leve] .revela-abaixo,
+:root[data-leve] .revela-acima { opacity: 1 !important; transform: none !important; }
+:root[data-leve] .revela-anda { transition: none; }

@@ -8,6 +8,8 @@
 //     card por mês; a troca de mês continua pelo seletor dentro do card, sem o
 //     swipe;
 //   • as transições de tela e a trava do splash encurtam;
+//   • cards e itens não entram nem saem com a rolagem (lib/revelar.js): ficam
+//     parados no lugar — um observador e uma transição a menos por item;
 //   • a gota da tab bar perde as molas do anime.js (ui/gota-liquida.js): desliza
 //     só com a transição CSS, sem deformar o canto, e a bolha gruda no dedo sem
 //     embalo — o anime.js nem chega a ser baixado;

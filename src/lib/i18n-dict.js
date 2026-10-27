@@ -84,8 +84,8 @@ export const EN = {
     "On: this device was detected as a modest one.",
   "Desligado: este aparelho dá conta dos efeitos completos.":
     "Off: this device handles the full effects.",
-  "Menos efeitos, mais fluidez. Sem vidro, sem animações de transição e sem deslizar entre meses no card de saldo.":
-    "Fewer effects, more fluidity. No glass, no transition animations, and no swiping between months on the balance card.",
+  "Menos efeitos, mais fluidez. Sem vidro, sem animações de transição ou de entrada ao rolar, e sem deslizar entre meses no card de saldo.":
+    "Fewer effects, more fluidity. No glass, no transition or scroll-in animations, and no swiping between months on the balance card.",
   "Todos os efeitos ligados.": "All effects on.",
 
   // ─── Cabeçalho do perfil ───
