@@ -105,6 +105,8 @@ function compactarPreferences(p) {
   // Snapshots de orçamento por mês (mapa yyyy-mm → número). Sem compactar os
   // valores: cada entrada é um mês congelado que precisa sobreviver.
   if (p.orcBaseAt && !ehObjetoVazio(p.orcBaseAt)) out.orcBaseAt = p.orcBaseAt;
+  // Mês anterior segurado num valor próprio (ver mudarOrcBaseSoDaqui).
+  if (p.orcMesAnteriorFixo?.mes) out.orcMesAnteriorFixo = p.orcMesAnteriorFixo;
   // Diferença de mês trazida (carryover, mapa yyyy-mm → número). NÃO filtrar
   // zeros: o valor 0 é o marcador de "já perguntei neste mês" (usuário recusou),
   // e é o que impede o modal de virada de mês de reaparecer a cada abertura.

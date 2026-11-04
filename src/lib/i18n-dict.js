@@ -416,6 +416,9 @@ export const EN = {
 
   // ─── Orçamentos ───
   "Orçamento mensal": "Monthly budget",
+  "Vale deste mês em diante — o mês anterior não muda.": "Applies from this month on — last month stays the same.",
+  "Este mês e o anterior": "This month and last month",
+  "Mês anterior: {x}": "Last month: {x}",
   "Definir orçamento": "Set budget",
   "Gasto: {x}": "Spent: {x}",
   "{pct}% utilizado": "{pct}% used",

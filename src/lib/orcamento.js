@@ -33,9 +33,17 @@ export function calcOrcBaseAtual(preferences) {
 // Orçamento base do mês `mes` (yyyy-mm). A janela "ao vivo" — mês atual,
 // futuros e o imediatamente anterior — usa sempre o orçamento vigente; meses
 // mais antigos que isso leem o histórico de vigência.
+//
+// Exceção: `preferences.orcMesAnteriorFixo = { mes, valor }` segura o mês
+// anterior num valor próprio — gravado por `mudarOrcBaseSoDaqui`. Vale só
+// enquanto aquele mês é o anterior; na virada ele sai da janela e o histórico
+// (que já tem o mesmo valor) assume.
 export function obterOrcBaseDoMes(mes, preferences, mesAtual) {
   const atual = calcOrcBaseAtual(preferences);
-  if (mes >= mesAnteriorDe(mesAtual)) return atual;
+  const anterior = mesAnteriorDe(mesAtual);
+  const fixo = preferences?.orcMesAnteriorFixo;
+  if (mes === anterior && fixo?.mes === mes && typeof fixo.valor === "number") return fixo.valor;
+  if (mes >= anterior) return atual;
 
   const snaps = preferences?.orcBaseAt;
   if (!snaps) return atual;
@@ -73,4 +81,36 @@ export function registrarMudancaOrcBase(preferences, novo, mes) {
   if (antigo > 0 && antigo !== novo && !cobrePassado) snaps[ultimoAntigo] = antigo;
   snaps[inicioVigencia] = novo;
   return snaps;
+}
+
+// Contas que têm os dois campos na tela de Orçamentos: o "Orçamento mensal"
+// muda só deste mês em diante, e um campo a mais muda este mês e o anterior
+// (o comportamento de todo mundo). Pedido específico de uma usuária.
+const EMAILS_ORC_SEPARA_ANTERIOR = ["angellicabru@gmail.com"];
+
+export function separaOrcMesAnterior(email) {
+  return EMAILS_ORC_SEPARA_ANTERIOR.includes((email || "").trim().toLowerCase());
+}
+
+// Patch de preferences para salvar `novo` estando em `mes` sem mexer no mês
+// anterior: ele fica com o valor que já mostrava, segurado por
+// `orcMesAnteriorFixo` enquanto está na janela ao vivo e gravado no histórico
+// para depois da virada. O mês antes dele é congelado também se o histórico
+// ainda não o cobre — senão o carry-forward puxaria o valor do anterior pra trás.
+export function mudarOrcBaseSoDaqui(preferences, novo, mes) {
+  const anterior = mesAnteriorDe(mes);
+  const antesDele = mesAnteriorDe(anterior);
+  const snaps = { ...(preferences?.orcBaseAt || {}) };
+  const cobrePassado = Object.keys(snaps).some(
+    (k) => k <= antesDele && typeof snaps[k] === "number",
+  );
+  if (!cobrePassado) snaps[antesDele] = obterOrcBaseDoMes(antesDele, preferences, mes);
+  const valorAnterior = obterOrcBaseDoMes(anterior, preferences, mes);
+  snaps[anterior] = valorAnterior;
+  snaps[mes] = novo;
+  return {
+    orcamentoMensal: novo,
+    orcBaseAt: snaps,
+    orcMesAnteriorFixo: { mes: anterior, valor: valorAnterior },
+  };
 }
