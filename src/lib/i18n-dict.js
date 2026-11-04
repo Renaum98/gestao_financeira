@@ -416,6 +416,14 @@ export const EN = {
 
   // ─── Orçamentos ───
   "Orçamento mensal": "Monthly budget",
+  "Este mês foi ajustado na Análise para {x}. O orçamento mensal é {y}.":
+    "This month was adjusted in Analysis to {x}. The monthly budget is {y}.",
+  "Orçamento de {mes}": "{mes} budget",
+  "Muda só {mes}. Os outros meses e o orçamento mensal continuam como estão.":
+    "Changes {mes} only. Other months and the monthly budget stay as they are.",
+  "Ajustado só para este mês": "Adjusted for this month only",
+  "Segue o orçamento mensal": "Follows the monthly budget",
+  "Voltar ao mensal": "Back to monthly",
   "Definir orçamento": "Set budget",
   "Gasto: {x}": "Spent: {x}",
   "{pct}% utilizado": "{pct}% used",

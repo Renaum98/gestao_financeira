@@ -20,8 +20,29 @@
 //
 // Meses anteriores ao registro mais antigo herdam esse registro — é o melhor
 // palpite disponível para um período em que o app ainda não guardava histórico.
+//
+// Por cima de tudo isso existe o ajuste de um mês só:
+// `preferences.orcDoMes[yyyy-mm] = number`, gravado pela Análise no mês que o
+// usuário está olhando. Ele vale para aquele mês e nenhum outro, e passa na
+// frente da janela ao vivo e do histórico. Mudar o orçamento mensal depois não
+// mexe nele — foi um valor escolhido de propósito para aquele mês.
 
 import { mesAnteriorDe } from "./datas.js";
+
+// Ajuste de um mês só (ver o topo do arquivo), ou null se o mês não tem.
+export function ajusteDoMes(mes, preferences) {
+  const v = preferences?.orcDoMes?.[mes];
+  return typeof v === "number" ? v : null;
+}
+
+// Novo mapa `orcDoMes` com o ajuste de `mes` trocado por `valor` — ou
+// removido, com `valor` null, e o mês volta a seguir o orçamento mensal.
+export function comAjusteDoMes(preferences, mes, valor) {
+  const ajustes = { ...(preferences?.orcDoMes || {}) };
+  if (valor === null) delete ajustes[mes];
+  else ajustes[mes] = valor;
+  return ajustes;
+}
 
 // Orçamento base "agora" — só o mensal manual. Limites por categoria
 // NÃO compõem o orçamento base: eles são sub-limites opcionais dentro do
@@ -34,6 +55,8 @@ export function calcOrcBaseAtual(preferences) {
 // futuros e o imediatamente anterior — usa sempre o orçamento vigente; meses
 // mais antigos que isso leem o histórico de vigência.
 export function obterOrcBaseDoMes(mes, preferences, mesAtual) {
+  const ajuste = ajusteDoMes(mes, preferences);
+  if (ajuste !== null) return ajuste;
   const atual = calcOrcBaseAtual(preferences);
   if (mes >= mesAnteriorDe(mesAtual)) return atual;
 

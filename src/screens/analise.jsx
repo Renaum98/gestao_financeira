@@ -25,12 +25,13 @@ import { PorPagamento } from "./analise/PorPagamento.jsx";
 import { TopCategorias } from "./analise/TopCategorias.jsx";
 import { MaioresGastos } from "./analise/MaioresGastos.jsx";
 import { AtalhoOrcamentos } from "./analise/AtalhoOrcamentos.jsx";
+import { OrcamentoDoMes } from "./analise/OrcamentoDoMes.jsx";
 
 export function AnaliseScreen({ ctx }) {
   const {
     txs, mes, setMes, todosMeses, mesAnterior, irPara, ehDesktop,
     partnerTxs = [], partnerNome = "", partnerUid,
-    preferences = {}, caixinhas = [], usuario,
+    preferences = {}, setPreferences, caixinhas = [], usuario,
     recorrentes = [],
   } = ctx;
   const tr = useT();
@@ -69,7 +70,8 @@ export function AnaliseScreen({ ctx }) {
   // `obterOrcBaseDoMes` aplica o orçamento vigente ao mês atual, aos futuros e
   // ao imediatamente anterior; meses mais antigos leem o histórico de vigência
   // em preferences.orcBaseAt. Assim alterar o orçamento hoje reflete no mês
-  // passado mais recente e dali pra frente, sem mexer em meses antigos.
+  // passado mais recente e dali pra frente, sem mexer em meses antigos. Um mês
+  // com ajuste próprio (OrcamentoDoMes, logo abaixo) usa o ajuste.
   const orcBase = obterOrcBaseDoMes(mes, preferences, mesAtual);
   const meuUid = usuario?.uid;
   const guardadoEmCaixinhas = React.useMemo(
@@ -168,6 +170,14 @@ export function AnaliseScreen({ ctx }) {
       >
         <SeletorMes mes={mes} setMes={setMes} todosMeses={todosMeses} />
       </div>
+
+      <OrcamentoDoMes
+        mes={mes}
+        mesAtual={mesAtual}
+        preferences={preferences}
+        setPreferences={setPreferences}
+        spanAll={spanAll}
+      />
 
       {vazio ? (
         <div className={spanAll} style={{ padding: "0 var(--pad-x)" }}>

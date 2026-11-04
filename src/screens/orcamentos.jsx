@@ -14,7 +14,7 @@ import {
   valorZero,
 } from '../lib/money-input.js';
 import { simboloMoeda } from '../lib/moeda.js';
-import { registrarMudancaOrcBase } from '../lib/orcamento.js';
+import { ajusteDoMes, obterOrcBaseDoMes, registrarMudancaOrcBase } from '../lib/orcamento.js';
 import { mesCorrente } from '../lib/datas.js';
 import { useT } from '../lib/i18n.jsx';
 
@@ -33,6 +33,10 @@ export function OrcamentosScreen({ ctx }) {
   // categoria são sub-limites OPCIONAIS dentro do mensal — não compõem o
   // mensal nem precisam somar igual a ele. Sem mensal definido = sem teto.
   const orcBase = preferences.orcamentoMensal > 0 ? preferences.orcamentoMensal : 0;
+  // O que o card mostra é o deste mês, que pode ter um ajuste próprio feito na
+  // Análise — o mesmo número do Início. O Editar continua mexendo no mensal.
+  const ajusteMes = ajusteDoMes(mes, preferences);
+  const orcBaseMes = obterOrcBaseDoMes(mes, preferences, mes);
   // Depósitos em caixinhas no mês — dinheiro guardado, não disponível. As
   // regras (saque não conta, saldo inicial não abate, depósito do parceiro é
   // do parceiro) vivem em guardadoNoMes, junto do card de saldo e da Análise.
@@ -40,8 +44,8 @@ export function OrcamentosScreen({ ctx }) {
   const guardadoEmCaixinhas = guardadoNoMes(caixinhas, mes, meuUid).meu;
   // Entradas do mês somam ao orçamento; caixinhas guardadas abatem.
   // Só faz sentido mostrar "orcMensal" quando há um teto definido.
-  const temOrcamento = orcBase > 0;
-  const orcMensal = temOrcamento ? orcBase + entradas - guardadoEmCaixinhas : 0;
+  const temOrcamento = orcBaseMes > 0;
+  const orcMensal = temOrcamento ? orcBaseMes + entradas - guardadoEmCaixinhas : 0;
   const totalGasto = totalGeral(txMes);
   const pctGeral = orcMensal > 0 ? (totalGasto / orcMensal) * 100 : 0;
 
@@ -163,6 +167,14 @@ export function OrcamentosScreen({ ctx }) {
             <span style={{ color: 'var(--ink)' }}>{t("Gasto: {x}", { x: fmtBRLCompacto(totalGasto) })}</span>
             <span style={{ color: 'var(--muted)' }}>{t("{pct}% utilizado", { pct: pctGeral.toFixed(0) })}</span>
           </div>
+        </div>
+      )}
+
+      {ajusteMes !== null && !editandoTotal && (
+        <div style={{ marginTop: 10, fontSize: 11, fontWeight: 600, lineHeight: 1.4, color: 'var(--muted)' }}>
+          {t("Este mês foi ajustado na Análise para {x}. O orçamento mensal é {y}.", {
+            x: fmtBRLCompacto(ajusteMes), y: fmtBRLCompacto(orcBase),
+          })}
         </div>
       )}
     </Card>
