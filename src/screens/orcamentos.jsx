@@ -14,8 +14,8 @@ import {
   valorZero,
 } from '../lib/money-input.js';
 import { simboloMoeda } from '../lib/moeda.js';
-import { mudarOrcBaseSoDaqui, obterOrcBaseDoMes, registrarMudancaOrcBase, separaOrcMesAnterior } from '../lib/orcamento.js';
-import { mesAnteriorDe, mesCorrente } from '../lib/datas.js';
+import { registrarMudancaOrcBase } from '../lib/orcamento.js';
+import { mesCorrente } from '../lib/datas.js';
 import { useT } from '../lib/i18n.jsx';
 
 export function OrcamentosScreen({ ctx }) {
@@ -58,33 +58,13 @@ export function OrcamentosScreen({ ctx }) {
   // vale deste mês (e do anterior, a janela ao vivo de sempre) em diante, e o
   // antigo fica congelado nos meses mais velhos — ver registrarMudancaOrcBase.
   // É o que faz a projeção do ano somar o orçamento real de cada mês.
-  //
-  // Para quem tem os dois campos (separaOrcMesAnterior), o "Orçamento mensal"
-  // vale só deste mês em diante, e o campo de baixo é o que leva o anterior junto.
-  const separaAnterior = separaOrcMesAnterior(usuario?.email);
-  const orcAnterior = obterOrcBaseDoMes(mesAnteriorDe(mes), preferences, mes);
-
-  const [editandoComAnt, setEditandoComAnt] = React.useState(false);
-  const [tempComAnt, setTempComAnt] = React.useState(valorZero());
-
-  const salvarComAnterior = (novo) => {
+  const salvarTotal = () => {
+    const novo = Math.max(0, parseValorBR(tempTotal));
     setPreferences({
       orcamentoMensal: novo,
       orcBaseAt: registrarMudancaOrcBase(preferences, novo, mes),
-      orcMesAnteriorFixo: null,
     });
-  };
-
-  const salvarTotal = () => {
-    const novo = Math.max(0, parseValorBR(tempTotal));
-    if (separaAnterior) setPreferences(mudarOrcBaseSoDaqui(preferences, novo, mes));
-    else salvarComAnterior(novo);
     setEditandoTotal(false);
-  };
-
-  const salvarComAnt = () => {
-    salvarComAnterior(Math.max(0, parseValorBR(tempComAnt)));
-    setEditandoComAnt(false);
   };
 
   // Dia em que a fatura fecha. 0 = último dia do mês (padrão), o caso "fatura
@@ -156,7 +136,6 @@ export function OrcamentosScreen({ ctx }) {
           color: 'var(--muted)',
         }}>
           {t("Use um valor fixo que você recebe todo mês, como salário ou mesada. Recebimentos extras devem ser lançados como Entrada em Transações.")}
-          {separaAnterior && <> {t("Vale deste mês em diante — o mês anterior não muda.")}</>}
         </div>
         </>
       ) : (
@@ -186,58 +165,6 @@ export function OrcamentosScreen({ ctx }) {
           </div>
         </div>
       )}
-    </Card>
-  );
-
-  // O campo a mais de quem separa os dois: muda este mês e o anterior juntos.
-  const cardComAnterior = separaAnterior && (
-    <Card style={{ padding: '14px 16px', marginTop: 12 }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-        <div style={{
-          width: 36, height: 36, borderRadius: 'var(--raio-controle)', background: 'var(--surface-sunken)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-        }}>
-          <Icon name="calendar" size={18} color="var(--ink)" strokeWidth={2} />
-        </div>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--ink)' }}>{t("Este mês e o anterior")}</div>
-          <div style={{ fontSize: 11, color: 'var(--muted)', fontWeight: 600, marginTop: 1 }}>
-            {t("Mês anterior: {x}", { x: fmtBRLCompacto(orcAnterior) })}
-          </div>
-        </div>
-        {editandoComAnt ? (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <input
-              autoFocus
-              type="text"
-              inputMode="numeric"
-              pattern="[0-9]*"
-              value={tempComAnt}
-              onChange={(e) => setTempComAnt(formatarValorDigitado(e.target.value))}
-              onKeyDown={(e) => { if (e.key === 'Enter') salvarComAnt(); if (e.key === 'Escape') setEditandoComAnt(false); }}
-              style={{
-                width: 90, padding: '6px 10px', borderRadius: 'var(--raio-compacto)',
-                border: '1.5px solid var(--primary)', background: 'var(--card)',
-                fontSize: 13, fontWeight: 700, color: 'var(--ink)', outline: 'none',
-                fontFamily: 'inherit', textAlign: 'right',
-              }}
-            />
-            <button onClick={salvarComAnt} style={{
-              width: 30, height: 30, borderRadius: 'var(--raio-pilula)', border: 'none',
-              background: 'var(--primary)', color: '#fff', cursor: 'pointer',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-            }}>
-              <Icon name="check" size={14} strokeWidth={2.6} />
-            </button>
-          </div>
-        ) : (
-          <button onClick={() => { setEditandoComAnt(true); setTempComAnt(formatarValorInicial(orcBase)); }} style={{
-            background: 'transparent', border: 'none', cursor: 'pointer', padding: 4, color: 'var(--muted)',
-          }}>
-            <Icon name="edit" size={16} strokeWidth={2} />
-          </button>
-        )}
-      </div>
     </Card>
   );
 
@@ -410,7 +337,6 @@ export function OrcamentosScreen({ ctx }) {
           <div className="painel-lateral" style={{ "--painel-largura": "380px" }}>
             <div>
               {cardPrincipal}
-              {cardComAnterior}
               <div style={{ marginTop: "var(--esp-secao)" }}>{secaoCartao}</div>
             </div>
             <div>{secaoCategorias}</div>
@@ -421,7 +347,6 @@ export function OrcamentosScreen({ ctx }) {
           {/* Card principal — total mensal editável */}
           <div style={{ padding: '4px var(--pad-x) 0' }}>
             {cardPrincipal}
-            {cardComAnterior}
           </div>
 
           {/* Cartões / fechamento da fatura */}
