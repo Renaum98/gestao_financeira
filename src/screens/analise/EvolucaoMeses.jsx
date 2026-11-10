@@ -1,5 +1,5 @@
 // EvolucaoMeses.jsx — barras de gasto total nos últimos 6 meses, com a linha
-// de tendência por cima. Tocar numa barra troca o mês selecionado.
+// de tendência na metade da altura delas. Tocar numa barra troca o mês selecionado.
 
 import { fmtBRL, fmtBRLCompacto } from "../../data.js";
 import { Card } from "../../ui/common.jsx";
@@ -44,11 +44,15 @@ function calcTendencia(evolucao) {
 export function EvolucaoMeses({ evolucao, maxEvol, mediaEvol, mes, setMes }) {
   const t = useT();
   const tend = calcTendencia(evolucao);
+  // A reta é desenhada na metade da altura das barras: no topo ela passava em
+  // cima dos valores e atrapalhava a leitura. A metade mantém a inclinação
+  // proporcional, então a leitura de "subindo/caindo" continua a mesma.
+  const MEIO = 0.5;
   // A reta pode passar da barra mais alta (tendência subindo forte); a escala
   // abre espaço pra ela não sair do gráfico.
-  const escala = Math.max(maxEvol, tend?.de || 0, tend?.ate || 0);
+  const escala = Math.max(maxEvol, (tend?.de || 0) * MEIO, (tend?.ate || 0) * MEIO);
   const n = evolucao.length;
-  const yDe = (v) => 100 - (v / escala) * 100;
+  const yDe = (v) => 100 - ((v * MEIO) / escala) * 100;
 
   return (
     <div style={{ padding: "var(--esp-secao) var(--pad-x) 0" }}>
