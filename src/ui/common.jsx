@@ -119,16 +119,20 @@ function BotaoVoltarFixo({ voltar, titulo, rolou, tituloSumiu, barraRef, t }) {
   return createPortal(botao, document.body);
 }
 
-export function SeletorMes({ mes, setMes, todosMeses }) {
+// `vidro`: o seletor mora dentro do card de saldo em vidro e aparece afundado
+// nele — fundo (o da tela, claro ou escuro) e relevo vêm de
+// `.seletor-mes-vidro` (components.css). Texto e setas seguem o tema, como
+// fora do card.
+export function SeletorMes({ mes, setMes, todosMeses, vidro = false }) {
   const t = useT();
   const idx = todosMeses.indexOf(mes);
   const podeProx = idx > 0;
   const podeAnt = idx < todosMeses.length - 1;
   return (
-    <div style={{
+    <div className={vidro ? 'seletor-mes-vidro' : undefined} style={{
       display: 'inline-flex', alignItems: 'center', gap: 4,
-      background: 'var(--card)', borderRadius: 'var(--raio-pilula)', padding: 4,
-      boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
+      borderRadius: 'var(--raio-pilula)', padding: 4,
+      ...(vidro ? {} : { background: 'var(--card)', boxShadow: '0 1px 2px rgba(0,0,0,0.04)' }),
     }}>
       <button onClick={() => podeAnt && setMes(todosMeses[idx + 1])} disabled={!podeAnt} aria-label={t("Mês anterior")} style={{
         width: 30, height: 30, borderRadius: 'var(--raio-pilula)', border: 'none',

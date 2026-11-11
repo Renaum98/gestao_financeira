@@ -686,6 +686,220 @@
   pointer-events: none;
 }
 
+/* Card de destaque em vidro (CardDestaque com `vidro`, só no saldo do Início).
+   Duas camadas que cobrem o card inteiro: a cor atrás e a lâmina de vidro na
+   frente. Sem sobra entre elas — a primeira versão recolhia a cor 8px e a
+   borda vazia parecia uma moldura, o que ele reprovou. Vidro branco "não
+   combinou"; tudo sai da cor de destaque. Já testados e recusados no fundo:
+   bolhas redondas derivando ("só tem uma") e o card como copo com líquido.
+
+   O que faz o olho ler vidro aqui:
+   1. Formas atrás: cinco manchas nos tons da paleta, todas dentro do card e
+      sobrepostas, que andam, giram e deformam o contorno devagar (os 8 raios
+      do border-radius sorteados a cada trecho — ui/vidro-formas.js, anime.js).
+      O desfoque da lâmina amolece as bordas e mistura as cores onde elas se
+      cruzam. Só o card do centro do carrossel anima.
+   2. Paralaxe: a camada de cor é mais larga que o card e anda mais devagar que
+      ele no carrossel (--carrossel-pos, escrito em CarrosselSaldoMes).
+   3. Relevo: a superfície abaulada, clara do lado da luz e escura no oposto.
+   Sem borda de vidro: o anel de luz em volta (borda especular) e o fio de
+   1px na beirada foram tirados — "a borda de vidro ficou estranha".
+
+   O `isolation` garante que o desfoque da lâmina enxergue a camada de cor: o
+   vidro só desfoca o que está atrás dele no mesmo contexto. */
+.card-vidro {
+  position: relative;
+  isolation: isolate;
+  /* Elevação: uma sombra só embaixo, tirada do fundo da tela (--bg)
+     escurecido, mais um contato curto colado na base. Ela desce reta e com
+     espalhamento negativo: nos lados ela nasce já recolhida e se dissolve,
+     sem começo visível. A versão anterior era deslocada pra direita (8px) e
+     no claro dava pra ver onde ela começava, na parte de cima do lado
+     direito. O relevo de dentro (lâmina e rebaixo do seletor) continua com a
+     luz de cima à esquerda. O carrossel abre espaço embaixo pra ela.
+     Já recusados aqui: sombra colorida em volta ("forte demais") e o clarão
+     do lado da luz do neumorphism ("não gostei desse brilho todo"). */
+  --neu-sombra: color-mix(in oklab, var(--bg) 78%, #000);
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.08),
+    0 14px 28px -14px var(--neu-sombra);
+}
+/* No escuro a sombra precisa ser bem mais funda pra aparecer. */
+:root.tema-escuro .card-vidro {
+  --neu-sombra: rgba(0, 0, 0, 0.6);
+}
+/* Brilho que vem de trás do vidro: uma cópia do gradiente do card, menor que
+   ele, desfocada e baixada um pouco — como luz da camada de cor vazando pelas
+   beiradas. Fica fora do recorte do card (por isso o recorte mora no
+   `__recorte` e não no card) e atrás de tudo dentro dele (o `isolation`
+   segura o z-index -1 aqui dentro). É desenhado uma vez: não anima. O
+   carrossel abre espaço embaixo pra ele (SOMBRA_CARD). */
+.card-vidro::before {
+  content: "";
+  position: absolute;
+  inset: 14px 12px 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: var(--card-vidro-fundo);
+  filter: blur(16px);
+  opacity: 0.45;
+  /* Só pra baixo, como a sombra: deslocado pro lado, ele também marcava onde
+     começava no canto de cima. */
+  transform: translateY(8px);
+  pointer-events: none;
+}
+/* O que antes era o overflow do card: a camada de cor é mais larga que ele e
+   precisa ser cortada no contorno. */
+.card-vidro__recorte {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  overflow: hidden;
+}
+/* 150% da largura do card (25% sobrando de cada lado); o deslocamento máximo
+   é 12% dessa largura = 18% do card, então a beirada nunca aparece. */
+.card-vidro__cor {
+  position: absolute;
+  inset: 0 -25%;
+  background: var(--card-vidro-fundo);
+  transform: translateX(calc(var(--carrossel-pos, 0) * -12%));
+}
+/* Caixa do tamanho do card dentro da camada de cor (que é 150% mais larga):
+   as posições das formas ficam em % do card, e nenhuma nasce fora da vista. */
+.card-vidro__formas {
+  position: absolute;
+  inset: 0 16.667%;
+}
+/* Tamanho em % da largura do card. O transform e o border-radius são escritos
+   a cada quadro pelo vidro-formas.js — daí o will-change. */
+.card-vidro__forma {
+  position: absolute;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  will-change: transform, border-radius;
+}
+.card-vidro__forma--1 { /* clara, no alto à esquerda */
+  width: 52%; left: -12%; top: -38%;
+  /* Fica atrás do "Gasto em…": clara demais e o texto branco some. */
+  background: var(--primary-2);
+  opacity: 0.55;
+}
+.card-vidro__forma--2 { /* escura, embaixo à direita */
+  width: 58%; left: 52%; top: 30%;
+  background: color-mix(in oklab, var(--primary) 50%, #000);
+  opacity: 0.85;
+}
+.card-vidro__forma--3 { /* tom médio, no meio */
+  width: 36%; left: 30%; top: 0%;
+  background: color-mix(in oklab, var(--primary-2) 55%, var(--primary));
+  opacity: 0.8;
+}
+.card-vidro__forma--4 { /* clara pequena, no alto à direita */
+  width: 26%; left: 74%; top: -14%;
+  background: var(--primary-2);
+  opacity: 0.7;
+}
+.card-vidro__forma--5 { /* profunda, embaixo à esquerda */
+  width: 40%; left: -6%; top: 55%;
+  background: color-mix(in oklab, var(--primary) 70%, #000);
+  opacity: 0.8;
+}
+.card-vidro__lamina {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  overflow: hidden;
+  /* Duas camadas: por cima, o abaulado da superfície (ver abaixo); por baixo,
+     o tom do vidro na cor de destaque. */
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.12),
+      rgba(255, 255, 255, 0.03) 35%,
+      transparent 55%,
+      rgba(0, 0, 0, 0.16)
+    ),
+    linear-gradient(
+      160deg,
+      color-mix(in oklab, var(--primary-2) 30%, transparent),
+      color-mix(in oklab, var(--primary) 18%, transparent) 55%,
+      color-mix(in oklab, var(--primary) 26%, transparent)
+    );
+  -webkit-backdrop-filter: blur(18px) saturate(170%);
+  backdrop-filter: blur(18px) saturate(170%);
+  /* A textura saltada vive aqui, na própria superfície, e não em brilho fora
+     do card. É o relevo de uma almofada vista com luz de cima à esquerda:
+     - o abaulado (gradiente de cima): o lado da luz um pouco mais claro, o
+       oposto um pouco mais escuro, atravessando a superfície inteira;
+     - o chanfro (sombras internas): claro em cima e à esquerda, escuro
+       embaixo e à direita, sempre esfumado — sem fio nítido na beirada, que
+       lia como uma borda de vidro e ele achou estranho.
+     Texto todo em branco: o lado escuro só aprofunda o fundo, não tira
+     contraste. */
+  box-shadow:
+    inset 6px 6px 10px -6px rgba(255, 255, 255, 0.22),
+    inset 16px 16px 26px -20px rgba(255, 255, 255, 0.16),
+    inset -8px -8px 14px -8px rgba(0, 0, 0, 0.3),
+    inset -18px -18px 30px -22px rgba(0, 0, 0, 0.3);
+}
+/* Seletor de mês dentro do card em vidro: afundado na lâmina, como um
+   rebaixo no vidro — o "pressed" do neumorphism. O miolo é o fundo da tela
+   (--bg, claro ou escuro) e o texto segue o tema (--ink): na cor de destaque
+   ele se perdia no card. Um pouco translúcido e com desfoque, pra continuar
+   parecendo vidro.
+   A luz vem de cima à esquerda (a mesma do card), então as beiradas de cima e
+   da esquerda do rebaixo fazem sombra pra dentro e as opostas pegam luz: o
+   avesso do card, que salta. */
+.seletor-mes-vidro {
+  background: color-mix(in oklab, var(--bg) 90%, transparent);
+  -webkit-backdrop-filter: blur(10px) saturate(150%);
+  backdrop-filter: blur(10px) saturate(150%);
+  box-shadow:
+    inset 2px 2px 5px rgba(0, 0, 0, 0.22),
+    inset 1px 1px 1px rgba(0, 0, 0, 0.12),
+    inset -2px -2px 4px rgba(255, 255, 255, 0.5),
+    -1px -1px 0 rgba(0, 0, 0, 0.12),
+    1px 1px 0 rgba(255, 255, 255, 0.2);
+}
+/* No escuro o fundo já é quase preto: a sombra interna precisa ser mais funda
+   e a luz da beirada oposta bem mais fraca, senão vira um contorno claro. */
+:root.tema-escuro .seletor-mes-vidro {
+  box-shadow:
+    inset 2px 2px 5px rgba(0, 0, 0, 0.55),
+    inset 1px 1px 1px rgba(0, 0, 0, 0.4),
+    inset -2px -2px 4px rgba(255, 255, 255, 0.07),
+    -1px -1px 0 rgba(0, 0, 0, 0.15),
+    1px 1px 0 rgba(255, 255, 255, 0.16);
+}
+
+/* Navegador sem desfoque: as formas aparecem nítidas sob o tom do vidro. */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .card-vidro__lamina { background: color-mix(in oklab, var(--primary) 18%, transparent); }
+}
+/* Modo leve: o vidro sai inteiro e o card volta a ser o de antes — gradiente
+   de destaque de borda a borda, parado, sem formas, só com a faixa de brilho
+   (que mora dentro da lâmina e por isso fica). O desfoque é o que cobra preço;
+   ver lib/leve.js. */
+:root[data-leve] .card-vidro {
+  box-shadow: 0 4px 12px color-mix(in oklab, var(--primary) 10%, transparent);
+}
+:root[data-leve] .card-vidro::before { display: none; }
+:root[data-leve] .seletor-mes-vidro {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+:root[data-leve] .card-vidro__cor {
+  inset: 0;
+  transform: none;
+}
+:root[data-leve] .card-vidro__lamina {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  background: none;
+  box-shadow: none;
+}
+:root[data-leve] .card-vidro__formas { display: none; }
+
 /* Barra de progresso do card de projeção anual (Análise). */
 .projecao-barra {
   transition: width .45s cubic-bezier(.22, 1, .36, 1) .08s;

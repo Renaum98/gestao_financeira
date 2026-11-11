@@ -65,10 +65,10 @@ function CardSaldoBase({
 
   return (
     <CardDestaque
-      style={{
-        padding: 22,
-        boxShadow: "0 4px 12px color-mix(in oklab, var(--primary) 10%, transparent)",
-      }}
+      vidro
+      // A sombra é do `.card-vidro` (components.css): elevação em camadas, que
+      // volta à sombra discreta de antes no modo leve.
+      style={{ padding: 22 }}
     >
       <div
         style={{
@@ -80,7 +80,7 @@ function CardSaldoBase({
         <div style={{ fontSize: 13, fontWeight: 600, opacity: 0.85 }}>
           {t("Gasto em {mes}", { mes: rotuloMesT(t, mesCard) })}
         </div>
-        <SeletorMes mes={mesCard} setMes={setMes} todosMeses={todosMeses} />
+        <SeletorMes mes={mesCard} setMes={setMes} todosMeses={todosMeses} vidro />
       </div>
 
       <div

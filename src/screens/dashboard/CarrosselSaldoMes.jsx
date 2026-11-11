@@ -52,6 +52,9 @@ const PADDING_LATERAL = ESPIADA + ESPACO;
 // calibrar a força do efeito — em 1, cada um desliga a sua parte.
 // Escala: como é uniforme, o vizinho encolhe também na altura.
 const ESCALA_MIN = 0.88;
+// Folga embaixo pra sombra do card não ser cortada pelo scroll (ver o style
+// do contêiner).
+const SOMBRA_CARD = 32;
 // Opacidade: empurra o vizinho pro segundo plano e deixa o centro mandar na
 // tela. Escolhido em 0.55 depois de testar 0.75, que ficou tímido demais.
 // O custo de descer aqui é a ESPIADA: quanto mais fraco o card lateral, menos
@@ -212,6 +215,10 @@ export function CarrosselSaldoMes({ todosMeses, mes, setMes, renderCard }) {
       face.style.opacity = op.toFixed(3);
       face.style.transformOrigin = `${origemX.toFixed(1)}% center`;
       face.style.transform = `scale(${escala.toFixed(4)})`;
+      // Posição pro card em vidro (`.card-vidro__cor`): a cor de trás anda mais
+      // devagar que o card, e é ela correndo por baixo da lâmina que denuncia
+      // o vidro. Custom property não mexe em layout.
+      face.style.setProperty("--carrossel-pos", pos.toFixed(3));
     }
   }, []);
 
@@ -339,7 +346,12 @@ export function CarrosselSaldoMes({ todosMeses, mes, setMes, renderCard }) {
         overscrollBehaviorX: "contain",
         // padding lateral = (viewport - slide_width) / 2, sintonizado com o
         // flex-basis dos slides — ver PADDING_LATERAL/ESPIADA lá em cima.
-        padding: `4px ${PADDING_LATERAL}px 0`,
+        // Embaixo, espaço pra sombra do card em vidro: o scroll horizontal
+        // recorta tudo que passa da caixa (overflow-x obriga overflow-y a
+        // recortar também), e a sombra e o brilho de trás descem ~30px. A
+        // margem negativa devolve o espaço, então o que vem depois não desce.
+        padding: `4px ${PADDING_LATERAL}px ${SOMBRA_CARD}px`,
+        marginBottom: -SOMBRA_CARD,
         gap: ESPACO,
       }}
     >
@@ -383,7 +395,9 @@ export function CarrosselSaldoMes({ todosMeses, mes, setMes, renderCard }) {
                 baixo flutuaria numa caixa alta) e é ela que recebe o transform
                 — nunca o slide, que é o alvo do snap. */}
             <div
-              className="carrossel-saldo__face"
+              // `--ativa` marca o card do centro: só ele anima as formas do
+              // fundo do card em vidro (ui/vidro-formas.js).
+              className={`carrossel-saldo__face${i === idxAtivo ? " carrossel-saldo__face--ativa" : ""}`}
               style={{
                 height: "100%",
                 willChange: perto ? "opacity, transform" : "auto",
