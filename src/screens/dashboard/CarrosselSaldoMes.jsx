@@ -215,10 +215,6 @@ export function CarrosselSaldoMes({ todosMeses, mes, setMes, renderCard }) {
       face.style.opacity = op.toFixed(3);
       face.style.transformOrigin = `${origemX.toFixed(1)}% center`;
       face.style.transform = `scale(${escala.toFixed(4)})`;
-      // Posição pro card em vidro (`.card-vidro__cor`): a cor de trás anda mais
-      // devagar que o card, e é ela correndo por baixo da lâmina que denuncia
-      // o vidro. Custom property não mexe em layout.
-      face.style.setProperty("--carrossel-pos", pos.toFixed(3));
     }
   }, []);
 
@@ -395,9 +391,7 @@ export function CarrosselSaldoMes({ todosMeses, mes, setMes, renderCard }) {
                 baixo flutuaria numa caixa alta) e é ela que recebe o transform
                 — nunca o slide, que é o alvo do snap. */}
             <div
-              // `--ativa` marca o card do centro: só ele anima as formas do
-              // fundo do card em vidro (ui/vidro-formas.js).
-              className={`carrossel-saldo__face${i === idxAtivo ? " carrossel-saldo__face--ativa" : ""}`}
+              className="carrossel-saldo__face"
               style={{
                 height: "100%",
                 willChange: perto ? "opacity, transform" : "auto",

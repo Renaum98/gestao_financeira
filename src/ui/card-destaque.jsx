@@ -21,9 +21,6 @@
 // absoluta e, por ser posicionada, pintaria por cima de qualquer filho que não
 // fosse. Quem usa não precisa mais repetir isso bloco a bloco.
 
-import React from "react";
-import { iniciarFormas } from "./vidro-formas.js";
-
 // Sem cor própria, o gradiente vem pronto no token — quem o monta é
 // `heroDaPaleta` (data.js), que é quem conhece as duas cores da paleta. Com cor
 // própria (a caixinha), montamos aqui a mesma receita: `corClara` é a mesma cor
@@ -40,16 +37,11 @@ function fundoProprio(cor, corClara) {
 // `style` sobrescreve o padrão — raio e padding variam de card pra card de
 // propósito, e o do Início ainda leva uma sombra colorida.
 //
-// `vidro` (só o saldo do Início, em teste): o card vira duas camadas do mesmo
-// tamanho. Atrás, a cor — o gradiente de destaque com cinco formas nos tons da
-// paleta, que andam, giram e deformam o contorno devagar (ui/vidro-formas.js);
-// na frente, uma lâmina de vidro tingida que desfoca tudo isso. Detalhes e o
-// porquê de cada escolha em `.card-vidro` (components.css).
-const FORMAS = 5;
-
+// `vidro` (só o saldo do Início): o mesmo gradiente, parado, com uma lâmina
+// de vidro por cima que tinge e dá relevo de almofada, mais um brilho da cor
+// vazando por trás e uma sombra suave embaixo. Detalhes e o porquê de cada
+// escolha em `.card-vidro` (components.css).
 function CardDestaqueVidro({ fundo, style, children, rest }) {
-  const formasRef = React.useRef(null);
-  React.useEffect(() => iniciarFormas(formasRef.current), []);
   return (
     <div
       {...rest}
@@ -63,13 +55,7 @@ function CardDestaqueVidro({ fundo, style, children, rest }) {
       }}
     >
       <div aria-hidden="true" className="card-vidro__recorte">
-        <div className="card-vidro__cor">
-          <div ref={formasRef} className="card-vidro__formas">
-            {Array.from({ length: FORMAS }, (_, i) => (
-              <span key={i} className={`card-vidro__forma card-vidro__forma--${i + 1}`} />
-            ))}
-          </div>
-        </div>
+        <div className="card-vidro__cor" />
       </div>
       <div aria-hidden="true" className="card-vidro__lamina">
         <div className="card-destaque-brilho" />
