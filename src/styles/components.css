@@ -29,55 +29,6 @@
   backdrop-filter: none;
 }
 
-/* Vidro com lente (Liquid Glass, em teste — só na tab bar, só no Chromium; ver
-   ui/lente-vidro.js). O filtro de refração (--lente) entra antes do desfoque,
-   e os dois são bem mais leves que no vidro comum: com 22px de desfoque e 70%
-   de tinta por cima, o que entorta nas beiradas não aparecia. */
-.glass-surface.vidro-lente {
-  background: color-mix(in srgb, var(--card) 50%, transparent);
-  backdrop-filter: var(--lente) blur(6px) saturate(180%);
-}
-/* A gota da aba ativa, na barra com lente: com o vidro menos fosco, o que
-   passava por trás aparecia através dela e brigava com o ícone. Por baixo do
-   tom de destaque de sempre entra uma base quase opaca da cor do cartão. */
-.vidro-lente .nav-indicador {
-  background:
-    radial-gradient(115% 95% at 50% 42%,
-      color-mix(in oklab, var(--primary) 30%, transparent) 0%,
-      color-mix(in oklab, var(--primary) 18%, transparent) 70%,
-      color-mix(in oklab, var(--primary) 10%, transparent) 100%),
-    color-mix(in srgb, var(--card) 88%, transparent);
-}
-/* A gota como lente: enquanto o dedo segura ou arrasta, ela sobe por cima dos
-   ícones (os botões ficam em z-index 1) e entorta o que passa por baixo dela —
-   os ícones e o vidro da barra. Perde a base opaca (senão cobriria os ícones)
-   e vira vidro quase limpo, com um fio de luz em cima e uma sombra curta de
-   quem está levantado. Solta, ela volta pra baixo dos ícones. */
-.nav-indicador.vidro-lente.is-segurando,
-.nav-indicador.vidro-lente.is-arrastando {
-  z-index: 2;
-  background:
-    radial-gradient(115% 95% at 50% 42%,
-      color-mix(in oklab, var(--primary) 10%, transparent) 0%,
-      transparent 80%),
-    color-mix(in srgb, var(--card) 14%, transparent);
-  backdrop-filter: var(--lente) saturate(150%) brightness(1.04);
-  box-shadow:
-    0 6px 16px rgba(20, 16, 24, 0.18),
-    inset 0 1px 0 rgba(255, 255, 255, 0.45),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.08);
-}
-/* Modo leve ligado com o app aberto: a lente sai junto com o vidro. */
-:root[data-leve] .glass-surface.vidro-lente {
-  background: var(--card);
-  backdrop-filter: none;
-}
-:root[data-leve] .nav-indicador.vidro-lente {
-  z-index: 0;
-  backdrop-filter: none;
-  box-shadow: none;
-}
-
 /* Primeira opção de cada card de configuração não tem linha em cima */
 .config-item:first-child { border-top: none !important; }
 
