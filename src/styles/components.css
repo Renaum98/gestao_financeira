@@ -792,24 +792,28 @@
    A luz vem de cima à esquerda (a mesma do card), então as beiradas de cima e
    da esquerda do rebaixo fazem sombra pra dentro e as opostas pegam luz: o
    avesso do card, que salta. */
+/* Profundidade reforçada a pedido: a sombra de dentro entra mais (4px, mais
+   larga e mais escura) com um segundo traço curto colado na beirada, a luz do
+   lado oposto sobe, e o lábio de fora fica mais marcado — escuro na quina da
+   luz, claro na oposta —, que é o que faz a beirada parecer cortada no vidro. */
 .seletor-mes-vidro {
   background: color-mix(in oklab, var(--bg) 90%, transparent);
   box-shadow:
-    inset 2px 2px 5px rgba(0, 0, 0, 0.22),
-    inset 1px 1px 1px rgba(0, 0, 0, 0.12),
-    inset -2px -2px 4px rgba(255, 255, 255, 0.5),
-    -1px -1px 0 rgba(0, 0, 0, 0.12),
-    1px 1px 0 rgba(255, 255, 255, 0.2);
+    inset 4px 4px 9px rgba(0, 0, 0, 0.3),
+    inset 2px 2px 2px rgba(0, 0, 0, 0.18),
+    inset -3px -3px 6px rgba(255, 255, 255, 0.7),
+    -1px -1px 1px rgba(0, 0, 0, 0.2),
+    1px 1px 1px rgba(255, 255, 255, 0.35);
 }
 /* No escuro o fundo já é quase preto: a sombra interna precisa ser mais funda
    e a luz da beirada oposta bem mais fraca, senão vira um contorno claro. */
 :root.tema-escuro .seletor-mes-vidro {
   box-shadow:
-    inset 2px 2px 5px rgba(0, 0, 0, 0.55),
-    inset 1px 1px 1px rgba(0, 0, 0, 0.4),
-    inset -2px -2px 4px rgba(255, 255, 255, 0.07),
-    -1px -1px 0 rgba(0, 0, 0, 0.15),
-    1px 1px 0 rgba(255, 255, 255, 0.16);
+    inset 4px 4px 10px rgba(0, 0, 0, 0.7),
+    inset 2px 2px 2px rgba(0, 0, 0, 0.5),
+    inset -2px -2px 5px rgba(255, 255, 255, 0.1),
+    -1px -1px 1px rgba(0, 0, 0, 0.28),
+    1px 1px 1px rgba(255, 255, 255, 0.2);
 }
 
 /* Modo leve: o card volta a ser o de antes — gradiente de destaque de borda a
