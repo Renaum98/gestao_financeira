@@ -16,6 +16,7 @@ import {
 import { Icon } from "./ui/icons.jsx";
 import { IconeTab } from "./ui/icones-tab.jsx";
 import { criarGota } from "./ui/gota-liquida.js";
+import { criarLente } from "./ui/lente-vidro.js";
 import { caixinhasVisiveis } from "./lib/caixinhas.js";
 import { escutarAuth, sair as sairFirebase } from "./lib/firebase.js";
 import { haviaSessao, lembrarSessao } from "./lib/sessao.js";
@@ -180,6 +181,14 @@ function TabBar({ tela, irPara, abrirAdd }) {
   // passaria por cima delas.
   const gotaRef = React.useRef(null);
   const gota = () => (gotaRef.current ??= criarGota(indicadorRef.current));
+
+  // Refração do Liquid Glass (em teste): nas beiradas da barra e na gota da
+  // aba ativa, que vira lente enquanto o dedo a segura ou arrasta (aí ela sobe
+  // por cima dos ícones e os entorta ao passar — ver .nav-indicador.vidro-lente
+  // no CSS). Só liga nos navegadores Chromium e fora do modo leve — ver
+  // ui/lente-vidro.js.
+  React.useEffect(() => criarLente(barraRef.current), []);
+  React.useEffect(() => criarLente(indicadorRef.current, { borda: 20 }), []);
 
   const dispararGota = React.useCallback(() => {
     const el = indicadorRef.current;
