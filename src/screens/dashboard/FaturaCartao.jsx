@@ -133,8 +133,9 @@ function GrupoFatura({ grupo, varios, primeiro, t }) {
     : undefined;
 
   // Com vários cartões cada grupo ganha um cabeçalho com o nome do cartão, e a
-  // linha diz só "Fatura atual" — quem lê sabe de quem é a fatura antes, sem
-  // repetir o nome em cada linha.
+  // linha diz só "Atual" — quem lê sabe de quem é a fatura antes, sem repetir o
+  // nome em cada linha. Nem "Fatura" (o título da seção já diz) nem "Aberta"
+  // na legenda (é o que "atual" quer dizer).
   return (
     <div style={{ borderTop: primeiro ? "none" : "1px solid var(--linha)" }}>
       {varios && (
@@ -186,8 +187,8 @@ function GrupoFatura({ grupo, varios, primeiro, t }) {
         )}
         <div style={{ flex: 1, minWidth: 0 }}>
           <LinhaFatura
-            titulo={t("Fatura atual")}
-            legenda={t("Aberta · fecha {data} · {vence}", {
+            titulo={t("Atual")}
+            legenda={t("Fecha {data} · {vence}", {
               data: diaMes(aberta.fecha),
               vence: venceEm(aberta, t),
             })}

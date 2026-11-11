@@ -3,7 +3,7 @@
 // reaproveitar os do mês ativo, simplificando o uso no carrossel.
 
 import React from "react";
-import { fmtBRL, fmtBRLCompacto, rotuloMesT, MESES } from "../../data.js";
+import { fmtBRL, fmtBRLCompacto, MESES } from "../../data.js";
 import { SeletorMes } from "../../ui/common.jsx";
 import { CardDestaque } from "../../ui/card-destaque.jsx";
 import { COR_POS_SOBRE, COR_NEG_SOBRE } from "../../lib/colors.js";
@@ -78,7 +78,9 @@ function CardSaldoBase({
         }}
       >
         <div style={{ fontSize: 13, fontWeight: 600, opacity: 0.85 }}>
-          {t("Gasto em {mes}", { mes: rotuloMesT(t, mesCard) })}
+          {/* Só "Gasto": o mês já está no seletor ao lado, e "Gasto em
+              Novembro 2026" repetia ele e quebrava em três linhas no celular. */}
+          {t("Gasto")}
         </div>
         <SeletorMes mes={mesCard} setMes={setMes} todosMeses={todosMeses} vidro />
       </div>

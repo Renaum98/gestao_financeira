@@ -268,7 +268,7 @@ export const EN = {
   "Abrir perfil": "Open profile",
   "Simular um gasto": "Simulate an expense",
   // CardSaldo
-  "Gasto em {mes}": "Spent in {mes}",
+  "Gasto": "Spent",
   "Orçamento": "Budget",
   "entradas": "income",
   "guardado em caixinhas": "saved in jars",
@@ -418,7 +418,6 @@ export const EN = {
   "Orçamento mensal": "Monthly budget",
   "Este mês foi ajustado na Análise para {x}. O orçamento mensal é {y}.":
     "This month was adjusted in Analysis to {x}. The monthly budget is {y}.",
-  "Orçamento de {mes}": "{mes} budget",
   "Muda só {mes}. Os outros meses e o orçamento mensal continuam como estão.":
     "Changes {mes} only. Other months and the monthly budget stay as they are.",
   "Ajustado só para este mês": "Adjusted for this month only",
@@ -441,10 +440,10 @@ export const EN = {
   "Fatura do cartão": "Card statement",
   "Ajustar →": "Adjust →",
   "Fatura de {mes}": "{mes} statement",
-  "Fatura atual": "Current statement",
+  "Atual": "Current",
   "{pct}% do limite": "{pct}% of limit",
   "Passou do limite": "Over the limit",
-  "Aberta · fecha {data} · {vence}": "Open · closes {data} · {vence}",
+  "Fecha {data} · {vence}": "Closes {data} · {vence}",
   "vence {data}": "due {data}",
   "vence em {mes}": "due in {mes}",
   "Não entra no saldo do mês: cada compra já abateu o mês em que foi feita.":
@@ -491,6 +490,17 @@ export const EN = {
     "This is the ceiling your bank set. It shows how much of the card is already committed — not the same as the monthly spending cap in Budgets.",
   "{disponivel} livres de {limite}": "{disponivel} left of {limite}",
   "Sem limite informado": "No limit set",
+  // Verso do cartão (CardCartao)
+  "Fecha hoje": "Closes today",
+  "Fecha amanhã": "Closes tomorrow",
+  "Fecha em {n} dias": "Closes in {n} days",
+  "vence hoje": "due today",
+  "vence amanhã": "due tomorrow",
+  "vence em {n} dias": "due in {n} days",
+  "Já nas próximas faturas": "Already on upcoming statements",
+  "Sem recorrentes neste cartão": "No recurring charges on this card",
+  "1 recorrente · {x}/mês": "1 recurring · {x}/month",
+  "{n} recorrentes · {x}/mês": "{n} recurring · {x}/month",
   "1 cartão · fatura aberta": "1 card · open statement",
   "{n} cartões · faturas abertas": "{n} cards · open statements",
   "Estourado": "Over limit",
@@ -537,7 +547,7 @@ export const EN = {
   "{n} meses · {count} transações": "{n} months · {count} transactions",
 
   // ─── Detalhe da categoria ───
-  "Gasto neste mês": "Spent this month",
+  "Gasto em {mes}": "Spent in {mes}",
   "Orçamento {x}": "Budget {x}",
   "Você passou {x} do limite": "You went {x} over the limit",
   "Nenhum gasto nesta categoria neste mês.": "No expenses in this category this month.",
@@ -719,7 +729,7 @@ export const EN = {
   "Você: {x}": "You: {x}",
   "{nome}: {x}": "{nome}: {x}",
   "Top categorias": "Top categories",
-  "Maiores gastos do mês": "Biggest expenses of the month",
+  "Maiores gastos": "Biggest expenses",
   "Acompanhar orçamentos": "Track budgets",
   "Veja onde está perto do limite": "See where you're close to the limit",
 

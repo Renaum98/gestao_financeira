@@ -48,7 +48,8 @@ export function OrcamentoDoMes({ mes, mesAtual, preferences, setPreferences, spa
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ fontSize: 13, fontWeight: 600, color: "var(--muted)" }}>
-              {t("Orçamento de {mes}", { mes: nomeMes })}
+              {/* Sem o nome do mês: o seletor logo acima já diz qual é. */}
+              {t("Orçamento")}
             </div>
             {!editando && (
               <div style={{ marginTop: 2, fontSize: 18, fontWeight: 800, color: "var(--ink)", letterSpacing: "-0.02em" }}>

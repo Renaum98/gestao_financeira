@@ -10,7 +10,8 @@ export function MaioresGastos({ maioresGastos }) {
   const tr = useT();
   return (
     <div style={{ padding: "var(--esp-secao) var(--pad-x) 0" }}>
-      <SecaoTitulo>{tr("Maiores gastos do mês")}</SecaoTitulo>
+      {/* Sem "do mês": a Análise inteira é de um mês, o do seletor. */}
+      <SecaoTitulo>{tr("Maiores gastos")}</SecaoTitulo>
       <Card style={{ padding: "4px 16px" }}>
         {maioresGastos.map((t, i) => (
           <div

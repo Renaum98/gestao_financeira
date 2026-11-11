@@ -12,9 +12,14 @@ import { Card, TopBar } from "../../ui/common.jsx";
 import { CardCartao, corDaFaixa } from "./CardCartao.jsx";
 import { ModalCartao } from "./ModalCartao.jsx";
 import { ModalApagarCartao } from "./ModalApagarCartao.jsx";
-import { contarNoCartao, usoDoCartao, faixaDoUso } from "../../lib/cartoes.js";
-import { faturasEmAberto } from "../../lib/fatura.js";
-import { hojeISO } from "../../lib/datas.js";
+import {
+  contarNoCartao,
+  usoDoCartao,
+  faixaDoUso,
+  ehRecorrenteNoCartao,
+} from "../../lib/cartoes.js";
+import { faturasEmAberto, totalFatura, rotuloFatura } from "../../lib/fatura.js";
+import { hojeISO, mesShift } from "../../lib/datas.js";
 import { useT } from "../../lib/i18n.jsx";
 
 // Rótulo da situação geral, no chip do topo. Vale a faixa do cartão mais
@@ -43,9 +48,37 @@ export function CartoesScreen({ ctx }) {
     return mapa;
   }, [cartoes, txs]);
 
+  // O verso de cada cartão: o que a frente não mostra.
+  // - quantos dias faltam pro fechamento e pro vencimento da fatura aberta
+  //   (a frente diz o dia fixo; aqui é a contagem);
+  // - as três faturas depois da aberta — o que já está comprometido nelas, que
+  //   são as parcelas, lançadas mês a mês;
+  // - os recorrentes cobrados nesse cartão e quanto somam por mês.
+  const versos = React.useMemo(() => {
+    const hoje = hojeISO();
+    const dias = (data) => Math.round((Date.parse(data) - Date.parse(hoje)) / 86400000);
+    const mapa = {};
+    for (const c of cartoes) {
+      const fech = c.diaFechamento || 0;
+      const { aberta } = faturasEmAberto(txs, fech, hoje, c.id, c.diaVencimento);
+      const proximas = [1, 2, 3].map((n) => {
+        const mes = mesShift(aberta.mes, n);
+        return { mes, rotulo: rotuloFatura(mes, fech), total: totalFatura(txs, mes, fech, c.id) };
+      });
+      const recs = (recorrentes || []).filter((r) => ehRecorrenteNoCartao(r) && r.cartaoId === c.id);
+      mapa[c.id] = {
+        diasFecha: dias(aberta.fecha),
+        diasVence: aberta.dataVence ? dias(aberta.dataVence) : null,
+        proximas,
+        recorrentes: { n: recs.length, total: recs.reduce((s, r) => s + (r.valor || 0), 0) },
+      };
+    }
+    return mapa;
+  }, [cartoes, txs, recorrentes]);
+
   const totalUsado = cartoes.reduce((s, c) => s + (usos[c.id]?.usado || 0), 0);
 
-  // O cartão mais apertado manda no chip do topo e no aviso do rodapé. Sem
+  // O cartão mais apertado manda no chip do topo. Sem
   // nenhum limite informado não há o que classificar — o chip some.
   const pior = React.useMemo(() => {
     let alvo = null;
@@ -108,18 +141,27 @@ export function CartoesScreen({ ctx }) {
     </div>
   );
 
+  // Cartões em tamanho de cartão, em grade: um por linha no celular e, no
+  // desktop, quantos couberem com pelo menos 260px cada — esticado na coluna
+  // inteira, um cartão de 600px viraria um outdoor.
   const lista = (
-    <>
-      {cartoes.map((c, i) => (
+    <div
+      style={{
+        display: "grid",
+        gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))",
+        gap: 14,
+      }}
+    >
+      {cartoes.map((c) => (
         <CardCartao
           key={c.id}
           cartao={c}
           uso={usos[c.id]}
-          primeiro={i === 0}
+          verso={versos[c.id]}
           onClick={() => setModal({ editando: c })}
         />
       ))}
-    </>
+    </div>
   );
 
   const rodape = (
@@ -133,30 +175,20 @@ export function CartoesScreen({ ctx }) {
         gap: 8,
       }}
     >
-      <Icon
-        name={faixaPior === "estourado" || faixaPior === "aperto" ? "bell" : "card"}
-        size={15}
-        color={faixaPior === "estourado" || faixaPior === "aperto" ? corPior : "var(--muted)"}
-        strokeWidth={2.2}
-      />
+      {/* Só a explicação do ciclo. O aviso de cartão estourado ou no limite
+          saiu daqui: a barra e a porcentagem no próprio cartão já mostram, e o
+          chip do topo resume. */}
+      <Icon name="card" size={15} color="var(--muted)" strokeWidth={2.2} />
       <div
         style={{
           flex: 1,
           fontSize: 11.5,
           fontWeight: 600,
           lineHeight: 1.45,
-          color:
-            faixaPior === "estourado" || faixaPior === "aperto" ? corPior : "var(--muted)",
+          color: "var(--muted)",
         }}
       >
-        {faixaPior === "estourado"
-          ? t("{nome} passou do limite.", { nome: pior.nome })
-          : faixaPior === "aperto"
-            ? t("{nome} já usou {pct}% do limite.", {
-                nome: pior.nome,
-                pct: usos[pior.id].pct.toFixed(0),
-              })
-            : t("A fatura é só uma forma de ver o ciclo do cartão: cada compra já abateu o mês em que foi feita.")}
+        {t("A fatura é só uma forma de ver o ciclo do cartão: cada compra já abateu o mês em que foi feita.")}
       </div>
     </div>
   );
@@ -238,13 +270,13 @@ export function CartoesScreen({ ctx }) {
               </Card>
               {botaoNovo}
             </div>
-            <Card style={{ padding: "2px 18px 14px" }}>{lista}</Card>
+            <Card style={{ padding: 18 }}>{lista}</Card>
           </div>
         ) : (
           <>
             <Card style={{ padding: "18px 18px 14px" }}>
               {resumo}
-              <div style={{ marginTop: 14 }}>{lista}</div>
+              <div style={{ marginTop: 14, marginBottom: 16 }}>{lista}</div>
               {rodape}
             </Card>
             {botaoNovo}

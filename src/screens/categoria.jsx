@@ -2,6 +2,7 @@
 
 import {
   CATEGORIAS,
+  MESES,
   fmtBRL,
   fmtBRLCompacto,
   totalGeral,
@@ -28,12 +29,8 @@ export function CategoriaScreen({ ctx, params }) {
       <div style={{ padding: "4px var(--pad-x) 0" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
           <CatChip catId={cat.id} size={56} />
+          {/* Sem o rótulo "Categoria" em cima: o ícone e o nome já dizem. */}
           <div>
-            <div
-              style={{ fontSize: 13, color: "var(--muted)", fontWeight: 600 }}
-            >
-              {tr("Categoria")}
-            </div>
             <div
               style={{
                 fontSize: 26,
@@ -49,7 +46,9 @@ export function CategoriaScreen({ ctx, params }) {
 
         <Card style={{ marginTop: "var(--esp-secao)", padding: 20 }}>
           <div style={{ fontSize: 12, color: "var(--muted)", fontWeight: 600 }}>
-            {tr("Gasto neste mês")}
+            {/* O mês é o escolhido na Análise, que nem sempre é o atual —
+                "neste mês" enganava quando era outro. */}
+            {tr("Gasto em {mes}", { mes: tr(MESES[Number(mes.slice(5, 7)) - 1]) })}
           </div>
           <div
             style={{
