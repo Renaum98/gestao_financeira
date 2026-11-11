@@ -769,9 +769,18 @@
 .card-vidro__formas {
   position: absolute;
   inset: 0 16.667%;
+  container-type: size;
 }
-/* Tamanho em % da largura do card. O transform e o border-radius são escritos
-   a cada quadro pelo vidro-formas.js — daí o will-change. */
+/* Tamanho: o menor entre uma fração da largura e uma da altura do card
+   (unidades de contêiner). No celular o card é quase quadrado e vale a
+   largura, como sempre foi. No desktop o card é muito largo e baixo: só pela
+   largura, as formas viravam círculos de 700px, maiores que o card inteiro, e
+   só a curva de uma ou outra aparecia num canto. Pela altura, elas ficam do
+   tamanho que têm no celular e se espalham pela largura (o `left` continua em
+   % da largura). As frações da altura são as da largura × 1,55, a proporção
+   do card no celular.
+   O transform e o border-radius são escritos a cada quadro pelo
+   vidro-formas.js — daí o will-change. */
 .card-vidro__forma {
   position: absolute;
   aspect-ratio: 1;
@@ -779,28 +788,28 @@
   will-change: transform, border-radius;
 }
 .card-vidro__forma--1 { /* clara, no alto à esquerda */
-  width: 52%; left: -12%; top: -38%;
+  width: min(52cqw, 80cqh); left: -12%; top: -38%;
   /* Fica atrás do "Gasto em…": clara demais e o texto branco some. */
   background: var(--primary-2);
   opacity: 0.55;
 }
 .card-vidro__forma--2 { /* escura, embaixo à direita */
-  width: 58%; left: 52%; top: 30%;
+  width: min(58cqw, 90cqh); left: 52%; top: 30%;
   background: color-mix(in oklab, var(--primary) 50%, #000);
   opacity: 0.85;
 }
 .card-vidro__forma--3 { /* tom médio, no meio */
-  width: 36%; left: 30%; top: 0%;
+  width: min(36cqw, 56cqh); left: 30%; top: 0%;
   background: color-mix(in oklab, var(--primary-2) 55%, var(--primary));
   opacity: 0.8;
 }
 .card-vidro__forma--4 { /* clara pequena, no alto à direita */
-  width: 26%; left: 74%; top: -14%;
+  width: min(26cqw, 40cqh); left: 74%; top: -14%;
   background: var(--primary-2);
   opacity: 0.7;
 }
 .card-vidro__forma--5 { /* profunda, embaixo à esquerda */
-  width: 40%; left: -6%; top: 55%;
+  width: min(40cqw, 62cqh); left: -6%; top: 55%;
   background: color-mix(in oklab, var(--primary) 70%, #000);
   opacity: 0.8;
 }
