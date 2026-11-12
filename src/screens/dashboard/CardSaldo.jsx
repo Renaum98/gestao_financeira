@@ -70,14 +70,18 @@ function CardSaldoBase({
       // volta à sombra discreta de antes no modo leve.
       style={{ padding: 22 }}
     >
+      {/* O rótulo desce até a base da linha (flex-end) pra ficar colado no
+          valor logo abaixo. Centralizado na altura do seletor, ele boiava
+          longe do número que nomeia. */}
       <div
         style={{
           display: "flex",
-          alignItems: "center",
+          alignItems: "flex-end",
           justifyContent: "space-between",
+          gap: 12,
         }}
       >
-        <div style={{ fontSize: 13, fontWeight: 600, opacity: 0.85 }}>
+        <div style={{ fontSize: 13, fontWeight: 600, opacity: 0.85, lineHeight: 1.2 }}>
           {/* Só "Gasto": o mês já está no seletor ao lado, e "Gasto em
               Novembro 2026" repetia ele e quebrava em três linhas no celular. */}
           {t("Gasto")}
@@ -87,7 +91,7 @@ function CardSaldoBase({
 
       <div
         style={{
-          marginTop: 10,
+          marginTop: 4,
           fontSize: 36,
           fontWeight: 800,
           letterSpacing: "-0.03em",
