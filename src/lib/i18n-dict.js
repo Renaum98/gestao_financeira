@@ -527,6 +527,8 @@ export const EN = {
   "Esses gastos são adicionados automaticamente todo mês. Edite para atualizar do mês atual em diante ou cancele se a cobrança parar.":
     "These expenses are added automatically every month. Edit to update from the current month onward, or cancel if the charge stops.",
   "Nenhum gasto recorrente": "No recurring expenses",
+  "Total por mês": "Total per month",
+  "Entradas recorrentes": "Recurring income",
   "Ao adicionar um gasto, marque \"Repetir todo mês\" para ele aparecer aqui e ser lançado automaticamente nos próximos meses.":
     "When adding an expense, check \"Repeat every month\" for it to appear here and be added automatically in the coming months.",
   "{cat} · todo dia {dia} · desde {inicio}": "{cat} · every day {dia} · since {inicio}",

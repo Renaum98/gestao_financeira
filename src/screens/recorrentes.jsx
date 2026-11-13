@@ -10,6 +10,7 @@ import { COR_NEG } from '../lib/colors.js';
 import { formatarValorInicial, parseValorBR } from '../lib/money-input.js';
 import { PAG_CARTAO } from '../lib/fatura.js';
 import { useT } from '../lib/i18n.jsx';
+import { mesCorrente } from '../lib/datas.js';
 import {
   CabecalhoForm,
   FileiraPilulas,
@@ -35,6 +36,40 @@ export function RecorrentesScreen({ ctx }) {
   // o texto vira a coluna estreita da esquerda e a lista fica com o resto.
   const explicacao = t("Esses gastos são adicionados automaticamente todo mês. Edite para atualizar do mês atual em diante ou cancele se a cobrança parar.");
 
+  // Total do mês: só o que vale agora — já começou e não terminou. Entradas
+  // recorrentes (salário etc.) somam à parte, pra não abater dos gastos.
+  const totais = React.useMemo(() => {
+    const hoje = mesCorrente();
+    let gastos = 0;
+    let entradas = 0;
+    for (const r of recorrentes) {
+      if (r.inicio && r.inicio > hoje) continue;
+      if (r.fim && r.fim < hoje) continue;
+      if (r.tipo === 'entrada') entradas += Number(r.valor) || 0;
+      else gastos += Number(r.valor) || 0;
+    }
+    return { gastos, entradas };
+  }, [recorrentes]);
+
+  const resumo = (
+    <Card style={{ padding: '14px 16px', marginBottom: 12 }}>
+      <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 12 }}>
+        <div style={{ fontSize: 13, color: 'var(--muted)', fontWeight: 600 }}>
+          {t("Total por mês")}
+        </div>
+        <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--ink)' }}>
+          {fmtBRL(totais.gastos)}
+        </div>
+      </div>
+      {totais.entradas > 0 && (
+        <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, marginTop: 6, fontSize: 12, color: 'var(--muted)', fontWeight: 600 }}>
+          <span>{t("Entradas recorrentes")}</span>
+          <span>{fmtBRL(totais.entradas)}</span>
+        </div>
+      )}
+    </Card>
+  );
+
   const conteudo = recorrentes.length === 0 ? (
     <Card style={{ padding: 28, textAlign: 'center' }}>
       <div style={{
@@ -52,48 +87,51 @@ export function RecorrentesScreen({ ctx }) {
       </div>
     </Card>
   ) : (
-    <Card style={{ padding: '4px 16px' }}>
-      {recorrentes.map((r, i) => {
-        const cat = CATEGORIAS[r.categoria] || CATEGORIAS.outros;
-        return (
-          <div key={r.id} style={{
-            display: 'flex', alignItems: 'center', gap: 12, padding: '14px 0',
-            borderTop: i === 0 ? 'none' : '1px solid var(--linha)',
-          }}>
-            <CatChip catId={r.categoria} size={40} />
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--ink)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                {r.descricao}
+    <div>
+      {resumo}
+      <Card style={{ padding: '4px 16px' }}>
+        {recorrentes.map((r, i) => {
+          const cat = CATEGORIAS[r.categoria] || CATEGORIAS.outros;
+          return (
+            <div key={r.id} style={{
+              display: 'flex', alignItems: 'center', gap: 12, padding: '14px 0',
+              borderTop: i === 0 ? 'none' : '1px solid var(--linha)',
+            }}>
+              <CatChip catId={r.categoria} size={40} />
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--ink)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  {r.descricao}
+                </div>
+                <div style={{ fontSize: 11, color: 'var(--muted)', fontWeight: 600, marginTop: 2 }}>
+                  {r.pagamento === PAG_CARTAO
+                    ? t("{cat} · na fatura do cartão · desde {inicio}", { cat: t(cat.nome), inicio: rotuloMesCurtoT(t, r.inicio) })
+                    : t("{cat} · todo dia {dia} · desde {inicio}", { cat: t(cat.nome), dia: r.dia, inicio: rotuloMesCurtoT(t, r.inicio) })}
+                  {r.fim ? t(" · até {fim}", { fim: rotuloMesCurtoT(t, r.fim) }) : ''}
+                  {r.crescimento ? t(" · reajuste {pct}% por parcela", { pct: (r.crescimento * 100).toLocaleString('pt-BR', { maximumFractionDigits: 2 }) }) : ''}
+                </div>
               </div>
-              <div style={{ fontSize: 11, color: 'var(--muted)', fontWeight: 600, marginTop: 2 }}>
-                {r.pagamento === PAG_CARTAO
-                  ? t("{cat} · na fatura do cartão · desde {inicio}", { cat: t(cat.nome), inicio: rotuloMesCurtoT(t, r.inicio) })
-                  : t("{cat} · todo dia {dia} · desde {inicio}", { cat: t(cat.nome), dia: r.dia, inicio: rotuloMesCurtoT(t, r.inicio) })}
-                {r.fim ? t(" · até {fim}", { fim: rotuloMesCurtoT(t, r.fim) }) : ''}
-                {r.crescimento ? t(" · reajuste {pct}% por parcela", { pct: (r.crescimento * 100).toLocaleString('pt-BR', { maximumFractionDigits: 2 }) }) : ''}
+              <div style={{ textAlign: 'right' }}>
+                <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--ink)' }}>
+                  {fmtBRL(r.valor)}
+                </div>
+                <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 4 }}>
+                  <button onClick={() => setEditando(r)} style={{
+                    background: 'transparent', border: 'none', cursor: 'pointer',
+                    padding: 0, color: 'var(--primary)', fontSize: 11, fontWeight: 700,
+                    fontFamily: 'inherit',
+                  }}>{t("Editar")}</button>
+                  <button onClick={() => setConfirmar(r)} style={{
+                    background: 'transparent', border: 'none', cursor: 'pointer',
+                    padding: 0, color: COR_NEG, fontSize: 11, fontWeight: 700,
+                    fontFamily: 'inherit',
+                  }}>{t("Cancelar")}</button>
+                </div>
               </div>
             </div>
-            <div style={{ textAlign: 'right' }}>
-              <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--ink)' }}>
-                {fmtBRL(r.valor)}
-              </div>
-              <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 4 }}>
-                <button onClick={() => setEditando(r)} style={{
-                  background: 'transparent', border: 'none', cursor: 'pointer',
-                  padding: 0, color: 'var(--primary)', fontSize: 11, fontWeight: 700,
-                  fontFamily: 'inherit',
-                }}>{t("Editar")}</button>
-                <button onClick={() => setConfirmar(r)} style={{
-                  background: 'transparent', border: 'none', cursor: 'pointer',
-                  padding: 0, color: COR_NEG, fontSize: 11, fontWeight: 700,
-                  fontFamily: 'inherit',
-                }}>{t("Cancelar")}</button>
-              </div>
-            </div>
-          </div>
-        );
-      })}
-    </Card>
+          );
+        })}
+      </Card>
+    </div>
   );
 
   return (
