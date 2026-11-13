@@ -754,16 +754,14 @@
   inset: 0;
   border-radius: inherit;
   overflow: hidden;
-  /* Duas camadas: por cima, o abaulado da superfície (ver abaixo); por baixo,
-     o tom do vidro na cor de destaque. */
+  /* Três camadas: por cima, o abaulado da superfície — luz descendo do topo e
+     sombra subindo da base, cada uma numa faixa de altura FIXA (em px). Em %
+     ou na diagonal (135deg, como era) as faixas esticavam com a altura do
+     card: num card alto o claro e o escuro viravam manchas nos cantos. Por
+     baixo, o tom do vidro na cor de destaque. */
   background:
-    linear-gradient(
-      135deg,
-      rgba(255, 255, 255, 0.12),
-      rgba(255, 255, 255, 0.03) 35%,
-      transparent 55%,
-      rgba(0, 0, 0, 0.16)
-    ),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.1), transparent 72px),
+    linear-gradient(to top, rgba(0, 0, 0, 0.16), transparent 72px),
     linear-gradient(
       160deg,
       color-mix(in oklab, var(--primary-2) 30%, transparent),
@@ -773,17 +771,21 @@
   /* A textura saltada (neumorphism) vive aqui, na própria superfície, e não
      em brilho fora do card. É o relevo de uma almofada vista com luz de cima
      à esquerda:
-     - o abaulado (gradiente de cima): o lado da luz um pouco mais claro, o
-       oposto um pouco mais escuro, atravessando a superfície inteira;
+     - o abaulado (gradientes de cima): topo um pouco mais claro, base um
+       pouco mais escura;
      - o chanfro (sombras internas): claro em cima e à esquerda, escuro
        embaixo e à direita, sempre esfumado — sem fio nítido na beirada.
+     Cada sombra anda num eixo só (x OU y) com espalhamento negativo igual ao
+     deslocamento: assim ela vira uma faixa de largura constante ao longo de
+     uma borda e contorna o arredondado. As antigas, deslocadas na diagonal,
+     formavam uma bola em cada canto que mudava de forma com a altura.
      Texto todo em branco: o lado escuro só aprofunda o fundo, não tira
      contraste. */
   box-shadow:
-    inset 6px 6px 10px -6px rgba(255, 255, 255, 0.22),
-    inset 16px 16px 26px -20px rgba(255, 255, 255, 0.16),
-    inset -8px -8px 14px -8px rgba(0, 0, 0, 0.3),
-    inset -18px -18px 30px -22px rgba(0, 0, 0, 0.3);
+    inset 0 8px 12px -8px rgba(255, 255, 255, 0.24),
+    inset 7px 0 12px -7px rgba(255, 255, 255, 0.14),
+    inset 0 -10px 16px -10px rgba(0, 0, 0, 0.32),
+    inset -8px 0 14px -8px rgba(0, 0, 0, 0.2);
 }
 /* Seletor de mês dentro do card em vidro: afundado na lâmina, como um
    rebaixo no vidro — o "pressed" do neumorphism. O miolo é o fundo da tela
