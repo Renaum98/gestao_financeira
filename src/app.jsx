@@ -30,6 +30,7 @@ import {
   desfazerParceria as desfazerParceriaFn,
 } from "./lib/partnership.js";
 import { chaveMes, dataISO, dataNoMes, hojeISO, mesCorrente, mesShift } from "./lib/datas.js";
+import { recorrenteEncerrada } from "./lib/recorrentes.js";
 import { ehTemaEscuro, lerAparenciaSalva, salvarAparencia } from "./lib/tema.js";
 import { useEhDesktop } from "./lib/desktop.js";
 import { ehLeve, lerLeveSalvo, salvarLeve, AUTO } from "./lib/leve.js";
@@ -1079,6 +1080,11 @@ export function App() {
       return { ...r, ultimoMesGerado: cur };
     });
 
+    // Recorrência cujo último mês já passou sai da lista de vez. Os lançamentos
+    // dela continuam no histórico, como no cancelamento.
+    const vivas = recsAtualizadas.filter((r) => !(r.fim && r.fim < yyyymmHoje));
+    if (vivas.length !== recsAtualizadas.length) cloud.setRecorrentes(vivas);
+
     if (mutou) {
       cloud.setTxs((atual) => {
         const existentes = new Set(atual.map((t) => t.id));
@@ -1088,7 +1094,7 @@ export function App() {
           b.data.localeCompare(a.data),
         );
       });
-      cloud.setRecorrentes(recsAtualizadas);
+      if (vivas.length === recsAtualizadas.length) cloud.setRecorrentes(recsAtualizadas);
     }
   }, [cloud.ready]);
 
@@ -1551,6 +1557,15 @@ export function App() {
   const ehCompartilhado = !!cloud.partnershipId;
   const caixinhasAtivas = ehCompartilhado ? shared.caixinhas : cloud.caixinhas;
 
+  // No mês do fim, a recorrência some assim que a última conta vence; o
+  // gerador tira ela do storage na virada do mês.
+  const recorrentesAtivas = React.useMemo(() => {
+    const hoje = hojeISO();
+    const lista = cloud.recorrentes || [];
+    const vivas = lista.filter((r) => !recorrenteEncerrada(r, cloud.txs || [], hoje));
+    return vivas.length === lista.length ? lista : vivas;
+  }, [cloud.recorrentes, cloud.txs]);
+
   const salvarCaixinha = (dados) => {
     if (ehCompartilhado) {
       shared.salvarCaixinha(dados);
@@ -1812,7 +1827,7 @@ export function App() {
     excluirCaixinha,
     depositarCaixinha,
     resgatarCaixinha,
-    recorrentes: cloud.recorrentes,
+    recorrentes: recorrentesAtivas,
     cancelarRecorrente,
     editarRecorrente,
     cartoes: cloud.cartoes || LISTA_VAZIA,

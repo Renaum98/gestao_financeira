@@ -10,8 +10,10 @@ import { COR_NEG } from '../lib/colors.js';
 import { formatarValorInicial, parseValorBR } from '../lib/money-input.js';
 import { PAG_CARTAO } from '../lib/fatura.js';
 import { useT } from '../lib/i18n.jsx';
-import { mesCorrente } from '../lib/datas.js';
+import { hojeISO } from '../lib/datas.js';
+import { resumoRecorrente } from '../lib/recorrentes.js';
 import {
+  BotoesDialogo,
   CabecalhoForm,
   FileiraPilulas,
   Linha,
@@ -21,35 +23,46 @@ import {
   NotaLinha,
   PilulaCategoria,
   RodapeLista,
+  TituloDialogo,
   ValorGrande,
   estiloInputLinha,
+  estiloValorLinha,
 } from '../ui/form-lista.jsx';
 
 export function RecorrentesScreen({ ctx }) {
-  const { recorrentes, cancelarRecorrente, editarRecorrente, voltar, ehDesktop, cartoes = [] } = ctx;
+  const { recorrentes, txs = [], cancelarRecorrente, editarRecorrente, voltar, ehDesktop, cartoes = [] } = ctx;
   const t = useT();
   const [confirmar, setConfirmar] = React.useState(null);
   const [editando, setEditando] = React.useState(null);
+  const [vendo, setVendo] = React.useState(null);
+
+  // Pagas, faltantes e totais de cada recorrência, tirados dos lançamentos de
+  // cada mês: mês alterado conta pelo valor novo, mês excluído não conta.
+  const resumos = React.useMemo(() => {
+    const hoje = hojeISO();
+    const m = new Map();
+    for (const r of recorrentes) m.set(r.id, resumoRecorrente(r, txs, hoje));
+    return m;
+  }, [recorrentes, txs]);
 
   // A explicação e a lista são as duas únicas peças da tela. No mobile elas se
   // sucedem — o texto no caminho da leitura, logo abaixo do título. No desktop
   // o texto vira a coluna estreita da esquerda e a lista fica com o resto.
   const explicacao = t("Esses gastos são adicionados automaticamente todo mês. Edite para atualizar do mês atual em diante ou cancele se a cobrança parar.");
 
-  // Total do mês: só o que vale agora — já começou e não terminou. Entradas
-  // recorrentes (salário etc.) somam à parte, pra não abater dos gastos.
+  // Total do mês: o que cada recorrência lançou neste mês (fora da vigência ou
+  // excluída no mês, zero). Entradas recorrentes (salário etc.) somam à
+  // parte, pra não abater dos gastos.
   const totais = React.useMemo(() => {
-    const hoje = mesCorrente();
     let gastos = 0;
     let entradas = 0;
     for (const r of recorrentes) {
-      if (r.inicio && r.inicio > hoje) continue;
-      if (r.fim && r.fim < hoje) continue;
-      if (r.tipo === 'entrada') entradas += Number(r.valor) || 0;
-      else gastos += Number(r.valor) || 0;
+      const v = resumos.get(r.id)?.valorMes || 0;
+      if (r.tipo === 'entrada') entradas += v;
+      else gastos += v;
     }
     return { gastos, entradas };
-  }, [recorrentes]);
+  }, [recorrentes, resumos]);
 
   const resumo = (
     <Card style={{ padding: '14px 16px', marginBottom: 12 }}>
@@ -92,11 +105,23 @@ export function RecorrentesScreen({ ctx }) {
       <Card style={{ padding: '4px 16px' }}>
         {recorrentes.map((r, i) => {
           const cat = CATEGORIAS[r.categoria] || CATEGORIAS.outros;
+          const res = resumos.get(r.id);
           return (
-            <div key={r.id} style={{
-              display: 'flex', alignItems: 'center', gap: 12, padding: '14px 0',
-              borderTop: i === 0 ? 'none' : '1px solid var(--linha)',
-            }}>
+            <div
+              key={r.id}
+              role="button"
+              tabIndex={0}
+              onClick={() => setVendo(r)}
+              onKeyDown={(e) => {
+                if (e.target !== e.currentTarget) return;
+                if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setVendo(r); }
+              }}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 12, padding: '14px 0',
+                borderTop: i === 0 ? 'none' : '1px solid var(--linha)',
+                cursor: 'pointer',
+              }}
+            >
               <CatChip catId={r.categoria} size={40} />
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--ink)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
@@ -109,18 +134,25 @@ export function RecorrentesScreen({ ctx }) {
                   {r.fim ? t(" · até {fim}", { fim: rotuloMesCurtoT(t, r.fim) }) : ''}
                   {r.crescimento ? t(" · reajuste {pct}% por parcela", { pct: (r.crescimento * 100).toLocaleString('pt-BR', { maximumFractionDigits: 2 }) }) : ''}
                 </div>
+                {res && (
+                  <div style={{ fontSize: 11, color: 'var(--ink)', fontWeight: 700, marginTop: 3, fontVariantNumeric: 'tabular-nums' }}>
+                    {res.valorTotal != null
+                      ? t("Total {total} · {pagas} de {n} pagas", { total: fmtBRL(res.valorTotal), pagas: res.pagas.length, n: res.totalParcelas })
+                      : t("Pago até agora {total}", { total: fmtBRL(res.totalPago) })}
+                  </div>
+                )}
               </div>
               <div style={{ textAlign: 'right' }}>
                 <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--ink)' }}>
                   {fmtBRL(r.valor)}
                 </div>
                 <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 4 }}>
-                  <button onClick={() => setEditando(r)} style={{
+                  <button onClick={(e) => { e.stopPropagation(); setEditando(r); }} style={{
                     background: 'transparent', border: 'none', cursor: 'pointer',
                     padding: 0, color: 'var(--primary)', fontSize: 11, fontWeight: 700,
                     fontFamily: 'inherit',
                   }}>{t("Editar")}</button>
-                  <button onClick={() => setConfirmar(r)} style={{
+                  <button onClick={(e) => { e.stopPropagation(); setConfirmar(r); }} style={{
                     background: 'transparent', border: 'none', cursor: 'pointer',
                     padding: 0, color: COR_NEG, fontSize: 11, fontWeight: 700,
                     fontFamily: 'inherit',
@@ -170,6 +202,15 @@ export function RecorrentesScreen({ ctx }) {
         />
       )}
 
+      {vendo && resumos.get(vendo.id) && (
+        <HistoricoRecorrenteModal
+          rec={vendo}
+          resumo={resumos.get(vendo.id)}
+          onFechar={() => setVendo(null)}
+          onEditar={() => { setEditando(vendo); setVendo(null); }}
+        />
+      )}
+
       {editando && (
         <EditarRecorrenteModal
           rec={editando}
@@ -182,6 +223,91 @@ export function RecorrentesScreen({ ctx }) {
         />
       )}
     </div>
+  );
+}
+
+// dd/mm/aa de uma data "yyyy-mm-dd".
+function rotuloData(iso) {
+  const [yy, mm, dd] = iso.split('-');
+  return `${dd}/${mm}/${yy.slice(2)}`;
+}
+
+// Tocar numa recorrente: o que já foi pago (data e valor de cada lançamento),
+// quantas faltam e quanto dá no total. Sem fim definido não existe "faltam"
+// nem total final — mostra só o que já saiu.
+function HistoricoRecorrenteModal({ rec, resumo, onFechar, onEditar }) {
+  const t = useT();
+  const { pagas, totalPago, faltam, totalFalta, valorTotal, totalParcelas } = resumo;
+  const temFim = valorTotal != null;
+  const num = { ...estiloValorLinha, fontVariantNumeric: 'tabular-nums' };
+
+  const subtitulo = rec.pagamento === PAG_CARTAO
+    ? t("{valor} por mês · na fatura do cartão", { valor: fmtBRL(rec.valor) })
+    : t("{valor} por mês · todo dia {dia}", { valor: fmtBRL(rec.valor), dia: rec.dia });
+
+  const tituloSecao = (txt) => (
+    <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--muted)', margin: '16px 6px 0' }}>{txt}</div>
+  );
+
+  return (
+    <ModalOverlay onClose={onFechar} maxWidth={420} padding="22px 20px 18px">
+      <TituloDialogo titulo={rec.descricao} mensagem={subtitulo} />
+
+      <ListaAgrupada style={{ marginTop: 14 }}>
+        {temFim && (
+          <Linha icone="wallet" rotulo={t("Valor total")}>
+            <span style={{ ...num, fontSize: 16, fontWeight: 800 }}>{fmtBRL(valorTotal)}</span>
+          </Linha>
+        )}
+        <Linha icone="check" rotulo={t("Pago")} divisoria={temFim}>
+          <span style={num}>
+            {temFim
+              ? t("{n} de {total} · {valor}", { n: pagas.length, total: totalParcelas, valor: fmtBRL(totalPago) })
+              : t("{n}× · {valor}", { n: pagas.length, valor: fmtBRL(totalPago) })}
+          </span>
+        </Linha>
+        <Linha icone="calendar" rotulo={t("Faltam")} divisoria>
+          <span style={num}>
+            {!temFim
+              ? t("Sem data de fim")
+              : faltam.length === 0
+                ? t("Nenhuma")
+                : t("{n} · {valor}", { n: faltam.length, valor: fmtBRL(totalFalta) })}
+          </span>
+        </Linha>
+      </ListaAgrupada>
+
+      {tituloSecao(t("Pagamentos"))}
+      {pagas.length === 0 ? (
+        <RodapeLista>{t("Nenhum pagamento ainda.")}</RodapeLista>
+      ) : (
+        <ListaAgrupada style={{ marginTop: 6 }}>
+          {pagas.map((tx, i) => (
+            <Linha key={tx.id} rotulo={rotuloData(tx.data)} divisoria={i > 0}>
+              <span style={num}>{fmtBRL(tx.valor)}</span>
+            </Linha>
+          ))}
+        </ListaAgrupada>
+      )}
+
+      {temFim && faltam.length > 0 && (
+        <>
+          {tituloSecao(t("Próximas"))}
+          <ListaAgrupada style={{ marginTop: 6 }}>
+            {faltam.map((f, i) => (
+              <Linha key={f.chave} rotulo={f.data ? rotuloData(f.data) : rotuloMesCurtoT(t, f.mes)} divisoria={i > 0}>
+                <span style={{ ...num, color: 'var(--muted)' }}>{fmtBRL(f.valor)}</span>
+              </Linha>
+            ))}
+          </ListaAgrupada>
+        </>
+      )}
+
+      <BotoesDialogo
+        cancelar={{ texto: t("Fechar"), onClick: onFechar }}
+        confirmar={{ texto: t("Editar"), onClick: onEditar, icone: 'edit' }}
+      />
+    </ModalOverlay>
   );
 }
 
