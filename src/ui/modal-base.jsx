@@ -25,12 +25,33 @@ export const Z_MODAL = 2147483000;
 // Pilha dos overlays abertos. Com um ConfirmModal por cima de outro modal, os
 // dois escutam a mesma tecla — e o de fora, que montou primeiro, responderia
 // antes. A pilha garante que só o de cima fecha.
+// Cada entrada guarda o próprio fechar, pra o voltar do sistema (lib/voltar.js)
+// fechar o modal de cima em vez de trocar a página por baixo dele.
 const abertos = [];
+
+// Quem precisa saber quando um modal abre ou fecha (o app, pra pôr ou tirar a
+// guarda do voltar do sistema).
+const ouvintes = new Set();
+function avisar() {
+  for (const fn of ouvintes) fn(abertos.length);
+}
+export function assinarOverlays(fn) {
+  ouvintes.add(fn);
+  return () => ouvintes.delete(fn);
+}
 
 // Há algum modal na tela? Quem tem atalho de teclado global precisa saber pra
 // não agir por baixo de um formulário aberto.
 export function temOverlayAberto() {
   return abertos.length > 0;
+}
+
+// Fecha o modal de cima, como o Esc ou o toque fora. Devolve se havia um.
+export function fecharOverlayDoTopo() {
+  const topo = abertos[abertos.length - 1];
+  if (!topo) return false;
+  topo.fechar.current?.();
+  return true;
 }
 
 // Esc fecha o modal. Vale em qualquer largura: no celular a tecla não existe,
@@ -39,8 +60,9 @@ export function useFecharComEsc(onClose) {
   const fechar = React.useRef(onClose);
   fechar.current = onClose;
   React.useEffect(() => {
-    const eu = {};
+    const eu = { fechar };
     abertos.push(eu);
+    avisar();
     const aoTeclar = (e) => {
       if (e.key !== 'Escape') return;
       if (abertos[abertos.length - 1] !== eu) return;
@@ -52,6 +74,7 @@ export function useFecharComEsc(onClose) {
       document.removeEventListener('keydown', aoTeclar);
       const i = abertos.indexOf(eu);
       if (i >= 0) abertos.splice(i, 1);
+      avisar();
     };
   }, []);
 }

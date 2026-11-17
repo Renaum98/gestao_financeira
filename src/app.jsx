@@ -37,7 +37,8 @@ import { ehLeve, lerLeveSalvo, salvarLeve, AUTO } from "./lib/leve.js";
 import { estaOffline, useEstaOffline } from "./lib/conexao.js";
 import { BarraOffline, EspacoBarraOffline, ALTURA_FAIXA } from "./ui/barra-offline.jsx";
 import { useInstallPrompt, InstallPromptModal } from "./ui/install-prompt.jsx";
-import { temOverlayAberto } from "./ui/modal-base.jsx";
+import { assinarOverlays, fecharOverlayDoTopo, temOverlayAberto } from "./ui/modal-base.jsx";
+import { registrarVoltar, sincronizarVoltar } from "./lib/voltar.js";
 import { LoaderTela, SplashLogo, useSplashInteiro } from "./ui/loader.jsx";
 import { rendimentoRealizadoAoResgatar } from "./lib/selic.js";
 import { ajustarGuardado } from "./lib/guardado-entradas.js";
@@ -1314,6 +1315,34 @@ export function App() {
     setTela(last.tela);
     setParams(last.params);
   };
+
+  // ─── Voltar do sistema (Android, navegador) ── ver lib/voltar.js ───
+  // Cada voltar desfaz um passo, nesta ordem: fecha o modal de cima; desempilha
+  // a subpágina; numa aba que não é o Início, vai pro Início. Na raiz (Início,
+  // pilha vazia, sem modal) o voltar sai do app.
+  const [overlaysAbertos, setOverlaysAbertos] = React.useState(0);
+  React.useEffect(() => assinarOverlays(setOverlaysAbertos), []);
+  const naRaiz = tela === "inicio" && stack.length === 0;
+  const navAtual = React.useRef(null);
+  navAtual.current = { naRaiz, stack, voltar, irPara, logado: !!uid };
+  React.useEffect(
+    () =>
+      registrarVoltar({
+        deveGuardar: () =>
+          navAtual.current.logado && (temOverlayAberto() || !navAtual.current.naRaiz),
+        desfazer: () => {
+          if (fecharOverlayDoTopo()) return;
+          const n = navAtual.current;
+          if (n.naRaiz) return;
+          if (n.stack.length === 0) n.irPara("inicio");
+          else n.voltar();
+        },
+      }),
+    [],
+  );
+  React.useEffect(() => {
+    sincronizarVoltar();
+  }, [naRaiz, overlaysAbertos, uid]);
 
   const salvarTx = (tx, editando) => {
     const ehRec = tx.ehRecorrente;
