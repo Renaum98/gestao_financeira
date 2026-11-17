@@ -125,6 +125,14 @@ const RAIO_GOTA = `calc(var(--raio-superficie) - ${PAD_BARRA}px)`;
 // vez de contaminar o outro campo em silêncio.
 const LISTA_VAZIA = Object.freeze([]);
 
+// Campos de uma tx que o sistema põe e o formulário de edição não carrega.
+// Editar a tx tem que mantê-los (ver salvarTx).
+const CAMPOS_DO_SISTEMA_TX = ["recorrenteId", "pago", "pagoEm"];
+
+// Lançamento gerado por uma recorrência tem id "<recId>-yyyy-mm". Serve pra
+// religar os que perderam o recorrenteId numa edição antiga (ver o gerador).
+const ID_TX_DE_RECORRENCIA = /^(rec-\d+)-\d{4}-\d{2}$/;
+
 const ITENS_TAB = [
   { id: "inicio", icon: "home", label: "Início" },
   { id: "gastos", icon: "list", label: "Transações" },
@@ -1051,6 +1059,26 @@ export function App() {
     const recs = cloud.recorrentes;
     if (!recs || recs.length === 0) return;
 
+    // Conserto de dados: até a edição de uma tx preservar o vínculo, editar o
+    // valor de um mês soltava a tx da recorrência. As geradas carregam o id da
+    // recorrência no próprio id, então dá pra religar. (A primeira de cada
+    // recorrência tem id "tx-..." e, se foi editada antes, não tem volta.)
+    const idsRec = new Set(recs.map((r) => r.id));
+    const soltas = (cloud.txs || []).some((t) => {
+      if (t.recorrenteId) return false;
+      const m = ID_TX_DE_RECORRENCIA.exec(t.id);
+      return m && idsRec.has(m[1]);
+    });
+    if (soltas) {
+      cloud.setTxs((atual) =>
+        atual.map((t) => {
+          if (t.recorrenteId) return t;
+          const m = ID_TX_DE_RECORRENCIA.exec(t.id);
+          return m && idsRec.has(m[1]) ? { ...t, recorrenteId: m[1] } : t;
+        }),
+      );
+    }
+
     const yyyymmHoje = mesCorrente();
     const novosTxs = [];
     let mutou = false;
@@ -1404,6 +1432,21 @@ export function App() {
       });
       if (!editando) setTela("gastos");
       return;
+    }
+
+    // O formulário monta a tx do zero e não conhece o que o sistema pendura
+    // nela: o vínculo com a recorrência e o "pago". Sem isso, editar o valor
+    // de um mês soltava a tx da recorrente — ela sumia do histórico de pagos
+    // e o mês passava a contar como excluído.
+    if (editando) {
+      const original = (cloud.txs || []).find((t) => t.id === tx.id);
+      if (original) {
+        const doSistema = {};
+        for (const k of CAMPOS_DO_SISTEMA_TX) {
+          if (original[k] !== undefined) doSistema[k] = original[k];
+        }
+        tx = { ...doSistema, ...tx };
+      }
     }
 
     // Editar uma entrada pode deixar depósitos sem lastro (valor menor que o
