@@ -1463,6 +1463,8 @@ export function App() {
         const nova = { ...r, ...dadosFinais };
         // cartaoId null é "tirar o cartão", não um valor a guardar.
         if (!nova.cartaoId) delete nova.cartaoId;
+        // Com fim novo, os lançamentos vão até ele (ajustarTxsAoFim).
+        if (dados.fim && dados.fim !== r.fim) nova.ultimoMesGerado = dados.fim;
         return nova;
       }),
     );
@@ -1490,8 +1492,46 @@ export function App() {
         }
         return nova;
       });
-      return novos.sort((a, b) => b.data.localeCompare(a.data));
+      const comFim = ajustarTxsAoFim(novos, recAntiga, recNova, yyyymmHoje);
+      return comFim.sort((a, b) => b.data.localeCompare(a.data));
     });
+  };
+
+  // Mudou o "até quando" de uma recorrência. Encurtou: somem os lançamentos
+  // depois do novo fim (só do mês atual em diante; o passado não se mexe).
+  // Esticou: lança os meses novos, como na criação, a partir do último já
+  // gerado — mês excluído à mão no meio continua excluído. Sem fim: nada a
+  // fazer aqui, o gerador lança mês a mês.
+  const ajustarTxsAoFim = (txs, recAntiga, recNova, yyyymmHoje) => {
+    if (!recAntiga || !recNova || !recNova.fim) return txs;
+    if (recNova.fim === recAntiga.fim) return txs;
+    const fim = recNova.fim;
+    const id = recNova.id;
+    const restantes = txs.filter((t) => {
+      if (t.recorrenteId !== id) return true;
+      const m = t.data.slice(0, 7);
+      return !(m > fim && m >= yyyymmHoje);
+    });
+    const gerado = recAntiga.ultimoMesGerado || recAntiga.inicio;
+    if (!gerado || gerado >= fim) return restantes;
+    const existentes = new Set(restantes.map((t) => t.id));
+    const novas = [];
+    for (let m = mesShift(gerado, 1); m <= fim; m = mesShift(m, 1)) {
+      const txId = `${id}-${m}`;
+      if (existentes.has(txId)) continue;
+      novas.push({
+        id: txId,
+        tipo: recNova.tipo,
+        descricao: recNova.descricao,
+        categoria: recNova.categoria,
+        pagamento: recNova.pagamento,
+        ...(recNova.cartaoId && { cartaoId: recNova.cartaoId }),
+        valor: valorRecNoMes(recNova, m),
+        data: dataNoMes(m, recNova.dia),
+        recorrenteId: id,
+      });
+    }
+    return [...novas, ...restantes];
   };
 
   // Marca uma tx como paga (some das "Próximas a vencer", continua no histórico).

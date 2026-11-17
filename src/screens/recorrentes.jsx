@@ -1,16 +1,16 @@
 // recorrentes.jsx — Tela para visualizar, editar e cancelar gastos recorrentes.
 
 import React from 'react';
-import { CATEGORIAS, catsMinhas, fmtBRL, rotuloMesCurtoT } from '../data.js';
+import { CATEGORIAS, MESES, catsMinhas, fmtBRL, rotuloMesCurtoT, rotuloMesT } from '../data.js';
 import { CatChip, Icon } from '../ui/icons.jsx';
-import { Card, TopBar } from '../ui/common.jsx';
+import { Card, Toggle, TopBar } from '../ui/common.jsx';
 import { ConfirmModal } from '../ui/confirm-modal.jsx';
 import { ModalOverlay } from '../ui/modal-base.jsx';
 import { COR_NEG } from '../lib/colors.js';
 import { formatarValorInicial, parseValorBR } from '../lib/money-input.js';
 import { PAG_CARTAO } from '../lib/fatura.js';
 import { useT } from '../lib/i18n.jsx';
-import { hojeISO } from '../lib/datas.js';
+import { hojeISO, mesCorrente } from '../lib/datas.js';
 import { resumoRecorrente } from '../lib/recorrentes.js';
 import {
   BotoesDialogo,
@@ -321,6 +321,18 @@ function EditarRecorrenteModal({ rec, cartoes = [], onFechar, onSalvar }) {
   const [cartaoId, setCartaoId] = React.useState(rec.cartaoId || null);
   const [dia, setDia] = React.useState(rec.dia || 1);
 
+  // Até quando. O fim não pode cair antes do mês atual (o passado não se
+  // edita) nem antes do início. Recorrência antiga sem fim pode ganhar um;
+  // as criadas hoje já nascem com fim.
+  const minFim = rec.inicio && rec.inicio > mesCorrente() ? rec.inicio : mesCorrente();
+  const fimInicial = rec.fim || minFim;
+  const [semFim, setSemFim] = React.useState(!rec.fim);
+  const [fimMes, setFimMes] = React.useState(Number(fimInicial.slice(5, 7)));
+  const [fimAno, setFimAno] = React.useState(Number(fimInicial.slice(0, 4)));
+  const fim = semFim ? null : `${fimAno}-${String(fimMes).padStart(2, '0')}`;
+  const fimValido = !fim || fim >= minFim;
+  const anoMin = Math.min(Number(minFim.slice(0, 4)), Number(fimInicial.slice(0, 4)));
+
   // Virou crédito agora? Cai no primeiro cartão. Uma recorrência que já era do
   // crédito sem cartão é órfã de verdade (sobra de cartão apagado) e fica como
   // está até o usuário escolher.
@@ -332,7 +344,7 @@ function EditarRecorrenteModal({ rec, cartoes = [], onFechar, onSalvar }) {
 
   const valorNum = parseValorBR(valor);
 
-  const podeSalvar = valorNum > 0 && descricao.trim().length > 0;
+  const podeSalvar = valorNum > 0 && descricao.trim().length > 0 && fimValido;
 
   const salvar = () => {
     if (!podeSalvar) return;
@@ -340,6 +352,7 @@ function EditarRecorrenteModal({ rec, cartoes = [], onFechar, onSalvar }) {
       descricao: descricao.trim(),
       valor: valorNum,
       dia: Number(dia),
+      fim,
     };
     if (!ehEntrada) {
       dados.categoria = categoria;
@@ -416,9 +429,40 @@ function EditarRecorrenteModal({ rec, cartoes = [], onFechar, onSalvar }) {
             />
           </Linha>
         )}
+
+        {/* Sem fim só aparece pra quem já era sem fim: a criação sempre pede
+            um "até", e aqui ele só ganha a chance de ter um. */}
+        {!rec.fim && (
+          <Linha icone="history" rotulo={t("Sem data de fim")} divisoria>
+            <Toggle ativo={semFim} onChange={setSemFim} />
+          </Linha>
+        )}
+        {!semFim && (
+          // Dois selects: a linha não é label (o toque não saberia em qual cair).
+          <Linha icone="history" rotulo={t("Até")} divisoria>
+            <SelectLinha
+              value={fimMes}
+              onChange={(v) => setFimMes(Number(v))}
+              ariaLabel={t("Mês")}
+              options={MESES.map((nome, idx) => ({ value: idx + 1, label: t(nome) }))}
+            />
+            <SelectLinha
+              value={fimAno}
+              onChange={(v) => setFimAno(Number(v))}
+              ariaLabel={t("Ano")}
+              options={Array.from({ length: 11 }, (_, i) => anoMin + i).map((a) => ({ value: a, label: a }))}
+            />
+          </Linha>
+        )}
       </ListaAgrupada>
 
-      <RodapeLista>{t("As mudanças valem do mês atual em diante.")}</RodapeLista>
+      <RodapeLista style={!fimValido ? { color: COR_NEG, fontWeight: 700 } : undefined}>
+        {!fimValido
+          ? t("O fim não pode ser antes de {mes}.", { mes: rotuloMesT(t, minFim) })
+          : fim && rec.fim && fim < rec.fim
+            ? t("As mudanças valem do mês atual em diante. Os lançamentos depois de {mes} serão removidos.", { mes: rotuloMesT(t, fim) })
+            : t("As mudanças valem do mês atual em diante.")}
+      </RodapeLista>
     </ModalOverlay>
   );
 }

@@ -544,6 +544,8 @@ export const EN = {
   "Pagamentos": "Payments",
   "Nenhum pagamento ainda.": "No payments yet.",
   "Próximas": "Upcoming",
+  "O fim não pode ser antes de {mes}.": "The end can't be before {mes}.",
+  "As mudanças valem do mês atual em diante. Os lançamentos depois de {mes} serão removidos.": "Changes apply from the current month onward. Entries after {mes} will be removed.",
   "Ao adicionar um gasto, marque \"Repetir todo mês\" para ele aparecer aqui e ser lançado automaticamente nos próximos meses.":
     "When adding an expense, check \"Repeat every month\" for it to appear here and be added automatically in the coming months.",
   "{cat} · todo dia {dia} · desde {inicio}": "{cat} · every day {dia} · since {inicio}",
