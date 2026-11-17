@@ -13,22 +13,21 @@
   outline-offset: 2px;
 }
 
-/* Campos zeram o contorno inline (`outline: 'none'`) pra desenhar o próprio
-   estado, e inline vence CSS — mesma situação do font-size do iOS em base.css.
-   Sem o !important o teclado não teria como mostrar onde está. */
+/* Campos de texto nunca levam o anel: input de texto casa com :focus-visible
+   já no clique, e o anel aparecia em volta da busca, dos campos dos modais
+   etc. O cursor piscando basta pra mostrar onde está o foco. */
 input:focus-visible,
-textarea:focus-visible,
+textarea:focus-visible {
+  outline: none !important;
+}
+
+/* Os que não têm cursor continuam com o anel no teclado. Eles zeram o
+   contorno inline (`outline: 'none'`) e inline vence CSS — mesma situação do
+   font-size do iOS em base.css —, daí o !important. */
+input:is([type="checkbox"], [type="radio"], [type="range"]):focus-visible,
 select:focus-visible {
   outline: 2px solid color-mix(in oklab, var(--primary) 60%, transparent) !important;
   outline-offset: 1px;
-}
-
-/* Dentro da lista agrupada dos modais o campo é texto solto na linha, sem
-   caixa: o anel aparece já no clique (input de texto sempre casa com
-   :focus-visible) e desenha um contorno em volta de nada. O cursor basta. */
-.lista-agrupada input:focus-visible,
-.lista-agrupada textarea:focus-visible {
-  outline: none !important;
 }
 
 /* ─── Hover ─────────────────────────────────────────────────────────────────
