@@ -1,5 +1,6 @@
-// voltar.js — liga o "voltar" do sistema (botão/gesto do Android, voltar do
-// navegador) à navegação caseira do app (irPara/voltar em app.jsx, sem router).
+// voltar.js — liga o "voltar" do sistema (botão/gesto do Android, gesto da
+// borda no iPhone, voltar do navegador) à navegação caseira do app
+// (irPara/voltar em app.jsx, sem router).
 //
 // Sem isto o histórico do navegador tem uma entrada só: o voltar do Android
 // não tinha pra onde ir e fechava o app de dentro de qualquer subpágina.
@@ -15,17 +16,27 @@
 // o botão de voltar da TopBar desempilha). Espelhar tudo isso entrada por
 // entrada desalinharia na primeira divergência; com uma guarda só, cada voltar
 // do sistema é sempre "desfaça um passo", seja qual for a pilha.
+//
+// AVANÇAR não existe no app. Mas a guarda consumida por um voltar continua no
+// histórico como entrada "pra frente", e no iPhone o arraste da borda direita
+// é o avançar do Safari: ele caía nela e disparava o mesmo popstate de um
+// voltar. Por isso cada guarda leva um número crescente (`n`): popstate que
+// chega numa entrada de número maior que o da atual é um avançar, e é anulado.
 
-let guardada = false; // a guarda está no topo do histórico?
+let guardada = false; // estamos parados numa guarda?
 let ignorarPop = false; // o próximo popstate fomos nós que pedimos (desarmar)
 let aoVoltar = null; // desfaz um passo no app
 let precisa = () => false; // há algo a desfazer agora?
+let seq = 0; // último número dado a uma guarda
+let pos = 0; // número da entrada em que estamos (0 = entrada sem guarda)
 
-const MARCA = { guardaVoltar: true };
+const numeroDe = (state) => (state && state.guardaVoltar ? state.n || 0 : 0);
 
 function armar() {
   if (guardada) return;
-  window.history.pushState(MARCA, '');
+  seq = Math.max(seq, pos) + 1;
+  window.history.pushState({ guardaVoltar: true, n: seq }, '');
+  pos = seq;
   guardada = true;
 }
 
@@ -49,16 +60,32 @@ export function sincronizarVoltar() {
 export function registrarVoltar({ deveGuardar, desfazer }) {
   precisa = deveGuardar;
   aoVoltar = desfazer;
-  // Recarregou a página com a guarda no topo: ela continua lá, e é nossa. Se
+  // Recarregou a página parado numa guarda: ela continua lá, e é nossa. Se
   // ninguém a reconhecer, ela vira um voltar que não faz nada.
-  if (window.history.state?.guardaVoltar) guardada = true;
+  const estado = window.history.state;
+  pos = numeroDe(estado);
+  seq = Math.max(seq, pos);
+  if (estado?.guardaVoltar) guardada = true;
+
   const aoPop = () => {
-    // A guarda saiu do topo, seja por nós (desarmar) ou pelo usuário.
-    guardada = false;
+    const estadoNovo = window.history.state;
+    const n = numeroDe(estadoNovo);
+    const avancou = n > pos;
+    pos = n;
+    // Onde paramos pode ser outra guarda (uma velha que ficou no caminho).
+    guardada = Boolean(estadoNovo?.guardaVoltar);
+
     if (ignorarPop) {
       ignorarPop = false;
       // Entre o pedido de desarmar e este pop o app pode ter voltado a
       // precisar da guarda (saiu da raiz de novo).
+      sincronizarVoltar();
+      return;
+    }
+    if (avancou) {
+      // Avançar (borda direita no iPhone): o app não muda. Se ainda há o que
+      // desfazer, ficar parado nesta guarda é exatamente o certo; se não há,
+      // desarmar devolve o histórico pra entrada de baixo.
       sincronizarVoltar();
       return;
     }
